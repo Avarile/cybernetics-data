@@ -77,6 +77,8 @@ const build = (
       createView: vi.fn(async () => ({})),
       deleteView: vi.fn(async () => undefined),
     },
+    graphService: { query: vi.fn(async () => ({ etag: 'e', notModified: false, vo: undefined })) },
+    graphNodeService: { expand: vi.fn(async () => ({ nodes: [], links: [], truncated: false })) },
     ...overrides.services,
   };
 
@@ -91,7 +93,9 @@ const build = (
     services.recordService as any,
     services.recordWriteService as any,
     services.viewService as any,
-    services.viewWriteService as any
+    services.viewWriteService as any,
+    services.graphService as any,
+    services.graphNodeService as any
   );
   return { registry, cls, permissionService, services };
 };
@@ -118,7 +122,7 @@ describe('McpToolRegistry', () => {
       expect(registry.get(name)).toBeUndefined();
     });
 
-    it('exposes the expected v1 catalogue', () => {
+    it('exposes the expected catalogue', () => {
       const { registry } = build();
       expect(
         registry
@@ -133,7 +137,9 @@ describe('McpToolRegistry', () => {
           'create_view',
           'delete_records',
           'delete_view',
+          'get_graph',
           'get_record',
+          'get_record_neighbors',
           'get_table_schema',
           'list_bases',
           'list_spaces',
@@ -203,6 +209,21 @@ describe('McpToolRegistry', () => {
         'not allowed'
       );
       expect(services.recordService.getRecords).not.toHaveBeenCalled();
+    });
+
+    it('refuses to persist a view with an unknown type', async () => {
+      // Regression: before create_view parsed viewRoSchema, a live run stored
+      // a view of type "notAViewType", and every page that loaded that table's
+      // views then crashed in the SDK's createViewInstance.
+      const { registry, services } = build();
+      await expect(
+        registry.invoke('create_view', {
+          tableId: tableIdForTests,
+          name: 'nope',
+          type: 'notAViewType',
+        })
+      ).rejects.toThrow();
+      expect(services.viewWriteService.createView).not.toHaveBeenCalled();
     });
 
     it('rejects an unknown tool', async () => {

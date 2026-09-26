@@ -1,6 +1,8 @@
 import type { Action } from '@teable/core';
 import type { z } from 'zod';
 import type { BaseService } from '../base/base.service';
+import type { BaseGraphService } from '../base-graph/base-graph.service';
+import type { GraphNodeService } from '../base-graph/graph-node.service';
 import type { FieldOpenApiService } from '../field/open-api/field-open-api.service';
 import type { RecordOpenApiService } from '../record/open-api/record-open-api.service';
 import type { RecordService } from '../record/record.service';
@@ -35,6 +37,8 @@ export interface IMcpToolContext {
   recordWriteService: RecordOpenApiService;
   viewService: ViewService;
   viewWriteService: ViewOpenApiService;
+  graphService: BaseGraphService;
+  graphNodeService: GraphNodeService;
   /** Already intersected with the token's scopes by validPermissions. */
   permissions: Action[];
   /**

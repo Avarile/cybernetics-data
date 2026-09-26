@@ -98,8 +98,8 @@ export const BasePageRouter = () => {
           // read-only graph. `hidden: false` must stay explicit: the annotated
           // element type has no `hidden` member, so the `.filter` below relies
           // on every entry carrying the key for inference.
-          href: `/base/${baseId}/knowledge-graph`,
-          label: t('common:noun.knowledgeGraph'),
+          href: `/base/${baseId}/graph`,
+          label: t('common:noun.graph'),
           Icon: Network,
           hidden: false,
         },

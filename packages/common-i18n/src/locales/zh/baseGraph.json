@@ -1,0 +1,80 @@
+{
+  "title": "关系图",
+  "stats": {
+    "nodes": "{{count}} 个节点",
+    "links": "{{count}} 条连线",
+    "tables": "{{count}} 张表"
+  },
+  "toolbar": {
+    "autoRotate": "自动旋转",
+    "recenter": "回到中心",
+    "startRotate": "开始旋转",
+    "stopRotate": "停止旋转",
+    "fullscreen": "全屏",
+    "exitFullscreen": "退出全屏",
+    "resetView": "重置视图",
+    "refresh": "刷新",
+    "query": "数据表与筛选",
+    "renderMode": "切换 2D / 3D"
+  },
+  "legend": {
+    "title": "图例",
+    "showAll": "全部显示",
+    "hidden": "已隐藏 {{count}} 项",
+    "allHidden": "所有内容均已隐藏"
+  },
+  "search": {
+    "placeholder": "搜索记录…",
+    "noResults": "没有匹配 \"{{query}}\" 的节点"
+  },
+  "detail": {
+    "path": "路径",
+    "fields": "字段",
+    "links": "关联",
+    "openRecord": "打开记录",
+    "expand": "展开",
+    "expandAll": "展开全部关联",
+    "expanded": "已加载 {{count}} 个相邻节点",
+    "created": "创建于 {{time}}",
+    "updated": "更新于 {{time}}",
+    "close": "关闭"
+  },
+  "query": {
+    "title": "数据表与筛选",
+    "preset": "预设",
+    "customPreset": "自定义",
+    "savePreset": "保存为预设",
+    "presetName": "预设名称",
+    "deletePreset": "删除预设",
+    "presetUnavailable": "当前数据库中不可用：{{missing}}",
+    "tables": "数据表",
+    "rows": "{{count}} 行",
+    "view": "视图",
+    "allRecords": "全部记录",
+    "filter": "筛选",
+    "editFilter": "筛选…",
+    "clearFilter": "清除筛选",
+    "hierarchy": "树形字段",
+    "groupBy": "分组字段",
+    "none": "无",
+    "limit": "行数上限",
+    "links": "关联关系",
+    "noLinks": "勾选两张有关联的数据表即可显示关联关系。",
+    "tableHubs": "数据表中心节点",
+    "baseHub": "数据库中心节点",
+    "tooLarge": "该查询过大，无法放入链接，已改为保存为预设。"
+  },
+  "empty": {
+    "title": "没有可显示的内容",
+    "description": "请在左侧面板中选择数据表，或放宽筛选条件。"
+  },
+  "truncated": {
+    "nodes": "以下数据表因节点上限被截断：{{tables}}。请收窄筛选以查看其余记录。",
+    "links": "部分关联关系因连线上限被隐藏。"
+  },
+  "error": {
+    "title": "无法加载关系图",
+    "retry": "重试",
+    "invalidUrl": "链接中的关系图设置无效，已改为加载预设。"
+  }
+}

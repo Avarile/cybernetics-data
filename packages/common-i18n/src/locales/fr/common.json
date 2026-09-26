@@ -390,7 +390,7 @@
     "automation": "Automatisation",
     "authorityMatrix": "Matrice d'autorité",
     "design": "Conception",
-    "knowledgeGraph": "Graphe de connaissances",
+    "graph": "Graph",
     "adminPanel": "Administration système",
     "license": "Licence auto-hébergée",
     "instanceId": "ID d'instance",

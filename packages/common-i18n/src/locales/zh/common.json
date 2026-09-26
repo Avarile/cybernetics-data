@@ -401,7 +401,7 @@
     "automation": "自动化",
     "authorityMatrix": "权限矩阵",
     "design": "设计",
-    "knowledgeGraph": "知识图谱",
+    "graph": "关系图",
     "adminPanel": "系统管理",
     "license": "私有化部署许可证",
     "instanceId": "实例 ID",

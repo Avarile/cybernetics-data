@@ -347,7 +347,7 @@
     "automation": "Автоматизація",
     "authorityMatrix": "Матриця повноважень",
     "design": "Дизайн",
-    "knowledgeGraph": "Граф знань",
+    "graph": "Graph",
     "adminPanel": "Системне адміністрування",
     "license": "Самостійна ліцензія",
     "instanceId": "Ідентифікатор екземпляра",

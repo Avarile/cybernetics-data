@@ -1,482 +1,394 @@
+# Base Graph — from Knowledge Graph to all-table graph
 
-# MCP Server — Detailed Design
+Status: **analysis + proposed design, not started**
+Branch: `feat-update-knowledge-graph`
+Scope: `apps/nextjs-app/src/pages/base/[baseId]/knowledge-graph.tsx` and everything behind it.
 
-Status: **design finalized — open questions resolved, ready for Phase 1**
-Branch: `feat-mcp-server`
-Companion: `todo-list` (execution order), `current-implementation-plan.md` (written in Phase 1)
+> The previous content of this file (MCP server design) is in git history:
+> `git show HEAD:scripts/customized/developments/current-design.md`.
 
-Every signature, path and line reference below was read out of the working tree on this branch.
-
----
-
-## 0. Locked decisions
-
-| # | Decision | Chosen | Consequence |
-|---|---|---|---|
-| D1 | Direction | **Server only** — we expose our data to external MCP clients | No MCP *client* registry, no outbound credential vault, no tool-approval UX in chat |
-| D2 | Placement | **`apps/nestjs-backend/src/features/mcp`** | Reuses `AuthGuard`, `PermissionService`, cls store and the open-api services in-process. No network hop, no duplicated permission logic, same deploy artifact |
-| D3 | Auth | **PAT bearer now, OAuth 2.1 in phase 2** | Works today with Claude Code / Cursor / any header-capable client. One-click connectors in Claude web/Desktop wait for phase 2 (§11) |
-| D4 | Tool surface | **CRUD + additive schema. Irreversible schema ops excluded** | See D5 |
-| D5 | v1 exclusions | **`delete_field`, `delete_table`, `update_field`/`convertField` are OUT** | This is the decision that shaped §6. It removes every *irreversible* operation from the surface, which in turn makes the confirm-token machinery unnecessary — see §6.1 |
-| D6 | Read-only default | `MCP_READONLY=false` | Writes are on by default; operators opt *out*, not in |
-| D7 | Settings page | **Instance-wide `/setting/mcp`** | Confirmed possible — §8.2. No `baseId` in client setup |
+Every path and behaviour below was read from the working tree. Live table list from base
+`data-centre` (`bseJEuE54y5caWO0Xc8`) on 2026-09-26: 21 tables — `goals`, `projects`, `tasks`,
+`contacts`, `contact_profession`, `contact_type`, `companies`, `knowledges`, `knowledge_type`,
+`project_frameworks`, `table_references`, `finance_*` ×6, `auditlog`, `system_info`,
+`system_status`, `template_table`.
 
 ---
 
-## 1. Goal and non-goals
+## Part A — How it works today
 
-### Goal
-A single Streamable-HTTP MCP endpoint on the existing backend that lets an authenticated external
-AI client discover and operate on the spaces, bases, tables, fields, views and records that
-**the presenting personal access token is already allowed to touch — never more**.
+### A.1 Request path at a glance
 
-### Non-goals
-- Not an MCP **client**. Nothing here connects outward. (D1)
-- Not stdio. HTTP only; a stdio shim is a phase-3 convenience.
-- Not OAuth 2.1 / dynamic client registration in v1. (D3, §11)
-- Not MCP **resources** or **prompts** in v1 — tools only.
-- No new permission *concepts*. This feature introduces **zero** new `Action` values. If a tool
-  cannot be expressed with the existing vocabulary in `packages/core/src/auth/actions.ts`, it does
-  not ship in v1.
+```
+Browser                                   Next.js SSR                    NestJS
+───────                                   ───────────                    ──────
+/base/:baseId/knowledge-graph ──► getServerSideProps
+                                    prefetch base + basePermission ──► (existing APIs)
+                                    NOT the graph (see §A.2)
+◄── HTML + dehydratedState
+DynamicKnowledgeGraph (ssr:false, lazy three.js chunk)
+  └ KnowledgeGraph
+      ├ useKnowledgeGraph()      ── GET /api/base/:baseId/knowledge-graph ──► KnowledgeGraphController.getKnowledgeGraph
+      │                                                                        └ KnowledgeGraphService.getGraph
+      │                                                                            ├ assertTablesInBase
+      │                                                                            ├ readTypes      (1 SQL)
+      │                                                                            ├ readKnowledges (1 SQL)
+      │                                                                            └ assembleKnowledgeGraph (pure)
+      └ KnowledgeNodeDetailPanel
+          └ useKnowledgeGraphNode(id) ─ GET …/knowledge-graph/node/:nodeId ──► KnowledgeGraphService.getNode
+```
 
----
+### A.2 Page (`pages/base/[baseId]/knowledge-graph.tsx`)
 
-## 2. What already exists (verified)
+- `withEnv(ensureLogin(withAuthSSR(...)))` — login is enforced server-side.
+- SSR prefetches only `ReactQueryKeys.base` and `getBasePermission`, which `BaseLayout` needs.
+  The graph is **not** prefetched on purpose: `fetchQuery` rejects on error (a backend 404 would
+  become a hard 500), and the consumer is `ssr: false`, so a dehydrated graph would never be used.
+- The component is `DynamicKnowledgeGraph` → `next/dynamic(..., { ssr: false })` because
+  `react-force-graph-3d` touches `window` at import time. That also keeps three.js out of the
+  initial chunk.
+- Entry point: sidebar link in `blocks/base/base-side-bar/BasePageRouter.tsx:101`.
 
-| Capability | Where | Why it matters here |
+### A.3 Backend (`apps/nestjs-backend/src/features/knowledge-graph/`)
+
+| File | Role |
+|---|---|
+| `knowledge-graph.controller.ts` | `GET api/base/:baseId/knowledge-graph` and `GET …/node/:nodeId`, both `@Permissions('record\|read')`. Sets `ETag`, `Cache-Control: private, no-cache` |
+| `knowledge-graph.service.ts` | Resolves the two tables, reads rows, builds breadcrumbs |
+| `knowledge-graph.assembler.ts` | **Pure** function `assembleKnowledgeGraph(types, knowledges, opts)` → `{nodes, links, stats}` |
+| `knowledge-type-tree.ts` | Generic hierarchy engine: `breakCycles`, `resolveHierarchy`, `orderDepthFirst` over `IHierarchyRow {recordId, title, parentRecordId}` |
+| `types.ts` | `KNOWLEDGE_FIELD` — field **names** resolved at request time, and allowed field types |
+| `configs/knowledge.config.ts` | `KNOWLEDGE_TABLE_ID`, `KNOWLEDGE_TYPE_TABLE_ID` (defaults are the data-centre ids), `KNOWLEDGE_GRAPH_MAX_NODES=2000`, `KNOWLEDGE_GRAPH_MAX_LINKS=6000` |
+
+**`getGraph(baseId)`**
+
+1. `assertTablesInBase` — both configured tables must belong to `:baseId`, else 404. This is what
+   stops a member of another base from reading these tables through their own base id.
+2. `resolveFields` — loads the table's fields, looks them up **by name**, asserts type
+   (`title` text, `deleted_at` date, `knowledge_type`/`parent_type`/`knowledge_parent` single-valued
+   Link, `related_knowledge` Link). Missing required field → 404; wrong type → 400.
+3. `readRows` — `recordService.getRecordsFields(tableId, { fieldKeyType: Id, projection, filter:
+   deleted_at is empty, ignoreViewQuery: true, take: max + 1 })`. One SQL per table. `take + 1`
+   detects truncation without `COUNT(*)`.
+4. `assembleKnowledgeGraph`:
+   - sort by `title, recordId` (deterministic → stable ETag),
+   - `breakCycles` on `parent_type` and on `knowledge_parent`, then depth/root resolution,
+   - emits a synthetic `core` node, one `type:<rec>` per type, a synthetic
+     `type:__unclassified__` bucket when needed, one `kn:<rec>` per knowledge,
+   - structural links (`core-type`, `type-parent`, `type-knowledge`, `knowledge-parent`) are never
+     dropped; `knowledge-knowledge` relations are deduped (two-way link arrives twice) and cut to
+     the remaining link budget,
+   - `degree`, `depth`, `rootTypeId` (colour key) are precomputed server-side.
+5. ETag = sha1 of the whole assembled payload.
+
+**`getNode(baseId, nodeId)`** parses the `type:`/`kn:` prefix, `getRecord` with `title`, `context`,
+`knowledge_type`, `related_knowledge`, then **re-reads the whole type table (and, for knowledges,
+the whole knowledge table)** to build a cycle-consistent breadcrumb.
+
+Contract lives in `packages/openapi/src/knowledge-graph/{types,get,get-node}.ts`
+(`KNOWLEDGE_GRAPH_VERSION = 3`; node tiers `core|type|knowledge`; link tiers are a closed enum).
+
+### A.4 State management (frontend, `blocks/knowledge-graph/`)
+
+Three layers, cleanly separated:
+
+| Layer | Holder | Contents |
 |---|---|---|
-| Express-based Nest app, global `json({limit:'50mb'})` | `src/bootstrap.ts:27` | `StreamableHTTPServerTransport.handleRequest(req,res,req.body)` accepts a pre-parsed body, so the global parser helps rather than obstructs |
-| Multi-strategy auth chain `session → access-token → jwt → anonymous` | `features/auth/guard/auth.guard.ts:18-23` | A PAT in `Authorization: Bearer` already authenticates. **No new strategy is needed** |
-| PAT validation sets `user.*` + `accessTokenId` into cls | `features/auth/strategies/access-token.strategy.ts:52-56` | The dispatcher reads `cls.get('accessTokenId')` to scope every tool call |
-| PATs carry `scopes: Action[]`, `spaceIds`, `baseIds`, `hasFullAccess`, expiry | `features/access-token/access-token.service.ts:26-59` | The whole scoping model already exists. MCP reuses it verbatim |
-| `PermissionService.validPermissions(resourceId, actions, accessTokenId)` | `features/auth/permission.service.ts:437-450` | **The single authorization primitive this design is built on.** Resolves the user's role permissions (walking table→base→space), intersects with PAT scopes, enforces `spaceIds`/`baseIds`, throws `RESTRICTED_RESOURCE` otherwise |
-| The same primitive is already called *imperatively* outside a guard | `features/trash/trash.service.ts:779-784` | Confirms §4's approach is idiomatic here, not a workaround invented for MCP |
-| `@TokenAccess()` metadata flag | `features/auth/decorators/token.decorator.ts:3-5` | The escape hatch that lets a PAT reach a route carrying no `@Permissions` — §4.1 |
-| **Table-level trash with restorable snapshots for View / Field / Record** | `features/trash/listener/table-trash.listener.ts:30-95`, `trash.service.ts:750+` | **The finding that reshaped §6.** Record deletes write `tableTrash` + per-record `recordTrash` snapshots; `restoreTableResource` restores them |
-| `operationId` is generated unconditionally on record delete | `features/record/record-modify/record-delete.service.ts:77` | The listener's `if (!operationId) return;` guard never trips on this path, so trash capture does **not** depend on `windowId` being passed |
-| OAuth 2.1 authorization server with PKCE | `features/oauth/oauth-server.controller.ts` | Phase 2 builds on this rather than standing up a new AS |
-| `@modelcontextprotocol/sdk@1.29.0` already in the pnpm store (via `@mastra/mcp`) | `node_modules/.pnpm` | Promoting it to a direct dependency costs no new download |
-| Settings UI pattern `pages/setting/<x>.tsx` → `features/app/blocks/setting/<x>/` | `apps/nextjs-app/src/pages/setting/personal-access-token.tsx` | The MCP page follows this exactly; `ScopesSelect` and `AccessTokenForm` are reusable |
+| **Server state** | React Query | `ReactQueryKeys.knowledgeGraph(baseId)`, `knowledgeGraphNode(baseId, nodeId)`; `staleTime 60s`, `gcTime 5m`, `refetchOnWindowFocus: false`. Refresh button = `invalidateQueries` |
+| **View state** | zustand `useKnowledgeGraphStore` (not persisted) | `focusedNodeId`, `hiddenTypeIds` (**exclusions** — empty = show all), `autoRotate`, `showLegend`, `searchQuery` |
+| **Derived state** | `useMemo` in `KnowledgeGraph.tsx` | `buildSimulationGraph(data, hiddenTypeIds)` — expands hidden ids to the whole subtree (`hiddenClosure`, fixpoint), filters nodes/links, **clones** everything (the force lib mutates nodes). Also `visibleCounts`, `typeNodes`, `legendHiddenTypeIds`, `siblingCount` |
+| Browser-owned | DOM | fullscreen (`useFullscreen` reads `document.fullscreenElement`), container size (`useResizeObserver`) |
+
+Rendering: `KnowledgeGraphCanvas` wraps `react-force-graph-3d`; tier-keyed lookup tables in
+`utils/graphTheme.ts` drive size, charge, link distance/strength, radial "sphere" force, focus
+distance, and colour (hue from `rootTypeId`). Search (`KnowledgeNodeSearch`) and the legend filter
+work only on the already-loaded payload.
 
 ---
 
-## 3. Architecture
+## Part B — Problems and restrictions
 
-### 3.1 Shape
+### B.1 Structural (block the all-tables goal)
 
-```text
-External MCP client (Claude Code / Desktop / Cursor)
-   │  HTTP POST /api/mcp     Authorization: Bearer teable_xxx
-   ▼
-AuthGuard  ──► access-token strategy ──► cls: user.id, accessTokenId
-   │
-PermissionGuard ──► route has no @Permissions + @TokenAccess() ⇒ PASS THROUGH (§4.1)
-   │
-McpController.handle()
-   │
-StreamableHTTPServerTransport  (stateless: sessionIdGenerator undefined)
-   │
-McpServer ──► tool dispatch
-   │
-ToolRegistry: for the invoked tool
-   1. zod-parse args
-   2. resolveResource(args) ──► resourceId  (spc… / bse… / tbl…)
-   3. PermissionService.validPermissions(resourceId, tool.requiredActions, accessTokenId)
-   4. cls.set('permissions', ownPermissions)         ◄── MANDATORY, §4.3
-   5. tool.execute(args, services)
-   │
-Existing open-api services (Table / Field / Record / View) — unmodified
-```
+| # | Restriction | Where | Effect |
+|---|---|---|---|
+| R1 | **Two table ids are fixed in env config**, defaulting to data-centre ids | `knowledge.config.ts` | Only one base can ever have a graph; any other base 404s. No way to add a table without a deploy |
+| R2 | **Field semantics bound by magic names** (`title`, `deleted_at`, `knowledge_type`, …) | `types.ts` | Renaming a column in the UI breaks the page (404/400). Other tables do not follow these names (their primary field is not `title`) |
+| R3 | **Domain baked into the published contract**: tier enums `core/type/knowledge`, link-tier enum, `type:`/`kn:` prefixes | `openapi/src/knowledge-graph/types.ts` | Any new table requires a contract change and a version bump |
+| R4 | **Frontend styling keyed by tier enum** (`NODE_VAL`, `LINK_DISTANCE`, `TIER_CHARGE`, `LABELLED_TIERS`, `rootTypeId` hue) | `graphTheme.ts`, `KnowledgeGraphCanvas.tsx` | Unknown tiers fall back to neutral defaults — works, but looks like one grey cloud |
+| R5 | **Only self-links + one type link are understood.** Cross-table links (task→project→goal, transaction→payee/category/account, contact→company) are invisible | service specs | The actually interesting base-wide structure is not in the graph |
+| R6 | **No server-side filtering**; the only filter is "hide type subtree" on the client | store/`buildSimulationGraph` | Useless once the dataset exceeds the node budget: the kept subset is "first 2000 by title" |
 
-### 3.2 Transport: stateless, deliberately
+### B.2 Performance / scale
 
-`StreamableHTTPServerTransport` is constructed **per request** with `sessionIdGenerator: undefined`
-(stateless mode), and disposed when the response closes.
+| # | Issue | Detail |
+|---|---|---|
+| P1 | Full-table read on every request | Nothing cached server-side. The ETag is computed **after** the full read + assembly, so it saves bandwidth only, never DB work. The controller notes browsers never see a 304 anyway |
+| P2 | `getNode` reads both whole tables to render one breadcrumb | Fine at 2k rows; an all-tables version must not copy this |
+| P3 | Truncation is alphabetical | `sorted.slice(0, max)` — deterministic, but semantically arbitrary. `auditlog` / `finance_Transactions` would crowd everything else out |
+| P4 | 3D force layout ceiling | `react-force-graph-3d` + a SpriteText per labelled node is comfortable to ~3–5k nodes / ~10k links on a laptop GPU; a whole base can exceed that |
 
-- No server-side session map, so no sticky-session requirement. This matters: this runs on k3s where
-  replica count is not pinned to 1, and a session map would silently break the moment a second
-  replica appears.
-- `GET /api/mcp` and `DELETE /api/mcp` return **405** with a JSON-RPC error body. Stateless mode has
-  no server→client stream to resume and no session to terminate; 405 is spec-correct and more honest
-  than a 404 that reads as "wrong URL".
-- Cost: no server-initiated notifications (no `notifications/tools/list_changed`). Acceptable — the
-  tool list is static per deployment.
+### B.3 Correctness / UX
 
-### 3.3 Files to add
+| # | Issue | Detail |
+|---|---|---|
+| U1 | **zustand store is a global singleton, not keyed by base** | Navigating base A → base B keeps `focusedNodeId` and `hiddenTypeIds` from A; `reset()` is only called from the toolbar |
+| U2 | Dead state | `searchQuery`/`setSearchQuery` are never read — `KnowledgeNodeSearch` keeps its own state |
+| U3 | No freshness signal | `staleTime 60s`, no focus refetch, no realtime: edits in the grid are not reflected until manual refresh |
+| U4 | Detail panel is read-only and knowledge-specific | Shows `context` only; no "open record", no edit, no other fields |
+| U5 | View state is not in the URL | A filtered/focused graph cannot be linked or bookmarked |
+| U6 | Soft-delete is a naming convention (`deleted_at`) | Other tables have no such column; Teable's own deletion is real deletion + trash |
+| U7 | Misleading comment | `CANVAS_BACKGROUND` comment says the app is dark-only, but the value `#f5f0e8` is a light cream |
 
-```text
-apps/nestjs-backend/src/features/mcp/
-  mcp.module.ts
-  mcp.controller.ts            # POST /api/mcp (+405 GET/DELETE), thin
-  mcp.service.ts               # builds McpServer + transport per request
-  tool-registry.ts             # IMcpTool contract + registry + the authorize() pipeline
-  tools/
-    discovery.tools.ts         # list_spaces, list_bases, list_tables, get_table_schema, list_views
-    record.tools.ts            # query/get/create/update/delete records
-    schema.tools.ts            # additive table/field/view ops (§5)
-  types.ts
-  mcp.manifest.controller.ts   # GET /api/mcp/manifest — REST, for the settings UI
+### B.4 Permissions (must be carried into the new design)
 
-packages/openapi/src/mcp/
-  get-manifest.ts              # zod contract + typed client for the manifest
-  types.ts
-  index.ts
-
-apps/nextjs-app/src/pages/setting/mcp.tsx
-apps/nextjs-app/src/features/app/blocks/setting/mcp/
-  McpPage.tsx
-  ToolCatalogue.tsx
-  ConnectionSnippet.tsx
-```
-
-`app.module.ts` gains `McpModule`. Nothing else in the backend is edited — strictly additive, which
-keeps the review surface small and the revert trivial.
+- Check is **base-level** `record|read` only. `RecordPermissionService.wrapView` is a no-op in this
+  build. *(Corrected during implementation: `getRecordsFields` does go through `wrapView`, via
+  `buildFilterSortQuery` → `prepareQuery`. The earlier claim that it skips it was wrong.)* So reads
+  through `RecordService` inherit any future record/field permission enforcement; do not add a
+  raw-SQL path that bypasses it (see §C.6).
+- The existing **ERD endpoint** (`GET /api/base/:baseId/erd`, `GraphService.generateBaseErd`) already
+  computes table + link-field topology — but it is guarded by `base|update`, so read-only members
+  cannot use it. Reuse its internals, not the route.
 
 ---
 
-## 4. Authorization — the core of this design
+## Part C — Target design: schema-driven "Base Graph"
 
-### 4.1 Why the existing guard cannot do this job
+### C.1 Principle
 
-`PermissionGuard` is **decorator-driven and per-HTTP-route**. It reads required actions from
-`@Permissions(...)` and the resource id from `req.params.baseId | spaceId | tableId`
-(`permission.guard.ts:34`, `:241-245`).
+Stop encoding the knowledge domain in code. The graph is derived from Teable's own metadata:
 
-An MCP endpoint is **one route dispatching N logically distinct operations**. At guard time the body
-has not been interpreted: there is no `req.params.tableId`, and required actions differ per tool. The
-decorator model structurally cannot express *"this call needs `field|create` on the table named in
-`params.arguments.tableId` of a JSON-RPC envelope."*
+- **Node** = a record (plus optional synthetic *table hub* / *group* nodes).
+- **Edge** = a value in a **Link field** whose foreign table is also in the graph. Link metadata
+  (`foreignTableId`, `relationship`, `symmetricFieldId`, `isOneWay`) says everything needed.
+- **Hierarchy** = an optional single-valued **self-link** per table (today: `parent_type`,
+  `knowledge_parent`) — the existing `knowledge-type-tree.ts` engine is already generic and is
+  reused as-is.
+- **Grouping** = an optional single-valued link to another table used as a bucket (today:
+  `knowledge_type`).
+- **Label** = the table's **primary field** (via `getPrimaryField`), not a field named `title`.
+- **Filtering** = Teable's own `IFilter` / saved views, per table, evaluated server-side.
 
-So the route carries **no `@Permissions`**, and authorization moves into the dispatcher. The guard
-already anticipates exactly this:
+The current knowledge graph becomes a **preset** of this engine (§C.7), not a separate code path.
+
+### C.2 API (new module `features/base-graph`, mounted under `api/base/:baseId/graph`)
+
+All routes `@Permissions('record|read')` under `:baseId` so `PermissionGuard` resolves the base.
+
+**1. `GET /graph/schema`** — what can be graphed.
 
 ```ts
-// permission.guard.ts:246-254
-const accessTokenId = this.cls.get('accessTokenId');
-if (accessTokenId && !permissions?.length) {
-  // The token can only access interfaces that are restricted by permissions
-  // or have a token access indicator.
-  return this.reflector.getAllAndOverride<boolean>(IS_TOKEN_ACCESS, [...]);
+{
+  tables: {
+    id, name, icon, primaryFieldId,
+    approxRecordCount,           // cheap estimate, for the table picker
+    linkFields: { id, name, foreignTableId, relationship, isOneWay, symmetricFieldId,
+                  isSelfLink, isMultipleCellValue }[],
+    suggestedHierarchyFieldId?,   // single-valued self-link, if exactly one
+  }[]
+}
+```
+Built from `tableMeta` + field loader, reusing `GraphService.getBaseErdContext` logic without its
+`base|update` guard. No record reads.
+
+**2. `POST /graph/query`** — the graph. POST because `IFilter` is a nested tree.
+
+```ts
+IBaseGraphQueryRo = {
+  tables: {
+    tableId: string;
+    viewId?: string;            // use a saved view's filter/sort (reuses the grid's filter UX)
+    filter?: IFilter;           // or an ad-hoc filter; ANDed with the view's
+    limit?: number;             // per-table budget (default derived from global)
+    hierarchyFieldId?: string;  // single-valued self-link → tree edges
+    groupByFieldId?: string;    // single-valued link to another included table → bucket edges
+  }[];
+  linkFieldIds?: string[];      // which link fields become edges; default = all between included tables
+  showTableHubs?: boolean;      // synthetic `tbl:` node per table, tethering its roots
+  maxNodes?: number;            // clamped server-side to config max
+  maxLinks?: number;
 }
 ```
 
-**`@TokenAccess()` on the MCP controller is the sanctioned hook**, not a workaround. And the pattern
-of calling `validPermissions` imperatively is already established in this codebase —
-`trash.service.ts:779` does exactly this.
-
-> Review gate: `@TokenAccess()` without `@Permissions` means *the guard authorizes nothing*. Any tool
-> reaching `execute()` without passing through `authorize()` is an unauthenticated data path.
-> §10.3 makes this a mechanically enforced test, not a code-review hope.
-
-### 4.2 The tool contract
+Response (contract **v4**, generic):
 
 ```ts
-export interface IMcpTool<TArgs extends z.ZodTypeAny> {
-  name: string;
-  title: string;
-  description: string;
-  inputSchema: TArgs;
-  annotations: { readOnlyHint: boolean; destructiveHint: boolean; idempotentHint: boolean };
-  /** Actions the caller must hold on the resolved resource. Empty array is ILLEGAL. */
-  requiredActions: Action[];
-  /** Which id in the args is the permission subject. Returns spc… | bse… | tbl… */
-  resolveResource(args: z.infer<TArgs>): string | Promise<string>;
-  execute(args: z.infer<TArgs>, ctx: IMcpToolContext): Promise<unknown>;
+node = { id, kind: 'record'|'table'|'group', tableId, recordId|null, label,
+         parentId|null, colorKey, depth, degree }
+link = { source, target, kind: 'hierarchy'|'group'|'hub'|'link', fieldId|null }
+stats = { perTable: { tableId, emitted, truncated }[], nodeCount, linkCount,
+          truncated: { nodes, links }, cyclesDropped, danglingLinks }
+etag
+```
+
+- Node id: `rec:<recordId>` (Teable record ids are globally unique; `tableId` travels in the node),
+  `tbl:<tableId>` for hubs. `colorKey` = `tableId` by default, or the hierarchy/group root — the
+  same idea as `rootTypeId` today, generalised.
+- `distance`/`value` are **dropped from the payload**: physics is presentation, it moves to
+  `graphTheme.ts` keyed by `link.kind`.
+
+**3. `GET /graph/node/:recordId?tableId=`** — detail. Primary + up to N non-computed fields
+(respecting the table's field order / a view's visible fields), plus per-link-field neighbour
+counts. Breadcrumb computed by walking the hierarchy field **per record** with a depth cap —
+*not* by re-reading the whole table (fixes P2). Consistency with the graph's cycle-cut is achieved
+by returning `ancestors` from the cached assembled graph when the node is in it (see C.5), and only
+falling back to the walk for nodes outside it.
+
+**4. `POST /graph/expand`** — `{ recordId, tableId, linkFieldIds?, limit }` → neighbours not yet in
+the client's graph. Lets the user start small (filtered) and grow outward, which is what makes
+`auditlog`/`finance_Transactions` usable at all (fixes P3/P4).
+
+Validation at the boundary (zod): every `tableId` belongs to `:baseId` (generalised
+`assertTablesInBase`, batched in one query), every `fieldId`/`viewId` belongs to its table,
+hierarchy/group fields are single-valued links of the right target. Wrong input → 400, not an empty
+graph.
+
+### C.3 Backend engine
+
+```
+BaseGraphService.query(ro)
+  ├ resolveSchema(baseId, ro)          → validated table/field plan (one metadata pass)
+  ├ for each table (parallel, bounded):
+  │     recordService.getRecordsFields(tableId, {
+  │       viewId, filter, ignoreViewQuery: !viewId, fieldKeyType: Id,
+  │       projection: [primary, hierarchyField?, groupField?, ...edgeLinkFields],
+  │       take: limit + 1 })
+  ├ assembleBaseGraph(rows, plan, budget)   ← pure, unit-tested like today's assembler
+  └ etag
+```
+
+Pure assembler rules (generalising what the current one already does well):
+
+1. Sort per table by `(label, recordId)` before truncating → stable subset and ETag.
+2. Hierarchy per table: `breakCycles` → `resolveHierarchy` → `orderDepthFirst` (existing code).
+3. Exactly one structural parent per node: hierarchy parent › group bucket › table hub › none.
+4. **Symmetric-link dedupe via metadata**: for a two-way link, read edges from one side only —
+   the field whose id sorts first of `{fieldId, symmetricFieldId}` when both tables are included;
+   if only one side's table is included, that side. Replaces today's "read only the ManyOne side"
+   hand rule and the `pairKey` dedupe (keep `pairKey` as a safety net).
+5. Edges whose other endpoint was filtered/truncated out are counted in `danglingLinks`, not drawn.
+   The client may offer "expand" on nodes with dangling links.
+6. Structural links never displaced by the link budget; `link` edges truncated deterministically.
+
+Config (`base-graph.config.ts`): `BASE_GRAPH_MAX_NODES` (default 5000), `BASE_GRAPH_MAX_LINKS`
+(15000), `BASE_GRAPH_DEFAULT_TABLE_LIMIT` (1000). The two `KNOWLEDGE_*_TABLE_ID` env vars disappear.
+
+### C.4 Filtering model
+
+Two layers, both server-side:
+
+- **Per-table filter** — `viewId` and/or `IFilter`. Reusing views means the user filters with the
+  exact UI they already know from the grid, and the frontend can reuse
+  `@teable/sdk/components/filter` (`BaseFilter`, `FilterWithTable`) for ad-hoc filters.
+- **Which relationships** — `linkFieldIds`. Unticking `tasks.project` removes those edges.
+
+Client-only (instant, no refetch): hide table, hide subtree (today's `hiddenTypeIds` generalised to
+`hiddenNodeIds` + `hiddenTableIds`), search, focus.
+
+Default when a table is added without a filter: `limit` = default table limit, and
+`auditlog`/`system_*`/`template_table` are unticked in the picker by default (a UI default, not a
+server rule).
+
+### C.5 Caching and freshness
+
+- **Cheap ETag before the read**: every Teable data table has `__last_modified_time`. One query per
+  table — `max(__last_modified_time), count(*)` under the same filter — plus a hash of the
+  normalised query DTO gives an ETag *without* reading rows or assembling. On match, return 304 /
+  cached payload. Fixes P1. (Deletes lower `count`, so they invalidate too; verify with the trash
+  restore path.)
+- In-process LRU (or existing cache service, if Redis-backed) keyed by `(baseId, queryHash, etag)`,
+  TTL ~60s. Also stores per-node ancestors for the detail endpoint.
+- Frontend: `refetchOnWindowFocus: true` becomes cheap once 304s are real. Later: listen for
+  `TABLE_RECORD_CREATE/UPDATE/DELETE` on the included tables via the existing realtime channel and
+  invalidate the query key (debounced ~2s).
+
+### C.6 Permission rules
+
+- Route guard: `record|read` on the base (unchanged).
+- Every read stays on `RecordService.getRecordsFields/getRecord` — no raw SQL on data tables — so
+  any future record/field permission enforcement there is inherited automatically. The one
+  exception, the ETag probe in C.5, only returns aggregates; if record-level permissions are ever
+  enabled, it must be routed through `RecordPermissionService.getReadQuerySource` too.
+- Cross-base links (link fields whose foreign table is in another base) are **excluded** in v4:
+  following them would require a permission check against the other base.
+
+### C.7 Knowledge graph as a preset
+
+```ts
+KNOWLEDGE_PRESET: IBaseGraphQueryRo = {
+  tables: [
+    { tableId: knowledge_type, hierarchyFieldId: <parent_type> },
+    { tableId: knowledges, hierarchyFieldId: <knowledge_parent>, groupByFieldId: <knowledge_type>,
+      filter: deleted_at is empty },
+  ],
+  linkFieldIds: [<related_knowledge>],
+  showTableHubs: false,
 }
 ```
 
-`requiredActions` uses only values from `packages/core/src/auth/actions.ts` — verified vocabulary:
-`space|read`, `base|read`, `table|create|read|update|delete`, `field|create|read|update|delete`,
-`view|create|read|update|delete`, `record|create|read|update|delete`.
+Field ids are resolved from `/graph/schema` by name **once, client-side, when the preset is
+created**, then stored by id — renames no longer break it (fixes R2). The synthetic `core` node
+becomes an optional "base" hub. Old route `GET /knowledge-graph` can stay as a thin adapter over the
+engine for one release, then be removed.
 
-A registry-construction assertion rejects any tool with empty `requiredActions`, so "I forgot to
-declare permissions" fails at boot, not in production.
+Presets are saved per base. Recommended storage: a `graph_presets` record in the base itself
+(queryable by the MCP server too) — or, simpler for v1, `localStorage` keyed by `baseId`.
 
-### 4.3 The mandatory `cls.set('permissions', …)` step
+### C.8 Frontend
 
-`validPermissions()` **returns** the caller's effective permissions, and `PermissionGuard` stores
-them (`permission.guard.ts:206`). Several services read them back:
+**Routing**: `pages/base/[baseId]/graph.tsx` (keep `knowledge-graph` as a redirect with
+`?preset=knowledge`). SSR stays as today — prefetch base/permission only.
 
-- `table-open-api.service.ts:833` — `new Set(this.cls.get('permissions'))`
-- `base.service.ts:542`, `selection.service.ts:476`, `record-open-api-v2.service.ts:902`
+**State**
 
-Because the MCP route bypasses the guard, **the dispatcher must replicate line 206**:
-
-```ts
-const ownPermissions = await this.permissionService.validPermissions(
-  resourceId, tool.requiredActions, this.cls.get('accessTokenId')
-);
-this.cls.set('permissions', ownPermissions);   // ← omitting this is a silent bug
-```
-
-Omitting it does not throw. `cls.get('permissions')` returns `undefined` and the consumers degrade
-quietly — `table-open-api.service.ts:833` builds an empty Set and reports a table as having no
-permissions; `record-open-api-v2.service.ts:902` falls back to `?? []`. The failure mode is **wrong
-output with a 200 status**, the worst kind. Highest-value line in the feature; dedicated test in §10.3.
-
-Correspondingly, because each tool call re-sets cls state within one HTTP request, **batched JSON-RPC
-calls must execute sequentially, never with `Promise.all`** — concurrent calls would interleave writes
-to a single request-scoped cls store and cross-contaminate permissions. The dispatcher enforces this.
-
-### 4.4 Defence in depth
-
-The PAT restriction is enforced twice, intentionally:
-
-1. `getPermissionsByAccessToken` (`permission.service.ts:247+`) throws if `resourceId` falls outside
-   the token's `spaceIds` / `baseIds`.
-2. `getPermissions` intersects token scopes with the user's actual role permissions
-   (`permission.service.ts:432`), so a token can never exceed the human who minted it — even if that
-   human is later demoted.
-
-Discovery tools have no single resource to check. They call `SpaceService.getSpaceList()` /
-`BaseService.getAllBaseList()`, which already filter by caller, then additionally pass through
-`SpaceService.filterSpaceListWithAccessToken` (`space.service.ts:117`). **Enumeration must never leak
-names of out-of-scope resources** — listing is a disclosure surface and is treated as one.
-
----
-
-## 5. Tool catalogue (v1)
-
-`R` = readOnlyHint · `D` = destructiveHint
-
-### Discovery
-| Tool | Actions | Resource | Backed by |
-|---|---|---|---|
-| `list_spaces` R | `space\|read` | — (list-filtered) | `SpaceService.getSpaceList()` :132 |
-| `list_bases` R | `base\|read` | `spaceId?` | `getBaseListBySpaceId` :258 / `getAllBaseList` :152 |
-| `list_tables` R | `table\|read` | `baseId` | `TableOpenApiService.getTables` :312 |
-| `get_table_schema` R | `table\|read`, `field\|read` | `tableId` | `getTable` :308 + `FieldOpenApiService.getFields` :551 |
-| `list_views` R | `view\|read` | `tableId` | view service |
-
-### Records
-| Tool | Actions | Resource | Backed by |
-|---|---|---|---|
-| `query_records` R | `record\|read` | `tableId` | `RecordService.getRecords` :1033 |
-| `get_record` R | `record\|read` | `tableId` | `RecordService.getRecord` :1075 |
-| `create_records` | `record\|create` | `tableId` | `multipleCreateRecords` :65 |
-| `update_record` idempotent | `record\|update` | `tableId` | `updateRecord` :172 |
-| `delete_records` D | `record\|delete` | `tableId` | `deleteRecords` :213 — **recoverable via trash**, §6.2 |
-
-### Schema — additive only (D5)
-| Tool | Actions | Resource | Backed by |
-|---|---|---|---|
-| `create_table` | `table\|create` | `baseId` | `createTable` :220 |
-| `update_table` | `table\|update` | `tableId` | `updateName` :599 / `updateDescription` :611 — metadata only |
-| `create_field` | `field\|create` | `tableId` | `createField` :1330 |
-| `create_view` | `view\|create` | `tableId` | `ViewOpenApiService.createView` :86 |
-| `delete_view` D | `view\|delete` | `tableId` | `deleteView` :102 — **recoverable via trash** |
-
-### Excluded from v1, with reasons
-
-| Excluded | Reason |
-|---|---|
-| `delete_field` | **D5.** Irreversible in practice; field deletion cascades to dependent formulas, rollups and links |
-| `delete_table` | **D5.** Not a recoverable mistake at agent speed |
-| `update_field` / `convertField` | **D5.** Type conversion loses cell data irreversibly |
-| `sqlQuery` :574, base-sql-executor | Injection and unbounded-result surface deserving its own design |
-| `create_base` / `delete_base`, space mutation | Blast radius beyond what PAT scoping alone should gate |
-| `duplicateTable`, `duplicateBase`, import/export | Long-running work that wants a job model, not a synchronous tool call |
-
-> **Known asymmetry, accepted.** The model can `create_table`, `create_field` and `create_view` but
-> cannot delete the first two. A confused agent can therefore leave clutter that a human must remove
-> through the UI. This is accepted deliberately: the failure mode is *untidy*, whereas enabling the
-> deletes reintroduces the *irreversible* failure mode D5 exists to remove. Untidy is the better
-> trade. Revisit only if it becomes a real operational complaint.
-
-### 5.1 Output discipline
-Record payloads are the dominant token cost and the main way an MCP server becomes useless in
-practice:
-- `query_records` `take` defaults to **50**, hard-capped at `MCP_MAX_RECORDS_PER_CALL` (**500**),
-  applied server-side after zod parsing and never trusted from args.
-- Responses always report `{ total, returned, hasMore, nextCursor? }` so the model pages
-  deliberately instead of guessing.
-- `fieldKeyType` is pinned to `FieldKeyType.Id` on every read path. `getRecord` defaults internally
-  to `Name`, which would make `record.fields[field.id]` silently return `undefined` — a known trap
-  already recorded in `current-implementation-plan.md` §0.2 R1.
-
----
-
-## 6. Guardrails
-
-### 6.1 Why there is no confirm-token machinery
-
-An earlier draft specified a two-phase plan→confirm flow with HMAC tokens, built on the existing
-`planDeleteField` / `planFieldConvert` planners. **D5 removed the tools that justified it.**
-
-What remains destructive is `delete_records` and `delete_view` — and both are **recoverable**:
-
-- `table-trash.listener.ts:30-58` writes a `tableTrash` row plus per-record `recordTrash` snapshots
-  on every record delete; `:85` does the same for view deletes.
-- `operationId` is generated unconditionally (`record-delete.service.ts:77`), so the listener's
-  `if (!operationId) return;` guard never trips — capture does **not** depend on `windowId`.
-- `trash.service.ts:750+` `restoreTableResource` restores both, gated on `table|trash_update`.
-
-Building a bespoke confirm protocol on top of a recovery path that already exists would be
-complexity that buys nothing. **The trash is the undo mechanism.** Dropping the confirm flow removes
-a file, a set of unit tests, and two-phase complexity from every destructive tool.
-
-*Open verification (Phase 1.5): the trash retention window. If rows are pruned aggressively, "it is
-recoverable" weakens and this section is revisited.*
-
-### 6.2 What guards the destructive tools instead
-
-1. **Permissions first.** `record|delete` / `view|delete` must be held on the resolved resource, by
-   both the user's role and the token's scopes (§4.4). This is the real control.
-2. **Bounded blast radius.** `delete_records` accepts at most `MCP_MAX_DELETE_PER_CALL` (**200**)
-   record ids per call. A runaway loop is throttled into many visible, individually-recoverable
-   operations rather than one catastrophic one.
-3. **Honest annotations.** `destructiveHint: true` so client UIs can prompt the human. These are
-   hints, not security, and are never the only thing standing between a model and data loss.
-4. **Recovery is discoverable.** Each destructive tool's description states that the operation is
-   recoverable from the table trash, and names the UI path. The model tells the user how to undo.
-
-### 6.3 Read-only mode
-`MCP_READONLY=true` drops every non-`readOnlyHint` tool from the catalogue at registry construction.
-Default is **`false`** (D6): writes are on, operators opt out. Evaluated at boot, so the tool list a
-client sees is always the truth.
-
----
-
-## 7. Errors
-
-| Condition | Response |
-|---|---|
-| Missing / invalid / expired PAT | HTTP **401** + `WWW-Authenticate: Bearer` (prepares phase-2 resource metadata) |
-| Tool not found, malformed JSON-RPC | JSON-RPC protocol error (`-32601` / `-32700`) |
-| Permission denied, validation failure, business error | **`isError: true` tool result**, not a protocol error |
-
-The last row matters. MCP convention is that *tool execution* failures come back as tool results so
-the model can read the message and self-correct, while *protocol* failures abort the call. Returning
-`RESTRICTED_RESOURCE` as a protocol error would leave the model unable to learn "I may not write to
-that table, but I may read it."
-
-`CustomHttpException` messages are already user-facing and i18n-keyed, so they are safe to surface.
-Stack traces and raw Prisma errors never leave the process — a generic message plus a server-side log
-line with a correlation id.
-
----
-
-## 8. Contract and frontend
-
-### 8.1 What belongs in `packages/openapi`
-Only `GET /api/mcp/manifest` — a normal REST endpoint returning the tool catalogue (`name`, `title`,
-`description`, `requiredActions`, `annotations`) for the settings UI.
-
-The MCP endpoint itself is **JSON-RPC over Streamable HTTP and deliberately stays out of the openapi
-contract and out of Swagger**. Modelling a JSON-RPC envelope as REST would produce a misleading
-contract no generated client could usefully consume.
-
-### 8.2 Instance-wide settings page — confirmed possible (D7)
-
-**A single instance-wide endpoint works natively; no `baseId` in client setup.** The reasoning:
-
-- The endpoint is one URL, `{publicOrigin}/api/mcp`. Reach is determined entirely by the **PAT's**
-  `spaceIds` / `baseIds` (`access-token.service.ts:26-59`), resolved per call by `validPermissions`.
-- Tools take `baseId` / `tableId` as **arguments**, and `list_spaces` → `list_bases` → `list_tables`
-  let a client discover what its token can reach. Scoping is carried by the token, not the URL.
-- So a per-base endpoint would add no security and would force users to reconfigure their client for
-  every base. The fallback you sketched is not needed.
-
-One ergonomic note: with a broad token the model spends turns discovering its way down the tree. If
-that proves annoying, an **optional** `MCP_DEFAULT_BASE_ID` hint could pre-seed context. It is a
-convenience only, changes no part of the security model, and is deferred out of v1.
-
-Page structure, following `personal-access-token.tsx`:
-
-1. **Endpoint** — `{publicOrigin}/api/mcp`, copyable.
-2. **Tool catalogue** — grouped by domain, each row showing required scopes and a destructive badge,
-   read from the manifest. The honest answer to "what can this thing actually do."
-3. **Token** — pick an existing PAT or create one; the create path pre-selects exactly the scopes the
-   chosen tool groups need, reusing `ScopesSelect` and `AccessTokenForm`. Least privilege must be the
-   *easy* path or nobody takes it.
-4. **Connection snippet** — `claude mcp add --transport http …` plus JSON for Desktop/Cursor. **The
-   token renders exactly once, at creation**, consistent with existing PAT behaviour.
-
-i18n strings go in `common-i18n` / `i18n-keys`. No hard-coded English.
-
----
-
-## 9. Configuration
-
-| Var | Default | Meaning |
+| Layer | Holder | Contents |
 |---|---|---|
-| `MCP_ENABLED` | `true` | Master switch; when false the module registers no routes |
-| `MCP_READONLY` | `false` | §6.3 (D6) |
-| `MCP_MAX_RECORDS_PER_CALL` | `500` | Hard cap for `query_records.take` |
-| `MCP_MAX_DELETE_PER_CALL` | `200` | Hard cap for `delete_records` (§6.2) |
+| Query (shareable) | **URL** (`?q=<compressed query DTO>&preset=&focus=rec:…`) | tables, views/filters, link fields. Source of truth for what is fetched → bookmarkable, back button works (fixes U5) |
+| Server | React Query | `['base-graph', baseId, 'schema']`, `['base-graph', baseId, hash(query)]` with `placeholderData: keepPreviousData` so changing a filter doesn't blank the canvas; expansions merged into a separate `['base-graph', baseId, hash, 'expanded']` list |
+| View | zustand, **one store per base** (`createStore` in a context provider mounted by the page, or `reset()` in an effect on `baseId` change) | `focusedNodeId`, `hiddenNodeIds`, `hiddenTableIds`, `autoRotate`, `showLegend`, `renderMode: '3d'\|'2d'`. Drop dead `searchQuery` (fixes U1, U2) |
+| Derived | `useMemo` | `buildSimulationGraph(data ∪ expanded, hidden…)` — same clone-before-handing-to-force-lib rule |
+
+**Components**
+
+- `GraphQueryPanel` (new, collapsible, left): table checklist with colour swatch + approx count,
+  per-table view picker and "Filter…" (`FilterWithTable`), hierarchy/group field selects,
+  relationship (link field) checklist. Edits the URL, not the store.
+- `Legend`: grouped by table, then by group/hierarchy root; toggles hide tables/subtrees.
+- `NodeDetailPanel` (generic): primary + fields rendered with the SDK's `CellValue`
+  renderers; per-link-field neighbour counts with "expand"; **"Open record"** opening the SDK
+  `ExpandRecord` modal in place — the user can edit, and on close the graph query is invalidated
+  (fixes U4, closes the loop with the grid).
+- `graphTheme.ts`: keyed by `node.kind`/`link.kind` instead of the domain tier; colour from
+  `colorKey` (table → hue, depth → lightness, as today for types). Labels only for hubs, groups,
+  focused node, and top-degree nodes to keep sprite count bounded.
+- Optional 2D renderer (`react-force-graph-2d`, same props) for large graphs (P4).
+
+### C.9 Integration points
+
+- Table view header / record expand menu: **"Show in graph"** → `/base/:id/graph?q={that table +
+  current view}&focus=rec:…`.
+- MCP server (`features/mcp`, same backend): add `get_graph` / `get_record_neighbors` tools calling
+  `BaseGraphService` directly — the same permission path, no duplicate logic.
+- Base sidebar entry renamed "Graph"; knowledge preset one click away.
 
 ---
 
-## 10. Testing strategy
+## Part D — Delivery plan
 
-### 10.1 Unit — `vitest`, colocated `*.spec.ts`
-Registry invariants, zod schemas, resource resolution, the read-only filter, and the delete cap.
-
-> Trap: `vitest.config.ts:39` excludes `**/*.controller.spec.ts`. A file named
-> `mcp.controller.spec.ts` would silently run **zero** tests and exit 0. Controller coverage lives in
-> e2e. Do not create that filename.
-
-### 10.2 E2E — `apps/nestjs-backend/test/mcp.e2e-spec.ts`
-Driven by the real MCP SDK `Client` over Streamable HTTP against the booted app, with PATs minted
-through the typed `@teable/openapi` clients. This proves protocol compliance against a real client
-rather than against our own assumptions. Follows established conventions: `initApp()`, vitest
-(`vi.fn()`, never `jest.fn()`), no supertest.
-
-### 10.3 The permission matrix — the test that actually matters
-Table-driven, and the acceptance gate for the whole feature:
-
-| Case | Must |
-|---|---|
-| Token scoped to base A calls a tool on base B | **fail** `RESTRICTED_RESOURCE` |
-| Token lacking `record\|delete` calls `delete_records` | **fail**, even though the user could |
-| User demoted to read-only after minting a write token | **fail** (intersection, §4.4) |
-| `list_bases` with a base-scoped token | returns **only** that base — no name leakage |
-| `delete_records` above `MCP_MAX_DELETE_PER_CALL` | **rejected**, nothing deleted |
-| `delete_records` then trash restore | records come back intact (proves §6.1's premise) |
-| `MCP_READONLY=true` | catalogue contains **no** write tool |
-| Every registered tool | has non-empty `requiredActions` (registry assertion) |
-| Every registered tool | reached `authorize()` before `execute()` — pipeline spy, so a future tool cannot skip it |
-| Excluded tools (`delete_field`, `delete_table`, `update_field`) | **absent** from the catalogue |
-
-A DB-mutating tool that passes its happy path but fails this matrix is a **security defect**, not a
-failing test.
-
-### 10.4 Manual verification
-Connect real Claude Code to a dev instance: tool discovery, one read, one write, one delete, then
-restore from trash. Protocol compliance is not credible until a real client has spoken to it.
-
----
-
-## 11. Phase 2 — OAuth 2.1 (designed for, not built)
-
-Deferred by D3, but v1 must not foreclose it:
-- `WWW-Authenticate` already emitted on 401 (§7) — the hook clients look for.
-- Add `/.well-known/oauth-protected-resource`; honour `resource` indicators (RFC 8707).
-- Reuse the existing AS at `/api/oauth/*` (`oauth-server.controller.ts`); add dynamic client
-  registration (RFC 7591), the one genuinely new piece.
-- Token exchange maps an OAuth grant onto the same `accessTokenId` scoping, so **§4 does not change
-  at all** — only how the caller proves identity. That property is the point of putting authorization
-  in the dispatcher rather than the transport.
-
-Phase 3 candidates: the excluded schema deletes behind a stronger confirm channel, MCP resources,
-`sqlQuery`, a stdio shim.
-
----
-
-## 12. Risks
-
-| Risk | Severity | Mitigation |
+| Phase | Work | Exit criterion |
 |---|---|---|
-| Missing `cls.set('permissions')` → silently wrong output, HTTP 200 | **High** | §4.3; dedicated test in §10.3 |
-| A future tool skips `authorize()` | **High** | Pipeline spy test (§10.3); `execute()` unreachable except via the registry |
-| Model bulk-deletes records | Medium | §6.2 permissions + 200/call cap + trash recovery, proven by a restore test |
-| Trash retention prunes before a user notices | ~~Medium~~ **Low** | **Verified (Phase 1.3): no pruning is implemented at all.** `configs/trash.config.ts` declares `retention: 30d` but nothing reads it — no `@Cron`, no `ScheduleModule`. Rows persist until restore, explicit reset, or permanent table deletion |
-| Agent clutters a base with fields/tables it cannot delete | Low | Accepted trade (§5); untidy beats irreversible |
-| Enumeration leaks out-of-scope names | **Was REAL, now fixed** | **Found in review (S1).** `BaseService.getAllBaseList` filters by user but **not** by access token — unlike `SpaceService.getSpaceList`, which applies `filterSpaceListWithAccessToken` (`space.service.ts:117`). `list_bases` now applies the token's `spaceIds`/`baseIds` itself, mirroring `permission.service.ts:243-245`. Three regression tests |
-| MCP is a laxer door than REST into the same services | **Was REAL, now fixed** | **Found in review (S2).** `create_table`/`create_field` skipped the zod schemas the controllers apply. Both now parse with `tableRoSchema` / `createFieldRoSchema` |
-| Driver error text reaches the model | **Was REAL, now fixed** | **Found in review (S3).** Only `HttpException` messages pass through; everything else returns a generic line and logs the detail |
-| `create_view` accepted any string as a view type | **Was REAL, now fixed** | **Found in live testing (S4).** The S2 fix covered `create_table` and `create_field` but missed `create_view`, which still passed args through unvalidated — a view was created with `type: "notAViewType"`. Now parses with `viewRoSchema` from `@teable/core` |
-| Wrong-prefix id returns empty instead of erroring | **Was REAL, now fixed** | **Found in live testing (S5).** A `spc…` passed as `baseId` passed the permission check (the caller genuinely holds rights on that space) and then matched no tables, so the model was told "no tables" rather than "wrong id". All id arguments now validate their `IdPrefix` (`tools/ids.ts`) |
-| Token bloat from large record payloads | Medium | §5.1 caps and pagination metadata |
-| Stateless mode surprises a client expecting sessions | Low | 405 with an explanatory JSON-RPC error body |
-| MCP SDK promoted from transitive to direct dep | Low | Already at 1.29.0 in the store; pin exactly |
+| **0 — Quick fixes** (independent) | Reset store on `baseId` change; remove `searchQuery`; fix `CANVAS_BACKGROUND` comment | Switching bases shows a clean graph |
+| **1 — Engine** | `features/base-graph`: schema route, query route, pure `assembleBaseGraph` + spec (port the existing assembler spec cases as the knowledge-preset regression suite), openapi v4 contract | Knowledge preset via `/graph/query` produces the same node/edge set as `/knowledge-graph` today (spec-asserted) |
+| **2 — Generic UI** | New page, URL-state query, query panel, kind-keyed theme, generic detail panel + ExpandRecord | Can graph goals→projects→tasks and contacts→companies with view filters |
+| **3 — Scale & freshness** | `/graph/expand`, pre-read ETag + cache, focus refetch, 2D mode | 20k-row `finance_Transactions` usable via filter + expand; unchanged data returns 304 |
+| **4 — Integration** | Saved presets, "Show in graph" deep links, realtime invalidation, MCP tools, retire `/knowledge-graph` routes and `KNOWLEDGE_*` env | Old module deleted |
+
+### Open questions
+
+1. Presets: stored in the base (shared, visible to MCP) or per-user localStorage?
+2. Should one-way link fields (no symmetric) be graphed by default, or opt-in?
+3. Include lookup/rollup relationships as edges (the ERD does), or only real Link fields? Proposed:
+   Link only in v4.
+4. Is a record-level permission model planned? If yes, §C.6's ETag probe needs the permission CTE
+   before Phase 3.

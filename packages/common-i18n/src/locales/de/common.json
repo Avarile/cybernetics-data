@@ -388,7 +388,7 @@
     "automation": "Automatisierung",
     "authorityMatrix": "Authority Matrix",
     "design": "Design",
-    "knowledgeGraph": "Wissensgraph",
+    "graph": "Graph",
     "adminPanel": "Systemverwaltung",
     "license": "Selbst-gehostete Lizenz",
     "instanceId": "Instanz ID",

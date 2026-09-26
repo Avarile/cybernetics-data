@@ -362,7 +362,7 @@
     "automation": "Otomasyon",
     "authorityMatrix": "Yetki Matrisi",
     "design": "Tasarım",
-    "knowledgeGraph": "Bilgi grafiği",
+    "graph": "Graph",
     "adminPanel": "Sistem Yönetimi",
     "license": "Kendi sunuculu lisans",
     "instanceId": "Örnek Kimliği",

@@ -35,10 +35,14 @@ export const ReactQueryKeys = {
 
   baseAll: () => ['base-all'] as const,
 
-  knowledgeGraph: (baseId: string) => ['knowledge-graph', baseId] as const,
+  baseGraphSchema: (baseId: string) => ['base-graph-schema', baseId] as const,
 
-  knowledgeGraphNode: (baseId: string, nodeId: string) =>
-    ['knowledge-graph-node', baseId, nodeId] as const,
+  /** `queryHash` is the normalised query; the prefix alone invalidates every graph. */
+  baseGraph: (baseId: string, queryHash?: string) =>
+    (queryHash ? ['base-graph', baseId, queryHash] : ['base-graph', baseId]) as readonly string[],
+
+  baseGraphNode: (baseId: string, recordId: string, tableId: string, hierarchyFieldId?: string) =>
+    ['base-graph-node', baseId, recordId, tableId, hierarchyFieldId ?? ''] as const,
 
   templateList: () => ['template-list'] as const,
 

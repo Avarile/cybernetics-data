@@ -7,6 +7,8 @@ import { CustomHttpException } from '../../custom.exception';
 import type { IClsStore } from '../../types/cls';
 import { PermissionService } from '../auth/permission.service';
 import { BaseService } from '../base/base.service';
+import { BaseGraphService } from '../base-graph/base-graph.service';
+import { GraphNodeService } from '../base-graph/graph-node.service';
 import { FieldOpenApiService } from '../field/open-api/field-open-api.service';
 import { RecordOpenApiService } from '../record/open-api/record-open-api.service';
 import { RecordService } from '../record/record.service';
@@ -15,6 +17,7 @@ import { TableOpenApiService } from '../table/open-api/table-open-api.service';
 import { ViewOpenApiService } from '../view/open-api/view-open-api.service';
 import { ViewService } from '../view/view.service';
 import { buildDiscoveryTools } from './tools/discovery.tools';
+import { buildGraphTools } from './tools/graph.tools';
 import { buildRecordTools } from './tools/record.tools';
 import { buildSchemaTools } from './tools/schema.tools';
 import type { IMcpTool, IMcpToolContext, IMcpRuntimeConfig, IMcpTokenScope } from './types';
@@ -37,7 +40,9 @@ export class McpToolRegistry {
     private readonly recordService: RecordService,
     private readonly recordWriteService: RecordOpenApiService,
     private readonly viewService: ViewService,
-    private readonly viewWriteService: ViewOpenApiService
+    private readonly viewWriteService: ViewOpenApiService,
+    private readonly graphService: BaseGraphService,
+    private readonly graphNodeService: GraphNodeService
   ) {
     this.runtimeConfig = {
       readonly: config.readonly,
@@ -52,6 +57,8 @@ export class McpToolRegistry {
       ...buildDiscoveryTools().map((tool) => ({ tool, group: 'discovery' as const })),
       ...buildRecordTools().map((tool) => ({ tool, group: 'record' as const })),
       ...buildSchemaTools().map((tool) => ({ tool, group: 'schema' as const })),
+      // Read-only views over records, so they sit with discovery in the UI.
+      ...buildGraphTools().map((tool) => ({ tool, group: 'discovery' as const })),
     ];
 
     const map = new Map<string, IMcpTool>();
@@ -170,6 +177,8 @@ export class McpToolRegistry {
       recordWriteService: this.recordWriteService,
       viewService: this.viewService,
       viewWriteService: this.viewWriteService,
+      graphService: this.graphService,
+      graphNodeService: this.graphNodeService,
       permissions,
       tokenScope,
       config: this.runtimeConfig,

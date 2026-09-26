@@ -191,6 +191,12 @@ const nextConfig = {
     // @link https://vercel.com/blog/how-we-optimized-package-imports-in-next-js
     optimizePackageImports: ['lucide-react', 'date-fns', '@tanstack/react-virtual'],
 
+    // Turbopack's on-disk dev cache (.next/dev) can go stale when pages are
+    // added, removed or renamed, and then panics on every compile ("Cell ...
+    // PagesStructure no longer exists"). Cold dev starts are slower without it,
+    // but never broken. Re-enable once a Next.js release fixes the staleness.
+    turbopackFileSystemCacheForDev: false,
+
     // Experimental /app dir
     // appDir: true,
   },

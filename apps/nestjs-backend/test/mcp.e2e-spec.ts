@@ -107,6 +107,30 @@ describe('MCP (e2e)', () => {
   });
 
   describe('the permission matrix', () => {
+    it('draws the base graph for a base in scope, and refuses one outside it', async () => {
+      const token = await tokenForBaseA(['table|read', 'record|read']);
+      const client = await connect(token.token);
+
+      const inScope = await call(client, 'get_graph', {
+        baseId: baseA,
+        tables: [{ tableId: tableA.id }],
+      });
+      expect(inScope.isError).toBeFalsy();
+      const graph = resultJson(inScope) as { nodes: { id: string; tableId: string }[] };
+      // createTable seeds blank rows when none are given; each is a node.
+      expect(graph.nodes.length).toBeGreaterThan(0);
+      expect(graph.nodes.every((n) => n.id.startsWith('rec:') && n.tableId === tableA.id)).toBe(
+        true
+      );
+
+      const outOfScope = await call(client, 'get_graph', {
+        baseId: baseB,
+        tables: [{ tableId: tableB.id }],
+      });
+      expect(outOfScope.isError).toBe(true);
+      await client.close();
+    });
+
     it('refuses a tool on a base outside the token scope', async () => {
       const token = await tokenForBaseA(['table|read', 'record|read']);
       const client = await connect(token.token);

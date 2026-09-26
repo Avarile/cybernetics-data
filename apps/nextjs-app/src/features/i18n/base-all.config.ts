@@ -13,7 +13,7 @@ export interface IBaseAllConfig {
     | 'token'
     | 'setting'
     | 'oauth'
-    | 'knowledgeGraph'
+    | 'baseGraph'
   >;
 }
 
@@ -30,6 +30,6 @@ export const baseAllConfig: IBaseAllConfig = {
     'token',
     'setting',
     'oauth',
-    'knowledgeGraph',
+    'baseGraph',
   ],
 };

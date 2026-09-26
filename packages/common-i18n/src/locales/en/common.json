@@ -397,7 +397,7 @@
     "automation": "Automation",
     "authorityMatrix": "Authority matrix",
     "design": "Design",
-    "knowledgeGraph": "Knowledge Graph",
+    "graph": "Graph",
     "adminPanel": "System Admin",
     "license": "Self-hosted license",
     "instanceId": "Instance ID",

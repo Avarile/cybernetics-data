@@ -390,7 +390,7 @@
     "automation": "Automazione",
     "authorityMatrix": "Matrice di autorità",
     "design": "Design",
-    "knowledgeGraph": "Grafo della conoscenza",
+    "graph": "Graph",
     "adminPanel": "Amministrazione di sistema",
     "license": "Licenza self-hosted",
     "instanceId": "ID istanza",

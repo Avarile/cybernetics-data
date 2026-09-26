@@ -29,6 +29,7 @@
   },
   "scripts": {
     "dev": "rimraf ./.next/dev/lock && next dev",
+    "dev:clean": "rimraf ./.next/dev && next dev",
     "build": "next build",
     "build-fast": "cross-env NEXT_BUILD_ENV_SENTRY_ENABLED=0 NEXT_BUILD_ENV_SOURCEMAPS=0 NEXT_BUILD_ENV_TYPECHECK=0 next build",
     "bundle-analyze": "cross-env ANALYZE=true NEXT_BUILD_ENV_SENTRY_ENABLED=1 NEXT_BUILD_ENV_TYPECHECK=0 pnpm build",
@@ -194,6 +195,7 @@
     "react-day-picker": "9.5.1",
     "react-dom": "18.3.1",
     "react-error-boundary": "4.0.13",
+    "react-force-graph-2d": "1.29.1",
     "react-force-graph-3d": "1.29.1",
     "react-grid-layout": "1.4.4",
     "react-hook-form": "7.51.1",

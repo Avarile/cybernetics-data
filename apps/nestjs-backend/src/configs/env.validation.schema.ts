@@ -67,13 +67,13 @@ export const envValidationSchema = Joi.object({
   MASTRA_URL: Joi.string().uri().default('http://localhost:4111'),
   MASTRA_API_KEY: Joi.string().optional(),
 
-  // Knowledge graph — the two Teable tables it reads and its node budget.
-  // Deliberately without Joi `.default()`: the defaults live in
-  // knowledge.config.ts, because Joi writes defaults onto process.env before
-  // the config factory runs and would shadow the factory's fallbacks.
-  KNOWLEDGE_TABLE_ID: Joi.string().pattern(/^tbl/),
-  KNOWLEDGE_TYPE_TABLE_ID: Joi.string().pattern(/^tbl/),
-  KNOWLEDGE_GRAPH_MAX_NODES: Joi.number().integer().min(1),
+  // Base graph budgets. Deliberately without Joi `.default()`: Joi writes
+  // defaults onto process.env before the config factory runs, so the defaults
+  // live in base-graph.config.ts.
+  BASE_GRAPH_MAX_NODES: Joi.number().integer().min(1),
+  BASE_GRAPH_MAX_LINKS: Joi.number().integer().min(1),
+  BASE_GRAPH_DEFAULT_TABLE_LIMIT: Joi.number().integer().min(1),
+  BASE_GRAPH_CACHE_TTL: Joi.number().integer().min(0),
 })
   .or('PRISMA_META_DATABASE_URL', 'PRISMA_DATABASE_URL', 'DATABASE_URL')
   .messages({

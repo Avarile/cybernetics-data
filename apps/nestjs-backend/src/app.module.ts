@@ -11,13 +11,15 @@ import { AccessTokenModule } from './features/access-token/access-token.module';
 import { AggregationOpenApiModule } from './features/aggregation/open-api/aggregation-open-api.module';
 import { AiModule } from './features/ai/ai.module';
 import { AttachmentsModule } from './features/attachments/attachments.module';
-import { ChatFileModule } from './features/chat-file/chat-file.module';
 import { AuthModule } from './features/auth/auth.module';
 import { BaseModule } from './features/base/base.module';
+import { BaseGraphModule } from './features/base-graph/base-graph.module';
 import { BaseNodeModule } from './features/base-node/base-node.module';
+import { BaseShareModule } from './features/base-share/base-share.module';
 import { BuiltinAssetsInitModule } from './features/builtin-assets-init';
 import { CanaryModule } from './features/canary';
 import { ChatModule } from './features/chat/chat.module';
+import { ChatFileModule } from './features/chat-file/chat-file.module';
 import { CollaboratorModule } from './features/collaborator/collaborator.module';
 import { CommentOpenApiModule } from './features/comment/comment-open-api.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
@@ -27,7 +29,6 @@ import { HealthModule } from './features/health/health.module';
 import { ImportOpenApiModule } from './features/import/open-api/import-open-api.module';
 import { IntegrityModule } from './features/integrity/integrity.module';
 import { InvitationModule } from './features/invitation/invitation.module';
-import { KnowledgeGraphModule } from './features/knowledge-graph/knowledge-graph.module';
 import { MailSenderOpenApiModule } from './features/mail-sender/open-api/mail-sender-open-api.module';
 import { MailSenderMergeModule } from './features/mail-sender/open-api/mail-sender.merge.module';
 import { McpModule } from './features/mcp/mcp.module';
@@ -43,7 +44,6 @@ import { PluginPanelModule } from './features/plugin-panel/plugin-panel.module';
 import { SelectionModule } from './features/selection/selection.module';
 import { AdminOpenApiModule } from './features/setting/open-api/admin-open-api.module';
 import { SettingOpenApiModule } from './features/setting/open-api/setting-open-api.module';
-import { BaseShareModule } from './features/base-share/base-share.module';
 import { ShareModule } from './features/share/share.module';
 import { SpaceModule } from './features/space/space.module';
 import { TemplateOpenApiModule } from './features/template/template-open-api.module';
@@ -110,7 +110,7 @@ export const appModules = {
     ObservabilityModule,
     BuiltinAssetsInitModule,
     V2Module,
-    KnowledgeGraphModule,
+    BaseGraphModule,
     // MCP_ENABLED=false registers no MCP routes at all.
     ...(process.env.MCP_ENABLED === 'false' ? [] : [McpModule]),
   ],

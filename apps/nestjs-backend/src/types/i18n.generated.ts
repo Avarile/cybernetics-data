@@ -91,6 +91,86 @@ export type I18nTranslations = {
             "privacyUrl": string;
         };
     };
+    "baseGraph": {
+        "title": string;
+        "stats": {
+            "nodes": string;
+            "links": string;
+            "tables": string;
+        };
+        "toolbar": {
+            "autoRotate": string;
+            "recenter": string;
+            "startRotate": string;
+            "stopRotate": string;
+            "fullscreen": string;
+            "exitFullscreen": string;
+            "resetView": string;
+            "refresh": string;
+            "query": string;
+            "renderMode": string;
+        };
+        "legend": {
+            "title": string;
+            "showAll": string;
+            "hidden": string;
+            "allHidden": string;
+        };
+        "search": {
+            "placeholder": string;
+            "noResults": string;
+        };
+        "detail": {
+            "path": string;
+            "fields": string;
+            "links": string;
+            "openRecord": string;
+            "expand": string;
+            "expandAll": string;
+            "expanded": string;
+            "created": string;
+            "updated": string;
+            "close": string;
+        };
+        "query": {
+            "title": string;
+            "preset": string;
+            "customPreset": string;
+            "savePreset": string;
+            "presetName": string;
+            "deletePreset": string;
+            "presetUnavailable": string;
+            "tables": string;
+            "rows": string;
+            "view": string;
+            "allRecords": string;
+            "filter": string;
+            "editFilter": string;
+            "clearFilter": string;
+            "hierarchy": string;
+            "groupBy": string;
+            "none": string;
+            "limit": string;
+            "links": string;
+            "noLinks": string;
+            "tableHubs": string;
+            "baseHub": string;
+            "tooLarge": string;
+        };
+        "empty": {
+            "title": string;
+            "description": string;
+        };
+        "truncated": {
+            "nodes": string;
+            "links": string;
+        };
+        "error": {
+            "title": string;
+            "retry": string;
+            "invalidUrl": string;
+        };
+    };
     "chart": {
         "notBaseId": string;
         "notPositionId": string;
@@ -595,7 +675,7 @@ export type I18nTranslations = {
             "automation": string;
             "authorityMatrix": string;
             "design": string;
-            "knowledgeGraph": string;
+            "graph": string;
             "adminPanel": string;
             "license": string;
             "instanceId": string;
@@ -1791,57 +1871,6 @@ export type I18nTranslations = {
             "compactDescription": string;
         };
         "only10Records": string;
-    };
-    "knowledgeGraph": {
-        "title": string;
-        "core": string;
-        "unclassified": string;
-        "stats": {
-            "nodes": string;
-            "links": string;
-            "types": string;
-        };
-        "toolbar": {
-            "autoRotate": string;
-            "recenter": string;
-            "startRotate": string;
-            "stopRotate": string;
-            "fullscreen": string;
-            "exitFullscreen": string;
-            "resetView": string;
-            "refresh": string;
-        };
-        "legend": {
-            "title": string;
-            "showAll": string;
-            "hidden": string;
-            "allHidden": string;
-        };
-        "search": {
-            "placeholder": string;
-            "noResults": string;
-        };
-        "detail": {
-            "context": string;
-            "path": string;
-            "related": string;
-            "type": string;
-            "siblings": string;
-            "created": string;
-            "updated": string;
-            "close": string;
-        };
-        "empty": {
-            "title": string;
-            "description": string;
-        };
-        "truncated": {
-            "banner": string;
-        };
-        "error": {
-            "title": string;
-            "retry": string;
-        };
     };
     "oauth": {
         "add": string;

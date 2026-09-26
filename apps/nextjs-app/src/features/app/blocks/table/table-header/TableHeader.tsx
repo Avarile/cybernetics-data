@@ -35,6 +35,7 @@ import { useIsInIframe } from '@/features/app/hooks/useIsInIframe';
 import { useHelpStore } from '@/features/help';
 import { tableConfig } from '@/features/i18n/table.config';
 import { BaseNodeMore } from '../../base/base-side-bar/BaseNodeMore';
+import { ShowInGraphButton } from '../../base-graph/ShowInGraphButton';
 import { ExpandViewList } from '../../view/list/ExpandViewList';
 import { ViewList } from '../../view/list/ViewList';
 import { useLockedViewTipStore } from '../store';
@@ -49,7 +50,7 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
   const [open, setOpen] = useState(false);
   const { status: chatStatus, toggleVisible: toggleChat } = useChatPanelStore();
   const { setOpen: openHelp } = useHelpStore();
-  const { tableId } = useBaseResource() as IBaseResourceTable;
+  const { baseId, tableId, viewId } = useBaseResource() as IBaseResourceTable;
   const isTouchDevice = useIsTouchDevice();
   const isHydrated = useIsHydrated();
   const router = useRouter();
@@ -197,6 +198,7 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
           >
             <HelpCircle className="size-4" />
           </Button>
+          <ShowInGraphButton baseId={baseId} tableId={tableId} viewId={viewId} />
           <BaseNodeMore
             resourceType={BaseNodeResourceType.Table}
             resourceId={tableId}

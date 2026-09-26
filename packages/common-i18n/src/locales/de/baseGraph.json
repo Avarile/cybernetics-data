@@ -1,0 +1,80 @@
+{
+  "title": "Graph",
+  "stats": {
+    "nodes": "{{count}} nodes",
+    "links": "{{count}} links",
+    "tables": "{{count}} tables"
+  },
+  "toolbar": {
+    "autoRotate": "Auto rotate",
+    "recenter": "Recenter",
+    "startRotate": "Start rotation",
+    "stopRotate": "Stop rotation",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen",
+    "resetView": "Reset view",
+    "refresh": "Refresh",
+    "query": "Tables & filters",
+    "renderMode": "Switch 2D / 3D"
+  },
+  "legend": {
+    "title": "Legend",
+    "showAll": "Show all",
+    "hidden": "{{count}} hidden",
+    "allHidden": "Everything is hidden"
+  },
+  "search": {
+    "placeholder": "Search records…",
+    "noResults": "No nodes match \"{{query}}\""
+  },
+  "detail": {
+    "path": "Path",
+    "fields": "Fields",
+    "links": "Links",
+    "openRecord": "Open record",
+    "expand": "Expand",
+    "expandAll": "Expand all links",
+    "expanded": "Loaded {{count}} neighbours",
+    "created": "Created {{time}}",
+    "updated": "Updated {{time}}",
+    "close": "Close"
+  },
+  "query": {
+    "title": "Tables & filters",
+    "preset": "Preset",
+    "customPreset": "Custom",
+    "savePreset": "Save as preset",
+    "presetName": "Preset name",
+    "deletePreset": "Delete preset",
+    "presetUnavailable": "Not available in this base: {{missing}}",
+    "tables": "Tables",
+    "rows": "{{count}} rows",
+    "view": "View",
+    "allRecords": "All records",
+    "filter": "Filter",
+    "editFilter": "Filter…",
+    "clearFilter": "Clear filter",
+    "hierarchy": "Tree by",
+    "groupBy": "Group by",
+    "none": "None",
+    "limit": "Row limit",
+    "links": "Relationships",
+    "noLinks": "Tick two linked tables to draw relationships.",
+    "tableHubs": "Table hubs",
+    "baseHub": "Base hub",
+    "tooLarge": "This query is too large for a link. It was saved as a preset instead."
+  },
+  "empty": {
+    "title": "Nothing to draw",
+    "description": "Pick tables in the panel on the left, or loosen their filters."
+  },
+  "truncated": {
+    "nodes": "Some tables were cut to fit the node budget: {{tables}}. Narrow a filter to see the rest.",
+    "links": "Some relationships were hidden to fit the link budget."
+  },
+  "error": {
+    "title": "Could not load the graph",
+    "retry": "Retry",
+    "invalidUrl": "The link's graph settings were invalid, so a preset was loaded instead."
+  }
+}

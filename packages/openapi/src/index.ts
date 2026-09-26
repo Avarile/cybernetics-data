@@ -48,4 +48,4 @@ export * from './base-node';
 export * from './base-share';
 export * from './types';
 export * from './user-integration';
-export * from './knowledge-graph';
+export * from './base-graph';

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BaseModule } from '../base/base.module';
+import { BaseGraphModule } from '../base-graph/base-graph.module';
 import { FieldOpenApiModule } from '../field/open-api/field-open-api.module';
 import { RecordOpenApiModule } from '../record/open-api/record-open-api.module';
 import { RecordModule } from '../record/record.module';
@@ -27,6 +28,7 @@ import { McpToolRegistry } from './tool-registry';
     RecordModule,
     ViewModule,
     ViewOpenApiModule,
+    BaseGraphModule,
   ],
   controllers: [McpController, McpManifestController],
   providers: [McpService, McpToolRegistry],
