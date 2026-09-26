@@ -1,3 +1,4 @@
+
 # MCP Server — Detailed Design
 
 Status: **design finalized — open questions resolved, ready for Phase 1**
