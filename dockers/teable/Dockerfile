@@ -50,6 +50,9 @@ ARG BUILD_VERSION
 ARG ENABLE_CSP=true
 ARG SENTRY_ENABLED=true
 ARG SENTRY_TRACING=true
+# Workspaces built in parallel. Each Next.js build can take several GB, so on a
+# small host pass --build-arg BUILD_CONCURRENCY=1 to avoid the OOM killer.
+ARG BUILD_CONCURRENCY=4
 
 ENV NODE_ENV=production \
     NEXT_BUILD_ENV_CSP=${ENABLE_CSP} \
@@ -67,7 +70,7 @@ RUN set -ex; \
         if [ -n "$INTEGRATION_TEST" ]; then \
               pnpm -F "./packages/**" run build; \
         else \
-              NODE_OPTIONS=--max-old-space-size=8192 pnpm -r run build; \
+              NODE_OPTIONS=--max-old-space-size=8192 pnpm -r --workspace-concurrency=${BUILD_CONCURRENCY} run build; \
         fi
 
 

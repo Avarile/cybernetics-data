@@ -18,4 +18,4 @@ qdrant/qdrant:latest                         d2ea76deb232        189MB          
 rabbitmq:3.13.7-management-alpine            98c7053953cc        176MB             0B    U   
 redis:6.2-alpine                             b7f611844a19       30.2MB             0B    U   
 λ workstation data-centre → λ git dev → cd scripts/customized/start-server/docker-compose/                                   
-λ workstation docker-compose → λ git dev → bash deploy.sh release.2026-06-10T04-05-13Z.1
+λ workstation docker-compose → λ git dev → bash deploy.sh release.2026-06-10T04-05-13Z.

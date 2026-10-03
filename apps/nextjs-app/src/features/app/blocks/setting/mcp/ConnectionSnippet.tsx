@@ -14,13 +14,13 @@ export const ConnectionSnippet = ({ endpoint }: IConnectionSnippetProps) => {
   const { t } = useTranslation(mcpConfig.i18nNamespaces);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const cli = `claude mcp add --transport http teable ${endpoint} \\
+  const cli = `claude mcp add --transport http cybernetics ${endpoint} \\
   --header "Authorization: Bearer ${TOKEN_PLACEHOLDER}"`;
 
   const json = JSON.stringify(
     {
       mcpServers: {
-        teable: {
+        cybernetics: {
           type: 'http',
           url: endpoint,
           headers: { Authorization: `Bearer ${TOKEN_PLACEHOLDER}` },
