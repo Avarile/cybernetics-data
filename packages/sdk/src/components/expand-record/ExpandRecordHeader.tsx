@@ -19,7 +19,7 @@ import {
 import { CopyPlus, Trash } from 'lucide-react';
 import { useMeasure } from 'react-use';
 import { useTranslation } from '../../context/app/i18n';
-import { useTablePermission } from '../../hooks';
+import { useIsTouchDevice, useTablePermission } from '../../hooks';
 import { useRecordCommentCount } from '../comment/hooks';
 import { TooltipWrap } from './TooltipWrap';
 
@@ -78,6 +78,9 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
   const showTitle = width > MIN_TITLE_WIDTH;
   const showOperator = width > MIN_OPERATOR_WIDTH;
   const recordCommentCount = useRecordCommentCount(tableId, recordId, canRead);
+  const isTouchDevice = useIsTouchDevice();
+  // Larger tap targets on touch devices
+  const iconSize = isTouchDevice ? 'icon' : 'icon-xs';
 
   return (
     <div
@@ -93,7 +96,7 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
           <Button
             variant={'ghost'}
             tabIndex={-1}
-            size={'icon-xs'}
+            size={iconSize}
             onClick={onPrev}
             disabled={disabledPrev}
           >
@@ -103,7 +106,7 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
         <TooltipWrap description="Next record" disabled={disabledNext}>
           <Button
             variant={'ghost'}
-            size={'icon-xs'}
+            size={iconSize}
             tabIndex={-1}
             onClick={onNext}
             disabled={disabledNext}
@@ -140,7 +143,7 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
       {showOperator && (
         <div className="flex items-center gap-1">
           <TooltipWrap description={t('expandRecord.copyRecordUrl')}>
-            <Button variant={'ghost'} size={'icon-xs'} onClick={onCopyUrl}>
+            <Button variant={'ghost'} size={iconSize} onClick={onCopyUrl}>
               <Link className="size-4 shrink-0" />
             </Button>
           </TooltipWrap>
@@ -154,7 +157,7 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
             >
               <Button
                 variant={recordHistoryVisible ? 'secondary' : 'ghost'}
-                size={'icon-xs'}
+                size={iconSize}
                 onClick={onRecordHistoryToggle}
               >
                 <History className="size-4 shrink-0" />
@@ -165,7 +168,7 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
           {editable && (
             <TooltipWrap description={t('comment.title')}>
               <Button
-                size={'icon-xs'}
+                size={iconSize}
                 onClick={onCommentToggle}
                 variant={commentVisible ? 'secondary' : 'ghost'}
                 className="relative"
@@ -182,7 +185,12 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
 
           {canDelete ? (
             <DropdownMenu modal={false}>
-              <DropdownMenuTrigger className="size-7 rounded-md px-1.5 hover:bg-accent hover:text-accent-foreground">
+              <DropdownMenuTrigger
+                className={cn(
+                  'rounded-md hover:bg-accent hover:text-accent-foreground',
+                  isTouchDevice ? 'size-9 px-2.5' : 'size-7 px-1.5'
+                )}
+              >
                 <MoreHorizontal className="size-4 shrink-0" />
               </DropdownMenuTrigger>
               <DropdownMenuContent>
@@ -212,7 +220,7 @@ export const ExpandRecordHeader = (props: IExpandRecordHeader) => {
         </div>
       )}
       <Separator className="h-6" orientation="vertical" />
-      <Button variant={'ghost'} size={'icon-xs'} onClick={onClose}>
+      <Button variant={'ghost'} size={iconSize} onClick={onClose}>
         <X className="size-4 shrink-0" />
       </Button>
     </div>

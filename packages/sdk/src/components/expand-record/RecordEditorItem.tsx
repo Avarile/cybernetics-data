@@ -4,7 +4,7 @@ import { cn } from '@teable/ui-lib';
 import { useContext } from 'react';
 import { TaskStatusCollectionContext } from '../../context';
 import type { IButtonClickStatusHook } from '../../hooks';
-import { useFieldStaticGetter } from '../../hooks';
+import { useFieldStaticGetter, useIsTouchDevice } from '../../hooks';
 import type { Field, Record } from '../../model';
 import { AiFieldGenerateButton } from './AiFieldGenerateButton';
 import { CellEditorWrap } from './CellEditorWrap';
@@ -37,6 +37,7 @@ export const RecordEditorItem = (props: {
     hasAiConfig,
   });
   const taskStatusCollection = useContext(TaskStatusCollectionContext);
+  const isTouchDevice = useIsTouchDevice();
   const isInTaskQueue =
     taskStatusCollection?.cells?.some((c) => c.recordId === record?.id && c.fieldId === field.id) ??
     false;
@@ -45,6 +46,15 @@ export const RecordEditorItem = (props: {
     if (cellValue === value) return;
     onChange?.(value, field.id);
   };
+
+  const aiGenerateButton = hasAiConfig && field.tableId && record && !readonly && (
+    <AiFieldGenerateButton
+      tableId={field.tableId}
+      fieldId={field.id}
+      recordId={record.id}
+      isInTaskQueue={isInTaskQueue}
+    />
+  );
 
   return (
     <div className={cn(vertical ? 'flex space-x-4' : 'space-y-2', 'relative group/field-row')}>
@@ -69,6 +79,8 @@ export const RecordEditorItem = (props: {
             *
           </span>
         )}
+        {/* Touch devices have no hover, so show the button inline next to the label */}
+        {isTouchDevice && aiGenerateButton && <div className="ml-auto">{aiGenerateButton}</div>}
       </div>
       <CellEditorWrap
         wrapClassName="min-w-0 flex-1 p-0.5"
@@ -82,21 +94,16 @@ export const RecordEditorItem = (props: {
         onAttachmentDownload={onAttachmentDownload}
       />
 
-      <div
-        className={cn(
-          'absolute -right-8 top-1 opacity-0 transition-opacity group-hover/field-row:opacity-100',
-          isInTaskQueue && 'opacity-100'
-        )}
-      >
-        {hasAiConfig && field.tableId && record && !readonly && (
-          <AiFieldGenerateButton
-            tableId={field.tableId}
-            fieldId={field.id}
-            recordId={record.id}
-            isInTaskQueue={isInTaskQueue}
-          />
-        )}
-      </div>
+      {!isTouchDevice && (
+        <div
+          className={cn(
+            'absolute -right-8 top-1 opacity-0 transition-opacity group-hover/field-row:opacity-100',
+            isInTaskQueue && 'opacity-100'
+          )}
+        >
+          {aiGenerateButton}
+        </div>
+      )}
     </div>
   );
 };
