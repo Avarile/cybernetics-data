@@ -1,3 +1,9 @@
+/**
+ * Shared-token REST client. NOT USED FOR READS: every read tool goes through
+ * ai-data-client.ts as the chatting user. Only write paths still use this: the unused
+ * write tools (kept for a future write gateway, CYBERDATA-12) and the RAG agent's
+ * synthesize-and-ingest, which is gated on the user's write permission.
+ */
 import { env } from '../../env.js';
 
 export const BASE_URL = env.TEABLE_BASE_URL;

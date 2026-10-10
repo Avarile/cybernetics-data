@@ -4,9 +4,15 @@ import { createGoal } from './project-management/goals.js';
 import {
   createProjectUnderGoal,
   createTaskUnderProject,
-  getFullHierarchy,
-  getAllProjectsWithTasks,
 } from './project-management/project-service.js';
+import { aiDataClient } from './ai-data-client.js';
+import type { AiDataClient, AiDataRecord } from './ai-data-client.js';
+import { TABLES, followLink, getById, listRecords } from './ai-data-reads.js';
+
+/** A project with its linked tasks, read as the chatting user. */
+async function withTasks(client: AiDataClient, project: AiDataRecord) {
+  return { project, tasks: await followLink(client, TABLES.tasks, project.fields.tasks) };
+}
 
 const recordSchema = z.object({ id: z.string(), fields: z.record(z.string(), z.unknown()) });
 
@@ -159,17 +165,14 @@ export const getFullHierarchyTool = createTool({
     goal: recordSchema.optional(),
     projects: z.array(projectWithTasksSchema).optional(),
   }),
-  execute: async ({ goalRecordId }) => {
-    const result = await getFullHierarchy(goalRecordId);
-    if (!result) return { found: false };
-    return {
-      found: true,
-      goal: toRecord(result.goal),
-      projects: result.projects.map((p) => ({
-        project: toRecord(p.project),
-        tasks: p.tasks.map(toRecord),
-      })),
-    };
+  execute: async ({ goalRecordId }, context) => {
+    const client = aiDataClient(context);
+    const goal = await getById(client, TABLES.goals, goalRecordId);
+    if (!goal) return { found: false };
+    const projects = await followLink(client, TABLES.projects, goal.fields.projects);
+    const withAllTasks = [];
+    for (const project of projects) withAllTasks.push(await withTasks(client, project));
+    return { found: true, goal, projects: withAllTasks };
   },
 });
 
@@ -178,21 +181,18 @@ export const getFullHierarchyTool = createTool({
 export const getAllProjectsWithTasksTool = createTool({
   id: 'get-all-projects-with-tasks',
   description:
-    'List all active projects with their linked tasks resolved. ' +
+    'List all active projects (up to 50) with their linked tasks resolved. ' +
     'Useful for a full dashboard view across all goals.',
   inputSchema: z.object({}),
   outputSchema: z.object({
     projects: z.array(projectWithTasksSchema),
     total: z.number(),
   }),
-  execute: async () => {
-    const projects = await getAllProjectsWithTasks();
-    return {
-      projects: projects.map((p) => ({
-        project: toRecord(p.project),
-        tasks: p.tasks.map(toRecord),
-      })),
-      total: projects.length,
-    };
+  execute: async (_input, context) => {
+    const client = aiDataClient(context);
+    const projects = await listRecords(client, TABLES.projects, { take: 50 });
+    const withAllTasks = [];
+    for (const project of projects) withAllTasks.push(await withTasks(client, project));
+    return { projects: withAllTasks, total: withAllTasks.length };
   },
 });

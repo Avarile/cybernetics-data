@@ -87,8 +87,18 @@ export class GenerationService {
     return this.aiDataContextService.issue(userId, baseId);
   }
 
-  private toRequestContext(dataContext: IDataContext | undefined) {
-    return dataContext ? { requestContext: { aiDataContext: dataContext.token } } : {};
+  /**
+   * Mastra requestContext for the agent's tools: the user's data token (when the
+   * ai-data endpoint is enabled) and whether the user may write in this base, which
+   * gates the RAG ingest and index tools.
+   */
+  private toRequestContext(dataContext: IDataContext | undefined, canWrite: boolean) {
+    return {
+      requestContext: {
+        canWrite,
+        ...(dataContext ? { aiDataContext: dataContext.token } : {}),
+      },
+    };
   }
 
   private async releaseDataContext(dataContext: IDataContext | undefined) {
@@ -103,7 +113,8 @@ export class GenerationService {
   private async generateStreamViaMastra(
     baseId: string,
     aiGenerateRo: IAiGenerateRo,
-    response: Response
+    response: Response,
+    canWrite: boolean
   ): Promise<void> {
     const { agentId, threadId: _threadId, resourceId, prompt, messages, fileTokens } = aiGenerateRo;
 
@@ -135,7 +146,7 @@ export class GenerationService {
             }[],
           }
         : { prompt: await this.injectFileContext(prompt ?? '', fileTokens) };
-      const body = { ...input, ...this.toRequestContext(dataContext) };
+      const body = { ...input, ...this.toRequestContext(dataContext, canWrite) };
 
       response.writeHead(200, {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -240,7 +251,8 @@ export class GenerationService {
       return this.generateStreamViaMastra(
         baseId,
         { ...aiGenerateRo, resourceId: userId },
-        response
+        response,
+        canWrite
       );
     }
 

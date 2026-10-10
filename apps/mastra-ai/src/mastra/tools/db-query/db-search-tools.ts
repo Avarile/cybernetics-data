@@ -1,12 +1,14 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { searchKnowledgesByTitle, getKnowledgesByIds } from './knowledges/knowledge.js';
+import { aiDataClient } from './ai-data-client.js';
+import type { AiDataRecord } from './ai-data-client.js';
+import { TABLES, searchByTitle, searchContacts } from './ai-data-reads.js';
 import { linkTitle } from './knowledges/link-cell.js';
-import { searchGoalsByTitle, getGoalsByIds } from './project-management/goals.js';
-import { searchProjectsByTitle, getProjectsByIds } from './project-management/projects.js';
-import { searchTasksByTitle, getTasksByIds } from './project-management/tasks.js';
-import { searchContacts, getContactsByIds } from './contacts/contacts.js';
-import { searchCompanies } from './contacts/companies.js';
+
+/**
+ * Two-round search tools. They read through the Teable backend as the chatting user
+ * (see ai-data-client.ts), by table and field name.
+ */
 
 // ── Shared output types ────────────────────────────────────────────────────
 
@@ -33,6 +35,37 @@ const idsInput = z.object({
     .describe('Teable record IDs (recXXX) — max 5, selected from Round 1 results'),
 });
 
+const text = (value: unknown) => (value ? String(value) : undefined);
+const title = (r: AiDataRecord) => String(r.fields.title ?? '');
+const toTitle = (r: AiDataRecord) => ({ id: r.id, title: title(r) });
+const toContext = (r: AiDataRecord) => ({ ...toTitle(r), context: text(r.fields.context) });
+
+/** Round 1 tool: titles containing the keyword. */
+const titleSearchTool = (id: string, description: string, table: string) =>
+  createTool({
+    id,
+    description,
+    inputSchema: keywordInput,
+    outputSchema: z.object({ results: z.array(titleResult), total: z.number() }),
+    execute: async ({ keyword, take }, context) => {
+      const records = await searchByTitle(aiDataClient(context), table, keyword, { take });
+      return { results: records.map(toTitle), total: records.length };
+    },
+  });
+
+/** Round 2 tool: title + context for the chosen ids. */
+const contextTool = (id: string, description: string, table: string) =>
+  createTool({
+    id,
+    description,
+    inputSchema: idsInput,
+    outputSchema: z.object({ records: z.array(contextResult) }),
+    execute: async ({ recordIds }, context) => {
+      const records = await aiDataClient(context).getRecordsByIds(table, recordIds);
+      return { records: records.map(toContext) };
+    },
+  });
+
 // ── Round 1 — Title search ─────────────────────────────────────────────────
 
 export const searchKnowledgeTitlesTool = createTool({
@@ -44,78 +77,43 @@ export const searchKnowledgeTitlesTool = createTool({
     'then call get-knowledge-contexts with those IDs.',
   inputSchema: keywordInput,
   outputSchema: z.object({ results: z.array(knowledgeTitleResult), total: z.number() }),
-  execute: async ({ keyword, take }) => {
-    const result = await searchKnowledgesByTitle(keyword, { take });
+  execute: async ({ keyword, take }, context) => {
+    const records = await searchByTitle(aiDataClient(context), TABLES.knowledges, keyword, {
+      take,
+    });
     return {
-      results: result.records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
+      results: records.map((r) => ({
+        ...toTitle(r),
         knowledge_type: linkTitle(r.fields.knowledge_type),
       })),
-      total: result.records.length,
+      total: records.length,
     };
   },
 });
 
-export const searchGoalTitlesTool = createTool({
-  id: 'search-goal-titles',
-  description:
-    'ROUND 1 — Search goal records whose title contains the keyword. ' +
+export const searchGoalTitlesTool = titleSearchTool(
+  'search-goal-titles',
+  'ROUND 1 — Search goal records whose title contains the keyword. ' +
     'Returns id and title only. ' +
     'Pick the ≤5 most relevant results, then call get-goal-contexts with those IDs.',
-  inputSchema: keywordInput,
-  outputSchema: z.object({ results: z.array(titleResult), total: z.number() }),
-  execute: async ({ keyword, take }) => {
-    const result = await searchGoalsByTitle(keyword, { take });
-    return {
-      results: result.records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-      })),
-      total: result.records.length,
-    };
-  },
-});
+  TABLES.goals
+);
 
-export const searchProjectTitlesTool = createTool({
-  id: 'search-project-titles',
-  description:
-    'ROUND 1 — Search project records whose title contains the keyword. ' +
+export const searchProjectTitlesTool = titleSearchTool(
+  'search-project-titles',
+  'ROUND 1 — Search project records whose title contains the keyword. ' +
     'Returns id and title only. ' +
     'Pick the ≤5 most relevant results, then call get-project-contexts with those IDs.',
-  inputSchema: keywordInput,
-  outputSchema: z.object({ results: z.array(titleResult), total: z.number() }),
-  execute: async ({ keyword, take }) => {
-    const result = await searchProjectsByTitle(keyword, { take });
-    return {
-      results: result.records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-      })),
-      total: result.records.length,
-    };
-  },
-});
+  TABLES.projects
+);
 
-export const searchTaskTitlesTool = createTool({
-  id: 'search-task-titles',
-  description:
-    'ROUND 1 — Search task records whose title contains the keyword. ' +
+export const searchTaskTitlesTool = titleSearchTool(
+  'search-task-titles',
+  'ROUND 1 — Search task records whose title contains the keyword. ' +
     'Returns id and title only. ' +
     'Pick the ≤5 most relevant results, then call get-task-contexts with those IDs.',
-  inputSchema: keywordInput,
-  outputSchema: z.object({ results: z.array(titleResult), total: z.number() }),
-  execute: async ({ keyword, take }) => {
-    const result = await searchTasksByTitle(keyword, { take });
-    return {
-      results: result.records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-      })),
-      total: result.records.length,
-    };
-  },
-});
+  TABLES.tasks
+);
 
 // ── Round 2 — Context fetch ────────────────────────────────────────────────
 
@@ -126,75 +124,37 @@ export const getKnowledgeContextsTool = createTool({
     'Call this after search-knowledge-titles with the IDs of the most relevant results.',
   inputSchema: idsInput,
   outputSchema: z.object({ records: z.array(knowledgeContextResult) }),
-  execute: async ({ recordIds }) => {
-    const records = await getKnowledgesByIds(recordIds);
+  execute: async ({ recordIds }, context) => {
+    const records = await aiDataClient(context).getRecordsByIds(TABLES.knowledges, recordIds);
     return {
       records: records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-        context: r.fields.context ? String(r.fields.context) : undefined,
+        ...toContext(r),
         knowledge_type: linkTitle(r.fields.knowledge_type),
       })),
     };
   },
 });
 
-export const getGoalContextsTool = createTool({
-  id: 'get-goal-contexts',
-  description:
-    'ROUND 2 — Fetch full title + context for up to 5 goal records by their IDs. ' +
+export const getGoalContextsTool = contextTool(
+  'get-goal-contexts',
+  'ROUND 2 — Fetch full title + context for up to 5 goal records by their IDs. ' +
     'Call this after search-goal-titles with the IDs of the most relevant results.',
-  inputSchema: idsInput,
-  outputSchema: z.object({ records: z.array(contextResult) }),
-  execute: async ({ recordIds }) => {
-    const records = await getGoalsByIds(recordIds);
-    return {
-      records: records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-        context: r.fields.context ? String(r.fields.context) : undefined,
-      })),
-    };
-  },
-});
+  TABLES.goals
+);
 
-export const getProjectContextsTool = createTool({
-  id: 'get-project-contexts',
-  description:
-    'ROUND 2 — Fetch full title + context for up to 5 project records by their IDs. ' +
+export const getProjectContextsTool = contextTool(
+  'get-project-contexts',
+  'ROUND 2 — Fetch full title + context for up to 5 project records by their IDs. ' +
     'Call this after search-project-titles with the IDs of the most relevant results.',
-  inputSchema: idsInput,
-  outputSchema: z.object({ records: z.array(contextResult) }),
-  execute: async ({ recordIds }) => {
-    const records = await getProjectsByIds(recordIds);
-    return {
-      records: records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-        context: r.fields.context ? String(r.fields.context) : undefined,
-      })),
-    };
-  },
-});
+  TABLES.projects
+);
 
-export const getTaskContextsTool = createTool({
-  id: 'get-task-contexts',
-  description:
-    'ROUND 2 — Fetch full title + context for up to 5 task records by their IDs. ' +
+export const getTaskContextsTool = contextTool(
+  'get-task-contexts',
+  'ROUND 2 — Fetch full title + context for up to 5 task records by their IDs. ' +
     'Call this after search-task-titles with the IDs of the most relevant results.',
-  inputSchema: idsInput,
-  outputSchema: z.object({ records: z.array(contextResult) }),
-  execute: async ({ recordIds }) => {
-    const records = await getTasksByIds(recordIds);
-    return {
-      records: records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-        context: r.fields.context ? String(r.fields.context) : undefined,
-      })),
-    };
-  },
-});
+  TABLES.tasks
+);
 
 // ── Contacts — Round 1 ─────────────────────────────────────────────────────
 
@@ -208,38 +168,22 @@ export const searchContactTitlesTool = createTool({
     'Pick the ≤5 most relevant results, then call get-contact-contexts with those IDs.',
   inputSchema: keywordInput,
   outputSchema: z.object({ results: z.array(contactTitleResult), total: z.number() }),
-  execute: async ({ keyword, take }) => {
-    const result = await searchContacts(keyword, { take });
+  execute: async ({ keyword, take }, context) => {
+    const records = await searchContacts(aiDataClient(context), keyword, { take });
     return {
-      results: result.records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-        email: r.fields.email ? String(r.fields.email) : undefined,
-      })),
-      total: result.records.length,
+      results: records.map((r) => ({ ...toTitle(r), email: text(r.fields.email) })),
+      total: records.length,
     };
   },
 });
 
-export const searchCompanyTitlesTool = createTool({
-  id: 'search-company-titles',
-  description:
-    'ROUND 1 — Search company records whose title contains the keyword. ' +
+export const searchCompanyTitlesTool = titleSearchTool(
+  'search-company-titles',
+  'ROUND 1 — Search company records whose title contains the keyword. ' +
     'Returns id and title only. ' +
     'Pick the ≤5 most relevant results, then call get-company-contexts with those IDs.',
-  inputSchema: keywordInput,
-  outputSchema: z.object({ results: z.array(titleResult), total: z.number() }),
-  execute: async ({ keyword, take }) => {
-    const result = await searchCompanies(keyword, { take });
-    return {
-      results: result.records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-      })),
-      total: result.records.length,
-    };
-  },
-});
+  TABLES.companies
+);
 
 // ── Contacts — Round 2 ─────────────────────────────────────────────────────
 
@@ -260,17 +204,16 @@ export const getContactContextsTool = createTool({
     'Call this after search-contact-titles with the IDs of the most relevant results.',
   inputSchema: idsInput,
   outputSchema: z.object({ records: z.array(contactContextResult) }),
-  execute: async ({ recordIds }) => {
-    const records = await getContactsByIds(recordIds);
+  execute: async ({ recordIds }, context) => {
+    const records = await aiDataClient(context).getRecordsByIds(TABLES.contacts, recordIds);
     return {
       records: records.map((r) => ({
-        id: r.id,
-        title: String(r.fields.title ?? ''),
-        firstname: r.fields.firstname ? String(r.fields.firstname) : undefined,
-        lastname: r.fields.lastname ? String(r.fields.lastname) : undefined,
-        email: r.fields.email ? String(r.fields.email) : undefined,
-        mobile: r.fields.mobile ? String(r.fields.mobile) : undefined,
-        context: r.fields.context ? String(r.fields.context) : undefined,
+        ...toTitle(r),
+        firstname: text(r.fields.firstname),
+        lastname: text(r.fields.lastname),
+        email: text(r.fields.email),
+        mobile: text(r.fields.mobile),
+        context: text(r.fields.context),
       })),
     };
   },

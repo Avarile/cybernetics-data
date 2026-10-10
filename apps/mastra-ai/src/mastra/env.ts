@@ -35,13 +35,16 @@ const envSchema = z.object({
   // CORS
   MASTRA_CORS_ORIGIN: z.string().default('*'),
 
-  // Backend logging integration — optional; enables BackendSpanExporter when set
-  // BACKEND_URL: z.string().url().default('http://localhost:3000'),
+  // Teable backend the data tools read through (POST /api/internal/ai-data/:op), as the
+  // chatting user. Use the backend's internal address, not the public domain.
+  BACKEND_URL: z.url().default('http://localhost:3000'),
 
   PUBLIC_ORIGIN: z.url().default('http://localhost:3000'),
   // BACKEND_API_KEY: z.string().optional(),
 
-  CYBERNETICS_APP_TOKEN: z.string(),
+  // Shared API token. No longer used for reads; only the RAG agent's synthesize-and-ingest
+  // (gated on the user's write permission) and the unused write tools still use it.
+  CYBERNETICS_APP_TOKEN: z.string().optional(),
 
   TEABLE_BASE_URL: z.string().url().default('https://projects.avarile.com'),
 });

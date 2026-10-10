@@ -1,5 +1,10 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { canWrite } from '../db-query/ai-data-client.js';
+
+/** Refusal for tools that change data when the chatting user cannot write to the base. */
+const writeDenied = (tool: string) =>
+  `Permission denied: ${tool} changes data and you do not have write access to this base.`;
 import {
   listIndexes,
   getIndex,
@@ -99,7 +104,8 @@ export const createIndexTool = createTool({
     index: indexSchema.optional(),
     error: z.string().optional(),
   }),
-  execute: async ({ name, label, description }) => {
+  execute: async ({ name, label, description }, context) => {
+    if (!canWrite(context)) return { success: false, error: writeDenied('create-index') };
     try {
       const ix = await createIndex({ name, label, description });
       return {
@@ -132,7 +138,8 @@ export const updateIndexTool = createTool({
     index: indexSchema.optional(),
     error: z.string().optional(),
   }),
-  execute: async ({ name, label, description }) => {
+  execute: async ({ name, label, description }, context) => {
+    if (!canWrite(context)) return { success: false, error: writeDenied('update-index') };
     try {
       const ix = await updateIndex(name, { label, description });
       if (!ix) return { success: false, error: `Index "${name}" not found` };
@@ -166,7 +173,8 @@ export const deleteIndexTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ name }) => {
+  execute: async ({ name }, context) => {
+    if (!canWrite(context)) return { success: false, message: writeDenied('delete-index') };
     const ok = await deleteIndex(name);
     return {
       success: ok,
@@ -188,7 +196,8 @@ export const restoreIndexTool = createTool({
     success: z.boolean(),
     message: z.string(),
   }),
-  execute: async ({ name }) => {
+  execute: async ({ name }, context) => {
+    if (!canWrite(context)) return { success: false, message: writeDenied('restore-index') };
     const ok = await restoreIndex(name);
     return {
       success: ok,

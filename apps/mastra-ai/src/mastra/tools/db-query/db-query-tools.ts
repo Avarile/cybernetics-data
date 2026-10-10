@@ -1,24 +1,22 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { listKnowledges } from './knowledges/knowledge.js';
-import { listKnowledgesByTypeName } from './knowledges/knowledge-service.js';
-import { listKnowledgeTypes } from './knowledges/knowledge-type.js';
-import { listGoals } from './project-management/goals.js';
-import { listProjects } from './project-management/projects.js';
-import { listTasks, getTaskById } from './project-management/tasks.js';
-import { getGoalWithProjects, getProjectWithTasks } from './project-management/project-service.js';
-import { listFrameworks, listFrameworksByType } from './framework.js';
-import type { FrameworkType } from './framework.js';
-import { listContactTypes } from './contacts/contact-type.js';
-import { listContactProfessions } from './contacts/contact-profession.js';
-import { listCompanies } from './contacts/companies.js';
-import { listContacts } from './contacts/contacts.js';
+import { aiDataClient } from './ai-data-client.js';
+import type { AiDataClient, AiDataRecord } from './ai-data-client.js';
 import {
-  getContactWithRelations,
-  getContactsByType,
-  getContactsByProfession,
-  getContactsByCompany,
-} from './contacts/contact-service.js';
+  TABLES,
+  findByTitle,
+  followLink,
+  getById,
+  linkedByOwnerTitle,
+  listFrameworksByType,
+  listRecords,
+} from './ai-data-reads.js';
+
+/**
+ * Read tools. They read through the Teable backend as the chatting user (see
+ * ai-data-client.ts); tables and fields are addressed by name, not hardcoded ids.
+ * Soft-deleted rows (deleted_at set) are left out by the backend.
+ */
 
 const pagination = {
   take: z.number().int().min(1).max(200).optional().default(50),
@@ -29,8 +27,18 @@ const pagination = {
 const recordSchema = z.object({ id: z.string(), fields: z.record(z.string(), z.unknown()) });
 const listOutput = z.object({ records: z.array(recordSchema), total: z.number() });
 
-type GR = { id: string; fields: Record<string, unknown> };
-const gr = (r: { id: string; fields: object }) => r as GR;
+const asList = (records: AiDataRecord[]) => ({ records, total: records.length });
+
+/** A list tool over one table with take / skip / search. */
+const listTool = (id: string, description: string, table: string) =>
+  createTool({
+    id,
+    description,
+    inputSchema: z.object({ ...pagination }),
+    outputSchema: listOutput,
+    execute: async ({ take, skip, search }, context) =>
+      asList(await listRecords(aiDataClient(context), table, { take, skip, search })),
+  });
 
 // ── Knowledge ──────────────────────────────────────────────────────────────
 
@@ -44,39 +52,40 @@ export const listKnowledgesTool = createTool({
     typeName: z.string().optional().describe('Filter by knowledge type title'),
   }),
   outputSchema: listOutput,
-  execute: async ({ take, skip, search, typeName }) => {
-    const result = typeName
-      ? await listKnowledgesByTypeName(typeName, { take, skip, search })
-      : await listKnowledges({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
+  execute: async ({ take, skip, search, typeName }, context) => {
+    const client = aiDataClient(context);
+    if (!typeName)
+      return asList(await listRecords(client, TABLES.knowledges, { take, skip, search }));
+
+    const type = await findByTitle(client, TABLES.knowledgeTypes, typeName);
+    if (!type) return asList([]);
+    return asList(
+      await listRecords(client, TABLES.knowledges, {
+        take,
+        skip,
+        search,
+        filter: {
+          conjunction: 'and',
+          filterSet: [{ fieldId: 'knowledge_type', operator: 'is', value: type.id }],
+        },
+      })
+    );
   },
 });
 
-// ── Knowledge Types ────────────────────────────────────────────────────────
+export const listKnowledgeTypesTool = listTool(
+  'list-knowledge-types',
+  'List all knowledge type records (the taxonomy/categories for knowledge records).',
+  TABLES.knowledgeTypes
+);
 
-export const listKnowledgeTypesTool = createTool({
-  id: 'list-knowledge-types',
-  description: 'List all knowledge type records (the taxonomy/categories for knowledge records).',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listKnowledgeTypes({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
+// ── Goals / projects / tasks ───────────────────────────────────────────────
 
-// ── Goals ──────────────────────────────────────────────────────────────────
-
-export const listGoalsTool = createTool({
-  id: 'list-goals',
-  description: 'List goal records. Pass search to filter by title keyword.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listGoals({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
+export const listGoalsTool = listTool(
+  'list-goals',
+  'List goal records. Pass search to filter by title keyword.',
+  TABLES.goals
+);
 
 export const getGoalWithProjectsTool = createTool({
   id: 'get-goal-with-projects',
@@ -89,25 +98,23 @@ export const getGoalWithProjectsTool = createTool({
     goal: recordSchema.optional(),
     projects: z.array(recordSchema).optional(),
   }),
-  execute: async ({ goalRecordId }) => {
-    const result = await getGoalWithProjects(goalRecordId);
-    if (!result) return { found: false };
-    return { found: true, goal: gr(result.goal), projects: result.projects.map(gr) };
+  execute: async ({ goalRecordId }, context) => {
+    const client = aiDataClient(context);
+    const goal = await getById(client, TABLES.goals, goalRecordId);
+    if (!goal) return { found: false };
+    return {
+      found: true,
+      goal,
+      projects: await followLink(client, TABLES.projects, goal.fields.projects),
+    };
   },
 });
 
-// ── Projects ───────────────────────────────────────────────────────────────
-
-export const listProjectsTool = createTool({
-  id: 'list-projects',
-  description: 'List project records. Pass search to filter by title keyword.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listProjects({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
+export const listProjectsTool = listTool(
+  'list-projects',
+  'List project records. Pass search to filter by title keyword.',
+  TABLES.projects
+);
 
 export const getProjectWithTasksTool = createTool({
   id: 'get-project-with-tasks',
@@ -120,25 +127,23 @@ export const getProjectWithTasksTool = createTool({
     project: recordSchema.optional(),
     tasks: z.array(recordSchema).optional(),
   }),
-  execute: async ({ projectRecordId }) => {
-    const result = await getProjectWithTasks(projectRecordId);
-    if (!result) return { found: false };
-    return { found: true, project: gr(result.project), tasks: result.tasks.map(gr) };
+  execute: async ({ projectRecordId }, context) => {
+    const client = aiDataClient(context);
+    const project = await getById(client, TABLES.projects, projectRecordId);
+    if (!project) return { found: false };
+    return {
+      found: true,
+      project,
+      tasks: await followLink(client, TABLES.tasks, project.fields.tasks),
+    };
   },
 });
 
-// ── Tasks ──────────────────────────────────────────────────────────────────
-
-export const listTasksTool = createTool({
-  id: 'list-tasks',
-  description: 'List task records. Pass search to filter by title keyword.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listTasks({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
+export const listTasksTool = listTool(
+  'list-tasks',
+  'List task records. Pass search to filter by title keyword.',
+  TABLES.tasks
+);
 
 export const getTaskTool = createTool({
   id: 'get-task',
@@ -146,18 +151,14 @@ export const getTaskTool = createTool({
   inputSchema: z.object({
     taskRecordId: z.string().describe('Teable record ID of the task (e.g. recXXX)'),
   }),
-  outputSchema: z.object({
-    found: z.boolean(),
-    task: recordSchema.optional(),
-  }),
-  execute: async ({ taskRecordId }) => {
-    const task = await getTaskById(taskRecordId);
-    if (!task) return { found: false };
-    return { found: true, task: gr(task) };
+  outputSchema: z.object({ found: z.boolean(), task: recordSchema.optional() }),
+  execute: async ({ taskRecordId }, context) => {
+    const task = await getById(aiDataClient(context), TABLES.tasks, taskRecordId);
+    return task ? { found: true, task } : { found: false };
   },
 });
 
-// ── Frameworks (read-only) ─────────────────────────────────────────────────
+// ── Frameworks ─────────────────────────────────────────────────────────────
 
 export const listFrameworksTool = createTool({
   id: 'list-frameworks',
@@ -172,65 +173,44 @@ export const listFrameworksTool = createTool({
       .describe('Framework category to filter by'),
   }),
   outputSchema: listOutput,
-  execute: async ({ take, skip, search, type }) => {
-    const result = type
-      ? await listFrameworksByType(type as FrameworkType, { take, skip, search })
-      : await listFrameworks({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
-
-// ── Contact Types ──────────────────────────────────────────────────────────
-
-export const listContactTypesTool = createTool({
-  id: 'list-contact-types',
-  description: 'List all contact type records.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listContactTypes({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
-
-// ── Contact Professions ────────────────────────────────────────────────────
-
-export const listContactProfessionsTool = createTool({
-  id: 'list-contact-professions',
-  description: 'List all contact profession records.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listContactProfessions({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
-
-// ── Companies ──────────────────────────────────────────────────────────────
-
-export const listCompaniesTool = createTool({
-  id: 'list-companies',
-  description: 'List company records. Pass search to filter by title keyword.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listCompanies({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
+  execute: async ({ take, skip, search, type }, context) => {
+    const client = aiDataClient(context);
+    return asList(
+      type
+        ? await listFrameworksByType(client, type, { take, skip, search })
+        : await listRecords(client, TABLES.frameworks, { take, skip, search })
+    );
   },
 });
 
 // ── Contacts ───────────────────────────────────────────────────────────────
 
-export const listContactsTool = createTool({
-  id: 'list-contacts',
-  description: 'List contact records. Pass search to filter by title keyword.',
-  inputSchema: z.object({ ...pagination }),
-  outputSchema: listOutput,
-  execute: async ({ take, skip, search }) => {
-    const result = await listContacts({ take, skip, search });
-    return { records: result.records.map(gr), total: result.records.length };
-  },
-});
+export const listContactTypesTool = listTool(
+  'list-contact-types',
+  'List all contact type records.',
+  TABLES.contactTypes
+);
+
+export const listContactProfessionsTool = listTool(
+  'list-contact-professions',
+  'List all contact profession records.',
+  TABLES.contactProfessions
+);
+
+export const listCompaniesTool = listTool(
+  'list-companies',
+  'List company records. Pass search to filter by title keyword.',
+  TABLES.companies
+);
+
+export const listContactsTool = listTool(
+  'list-contacts',
+  'List contact records. Pass search to filter by title keyword.',
+  TABLES.contacts
+);
+
+const firstLinked = async (client: AiDataClient, table: string, cell: unknown) =>
+  (await followLink(client, table, Array.isArray(cell) ? cell.slice(0, 1) : cell))[0];
 
 export const getContactWithRelationsTool = createTool({
   id: 'get-contact-with-relations',
@@ -246,54 +226,69 @@ export const getContactWithRelationsTool = createTool({
     profession: recordSchema.optional(),
     company: recordSchema.optional(),
   }),
-  execute: async ({ contactRecordId }) => {
-    const result = await getContactWithRelations(contactRecordId);
-    if (!result) return { found: false };
+  execute: async ({ contactRecordId }, context) => {
+    const client = aiDataClient(context);
+    const contact = await getById(client, TABLES.contacts, contactRecordId);
+    if (!contact) return { found: false };
     return {
       found: true,
-      contact: gr(result.contact),
-      type: result.type ? gr(result.type) : undefined,
-      profession: result.profession ? gr(result.profession) : undefined,
-      company: result.company ? gr(result.company) : undefined,
+      contact,
+      type: await firstLinked(client, TABLES.contactTypes, contact.fields.contact_type),
+      profession: await firstLinked(
+        client,
+        TABLES.contactProfessions,
+        contact.fields.contact_profession
+      ),
+      company: await firstLinked(client, TABLES.companies, contact.fields.contact_company),
     };
   },
 });
 
-export const getContactsByTypeTool = createTool({
-  id: 'get-contacts-by-type',
-  description: 'Get all contacts linked to a given contact type title.',
-  inputSchema: z.object({
-    typeName: z.string().describe('Contact type title (e.g. "Lead")'),
-  }),
-  outputSchema: listOutput,
-  execute: async ({ typeName }) => {
-    const records = await getContactsByType(typeName);
-    return { records: records.map(gr), total: records.length };
-  },
-});
+/** All contacts linked from the record titled `title` in `ownerTable` (its reverse `contacts` link). */
+const contactsOfTool = (
+  id: string,
+  description: string,
+  ownerTable: string,
+  inputName: string,
+  inputDescription: string
+) =>
+  createTool({
+    id,
+    description,
+    inputSchema: z.object({ [inputName]: z.string().describe(inputDescription) }),
+    outputSchema: listOutput,
+    execute: async (input, context) =>
+      asList(
+        await linkedByOwnerTitle(
+          aiDataClient(context),
+          ownerTable,
+          String((input as Record<string, unknown>)[inputName]),
+          'contacts',
+          TABLES.contacts
+        )
+      ),
+  });
 
-export const getContactsByProfessionTool = createTool({
-  id: 'get-contacts-by-profession',
-  description: 'Get all contacts linked to a given contact profession title.',
-  inputSchema: z.object({
-    professionName: z.string().describe('Contact profession title (e.g. "Engineer")'),
-  }),
-  outputSchema: listOutput,
-  execute: async ({ professionName }) => {
-    const records = await getContactsByProfession(professionName);
-    return { records: records.map(gr), total: records.length };
-  },
-});
+export const getContactsByTypeTool = contactsOfTool(
+  'get-contacts-by-type',
+  'Get all contacts linked to a given contact type title.',
+  TABLES.contactTypes,
+  'typeName',
+  'Contact type title (e.g. "Lead")'
+);
 
-export const getContactsByCompanyTool = createTool({
-  id: 'get-contacts-by-company',
-  description: 'Get all contacts linked to a given company title.',
-  inputSchema: z.object({
-    companyName: z.string().describe('Company title'),
-  }),
-  outputSchema: listOutput,
-  execute: async ({ companyName }) => {
-    const records = await getContactsByCompany(companyName);
-    return { records: records.map(gr), total: records.length };
-  },
-});
+export const getContactsByProfessionTool = contactsOfTool(
+  'get-contacts-by-profession',
+  'Get all contacts linked to a given contact profession title.',
+  TABLES.contactProfessions,
+  'professionName',
+  'Contact profession title (e.g. "Engineer")'
+);
+
+export const getContactsByCompanyTool = contactsOfTool(
+  'get-contacts-by-company',
+  'Get all contacts linked to a given company title.',
+  TABLES.companies,
+  'companyName',
+  'Company title'
+);

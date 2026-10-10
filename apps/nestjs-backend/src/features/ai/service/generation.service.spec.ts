@@ -47,7 +47,8 @@ describe('GenerationService.generateStream agent gating', () => {
     expect(viaMastra).toHaveBeenCalledWith(
       'bse1',
       expect.objectContaining({ agentId: reactiveAgent, resourceId: 'usr1' }),
-      response
+      response,
+      true
     );
   });
 
@@ -108,9 +109,23 @@ describe('GenerationService Mastra path: AI data context', () => {
 
     expect(aiDataContextService.issue).toHaveBeenCalledWith('usr1', 'bse1');
     const body = (streamAgent.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
-    expect(body.requestContext).toEqual({ aiDataContext: 'opaque-token' });
+    // read-only user: canWrite false gates the RAG ingest tools in Mastra
+    expect(body.requestContext).toEqual({ aiDataContext: 'opaque-token', canWrite: false });
     expect(aiDataContextService.revoke).toHaveBeenCalledWith('opaque-token');
     expect(written.join('')).toContain('hello');
+  });
+
+  it('tells Mastra the user can write when they hold a record write permission', async () => {
+    const { service, streamAgent } = createMastraService({ enabled: true });
+    (service as any).permissionService.getPermissions = vi
+      .fn()
+      .mockResolvedValue(['record|read', 'record|create']);
+    (service as any).mastraClientService.createThread = vi.fn(async () => ({ id: 'thr1' }));
+    const { res } = makeResponse();
+
+    await service.generateStream('bse1', ragRequest as never, res as never);
+    const body = (streamAgent.mock.calls[0] as unknown[])[1] as Record<string, any>;
+    expect(body.requestContext.canWrite).toBe(true);
   });
 
   it('revokes the context even when the agent fails', async () => {
@@ -122,7 +137,7 @@ describe('GenerationService Mastra path: AI data context', () => {
     expect(aiDataContextService.revoke).toHaveBeenCalledWith('opaque-token');
   });
 
-  it('sends no context when the feature is not configured', async () => {
+  it('sends no data token, only canWrite, when the feature is not configured', async () => {
     const { service, streamAgent, aiDataContextService } = createMastraService({ enabled: false });
     (service as any).mastraClientService.createThread = vi.fn(async () => ({ id: 'thr1' }));
     const { res } = makeResponse();
@@ -130,6 +145,6 @@ describe('GenerationService Mastra path: AI data context', () => {
     await service.generateStream('bse1', ragRequest as never, res as never);
     expect(aiDataContextService.issue).not.toHaveBeenCalled();
     const body = (streamAgent.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
-    expect(body.requestContext).toBeUndefined();
+    expect(body.requestContext).toEqual({ canWrite: false });
   });
 });

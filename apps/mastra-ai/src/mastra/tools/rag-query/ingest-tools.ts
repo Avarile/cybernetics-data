@@ -1,5 +1,10 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { canWrite } from '../db-query/ai-data-client.js';
+
+/** Refusal for tools that change data when the chatting user cannot write to the base. */
+const writeDenied = (tool: string) =>
+  `Permission denied: ${tool} changes data and you do not have write access to this base.`;
 import { ingestDocument } from '../../rag/ingest';
 import { listIndexes } from '../../db/db-vector.js';
 import { createKnowledgeWithType } from '../db-query/knowledges/knowledge-service.js';
@@ -50,7 +55,8 @@ export const ingestDocumentTool = createTool({
     indexName: z.string().optional(),
     error: z.string().optional(),
   }),
-  execute: async ({ indexName, content, docName, metadata, extractEnrichments }) => {
+  execute: async ({ indexName, content, docName, metadata, extractEnrichments }, context) => {
+    if (!canWrite(context)) return { success: false, error: writeDenied('ingest-document') };
     try {
       const result = await ingestDocument({
         indexName,
@@ -121,7 +127,11 @@ export const synthesizeAndIngestTool = createTool({
     knowledgeRecordId: z.string().optional(),
     error: z.string().optional(),
   }),
-  execute: async ({ content, indexName, docName, title, typeName, typeContext, metadata }) => {
+  execute: async (
+    { content, indexName, docName, title, typeName, typeContext, metadata },
+    context
+  ) => {
+    if (!canWrite(context)) return { success: false, error: writeDenied('synthesize-and-ingest') };
     try {
       const ingestResult = await ingestDocument({ indexName, content, docName, metadata });
       const { knowledge } = await createKnowledgeWithType(
