@@ -17,8 +17,8 @@ Categories for knowledge base articles (e.g. "How-to", "Policy", "Runbook").
 
 Read all types to discover valid IDs before creating a knowledge record:
 
-```bash
-node scripts/get-records.js '{"tableId":"tbl2vKKo0l3RfSvKzM1","take":50}'
+```
+queryRecords({ "tableId": "tbl2vKKo0l3RfSvKzM1", "take": 50 })
 ```
 
 ## Example Payloads

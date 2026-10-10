@@ -17,13 +17,17 @@ Professional specialisation of contacts: e.g. "Software Engineer", "Designer", "
 
 Lookup a profession record ID before setting `internal_contact_profession` on a contact:
 
-```bash
-node scripts/lookup-link-id.js '{
-  "tableId": "tblSceUZHrMe5psnhCZ",
-  "fieldId": "fldEEYC8IGsxhCKy49F",
-  "value": "Software Engineer"
-}'
 ```
+queryRecords({
+  "tableId": "tblSceUZHrMe5psnhCZ",
+  "filter": { "conjunction": "and", "filterSet": [
+    { "fieldId": "fldEEYC8IGsxhCKy49F", "operator": "is", "value": "Software Engineer" }
+  ] },
+  "take": 2
+})
+```
+
+Use the `id` of the returned record.
 
 ## Example Payloads
 

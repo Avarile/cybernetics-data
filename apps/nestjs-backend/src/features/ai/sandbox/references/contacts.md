@@ -28,7 +28,7 @@ People in the system: internal staff, external partners, contractors, etc.
 ## Required Fields on Create
 
 - `internal_contact_type` (single link) — must be a valid contact-type record ID.
-  Run `lookup-link-id.js` on table `tblXWCU7zG6yVPpnH50` field `fldnyYl4qoi7Rj2vuWH` first.
+  Call `queryRecords` on table `tblXWCU7zG6yVPpnH50`, filtering field `fldnyYl4qoi7Rj2vuWH`, first.
 
 ## Common Filter Examples
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 /**
+ * NOT USED AT THE MOMENT: the agents read through AiDataService (queryRecords /
+ * getRecords tools) and no longer allow this script. Kept for reference.
+ *
  * Find a record ID in a linked table by matching a field value.
  * Use this before setting any link field to get a valid record ID.
  *

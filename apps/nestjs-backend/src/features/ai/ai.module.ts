@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AiDataModule } from '../ai-data/ai-data.module';
 import { ChatFileModule } from '../chat-file/chat-file.module';
 import { SettingModule } from '../setting/setting.module';
 import { AiController } from './ai.controller';
@@ -25,7 +26,7 @@ const subServices = [
 ];
 
 @Module({
-  imports: [ConfigModule, SettingModule, ChatFileModule],
+  imports: [ConfigModule, SettingModule, ChatFileModule, AiDataModule],
   controllers: [AiController],
   providers: [AiService, ...subServices],
   exports: [AiService],

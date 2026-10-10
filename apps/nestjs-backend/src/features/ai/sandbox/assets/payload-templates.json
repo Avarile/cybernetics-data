@@ -16,7 +16,7 @@
           }
         }
       ],
-      "_prereqs": "Lookup contact-type record ID first: node scripts/lookup-link-id.js '{\"tableId\":\"tblXWCU7zG6yVPpnH50\",\"fieldId\":\"fldIGDeAfwj7LukG0Kn\",\"value\":\"Employee\"}'"
+      "_prereqs": "Look up the contact-type record ID first: queryRecords on tblXWCU7zG6yVPpnH50, filtering fldIGDeAfwj7LukG0Kn is 'Employee'"
     },
 
     "task": {

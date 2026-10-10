@@ -7,6 +7,7 @@ import { generateText, streamText } from 'ai';
 import type { Response } from 'express';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
+import { AiDataService } from '../../ai-data/ai-data.service';
 import { PermissionService } from '../../auth/permission.service';
 import { ChatFileService } from '../../chat-file/chat-file.service';
 import { runGeneralInfoAgent } from '../agents/general-agents';
@@ -46,7 +47,8 @@ export class GenerationService {
     private readonly chatFileService: ChatFileService,
     private readonly mastraClientService: MastraClientService,
     private readonly permissionService: PermissionService,
-    private readonly cls: ClsService<IClsStore>
+    private readonly cls: ClsService<IClsStore>,
+    private readonly aiDataService: AiDataService
   ) {}
 
   /** Resolve whether the current caller may mutate records in this base. */
@@ -246,8 +248,7 @@ export class GenerationService {
         const result = await runGeneralInfoAgent(
           modelInstance,
           input,
-          baseId,
-          canWrite,
+          { baseId, aiData: this.aiDataService, canWrite },
           abortController.signal
         );
 
@@ -402,7 +403,7 @@ export class GenerationService {
       const result = await runIngestionAgent(
         modelInstance,
         { prompt },
-        true,
+        { baseId, aiData: this.aiDataService, canWrite: true },
         abortController.signal
       );
 

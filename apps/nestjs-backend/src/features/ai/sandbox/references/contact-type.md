@@ -19,15 +19,17 @@ This is a **required** field when creating a contact.
 
 Before creating a contact, look up a valid contact-type ID:
 
-```bash
-node scripts/lookup-link-id.js '{
+```
+queryRecords({
   "tableId": "tblXWCU7zG6yVPpnH50",
-  "fieldId": "fldIGDeAfwj7LukG0Kn",
-  "value": "Employee"
-}'
+  "filter": { "conjunction": "and", "filterSet": [
+    { "fieldId": "fldIGDeAfwj7LukG0Kn", "operator": "is", "value": "Employee" }
+  ] },
+  "take": 2
+})
 ```
 
-Then use `firstId` from the result as `internal_contact_type: { "id": "recXXX" }` in the contact create payload.
+Then use the `id` of the returned record as `internal_contact_type: { "id": "recXXX" }` in the contact create payload.
 
 ## Example Payloads
 

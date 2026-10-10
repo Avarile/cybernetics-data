@@ -11,11 +11,11 @@ description: Perform Create, Read, Update, and Delete operations against the Tea
 sandbox/
 ├── SKILL.md                        ← you are here
 ├── scripts/                        ← executable Node.js helpers (run with: node scripts/<name>.js '<json-args>')
-│   ├── get-records.js
+│   ├── get-records.js              ← not used at the moment (reads use the queryRecords tool)
 │   ├── create-records.js
 │   ├── update-record.js
 │   ├── delete-record.js
-│   └── lookup-link-id.js
+│   └── lookup-link-id.js           ← not used at the moment (use queryRecords on the linked table)
 ├── references/                     ← per-table field specs, constraints, filter examples
 │   ├── entity-relationships.md
 │   ├── contacts.md
@@ -52,14 +52,16 @@ All requests require a Bearer token. Read from env:
 
 ## How to Use Scripts
 
-Run any script with a single JSON argument:
+**Reading is not done with scripts.** Use the `listTables`, `describeTable`,
+`queryRecords` and `getRecords` tools; they run as the current user and only see the
+current base. The scripts below are for writing and need write permission.
+
+Run a write script with a single JSON argument:
 
 ```bash
-node scripts/get-records.js     '{"tableId":"tblXXX","take":20,"filter":{...}}'
 node scripts/create-records.js  '{"tableId":"tblXXX","records":[{"fields":{...}}]}'
 node scripts/update-record.js   '{"tableId":"tblXXX","recordId":"recXXX","fields":{...}}'
 node scripts/delete-record.js   '{"tableId":"tblXXX","recordId":"recXXX"}'
-node scripts/lookup-link-id.js  '{"tableId":"tblXXX","fieldId":"fldXXX","value":"Jane Smith"}'
 ```
 
 All scripts print JSON to stdout and exit non-zero on error.
@@ -72,11 +74,11 @@ Look up `fieldId` values in `assets/field-ids.json`.
 ## Workflow Decision Rules
 
 1. **Read references/ before any table operation** — always check the per-table reference for required fields and link constraints before writing.
-2. **Always resolve link IDs first** — use `lookup-link-id.js` to get a target record's `id` before setting any link field.
+2. **Always resolve link IDs first** — call `queryRecords` on the linked table, filtering its primary field, to get a target record's `id` before setting any link field.
 3. **filter/orderBy use field IDs** — `fieldKeyType=name` applies only to request/response bodies; filter and orderBy must use `fldXXX` IDs from `assets/field-ids.json`.
 4. **Never write READ-ONLY fields** — `record_id`, `created_at`, rollup fields are server-computed; the API will reject them.
 5. **Batch creates** — `records` array accepts up to 1 000 items per POST.
-6. **Paginate large reads** — increment `skip` by `take` until the response `records` length is less than `take`.
+6. **Paginate large reads** — with `queryRecords`, call again with `skip = nextSkip` while `hasMore` is true.
 7. **contacts require internal_contact_type** — this is the only table with a required link on create; query `contact-type` first.
 
 ---

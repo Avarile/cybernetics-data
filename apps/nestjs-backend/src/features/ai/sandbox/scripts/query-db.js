@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 /**
+ * NOT USED AT THE MOMENT: the agents read through AiDataService (queryRecords /
+ * getRecords tools) and no longer allow this script. Kept for reference.
+ *
  * Execute a read-only SELECT query against the PostgreSQL database.
  *
  * Usage:
