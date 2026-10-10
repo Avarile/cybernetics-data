@@ -1,17 +1,42 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { SortFunc } from '@teable/core';
 import { describe, expect, it, vi } from 'vitest';
 import { AiDataService } from './ai-data.service';
 
 const baseA = 'bseAAAA';
 const baseB = 'bseBBBB';
-const tableA = 'tblAAAA';
-const tableB = 'tblBBBB';
+const tableA = 'tblAAAA'; // "Knowledge": follows the template convention
+const tablePlain = 'tblCCCC'; // "Goals": no deleted_at / context
+const tableB = 'tblBBBB'; // only in base B
 const recordRead = 'record|read';
 const tableRead = 'table|read';
+const fieldRead = 'field|read';
 const tableNotFound = 'Table not found';
 
 const config = { maxRecordsPerCall: 3, maxCellChars: 20, maxResponseChars: 10_000 };
+
+const knowledgeFields = [
+  { id: 'fldTitle', name: 'title', type: 'singleLineText', isPrimary: true },
+  { id: 'fldCtx', name: 'context', type: 'longText' },
+  {
+    id: 'fldType',
+    name: 'Type',
+    type: 'singleSelect',
+    options: { choices: [{ name: 'Note' }, { name: 'Doc' }] },
+  },
+  { id: 'fldParent', name: 'Parent', type: 'link', options: { foreignTableId: tablePlain } },
+  {
+    id: 'fldLookup',
+    name: 'Lookup',
+    type: 'singleLineText',
+    isComputed: true,
+    lookupOptions: { foreignTableId: 'tblDDDD' },
+  },
+  { id: 'fldDel', name: 'deleted_at', type: 'date' },
+  { id: 'fldActive', name: 'is_active', type: 'checkbox' },
+];
+const plainFields = [{ id: 'fldName', name: 'Name', type: 'singleLineText', isPrimary: true }];
 
 const makeCls = (accessTokenId?: string) => {
   const store: Record<string, unknown> = accessTokenId ? { accessTokenId } : {};
@@ -26,7 +51,6 @@ const makeCls = (accessTokenId?: string) => {
 
 const build = (
   overrides: {
-    cls?: ReturnType<typeof makeCls>;
     permission?: Record<string, any>;
     record?: Record<string, any>;
     table?: Record<string, any>;
@@ -34,57 +58,35 @@ const build = (
     config?: Partial<typeof config>;
   } = {}
 ) => {
-  const cls = overrides.cls ?? makeCls('tokenA');
+  const cls = makeCls('tokenA');
   const permission = {
-    validPermissions: vi.fn(async () => [recordRead, tableRead, 'field|read']),
-    getUpperIdByTableId: vi.fn(async (tableId: string) => ({
-      spaceId: 'spc1',
-      baseId: tableId === tableB ? baseB : baseA,
-    })),
+    validPermissions: vi.fn(async () => [recordRead, tableRead, fieldRead]),
     ...overrides.permission,
   };
   const table = {
-    getTables: vi.fn(async () => [
-      { id: tableA, name: 'Knowledge', description: null },
-      { id: 'tblCCCC', name: 'Goals', description: 'All goals' },
-    ]),
-    getTable: vi.fn(async () => ({ id: tableA, name: 'Knowledge', description: 'KB' })),
+    getTables: vi.fn(async (baseId: string) =>
+      baseId === baseA
+        ? [
+            { id: tableA, name: 'Knowledge', description: null },
+            { id: tablePlain, name: 'Goals', description: 'All goals' },
+            { id: 'tblDup1', name: 'Dup', description: null },
+            { id: 'tblDup2', name: 'DUP', description: null },
+          ]
+        : [{ id: tableB, name: 'Secret', description: null }]
+    ),
     ...overrides.table,
   };
   const field = {
-    getFields: vi.fn(async () => [
-      { id: 'fld1', name: 'Title', type: 'singleLineText', isPrimary: true },
-      {
-        id: 'fld2',
-        name: 'Type',
-        type: 'singleSelect',
-        options: {
-          choices: [
-            { name: 'Note', id: 'x' },
-            { name: 'Doc', id: 'y' },
-          ],
-        },
-      },
-      {
-        id: 'fld3',
-        name: 'Parent',
-        type: 'link',
-        options: { foreignTableId: 'tblCCCC', relationship: 'manyOne' },
-      },
-      {
-        id: 'fld4',
-        name: 'Lookup',
-        type: 'singleLineText',
-        isComputed: true,
-        lookupOptions: { foreignTableId: 'tblDDDD' },
-        options: { showAs: {} },
-      },
-    ]),
+    getFields: vi.fn(async (tableId: string) =>
+      tableId === tableA ? knowledgeFields : plainFields
+    ),
     ...overrides.field,
   };
   const record = {
-    getRecords: vi.fn(async () => ({ records: [{ id: 'rec1', fields: { fld1: 'Hello' } }] })),
-    getRecordsById: vi.fn(async () => ({ records: [{ id: 'rec1', fields: { fld1: 'Hello' } }] })),
+    getRecords: vi.fn(async () => ({ records: [{ id: 'rec1', fields: { fldTitle: 'Hello' } }] })),
+    getRecordsById: vi.fn(async () => ({
+      records: [{ id: 'rec1', fields: { fldTitle: 'Hello' } }],
+    })),
     ...overrides.record,
   };
   const service = new AiDataService(
@@ -98,6 +100,9 @@ const build = (
   return { service, cls, permission, table, field, record };
 };
 
+const queryArgs = (record: { getRecords: { mock: { calls: unknown[][] } } }) =>
+  record.getRecords.mock.calls[0][1] as any;
+
 describe('AiDataService.listTables', () => {
   it('authorizes table|read on the base, publishes permissions to CLS, and maps the result', async () => {
     const { service, permission, cls } = build();
@@ -105,10 +110,7 @@ describe('AiDataService.listTables', () => {
 
     expect(permission.validPermissions).toHaveBeenCalledWith(baseA, [tableRead], 'tokenA');
     expect(cls.set).toHaveBeenCalledWith('permissions', expect.arrayContaining([tableRead]));
-    expect(tables).toEqual([
-      { id: tableA, name: 'Knowledge', description: null },
-      { id: 'tblCCCC', name: 'Goals', description: 'All goals' },
-    ]);
+    expect(tables.map((t) => t.name)).toEqual(['Knowledge', 'Goals', 'Dup', 'DUP']);
   });
 
   it('rejects a wrong-prefix base id before touching anything', async () => {
@@ -131,140 +133,204 @@ describe('AiDataService.listTables', () => {
   });
 });
 
+describe('AiDataService table resolution', () => {
+  it('finds a table by id, by exact name, and by unambiguous case-insensitive name', async () => {
+    const { service } = build();
+    expect((await service.describeTable(baseA, tableA)).id).toBe(tableA);
+    expect((await service.describeTable(baseA, 'Knowledge')).id).toBe(tableA);
+    expect((await service.describeTable(baseA, 'knowledge')).id).toBe(tableA);
+    expect((await service.describeTable(baseA, ' Goals ')).id).toBe(tablePlain);
+  });
+
+  it('prefers the exact name and refuses an ambiguous loose match', async () => {
+    const { service } = build();
+    expect((await service.describeTable(baseA, 'DUP')).id).toBe('tblDup2');
+    await expect(service.describeTable(baseA, 'dup')).rejects.toThrow(tableNotFound);
+  });
+
+  it('treats a table from another base exactly like a missing one, by id or by name', async () => {
+    const { service, field } = build();
+    await expect(service.describeTable(baseA, tableB)).rejects.toThrow(tableNotFound);
+    await expect(service.describeTable(baseA, 'Secret')).rejects.toThrow(tableNotFound);
+    await expect(service.queryRecords(baseA, { tableId: tableB })).rejects.toThrow(tableNotFound);
+    expect(field.getFields).not.toHaveBeenCalled();
+  });
+
+  it('checks the base before looking up names, so names of an unreadable base never leak', async () => {
+    const { service, table } = build({
+      permission: {
+        validPermissions: vi.fn(async (resourceId: string) => {
+          if (resourceId === baseB) throw new ForbiddenException('no base access');
+          return [recordRead, tableRead, fieldRead];
+        }),
+      },
+    });
+    await expect(service.describeTable(baseB, 'Secret')).rejects.toThrow('no base access');
+    await expect(service.describeTable(baseB, 'Nope')).rejects.toThrow('no base access');
+    expect(table.getTables).not.toHaveBeenCalled();
+  });
+
+  it('caches table and field lists between calls', async () => {
+    const { service, table, field } = build();
+    await service.describeTable(baseA, 'Knowledge');
+    await service.queryRecords(baseA, { tableId: 'Knowledge' });
+    await service.describeTable(baseA, tableA);
+    expect(table.getTables).toHaveBeenCalledTimes(1);
+    expect(field.getFields).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('AiDataService.describeTable', () => {
-  it('returns a compact field list with link targets and select choices', async () => {
+  it('returns compact fields and the detected profile', async () => {
     const { service, permission } = build();
     const result = await service.describeTable(baseA, tableA);
 
     expect(permission.validPermissions).toHaveBeenCalledWith(
       tableA,
-      [tableRead, 'field|read'],
+      [tableRead, fieldRead],
       'tokenA'
     );
-    expect(result.baseId).toBe(baseA);
-    expect(result.fields).toEqual([
-      { id: 'fld1', name: 'Title', type: 'singleLineText', isPrimary: true, isComputed: false },
-      {
-        id: 'fld2',
-        name: 'Type',
-        type: 'singleSelect',
-        isPrimary: false,
-        isComputed: false,
-        choices: ['Note', 'Doc'],
-      },
-      {
-        id: 'fld3',
-        name: 'Parent',
-        type: 'link',
-        isPrimary: false,
-        isComputed: false,
-        linkedTableId: 'tblCCCC',
-      },
-      {
-        id: 'fld4',
-        name: 'Lookup',
-        type: 'singleLineText',
-        isPrimary: false,
-        isComputed: true,
-        linkedTableId: 'tblDDDD',
-      },
-    ]);
-  });
-
-  it('treats a table from another base exactly like a missing table', async () => {
-    const { service, field, permission } = build();
-    await expect(service.describeTable(baseA, tableB)).rejects.toThrow(tableNotFound);
-    expect(field.getFields).not.toHaveBeenCalled();
-    expect(permission.validPermissions).not.toHaveBeenCalled();
-  });
-
-  it('reports a table that does not exist with the same message', async () => {
-    const { service } = build({
-      permission: {
-        getUpperIdByTableId: vi.fn(async () => {
-          throw new NotFoundException('gone');
-        }),
-      },
+    expect(result).toMatchObject({ id: tableA, name: 'Knowledge', baseId: baseA });
+    expect(result.profile).toEqual({
+      titleFieldId: 'fldTitle',
+      contextFieldId: 'fldCtx',
+      softDeleteFieldId: 'fldDel',
     });
-    await expect(service.describeTable(baseA, 'tblMissing')).rejects.toThrow(tableNotFound);
+    expect(result.fields.find((f) => f.id === 'fldType')?.choices).toEqual(['Note', 'Doc']);
+    expect(result.fields.find((f) => f.id === 'fldParent')?.linkedTableId).toBe(tablePlain);
+    expect(result.fields.find((f) => f.id === 'fldLookup')).toMatchObject({
+      isComputed: true,
+      linkedTableId: 'tblDDDD',
+    });
+  });
+
+  it('reports no soft-delete field for a table outside the convention', async () => {
+    const { service } = build();
+    expect((await service.describeTable(baseA, 'Goals')).profile).toEqual({
+      titleFieldId: 'fldName',
+    });
   });
 });
 
 describe('AiDataService.queryRecords', () => {
-  it('reads by field id as the current user and reports no more rows', async () => {
+  it('reads as the current user and leaves soft-deleted rows out by default', async () => {
     const { service, record, permission } = build();
-    const result = await service.queryRecords(baseA, { tableId: tableA, take: 2, search: 'foo' });
+    const result = await service.queryRecords(baseA, { tableId: 'Knowledge', search: 'foo' });
 
-    expect(permission.validPermissions).toHaveBeenCalledWith(tableA, [recordRead], 'tokenA');
-    expect(record.getRecords).toHaveBeenCalledWith(
+    expect(permission.validPermissions).toHaveBeenCalledWith(
       tableA,
-      expect.objectContaining({
-        take: 3,
-        skip: 0,
-        search: ['foo'],
-        fieldKeyType: 'id',
-      })
+      [recordRead, fieldRead],
+      'tokenA'
     );
-    expect(result).toEqual({
-      records: [{ id: 'rec1', fields: { fld1: 'Hello' } }],
-      returned: 1,
-      hasMore: false,
-      nextSkip: null,
-      truncated: false,
+    const args = queryArgs(record);
+    expect(args).toMatchObject({ take: 4, skip: 0, search: ['foo'], fieldKeyType: 'id' });
+    expect(args.filter).toEqual({
+      conjunction: 'and',
+      filterSet: [{ fieldId: 'fldDel', operator: 'isEmpty', value: null }],
     });
+    expect(result.softDeletedExcluded).toBe(true);
+  });
+
+  it('keeps the caller filter and ANDs the soft-delete condition onto it', async () => {
+    const { service, record } = build();
+    const filter = {
+      conjunction: 'or',
+      filterSet: [{ fieldId: 'title', operator: 'contains', value: 'x' }],
+    } as any;
+    await service.queryRecords(baseA, { tableId: tableA, filter });
+    expect(queryArgs(record).filter).toEqual({
+      conjunction: 'and',
+      filterSet: [
+        {
+          conjunction: 'or',
+          filterSet: [{ fieldId: 'fldTitle', operator: 'contains', value: 'x' }],
+        },
+        { fieldId: 'fldDel', operator: 'isEmpty', value: null },
+      ],
+    });
+  });
+
+  it('includes soft-deleted rows on request, and never filters a table outside the convention', async () => {
+    const opted = build();
+    const r1 = await opted.service.queryRecords(baseA, { tableId: tableA, includeDeleted: true });
+    expect(queryArgs(opted.record).filter).toBeUndefined();
+    expect(r1.softDeletedExcluded).toBe(false);
+
+    const plain = build();
+    const r2 = await plain.service.queryRecords(baseA, { tableId: 'Goals' });
+    expect(queryArgs(plain.record).filter).toBeUndefined();
+    expect(r2.softDeletedExcluded).toBe(false);
+  });
+
+  it('translates field names in sort and projection, and can key cells by name', async () => {
+    const { service, record } = build();
+    const result = await service.queryRecords(baseA, {
+      tableId: tableA,
+      orderBy: [{ fieldId: 'title', order: SortFunc.Desc }],
+      projection: ['title', 'fldCtx'],
+      fieldKeyType: 'name',
+    });
+    expect(queryArgs(record)).toMatchObject({
+      orderBy: [{ fieldId: 'fldTitle', order: 'desc' }],
+      projection: ['fldTitle', 'fldCtx'],
+      fieldKeyType: 'id',
+    });
+    expect(result.records).toEqual([{ id: 'rec1', fields: { title: 'Hello' } }]);
+  });
+
+  it('names the unknown field and lists the real ones', async () => {
+    const { service, record } = build();
+    await expect(
+      service.queryRecords(baseA, { tableId: tableA, projection: ['nope'] })
+    ).rejects.toThrow(/Unknown field "nope" in table "Knowledge". Fields: title, context/);
+    expect(record.getRecords).not.toHaveBeenCalled();
   });
 
   it('caps take at maxRecordsPerCall and pages with hasMore / nextSkip', async () => {
-    const rows = Array.from({ length: 4 }, (_, i) => ({ id: `rec${i}`, fields: { fld1: 'v' } }));
+    const rows = Array.from({ length: 4 }, (_, i) => ({
+      id: `rec${i}`,
+      fields: { fldTitle: 'v' },
+    }));
     const { service, record } = build({
       record: { getRecords: vi.fn(async () => ({ records: rows })) },
     });
-
     const result = await service.queryRecords(baseA, { tableId: tableA, take: 500, skip: 10 });
-
-    expect((record.getRecords.mock.calls[0] as any[])[1].take).toBe(config.maxRecordsPerCall + 1);
-    expect(result.returned).toBe(3);
-    expect(result.hasMore).toBe(true);
-    expect(result.nextSkip).toBe(13);
+    expect(queryArgs(record).take).toBe(config.maxRecordsPerCall + 1);
+    expect(result).toMatchObject({ returned: 3, hasMore: true, nextSkip: 13 });
   });
 
-  it('cuts oversized cells and flags the result as truncated', async () => {
-    const { service } = build({
+  it('cuts oversized cells, flags truncated, and keeps paging right when rows are held back', async () => {
+    const big = build({
       record: {
         getRecords: vi.fn(async () => ({
-          records: [{ id: 'rec1', fields: { fld1: 'x'.repeat(100) } }],
+          records: [{ id: 'rec1', fields: { fldTitle: 'x'.repeat(100) } }],
         })),
       },
     });
-    const result = await service.queryRecords(baseA, { tableId: tableA });
-    expect(result.truncated).toBe(true);
-    expect(result.records[0].fields.fld1 as string).toContain('truncated');
-  });
+    const r1 = await big.service.queryRecords(baseA, { tableId: tableA });
+    expect(r1.truncated).toBe(true);
+    expect(r1.records[0].fields.fldTitle as string).toContain('truncated');
 
-  it('keeps paging correct when records are dropped to fit the size budget', async () => {
-    const rows = Array.from({ length: 3 }, (_, i) => ({ id: `rec${i}`, fields: { fld1: 'abc' } }));
-    const { service } = build({
+    const rows = Array.from({ length: 3 }, (_, i) => ({
+      id: `rec${i}`,
+      fields: { fldTitle: 'abc' },
+    }));
+    const tight = build({
       config: { maxResponseChars: 60 },
       record: { getRecords: vi.fn(async () => ({ records: rows })) },
     });
-    const result = await service.queryRecords(baseA, { tableId: tableA, take: 3, skip: 5 });
-    expect(result.returned).toBeLessThan(3);
-    expect(result.hasMore).toBe(true);
-    expect(result.truncated).toBe(true);
-    expect(result.nextSkip).toBe(5 + result.returned);
-  });
-
-  it("does not query another base's table", async () => {
-    const { service, record } = build();
-    await expect(service.queryRecords(baseA, { tableId: tableB })).rejects.toThrow(tableNotFound);
-    expect(record.getRecords).not.toHaveBeenCalled();
+    const r2 = await tight.service.queryRecords(baseA, { tableId: tableA, take: 3, skip: 5 });
+    expect(r2.returned).toBeLessThan(3);
+    expect(r2.hasMore).toBe(true);
+    expect(r2.nextSkip).toBe(5 + r2.returned);
   });
 
   it('does not query when record|read is denied', async () => {
     const { service, record } = build({
       permission: {
-        validPermissions: vi.fn(async () => {
-          throw new ForbiddenException('denied');
+        validPermissions: vi.fn(async (resourceId: string) => {
+          if (resourceId === tableA) throw new ForbiddenException('denied');
+          return [tableRead];
         }),
       },
     });
@@ -276,36 +342,38 @@ describe('AiDataService.queryRecords', () => {
 describe('AiDataService.getRecords', () => {
   it('fetches the ids in one batch, de-duplicated, and reports missing ones', async () => {
     const { service, record } = build();
-    const result = await service.getRecords(baseA, tableA, ['rec1', 'rec1', 'rec2']);
-
+    const result = await service.getRecords(baseA, 'Knowledge', ['rec1', 'rec1', 'rec2']);
     expect(record.getRecordsById).toHaveBeenCalledTimes(1);
     expect(record.getRecordsById).toHaveBeenCalledWith(tableA, ['rec1', 'rec2']);
     expect(result.returned).toBe(1);
     expect(result.missingIds).toEqual(['rec2']);
   });
 
-  it('treats "none found" as an empty result instead of an error', async () => {
-    const { service } = build({
+  it('can key cells by field name', async () => {
+    const { service } = build();
+    const result = await service.getRecords(baseA, tableA, ['rec1'], { fieldKeyType: 'name' });
+    expect(result.records).toEqual([{ id: 'rec1', fields: { title: 'Hello' } }]);
+  });
+
+  it('treats "none found" as an empty result and rethrows other errors', async () => {
+    const empty = build({
       record: {
         getRecordsById: vi.fn(async () => {
           throw new NotFoundException('Can not get record');
         }),
       },
     });
-    const result = await service.getRecords(baseA, tableA, ['rec9']);
-    expect(result.records).toEqual([]);
-    expect(result.missingIds).toEqual(['rec9']);
-  });
+    const result = await empty.service.getRecords(baseA, tableA, ['rec9']);
+    expect(result).toMatchObject({ records: [], missingIds: ['rec9'] });
 
-  it('rethrows non-404 errors', async () => {
-    const { service } = build({
+    const denied = build({
       record: {
         getRecordsById: vi.fn(async () => {
           throw new ForbiddenException('nope');
         }),
       },
     });
-    await expect(service.getRecords(baseA, tableA, ['rec1'])).rejects.toThrow('nope');
+    await expect(denied.service.getRecords(baseA, tableA, ['rec1'])).rejects.toThrow('nope');
   });
 
   it('rejects empty and oversized id lists', async () => {
@@ -323,7 +391,6 @@ describe('AiDataService serialization', () => {
     const events: string[] = [];
     let release!: () => void;
     const gate = new Promise<void>((resolve) => (release = resolve));
-
     const { service } = build({
       permission: {
         validPermissions: vi.fn(async (resourceId: string) => {
@@ -358,6 +425,6 @@ describe('AiDataService serialization', () => {
     const first = service.listTables(baseA);
     const second = service.listTables(baseA);
     await expect(first).rejects.toThrow('first fails');
-    await expect(second).resolves.toHaveLength(2);
+    await expect(second).resolves.toHaveLength(4);
   });
 });

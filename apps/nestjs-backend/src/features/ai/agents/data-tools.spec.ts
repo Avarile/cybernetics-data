@@ -44,7 +44,9 @@ describe('data tools', () => {
     expect(aiData.listTables).toHaveBeenCalledWith(baseId);
     expect(aiData.describeTable).toHaveBeenCalledWith(baseId, tableId);
     expect(aiData.queryRecords).toHaveBeenCalledWith(baseId, expect.objectContaining({ tableId }));
-    expect(aiData.getRecords).toHaveBeenCalledWith(baseId, tableId, ['rec1']);
+    expect(aiData.getRecords).toHaveBeenCalledWith(baseId, tableId, ['rec1'], {
+      fieldKeyType: undefined,
+    });
   });
 
   it('passes a valid filter and sort through to the service', async () => {

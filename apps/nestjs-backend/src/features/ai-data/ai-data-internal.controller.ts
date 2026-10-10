@@ -24,7 +24,9 @@ import { AiDataInternalGuard } from './ai-data-internal.guard';
 import type { IAiDataInternalRequest } from './ai-data-internal.guard';
 import { AiDataService } from './ai-data.service';
 
-const tableId = z.string().startsWith('tbl');
+/** Table id (tblXXX) or exact table name. */
+const tableId = z.string().trim().min(1).max(255);
+const fieldKeyType = z.enum(['id', 'name']).optional();
 
 /** Request bodies per operation. The base never comes from the body, only from the context. */
 /* eslint-disable @typescript-eslint/naming-convention -- keys are URL path segments */
@@ -40,9 +42,13 @@ export const aiDataInternalBodies = {
       projection: z.array(z.string()).optional(),
       take: z.number().int().min(1).optional(),
       skip: z.number().int().min(0).optional(),
+      fieldKeyType,
+      includeDeleted: z.boolean().optional(),
     })
     .strict(),
-  'get-records': z.object({ tableId, recordIds: z.array(z.string()).min(1) }).strict(),
+  'get-records': z
+    .object({ tableId, recordIds: z.array(z.string()).min(1), fieldKeyType })
+    .strict(),
 } as const;
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -124,8 +130,8 @@ export class AiDataInternalController {
       case 'query-records':
         return this.aiDataService.queryRecords(baseId, args as IArgs<'query-records'>);
       case 'get-records': {
-        const { tableId, recordIds } = args as IArgs<'get-records'>;
-        return this.aiDataService.getRecords(baseId, tableId, recordIds);
+        const { tableId, recordIds, fieldKeyType } = args as IArgs<'get-records'>;
+        return this.aiDataService.getRecords(baseId, tableId, recordIds, { fieldKeyType });
       }
     }
   }

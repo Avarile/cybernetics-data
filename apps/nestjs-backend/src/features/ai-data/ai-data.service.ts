@@ -12,16 +12,37 @@ import { RecordService } from '../record/record.service';
 import { TableOpenApiService } from '../table/open-api/table-open-api.service';
 import { capRecords } from './ai-data.limits';
 import type { IAiDataRecord } from './ai-data.limits';
+import {
+  detectTableProfile,
+  keyRecordsByName,
+  resolveFieldRef,
+  toFieldSummary,
+  translateFilter,
+  translateOrderBy,
+  withSoftDeleteFilter,
+} from './ai-data.schema';
+import type { IAiDataFieldSummary, IAiDataTableProfile, IRawField } from './ai-data.schema';
+
+export type { IAiDataFieldSummary, IAiDataTableProfile } from './ai-data.schema';
+
+export type IAiDataFieldKeyType = 'id' | 'name';
 
 export interface IAiDataQueryArgs {
+  /** Table id (tblXXX) or exact table name. */
   tableId: string;
+  /** Filter; fieldId may be a field id or a field name. */
   filter?: IGetRecordsRo['filter'];
+  /** Sort; fieldId may be a field id or a field name. */
   orderBy?: IGetRecordsRo['orderBy'];
   search?: string;
-  /** Field ids to return. Omit for all fields. */
+  /** Field ids or names to return. Omit for all fields. */
   projection?: string[];
   take?: number;
   skip?: number;
+  /** Key returned cells by field id (default) or by field name. */
+  fieldKeyType?: IAiDataFieldKeyType;
+  /** Also return soft-deleted rows (deleted_at set). Default false. */
+  includeDeleted?: boolean;
 }
 
 export interface IAiDataRecordsResult {
@@ -31,6 +52,8 @@ export interface IAiDataRecordsResult {
   nextSkip: number | null;
   /** True when a cell was cut or records were dropped to stay inside the size budget. */
   truncated: boolean;
+  /** True when soft-deleted rows were left out. */
+  softDeletedExcluded: boolean;
 }
 
 export interface IAiDataTableSummary {
@@ -39,22 +62,16 @@ export interface IAiDataTableSummary {
   description: string | null;
 }
 
-export interface IAiDataFieldSummary {
-  id: string;
-  name: string;
-  type: string;
-  isPrimary: boolean;
-  isComputed: boolean;
-  /** Present for link fields and lookups. */
-  linkedTableId?: string;
-  /** Present for single/multiple select fields. */
-  choices?: string[];
-}
+const schemaCacheTtlMs = 30_000;
+const tableRead: Action = 'table|read';
+const fieldRead: Action = 'field|read';
+const recordRead: Action = 'record|read';
 
 /**
  * Read-only data access for AI agents. Every call runs as the current user:
  * permissions are resolved from the CLS user, the table must belong to the
  * base the request is scoped to, and results are capped before they reach a model.
+ * Tables and fields can be named by id or by name.
  *
  * Calls within one request are serialized. The services below read permissions
  * from CLS, so two calls interleaving across awaits could see each other's
@@ -63,6 +80,8 @@ export interface IAiDataFieldSummary {
 @Injectable()
 export class AiDataService {
   private readonly queues = new WeakMap<object, Promise<unknown>>();
+  /** Table lists and field lists, per base / table. Only read after authorization. */
+  private readonly schemaCache = new Map<string, { expires: number; value: unknown }>();
 
   constructor(
     @AiDataConfig() private readonly config: IAiDataConfig,
@@ -76,67 +95,54 @@ export class AiDataService {
   listTables(baseId: string): Promise<IAiDataTableSummary[]> {
     return this.serialize(async () => {
       this.assertPrefix(baseId, IdPrefix.Base, 'base id');
-      await this.authorize(baseId, ['table|read']);
-      const tables = (await this.tableService.getTables(baseId)) as {
-        id: string;
-        name: string;
-        description?: string | null;
-      }[];
-      return tables.map(({ id, name, description }) => ({
-        id,
-        name,
-        description: description ?? null,
-      }));
+      await this.authorize(baseId, [tableRead]);
+      return this.loadTables(baseId);
     });
   }
 
-  describeTable(baseId: string, tableId: string) {
+  describeTable(baseId: string, tableRef: string) {
     return this.serialize(async () => {
-      await this.assertTableInBase(baseId, tableId);
-      await this.authorize(tableId, ['table|read', 'field|read']);
-
-      const [table, fields] = await Promise.all([
-        this.tableService.getTable(baseId, tableId),
-        this.fieldService.getFields(tableId, {}),
-      ]);
-      const { id, name, description } = table as {
-        id: string;
-        name: string;
-        description?: string | null;
-      };
-
+      const table = await this.resolveTable(baseId, tableRef);
+      await this.authorize(table.id, [tableRead, fieldRead]);
+      const fields = await this.loadFields(table.id);
       return {
-        id,
-        name,
-        description: description ?? null,
+        ...table,
         baseId,
-        fields: (fields as unknown as IRawField[]).map((f) => this.toFieldSummary(f)),
+        profile: detectTableProfile(fields) as IAiDataTableProfile,
+        fields,
       };
     });
   }
 
   queryRecords(baseId: string, args: IAiDataQueryArgs): Promise<IAiDataRecordsResult> {
     return this.serialize(async () => {
-      await this.assertTableInBase(baseId, args.tableId);
-      await this.authorize(args.tableId, ['record|read']);
+      const table = await this.resolveTable(baseId, args.tableId);
+      await this.authorize(table.id, [recordRead, fieldRead]);
+      const fields = await this.loadFields(table.id);
+      const { softDeleteFieldId } = detectTableProfile(fields);
+
+      let filter = args.filter ? translateFilter(args.filter, fields, table.name) : undefined;
+      const excludeDeleted = Boolean(softDeleteFieldId && !args.includeDeleted);
+      if (excludeDeleted) filter = withSoftDeleteFilter(filter, softDeleteFieldId as string);
 
       const take = Math.min(Math.max(args.take ?? 20, 1), this.config.maxRecordsPerCall);
       const skip = Math.max(args.skip ?? 0, 0);
 
       // Over-fetch by one to learn hasMore without a second count query.
-      const result = (await this.recordService.getRecords(args.tableId, {
+      const result = (await this.recordService.getRecords(table.id, {
         take: take + 1,
         skip,
-        filter: args.filter,
-        orderBy: args.orderBy,
+        filter,
+        orderBy: args.orderBy ? translateOrderBy(args.orderBy, fields, table.name) : undefined,
         search: args.search ? [args.search] : undefined,
-        projection: args.projection,
+        projection: args.projection?.map((ref) => resolveFieldRef(ref, fields, table.name)),
         fieldKeyType: FieldKeyType.Id,
       } as never)) as { records: IAiDataRecord[] };
 
       const overFetched = result.records.length > take;
       const page = overFetched ? result.records.slice(0, take) : result.records;
-      const capped = capRecords(page, this.config);
+      const keyed = args.fieldKeyType === 'name' ? keyRecordsByName(page, fields) : page;
+      const capped = capRecords(keyed, this.config);
 
       const hasMore = overFetched || capped.droppedForSize > 0;
       return {
@@ -145,15 +151,21 @@ export class AiDataService {
         hasMore,
         nextSkip: hasMore ? skip + capped.records.length : null,
         truncated: capped.truncated,
+        softDeletedExcluded: excludeDeleted,
       };
     });
   }
 
   /** Fetch specific records by id in one call. Ids that are not visible are reported, not guessed at. */
-  getRecords(baseId: string, tableId: string, recordIds: string[]) {
+  getRecords(
+    baseId: string,
+    tableRef: string,
+    recordIds: string[],
+    options: { fieldKeyType?: IAiDataFieldKeyType } = {}
+  ) {
     return this.serialize(async () => {
-      await this.assertTableInBase(baseId, tableId);
-      await this.authorize(tableId, ['record|read']);
+      const table = await this.resolveTable(baseId, tableRef);
+      await this.authorize(table.id, [recordRead, fieldRead]);
 
       const ids = [...new Set(recordIds)];
       if (ids.length === 0) {
@@ -171,7 +183,7 @@ export class AiDataService {
 
       let found: IAiDataRecord[] = [];
       try {
-        const result = (await this.recordService.getRecordsById(tableId, ids)) as {
+        const result = (await this.recordService.getRecordsById(table.id, ids)) as {
           records: IAiDataRecord[];
         };
         found = result.records;
@@ -180,7 +192,11 @@ export class AiDataService {
         if (!(error instanceof HttpException && error.getStatus() === 404)) throw error;
       }
 
-      const capped = capRecords(found, this.config);
+      const keyed =
+        options.fieldKeyType === 'name'
+          ? keyRecordsByName(found, await this.loadFields(table.id))
+          : found;
+      const capped = capRecords(keyed, this.config);
       const seen = new Set(capped.records.map((r) => r.id));
       const foundIds = new Set(found.map((r) => r.id));
       return {
@@ -195,22 +211,6 @@ export class AiDataService {
 
   // ── helpers ────────────────────────────────────────────────────────────────
 
-  private toFieldSummary(f: IRawField): IAiDataFieldSummary {
-    const summary: IAiDataFieldSummary = {
-      id: f.id,
-      name: f.name,
-      type: f.type,
-      isPrimary: f.isPrimary ?? false,
-      isComputed: f.isComputed ?? false,
-    };
-    const foreignTableId = f.options?.foreignTableId ?? f.lookupOptions?.foreignTableId;
-    if (foreignTableId) summary.linkedTableId = foreignTableId;
-    if (Array.isArray(f.options?.choices)) {
-      summary.choices = f.options.choices.map((c) => c.name);
-    }
-    return summary;
-  }
-
   private assertPrefix(id: string, prefix: IdPrefix, label: string) {
     if (typeof id !== 'string' || !id.startsWith(prefix)) {
       throw new CustomHttpException(
@@ -221,20 +221,61 @@ export class AiDataService {
   }
 
   /**
-   * The request is scoped to one base. A table id from another base gets the
-   * same answer as one that does not exist, so ids cannot be probed.
+   * Find a table of the request's base by id or exact name (case-insensitive if that
+   * is unambiguous). The base is checked first, so table names of a base the user
+   * cannot read are never revealed. A table from another base gets the same
+   * "Table not found" as one that does not exist, so ids cannot be probed.
    */
-  private async assertTableInBase(baseId: string, tableId: string) {
+  private async resolveTable(baseId: string, tableRef: string): Promise<IAiDataTableSummary> {
     this.assertPrefix(baseId, IdPrefix.Base, 'base id');
-    this.assertPrefix(tableId, IdPrefix.Table, 'table id');
-    const notFound = () => new CustomHttpException('Table not found', HttpErrorCode.NOT_FOUND);
-    let owner: { baseId: string };
-    try {
-      owner = await this.permissionService.getUpperIdByTableId(tableId);
-    } catch {
-      throw notFound();
+    if (typeof tableRef !== 'string' || !tableRef.trim()) {
+      throw new CustomHttpException(
+        'A table id or name is required',
+        HttpErrorCode.VALIDATION_ERROR
+      );
     }
-    if (owner.baseId !== baseId) throw notFound();
+    await this.authorize(baseId, [tableRead]);
+    const tables = await this.loadTables(baseId);
+    const ref = tableRef.trim();
+    const match =
+      tables.find((t) => t.id === ref) ??
+      tables.find((t) => t.name === ref) ??
+      (() => {
+        const loose = tables.filter((t) => t.name.toLowerCase() === ref.toLowerCase());
+        return loose.length === 1 ? loose[0] : undefined;
+      })();
+    if (!match) throw new CustomHttpException('Table not found', HttpErrorCode.NOT_FOUND);
+    return match;
+  }
+
+  private loadTables(baseId: string): Promise<IAiDataTableSummary[]> {
+    return this.cached(`tables:${baseId}`, async () => {
+      const tables = (await this.tableService.getTables(baseId)) as {
+        id: string;
+        name: string;
+        description?: string | null;
+      }[];
+      return tables.map(({ id, name, description }) => ({
+        id,
+        name,
+        description: description ?? null,
+      }));
+    });
+  }
+
+  private loadFields(tableId: string): Promise<IAiDataFieldSummary[]> {
+    return this.cached(`fields:${tableId}`, async () => {
+      const fields = await this.fieldService.getFields(tableId, {});
+      return (fields as unknown as IRawField[]).map(toFieldSummary);
+    });
+  }
+
+  private async cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+    const hit = this.schemaCache.get(key);
+    if (hit && hit.expires > Date.now()) return hit.value as T;
+    const value = await load();
+    this.schemaCache.set(key, { expires: Date.now() + schemaCacheTtlMs, value });
+    return value;
   }
 
   /** Check the actions for this resource and publish the result to CLS, as the MCP registry does. */
@@ -264,14 +305,4 @@ export class AiDataService {
     );
     return run;
   }
-}
-
-interface IRawField {
-  id: string;
-  name: string;
-  type: string;
-  isPrimary?: boolean;
-  isComputed?: boolean;
-  options?: { foreignTableId?: string; choices?: { name: string }[] };
-  lookupOptions?: { foreignTableId?: string };
 }

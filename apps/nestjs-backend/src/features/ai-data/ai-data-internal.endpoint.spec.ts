@@ -82,13 +82,15 @@ describe('AiDataInternalController', () => {
       req()
     );
     expect(aiData.describeTable).toHaveBeenCalledWith('bseCTX', 'tbl1');
-    expect(aiData.getRecords).toHaveBeenCalledWith('bseCTX', 'tbl1', ['rec1']);
+    expect(aiData.getRecords).toHaveBeenCalledWith('bseCTX', 'tbl1', ['rec1'], {
+      fieldKeyType: undefined,
+    });
     expect(aiData.queryRecords).toHaveBeenCalledTimes(1);
   });
 
   it('rejects bad arguments and unknown operations', async () => {
     const { controller, aiData } = build();
-    await expect(controller.run('describe-table', { tableId: 'bse1' }, req())).rejects.toThrow(
+    await expect(controller.run('describe-table', { tableId: '   ' }, req())).rejects.toThrow(
       BadRequestException
     );
     await expect(

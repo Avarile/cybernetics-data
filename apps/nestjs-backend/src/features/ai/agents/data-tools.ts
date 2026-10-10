@@ -42,7 +42,13 @@ async function runDataTool<T>(
   }
 }
 
-const tableIdInput = z.string().describe('Table id from listTables, e.g. tblXXXXXXXX');
+const tableIdInput = z
+  .string()
+  .describe('Table id from listTables (e.g. tblXXXXXXXX) or the exact table name');
+const fieldKeyTypeInput = z
+  .enum(['id', 'name'])
+  .optional()
+  .describe('Key returned cells by field id (default) or by field name');
 
 export const listTablesTool = tool({
   description:
@@ -56,8 +62,9 @@ export const listTablesTool = tool({
 export const describeTableTool = tool({
   description:
     'Get the fields of one table: field id (fldXXX), name, type, whether it is the primary ' +
-    '(title) field, link targets (linkedTableId) and select choices. Call this before ' +
-    'queryRecords so filters, sorting and projection use real field ids.',
+    '(title) field, link targets (linkedTableId) and select choices, plus a profile naming ' +
+    'the title, context and soft-delete (deleted_at) fields. Call this before queryRecords ' +
+    'so filters, sorting and projection use real field ids or names.',
   inputSchema: z.object({ tableId: tableIdInput }),
   execute: async ({ tableId }, { experimental_context: context }) =>
     runDataTool('describeTable', context, ({ aiData, baseId }) =>
@@ -67,10 +74,12 @@ export const describeTableTool = tool({
 
 export const queryRecordsTool = tool({
   description:
-    'Read records from a table. Cells are keyed by field id. Use `search` for plain-text ' +
-    'lookups, or `filter` for precise matching. Page with take/skip: when hasMore is true, ' +
-    'call again with skip = nextSkip. When truncated is true some long cells were cut or ' +
-    'records were held back to keep the answer small; say so if it matters.',
+    'Read records from a table. Cells are keyed by field id, or by name with ' +
+    'fieldKeyType "name". Use `search` for plain-text lookups, or `filter` for precise ' +
+    'matching. Soft-deleted rows (deleted_at set) are left out unless includeDeleted is true. ' +
+    'Page with take/skip: when hasMore is true, call again with skip = nextSkip. When ' +
+    'truncated is true some long cells were cut or records were held back to keep the ' +
+    'answer small; say so if it matters.',
   inputSchema: z.object({
     tableId: tableIdInput,
     search: z.string().optional().describe('Plain text matched across the table'),
@@ -78,20 +87,25 @@ export const queryRecordsTool = tool({
       .record(z.string(), z.unknown())
       .optional()
       .describe(
-        'Teable filter keyed by FIELD ID, e.g. {"conjunction":"and","filterSet":' +
+        'Teable filter; fieldId may be a field id or name, e.g. {"conjunction":"and","filterSet":' +
           '[{"fieldId":"fldXXX","operator":"contains","value":"Acme"}]}. Operators include ' +
           'is, isNot, contains, doesNotContain, isGreater, isLess, isEmpty, isNotEmpty.'
       ),
     orderBy: z
       .array(z.object({ fieldId: z.string(), order: z.enum(['asc', 'desc']) }))
       .optional()
-      .describe('Sort by field id, e.g. [{"fieldId":"fldXXX","order":"desc"}]'),
+      .describe('Sort by field id or name, e.g. [{"fieldId":"fldXXX","order":"desc"}]'),
     projection: z
       .array(z.string())
       .optional()
-      .describe('Only return these field ids, to keep the answer small'),
+      .describe('Only return these field ids or names, to keep the answer small'),
     take: z.number().int().min(1).optional().describe('How many records (default 20, capped)'),
     skip: z.number().int().min(0).optional().describe('How many records to skip (default 0)'),
+    fieldKeyType: fieldKeyTypeInput,
+    includeDeleted: z
+      .boolean()
+      .optional()
+      .describe('Also return soft-deleted rows (deleted_at set). Default false.'),
   }),
   execute: async (args, { experimental_context: context }) =>
     runDataTool('queryRecords', context, ({ aiData, baseId }) => {
@@ -101,6 +115,8 @@ export const queryRecordsTool = tool({
         projection: args.projection,
         take: args.take,
         skip: args.skip,
+        fieldKeyType: args.fieldKeyType,
+        includeDeleted: args.includeDeleted,
         // Validate with the same schemas the REST API uses, so a malformed filter
         // comes back as a readable error instead of a failed query.
         filter: args.filter ? filterSchema.parse(args.filter) ?? undefined : undefined,
@@ -117,10 +133,11 @@ export const getRecordsTool = tool({
   inputSchema: z.object({
     tableId: tableIdInput,
     recordIds: z.array(z.string()).min(1).describe('Record ids, e.g. ["recXXX"]'),
+    fieldKeyType: fieldKeyTypeInput,
   }),
-  execute: async ({ tableId, recordIds }, { experimental_context: context }) =>
+  execute: async ({ tableId, recordIds, fieldKeyType }, { experimental_context: context }) =>
     runDataTool('getRecords', context, ({ aiData, baseId }) =>
-      aiData.getRecords(baseId, tableId, recordIds)
+      aiData.getRecords(baseId, tableId, recordIds, { fieldKeyType })
     ),
 });
 
