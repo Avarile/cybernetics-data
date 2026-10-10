@@ -141,6 +141,8 @@ export const getRecordTool = createTool({
 });
 
 // ── create-records ───────────────────────────────────────────────────────────
+// NOT USED AT THE MOMENT: no agent registers this write tool (the Mastra agents are
+// read-only). Kept for a future write gateway; see CYBERDATA-12.
 
 export const createRecordsTool = createTool({
   id: 'create-records',
@@ -172,6 +174,8 @@ export const createRecordsTool = createTool({
 });
 
 // ── update-record ────────────────────────────────────────────────────────────
+// NOT USED AT THE MOMENT: no agent registers this write tool (the Mastra agents are
+// read-only). Kept for a future write gateway; see CYBERDATA-12.
 
 export const updateRecordTool = createTool({
   id: 'update-record',
@@ -199,6 +203,8 @@ export const updateRecordTool = createTool({
 });
 
 // ── delete-record ────────────────────────────────────────────────────────────
+// NOT USED AT THE MOMENT: no agent registers this write tool (the Mastra agents are
+// read-only). Kept for a future write gateway; see CYBERDATA-12.
 
 export const deleteRecordTool = createTool({
   id: 'delete-record',

@@ -70,6 +70,8 @@ const projectWithTasksSchema = z.object({
 });
 
 // ── Create Goal Tree ────────────────────────────────────────────────────────
+// NOT USED AT THE MOMENT: no agent registers this write tool (the Mastra agents are
+// read-only). Kept for a future write gateway; see CYBERDATA-12.
 
 export const createGoalTreeTool = createTool({
   id: 'create-goal-tree',

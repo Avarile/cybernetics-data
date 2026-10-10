@@ -1,3 +1,5 @@
+// NOT USED AT THE MOMENT: no agent registers these write tools (the Mastra agents are
+// read-only). Kept for a future write gateway; see CYBERDATA-12.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { createKnowledgeWithType } from './knowledges/knowledge-service.js';
