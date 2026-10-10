@@ -76,7 +76,7 @@ export interface ToolContextLike {
 export class AiDataClient {
   constructor(
     private readonly token: string,
-    private readonly baseUrl: string = env.BACKEND_URL,
+    private readonly baseUrl: string = env.PUBLIC_ORIGIN,
     private readonly serviceKey: string | undefined = env.MASTRA_API_KEY
   ) {}
 

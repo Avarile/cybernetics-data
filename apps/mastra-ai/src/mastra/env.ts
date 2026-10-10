@@ -35,10 +35,8 @@ const envSchema = z.object({
   // CORS
   MASTRA_CORS_ORIGIN: z.string().default('*'),
 
-  // Teable backend the data tools read through (POST /api/internal/ai-data/:op), as the
-  // chatting user. Use the backend's internal address, not the public domain.
-  BACKEND_URL: z.url().default('http://localhost:3000'),
-
+  // Teable's origin. The data tools also read through it (POST /api/internal/ai-data/:op),
+  // as the chatting user.
   PUBLIC_ORIGIN: z.url().default('http://localhost:3000'),
   // BACKEND_API_KEY: z.string().optional(),
 });
