@@ -7,6 +7,7 @@ import { generateText, streamText } from 'ai';
 import type { Response } from 'express';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
+import { AiDataContextService } from '../../ai-data/ai-data-context.service';
 import { AiDataService } from '../../ai-data/ai-data.service';
 import { PermissionService } from '../../auth/permission.service';
 import { ChatFileService } from '../../chat-file/chat-file.service';
@@ -18,6 +19,8 @@ import { AiConfigService } from './ai-config.service';
 import { MastraClientService } from './mastra-client.service';
 import { ModelCapabilityService } from './model-capability.service';
 import { ModelResolverService } from './model-resolver.service';
+
+type IDataContext = { token: string; requestId: string };
 
 // Record-level write permissions; holding any one of these makes the caller a writer.
 const WRITE_ACTIONS: Action[] = ['record|create', 'record|update', 'record|delete'];
@@ -48,7 +51,8 @@ export class GenerationService {
     private readonly mastraClientService: MastraClientService,
     private readonly permissionService: PermissionService,
     private readonly cls: ClsService<IClsStore>,
-    private readonly aiDataService: AiDataService
+    private readonly aiDataService: AiDataService,
+    private readonly aiDataContextService: AiDataContextService
   ) {}
 
   /** Resolve whether the current caller may mutate records in this base. */
@@ -73,7 +77,31 @@ export class GenerationService {
 
   // ── Mastra path ──────────────────────────────────────────────────────────────
 
+  /**
+   * Signed user context for the Mastra tools' calls back into the ai-data endpoint.
+   * It lives for one chat turn: releaseDataContext() revokes it, so it cannot be
+   * replayed afterwards. Undefined while the feature is not configured.
+   */
+  private async issueDataContext(userId: string, baseId: string) {
+    if (!this.aiDataContextService.enabled) return undefined;
+    return this.aiDataContextService.issue(userId, baseId);
+  }
+
+  private toRequestContext(dataContext: IDataContext | undefined) {
+    return dataContext ? { requestContext: { aiDataContext: dataContext.token } } : {};
+  }
+
+  private async releaseDataContext(dataContext: IDataContext | undefined) {
+    if (!dataContext) return;
+    try {
+      await this.aiDataContextService.revoke(dataContext.requestId);
+    } catch (err) {
+      this.logger.error(`Failed to revoke AI data context: ${(err as Error).message}`);
+    }
+  }
+
   private async generateStreamViaMastra(
+    baseId: string,
     aiGenerateRo: IAiGenerateRo,
     response: Response
   ): Promise<void> {
@@ -83,8 +111,10 @@ export class GenerationService {
     const abortController = new AbortController();
     const onClose = () => abortController.abort();
     response.on('close', onClose);
+    let dataContext: IDataContext | undefined;
 
     try {
+      dataContext = await this.issueDataContext(resourceId!, baseId);
       let resolvedThreadId = _threadId;
       let isNewThread = false;
 
@@ -94,7 +124,7 @@ export class GenerationService {
         isNewThread = true;
       }
 
-      const body: {
+      const input: {
         messages?: { role: 'user' | 'assistant'; content: string }[];
         prompt?: string;
       } = messages?.length
@@ -105,6 +135,7 @@ export class GenerationService {
             }[],
           }
         : { prompt: await this.injectFileContext(prompt ?? '', fileTokens) };
+      const body = { ...input, ...this.toRequestContext(dataContext) };
 
       response.writeHead(200, {
         'Content-Type': 'text/plain; charset=utf-8',
@@ -147,6 +178,7 @@ export class GenerationService {
       response.end();
     } finally {
       response.off('close', onClose);
+      await this.releaseDataContext(dataContext);
     }
   }
 
@@ -205,7 +237,11 @@ export class GenerationService {
       if (aiGenerateRo.threadId) {
         await this.assertThreadOwnership(aiGenerateRo.threadId, userId, aiGenerateRo.agentId);
       }
-      return this.generateStreamViaMastra({ ...aiGenerateRo, resourceId: userId }, response);
+      return this.generateStreamViaMastra(
+        baseId,
+        { ...aiGenerateRo, resourceId: userId },
+        response
+      );
     }
 
     // Abort the model/agent stream when the client disconnects (M1).

@@ -138,7 +138,12 @@ export class MastraClientService {
    */
   async *streamAgent(
     agentId: string,
-    body: { messages?: { role: 'user' | 'assistant'; content: string }[]; prompt?: string },
+    body: {
+      messages?: { role: 'user' | 'assistant'; content: string }[];
+      prompt?: string;
+      /** Passed to Mastra as the agent's requestContext (e.g. the signed aiDataContext). */
+      requestContext?: Record<string, unknown>;
+    },
     threadId: string,
     resourceId: string,
     signal?: AbortSignal

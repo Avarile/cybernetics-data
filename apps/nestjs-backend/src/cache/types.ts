@@ -28,6 +28,8 @@ export interface ICacheStore {
   [key: `signin:attempts:${string}`]: number;
   [key: `signin:lockout:${string}`]: boolean;
   [key: `query-params:${string}`]: Record<string, unknown>;
+  // requestId of a live AI data context (present = not revoked)
+  [key: `ai-data:context:${string}`]: true;
   // baseId:etag — the etag already covers the query, the data and the schema
   [key: `base-graph:${string}:${string}`]: IBaseGraphVo;
   [key: `mail-sender:notify-mail-merge:${string}`]: (ISendMailOptions & {

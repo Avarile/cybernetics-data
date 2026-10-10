@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { GenerationService } from './generation.service';
@@ -44,6 +45,7 @@ describe('GenerationService.generateStream agent gating', () => {
     const { service, viaMastra } = createService(['record|update']);
     await service.generateStream('bse1', request(reactiveAgent), response);
     expect(viaMastra).toHaveBeenCalledWith(
+      'bse1',
       expect.objectContaining({ agentId: reactiveAgent, resourceId: 'usr1' }),
       response
     );
@@ -53,5 +55,81 @@ describe('GenerationService.generateStream agent gating', () => {
     const { service, viaMastra } = createService(['record|read']);
     await service.generateStream('bse1', request('knowledge-manager-rag'), response);
     expect(viaMastra).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('GenerationService Mastra path: signed AI data context', () => {
+  const makeResponse = () => {
+    const written: string[] = [];
+    return {
+      written,
+      res: {
+        headersSent: false,
+        on: vi.fn(),
+        off: vi.fn(),
+        writeHead: vi.fn(function (this: { headersSent: boolean }) {
+          this.headersSent = true;
+        }),
+        write: vi.fn((chunk: string) => written.push(chunk)),
+        end: vi.fn(),
+      },
+    };
+  };
+
+  const createMastraService = (opts: { enabled: boolean; fail?: boolean }) => {
+    const service = Object.create(GenerationService.prototype) as GenerationService;
+    const streamAgent = vi.fn(async function* () {
+      if (opts.fail) throw new Error('mastra down');
+      yield 'hello';
+    });
+    const aiDataContextService = {
+      enabled: opts.enabled,
+      issue: vi.fn(async () => ({ token: 'v1.signed.token', requestId: 'req-1' })),
+      revoke: vi.fn(async () => undefined),
+    };
+    Object.assign(service, {
+      cls: { get: (key: string) => (key === 'user' ? { id: 'usr1' } : undefined) },
+      permissionService: { getPermissions: vi.fn().mockResolvedValue(['record|read']) },
+      mastraClientService: { streamAgent, getThread: vi.fn() },
+      aiDataContextService,
+      logger: { error: vi.fn(), warn: vi.fn() },
+    });
+    return { service, streamAgent, aiDataContextService };
+  };
+
+  const ragRequest = { ...request('knowledge-manager-rag'), threadId: undefined };
+
+  it('issues a context for the session user and base, passes it as requestContext, then revokes it', async () => {
+    const { service, streamAgent, aiDataContextService } = createMastraService({ enabled: true });
+    (service as any).mastraClientService.createThread = vi.fn(async () => ({ id: 'thr1' }));
+    const { res, written } = makeResponse();
+
+    await service.generateStream('bse1', ragRequest as never, res as never);
+
+    expect(aiDataContextService.issue).toHaveBeenCalledWith('usr1', 'bse1');
+    const body = (streamAgent.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
+    expect(body.requestContext).toEqual({ aiDataContext: 'v1.signed.token' });
+    expect(aiDataContextService.revoke).toHaveBeenCalledWith('req-1');
+    expect(written.join('')).toContain('hello');
+  });
+
+  it('revokes the context even when the agent fails', async () => {
+    const { service, aiDataContextService } = createMastraService({ enabled: true, fail: true });
+    (service as any).mastraClientService.createThread = vi.fn(async () => ({ id: 'thr1' }));
+    const { res } = makeResponse();
+
+    await service.generateStream('bse1', ragRequest as never, res as never);
+    expect(aiDataContextService.revoke).toHaveBeenCalledWith('req-1');
+  });
+
+  it('sends no context when the feature is not configured', async () => {
+    const { service, streamAgent, aiDataContextService } = createMastraService({ enabled: false });
+    (service as any).mastraClientService.createThread = vi.fn(async () => ({ id: 'thr1' }));
+    const { res } = makeResponse();
+
+    await service.generateStream('bse1', ragRequest as never, res as never);
+    expect(aiDataContextService.issue).not.toHaveBeenCalled();
+    const body = (streamAgent.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
+    expect(body.requestContext).toBeUndefined();
   });
 });
