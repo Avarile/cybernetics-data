@@ -149,7 +149,7 @@ export const allKnowledgeQueryTool = createTool({
           totalFound: 0,
           indexesSearched: [],
           error:
-            'No active indexes found. Create one with create-index then ingest content with synthesize-and-ingest or ingest-document.',
+            'No active indexes found. Create one with create-index, then ingest content with ingest-document or synthesize-and-ingest.',
         };
       }
 

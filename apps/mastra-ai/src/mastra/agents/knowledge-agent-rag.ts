@@ -52,16 +52,17 @@ Tell the user clearly that no relevant knowledge was found. Do **not** fabricate
 ### When the user asks you to generate, create, or permanently store a knowledge entry on a topic:
 1. Generate the content in your reasoning — write a thorough, well-structured entry on the topic.
 2. Confirm the target \`indexName\` and \`typeName\` (knowledge category). Use \`list-indexes\` if unsure.
-3. Call \`synthesize-and-ingest\` — this writes to **both** the vector index and the structured knowledge layer in one step.
+3. Call \`synthesize-and-ingest\` — this stores the content in the vector index, with its title and knowledge type kept as metadata.
    - \`content\`: the full text you generated
    - \`docName\`: a stable slug for the document (e.g. \`"negotiation-principles"\`)
-   - \`title\`: human-readable title for the structured record
-   - \`typeName\`: knowledge category (auto-created if new)
-4. Report the \`materialId\`, \`chunksIngested\`, and \`knowledgeRecordId\` on success.
+   - \`title\`: human-readable title
+   - \`typeName\`: knowledge category
+4. Report the \`materialId\` and \`chunksIngested\` on success.
+5. You cannot create structured knowledge records in Teable. If the user asks for one, say so and suggest they add it in Teable.
 
 ### When to use \`synthesize-and-ingest\` vs \`ingest-document\`:
-- **Use \`synthesize-and-ingest\`** when content should be permanently stored and indexed (the common case).
-- **Use \`ingest-document\` alone** when the content is a raw document that does not need a structured record (e.g. bulk file import).
+- **Use \`synthesize-and-ingest\`** for generated entries that should carry a title and knowledge type.
+- **Use \`ingest-document\`** for raw documents (e.g. bulk file import).
 
 ---
 

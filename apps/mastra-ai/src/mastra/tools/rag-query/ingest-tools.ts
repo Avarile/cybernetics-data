@@ -7,7 +7,6 @@ const writeDenied = (tool: string) =>
   `Permission denied: ${tool} changes data and you do not have write access to this base.`;
 import { ingestDocument } from '../../rag/ingest';
 import { listIndexes } from '../../db/db-vector.js';
-import { createKnowledgeWithType } from '../db-query/knowledges/knowledge-service.js';
 
 // ─────────────────────────────────────────────
 // Tool: ingest-document
@@ -79,16 +78,16 @@ export const ingestDocumentTool = createTool({
 
 // ─────────────────────────────────────────────
 // Tool: synthesize-and-ingest
-// Compound tool: stores agent-generated or user-provided content into
-// BOTH the vector index and the structured knowledge layer in one call.
+// Stores agent-generated or user-provided content in a vector index, with its
+// title and knowledge type kept as chunk metadata. It no longer creates a
+// structured knowledge record: Mastra has no write access to Teable.
 // ─────────────────────────────────────────────
 export const synthesizeAndIngestTool = createTool({
   id: 'synthesize-and-ingest',
   description:
-    'Persist content into both layers simultaneously: ' +
-    '(1) chunks and embeds it into a vector index for semantic search, and ' +
-    '(2) creates a structured knowledge record for browsing and filtering. ' +
-    'Use this when you have generated or received content that must be permanently stored. ' +
+    'Persist generated or received content into a vector index for semantic search, ' +
+    'storing its title and knowledge type as metadata on every chunk. It does NOT create a ' +
+    'structured knowledge record in Teable. ' +
     'Re-ingesting the same docName in the same index replaces existing vector content.',
   inputSchema: z.object({
     content: z
@@ -105,14 +104,8 @@ export const synthesizeAndIngestTool = createTool({
         'Stable document identifier, e.g. "Q3 2024 Summary". ' +
           'Re-ingesting the same docName replaces previous content.'
       ),
-    title: z.string().min(1).describe('Human-readable title for the structured knowledge record'),
-    typeName: z
-      .string()
-      .describe('Knowledge type / category — created automatically if it does not exist'),
-    typeContext: z
-      .string()
-      .optional()
-      .describe('Description of the type, used only when the type needs to be created'),
+    title: z.string().min(1).describe('Human-readable title, stored as chunk metadata'),
+    typeName: z.string().describe('Knowledge type / category, stored as chunk metadata'),
     metadata: z
       .record(z.string(), z.unknown())
       .optional()
@@ -124,26 +117,21 @@ export const synthesizeAndIngestTool = createTool({
     success: z.boolean(),
     materialId: z.string().optional(),
     chunksIngested: z.number().optional(),
-    knowledgeRecordId: z.string().optional(),
     error: z.string().optional(),
   }),
-  execute: async (
-    { content, indexName, docName, title, typeName, typeContext, metadata },
-    context
-  ) => {
+  execute: async ({ content, indexName, docName, title, typeName, metadata }, context) => {
     if (!canWrite(context)) return { success: false, error: writeDenied('synthesize-and-ingest') };
     try {
-      const ingestResult = await ingestDocument({ indexName, content, docName, metadata });
-      const { knowledge } = await createKnowledgeWithType(
-        { title, context: content.slice(0, 5000) },
-        typeName,
-        typeContext
-      );
+      const ingestResult = await ingestDocument({
+        indexName,
+        content,
+        docName,
+        metadata: { ...metadata, title, knowledgeType: typeName },
+      });
       return {
         success: true,
         materialId: ingestResult.materialId,
         chunksIngested: ingestResult.chunksIngested,
-        knowledgeRecordId: knowledge.id,
       };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };

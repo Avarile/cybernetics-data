@@ -5,14 +5,10 @@ const ingestDocument = vi.fn(async () => ({
   chunksIngested: 1,
   indexName: 'kb',
 }));
-const createKnowledgeWithType = vi.fn(async () => ({ knowledge: { id: 'recK' } }));
 const createIndex = vi.fn();
 const deleteIndex = vi.fn();
 
 vi.mock('../src/mastra/rag/ingest', () => ({ ingestDocument }));
-vi.mock('../src/mastra/tools/db-query/knowledges/knowledge-service.js', () => ({
-  createKnowledgeWithType,
-}));
 vi.mock('../src/mastra/db/db-vector.js', () => ({
   listIndexes: vi.fn(async () => []),
   getIndex: vi.fn(),
@@ -52,7 +48,6 @@ describe('RAG write tools are gated on the user write permission', () => {
       expect(String(result.error ?? result.message)).toContain(`Permission denied: ${name}`);
     }
     expect(ingestDocument).not.toHaveBeenCalled();
-    expect(createKnowledgeWithType).not.toHaveBeenCalled();
     expect(createIndex).not.toHaveBeenCalled();
     expect(deleteIndex).not.toHaveBeenCalled();
   });
@@ -64,5 +59,30 @@ describe('RAG write tools are gated on the user write permission', () => {
     )) as Record<string, unknown>;
     expect(result.success).toBe(true);
     expect(ingestDocument).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('synthesize-and-ingest', () => {
+  it('only indexes: title and type go into chunk metadata, no knowledge record is created', async () => {
+    ingestDocument.mockClear();
+    const result = (await synthesizeAndIngestTool.execute!(
+      {
+        content: 'body',
+        indexName: 'kb',
+        docName: 'doc',
+        title: 'Negotiation principles',
+        typeName: 'Note',
+        metadata: { source: 'generated' },
+      } as never,
+      contextWith({ canWrite: true })
+    )) as Record<string, unknown>;
+
+    expect(result).toEqual({ success: true, materialId: 'm1', chunksIngested: 1 });
+    expect(ingestDocument).toHaveBeenCalledWith({
+      indexName: 'kb',
+      content: 'body',
+      docName: 'doc',
+      metadata: { source: 'generated', title: 'Negotiation principles', knowledgeType: 'Note' },
+    });
   });
 });

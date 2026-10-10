@@ -41,12 +41,6 @@ const envSchema = z.object({
 
   PUBLIC_ORIGIN: z.url().default('http://localhost:3000'),
   // BACKEND_API_KEY: z.string().optional(),
-
-  // Shared API token. No longer used for reads; only the RAG agent's synthesize-and-ingest
-  // (gated on the user's write permission) and the unused write tools still use it.
-  CYBERNETICS_APP_TOKEN: z.string().optional(),
-
-  TEABLE_BASE_URL: z.string().url().default('https://projects.avarile.com'),
 });
 
 const parsed = envSchema.safeParse(process.env);
