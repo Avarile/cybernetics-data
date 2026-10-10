@@ -10,18 +10,27 @@ export const ChatPanelTabs = ({ activeTab, fileCount, onTabChange }: IChatPanelT
   const { t } = useTranslation('common');
 
   const tabClass = (tab: 'chat' | 'files') =>
-    `px-4 py-1.5 font-medium transition-colors ${
+    `-mb-px px-4 py-1.5 font-medium transition-colors ${
       activeTab === tab
         ? 'border-b-2 border-primary text-foreground'
         : 'text-muted-foreground hover:text-foreground'
     }`;
 
   return (
-    <div className="flex shrink-0 border-b text-sm">
-      <button className={tabClass('chat')} onClick={() => onTabChange('chat')}>
+    <div role="tablist" className="flex shrink-0 border-b text-sm">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === 'chat'}
+        className={tabClass('chat')}
+        onClick={() => onTabChange('chat')}
+      >
         {t('ai.chat.tabChat', 'Chat')}
       </button>
       <button
+        type="button"
+        role="tab"
+        aria-selected={activeTab === 'files'}
         className={`flex items-center gap-1 ${tabClass('files')}`}
         onClick={() => onTabChange('files')}
       >

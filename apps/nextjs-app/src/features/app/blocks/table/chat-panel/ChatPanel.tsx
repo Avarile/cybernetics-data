@@ -13,7 +13,18 @@ import {
 import type { IAiThreadMessage, IChatFileVo } from '@teable/openapi';
 import { ReactQueryKeys } from '@teable/sdk';
 import { useIsTouchDevice, useSession } from '@teable/sdk/hooks';
-import { cn } from '@teable/ui-lib/shadcn';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  cn,
+} from '@teable/ui-lib/shadcn';
+import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import axios from 'axios';
 import { useTranslation } from 'next-i18next';
 import { Resizable } from 're-resizable';
@@ -29,7 +40,7 @@ import {
   ChatPanelTabs,
   ContextBar,
 } from './components';
-import { countSelectedRows, loadStoredMessages, readStream } from './helpers';
+import { countSelectedRows, getChatErrorMessage, loadStoredMessages, readStream } from './helpers';
 import {
   ALLOWED_EXTENSIONS,
   ALLOWED_MIME_TYPES,
@@ -69,6 +80,10 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
   });
   const [threadId, setThreadId] = useState<string | undefined>(undefined);
   const hasRestoredThreadRef = useRef(false);
+  // Set while the "switch agent?" confirmation is open; `agentId` undefined means Local AI.
+  const [pendingAgentSwitch, setPendingAgentSwitch] = useState<{ agentId?: string } | null>(null);
+  // File tokens of the last request, reused when the user retries a failed reply.
+  const lastFileTokensRef = useRef<string[]>([]);
 
   const [uploadingFiles, setUploadingFiles] = useState<IUploadingFile[]>([]);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -203,11 +218,20 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
   const uploadFile = useCallback(
     async (file: File) => {
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-        setUploadError(`File type not allowed. Supported: PDF, TXT, Markdown, HTML, CSV, Word.`);
+        setUploadError(
+          t(
+            'ai.chat.uploadTypeNotAllowed',
+            'File type not allowed. Supported: PDF, TXT, Markdown, HTML, CSV, Word.'
+          )
+        );
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        setUploadError(`File "${file.name}" exceeds 10 MB limit.`);
+        setUploadError(
+          t('ai.chat.uploadTooLarge', 'File "{{name}}" exceeds the 10 MB limit.', {
+            name: file.name,
+          })
+        );
         return;
       }
 
@@ -241,12 +265,14 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
       } catch {
         setUploadingFiles((prev) =>
           prev.map((f) =>
-            f.id === tempId ? { ...f, uploading: false, error: 'Upload failed' } : f
+            f.id === tempId
+              ? { ...f, uploading: false, error: t('ai.chat.uploadFailed', 'Upload failed') }
+              : f
           )
         );
       }
     },
-    [baseId, refetchFiles]
+    [baseId, refetchFiles, t]
   );
 
   const handleFileInputChange = useCallback(
@@ -284,12 +310,13 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
   // ---------------------------------------------------------------------------
 
   const streamAssistantReply = useCallback(
-    async (_userText: string, history: IMessage[], fileTokens: string[]) => {
+    async (history: IMessage[], fileTokens: string[]) => {
       const controller = new AbortController();
       abortRef.current = controller;
+      lastFileTokensRef.current = fileTokens;
 
-      // Filter out divider messages — they're UI-only and must not be sent to the API
-      const chatHistory = history.filter((m) => !m.isDivider);
+      // Filter out divider and error messages — they're UI-only and must not be sent to the API
+      const chatHistory = history.filter((m) => !m.isDivider && !m.isError);
 
       const apiMessages = chatHistory.map((m, i) => {
         if (i === chatHistory.length - 1 && m.role === 'user' && selectedRecordsContext) {
@@ -302,6 +329,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
       });
 
       let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
+      let failedStatus: number | undefined;
 
       // \x00 is the separator emitted by the backend between reasoning and final answer.
       const SEPARATOR = '\x00';
@@ -360,7 +388,10 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
           },
           controller.signal
         );
-        if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok || !res.body) {
+          failedStatus = res.status;
+          throw new Error(`HTTP ${res.status}`);
+        }
 
         // Capture new thread ID from header (only emitted when a new thread was created)
         const newThreadId = res.headers.get('X-Thread-Id');
@@ -370,6 +401,19 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
 
         reader = res.body.getReader();
         await readStream(reader, appendChunk);
+
+        // Responses without the separator (e.g. models without tool use) are all answer,
+        // not reasoning — move the text out of the collapsed reasoning section.
+        if (!answerMode) {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role !== 'assistant' || last.content || !last.reasoning) return prev;
+            return [
+              ...prev.slice(0, -1),
+              { ...last, content: last.reasoning, reasoning: undefined },
+            ];
+          });
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') {
           setMessages((prev) => {
@@ -378,11 +422,13 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
             return prev;
           });
         } else {
+          const { key, fallback } = getChatErrorMessage(failedStatus);
           setMessages((prev) => {
             const updated = [...prev];
             updated[updated.length - 1] = {
-              ...updated[updated.length - 1],
-              content: t('ai.chat.errorMessage', 'Something went wrong. Please try again.'),
+              role: 'assistant',
+              content: t(key, fallback),
+              isError: true,
             };
             return updated;
           });
@@ -400,7 +446,8 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
   const handleSubmit = useCallback(
     (message: PromptInputMessage) => {
       const text = message.text.trim();
-      if (!text || isStreaming) return;
+      // The submit button is disabled while files upload; this guards the programmatic path.
+      if (!text || isStreaming || uploadingFiles.some((f) => f.uploading)) return;
 
       const persistedTokens = chatFiles
         .filter((f) => selectedFileIds.has(f.id))
@@ -417,11 +464,22 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
       setMessages([...nextHistory, assistantPlaceholder]);
       setIsStreaming(true);
       setIsThinking(true);
-      streamAssistantReply(text, nextHistory, fileTokens);
+      void streamAssistantReply(nextHistory, fileTokens);
       setUploadingFiles([]);
     },
     [isStreaming, messages, streamAssistantReply, uploadingFiles, chatFiles, selectedFileIds]
   );
+
+  // Re-sends the conversation when the last reply failed, replacing the error message.
+  const handleRetry = useCallback(() => {
+    const last = messages[messages.length - 1];
+    if (isStreaming || !last?.isError) return;
+    const history = messages.slice(0, -1);
+    setMessages([...history, { role: 'assistant', content: '' }]);
+    setIsStreaming(true);
+    setIsThinking(true);
+    void streamAssistantReply(history, lastFileTokensRef.current);
+  }, [isStreaming, messages, streamAssistantReply]);
 
   const handleStop = useCallback(() => {
     abortRef.current?.abort();
@@ -478,15 +536,26 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
     [baseId, userId]
   );
 
+  // Switching agents starts a new conversation, so confirm when there is one to lose.
+  const requestAgentChange = useCallback(
+    (agentId: string | undefined) => {
+      if (agentId === selectedAgentId) return;
+      const hasConversation = messages.some((m) => !m.isDivider);
+      if (hasConversation) setPendingAgentSwitch({ agentId });
+      else handleAgentChange(agentId);
+    },
+    [handleAgentChange, messages, selectedAgentId]
+  );
+
   const lastAssistantMessage = useMemo(() => {
     const last = messages[messages.length - 1];
-    return last?.role === 'assistant' ? last.content : '';
+    return last?.role === 'assistant' && !last.isError ? last.content : '';
   }, [messages]);
 
-  const agentLabel = useMemo(
-    () => MASTRA_AGENTS.find((a) => a.id === selectedAgentId)?.label,
-    [selectedAgentId]
-  );
+  const agentLabel = useMemo(() => {
+    const agent = MASTRA_AGENTS.find((a) => a.id === selectedAgentId);
+    return agent ? t(agent.labelKey, agent.label) : undefined;
+  }, [selectedAgentId, t]);
 
   // ---------------------------------------------------------------------------
   // File delete
@@ -494,10 +563,20 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
 
   const handleDeleteFile = useCallback(
     async (fileId: string) => {
-      await deleteChatFile(baseId, fileId);
-      void queryClient.invalidateQueries({ queryKey: ['chatFiles', baseId] });
+      try {
+        await deleteChatFile(baseId, fileId);
+        setSelectedFileIds((prev) => {
+          if (!prev.has(fileId)) return prev;
+          const next = new Set(prev);
+          next.delete(fileId);
+          return next;
+        });
+        void queryClient.invalidateQueries({ queryKey: ['chatFiles', baseId] });
+      } catch {
+        toast.error(t('ai.files.deleteFailed', 'Failed to delete the file. Please try again.'));
+      }
     },
-    [baseId, queryClient]
+    [baseId, queryClient, t]
   );
 
   if (status === 'close') return null;
@@ -522,7 +601,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
         onToggleExpanded={toggleExpanded}
         onClearSession={handleClearSession}
         agentLabel={agentLabel}
-        onClearAgent={agentLabel ? () => handleAgentChange(undefined) : undefined}
+        onClearAgent={agentLabel ? () => requestAgentChange(undefined) : undefined}
       />
 
       <ChatPanelTabs
@@ -537,7 +616,12 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
 
       {activeTab === 'chat' && (
         <>
-          <ChatConversation messages={messages} isStreaming={isStreaming} isThinking={isThinking} />
+          <ChatConversation
+            messages={messages}
+            isStreaming={isStreaming}
+            isThinking={isThinking}
+            onRetry={handleRetry}
+          />
           <ChatInputArea
             baseId={baseId}
             isFullscreen={isFullscreen}
@@ -554,7 +638,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
             onAttachClick={() => fileInputRef.current?.click()}
             onToggleFileSelection={toggleFileSelection}
             onRemoveUploadingFile={removeUploadingFile}
-            onAgentChange={handleAgentChange}
+            onAgentChange={requestAgentChange}
           />
         </>
       )}
@@ -566,6 +650,34 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
           onUploadClick={() => fileInputRef.current?.click()}
         />
       )}
+
+      <AlertDialog
+        open={pendingAgentSwitch !== null}
+        onOpenChange={(open) => !open && setPendingAgentSwitch(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('ai.chat.switchAgentTitle', 'Switch agent?')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                'ai.chat.switchAgentDescription',
+                'Switching agents starts a new conversation. The current conversation will no longer be shown here.'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('actions.cancel', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingAgentSwitch) handleAgentChange(pendingAgentSwitch.agentId);
+                setPendingAgentSwitch(null);
+              }}
+            >
+              {t('ai.chat.switchAgentConfirm', 'Switch')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 

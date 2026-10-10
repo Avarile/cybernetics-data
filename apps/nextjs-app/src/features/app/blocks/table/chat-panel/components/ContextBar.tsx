@@ -17,7 +17,13 @@ export const ContextBar = ({ rowCount, onDismiss }: IContextBarProps) => {
       <span className="text-muted-foreground">
         {t('ai.chat.rowsSelected', '{{count}} rows selected as context', { count: rowCount })}
       </span>
-      <Button variant="ghost" size="xs" className="size-5 p-0" onClick={onDismiss}>
+      <Button
+        variant="ghost"
+        size="xs"
+        className="size-5 p-0"
+        onClick={onDismiss}
+        aria-label={t('ai.chat.removeContext', 'Remove selected rows from context')}
+      >
         <X className="size-3" />
       </Button>
     </div>

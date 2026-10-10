@@ -3,11 +3,17 @@ export interface IMessage {
   content: string;
   reasoning?: string;
   isDivider?: boolean;
+  isError?: boolean;
 }
 
+// `labelKey` is resolved under the `common` namespace; `label` is the fallback.
 export const MASTRA_AGENTS = [
-  { id: 'knowledge-manager-non-rag', label: 'Knowledge Search' },
-  { id: 'knowledge-manager-rag', label: 'RAG Search' },
+  {
+    id: 'knowledge-manager-non-rag',
+    labelKey: 'ai.chat.agents.knowledge',
+    label: 'Knowledge Search',
+  },
+  { id: 'knowledge-manager-rag', labelKey: 'ai.chat.agents.rag', label: 'RAG Search' },
 ] as const;
 
 export interface IGridSelection {

@@ -33,6 +33,8 @@ export const ChatPanelHeader = ({
   onClearAgent,
 }: IChatPanelHeaderProps) => {
   const { t } = useTranslation('common');
+  const fullscreenLabel =
+    status === 'expanded' ? t('ai.chat.exitFullscreen') : t('ai.chat.fullscreen');
 
   return (
     <div className="flex shrink-0 items-center justify-between px-3 py-2">
@@ -40,7 +42,7 @@ export const ChatPanelHeader = ({
         <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
         <span className="text-sm font-medium">{t('ai.chat.title', 'AI Chat')}</span>
         {agentLabel && (
-          <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+          <div className="flex min-w-0 max-w-[160px] items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
             <span className="truncate">{agentLabel}</span>
             {onClearAgent && (
               <button
@@ -48,6 +50,7 @@ export const ChatPanelHeader = ({
                 className="ml-0.5 shrink-0 hover:text-primary/70"
                 onClick={onClearAgent}
                 title={t('ai.chat.switchToLocal', 'Switch to Local AI')}
+                aria-label={t('ai.chat.switchToLocal', 'Switch to Local AI')}
               >
                 <X className="size-3" />
               </button>
@@ -58,7 +61,12 @@ export const ChatPanelHeader = ({
       <div className="flex items-center gap-1">
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="xs" title={t('ai.chat.clearSession', 'Clear session')}>
+            <Button
+              variant="ghost"
+              size="xs"
+              title={t('ai.chat.clearSession', 'Clear session')}
+              aria-label={t('ai.chat.clearSession', 'Clear session')}
+            >
               <Trash2 className="size-4" />
             </Button>
           </AlertDialogTrigger>
@@ -87,7 +95,8 @@ export const ChatPanelHeader = ({
             variant="ghost"
             size="xs"
             onClick={onToggleExpanded}
-            title={status === 'expanded' ? t('ai.chat.exitFullscreen') : t('ai.chat.fullscreen')}
+            title={fullscreenLabel}
+            aria-label={fullscreenLabel}
           >
             {status === 'expanded' ? (
               <Minimize2 className="size-4" />
@@ -96,7 +105,13 @@ export const ChatPanelHeader = ({
             )}
           </Button>
         )}
-        <Button variant="ghost" size="xs" onClick={onClose} title={t('actions.close')}>
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={onClose}
+          title={t('actions.close')}
+          aria-label={t('actions.close')}
+        >
           <X className="size-4" />
         </Button>
       </div>

@@ -1,5 +1,6 @@
 import { Check, Paperclip, X } from '@teable/icons';
 import type { IChatFileVo } from '@teable/openapi';
+import { cn } from '@teable/ui-lib/shadcn';
 import { Bot, FileIcon, Files } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import {
@@ -76,10 +77,14 @@ const ChatInputAreaContent = ({
   const { t } = useTranslation('common');
   const controller = usePromptInputController();
   const hasText = controller.textInput.value.trim().length > 0;
+  const isUploading = uploadingFiles.some((f) => f.uploading);
 
   return (
     <div className={isFullscreen ? 'flex shrink-0 justify-center p-3' : 'shrink-0 p-3'}>
-      <PromptInput className={isFullscreen ? 'w-1/3' : undefined} onSubmit={onSubmit}>
+      <PromptInput
+        className={cn('[&_[data-slot=input-group]]:rounded-2xl', isFullscreen && 'w-1/3')}
+        onSubmit={onSubmit}
+      >
         <PromptInputBody>
           <PromptInputTextarea
             placeholder={t('ai.chat.inputPlaceholder', 'Ask a question… (Enter to send)')}
@@ -94,6 +99,7 @@ const ChatInputAreaContent = ({
             />
             <PromptInputButton
               tooltip={t('ai.chat.attachFile', 'Attach file')}
+              aria-label={t('ai.chat.attachFile', 'Attach file')}
               onClick={onAttachClick}
             >
               <Paperclip className="size-4" />
@@ -103,7 +109,10 @@ const ChatInputAreaContent = ({
               value={selectedAgentId ?? 'local'}
               onValueChange={(v) => onAgentChange(v === 'local' ? undefined : v)}
             >
-              <PromptInputSelectTrigger className="h-auto gap-0.5 px-1.5 py-0.5 text-xs">
+              <PromptInputSelectTrigger
+                className="h-auto gap-0.5 px-1.5 py-0.5 text-xs"
+                aria-label={t('ai.chat.selectAgent', 'Select agent')}
+              >
                 <Bot className="size-3.5 shrink-0" />
                 <PromptInputSelectValue />
               </PromptInputSelectTrigger>
@@ -113,7 +122,7 @@ const ChatInputAreaContent = ({
                 </PromptInputSelectItem>
                 {MASTRA_AGENTS.map((agent) => (
                   <PromptInputSelectItem key={agent.id} value={agent.id}>
-                    {agent.label}
+                    {t(agent.labelKey, agent.label)}
                   </PromptInputSelectItem>
                 ))}
               </PromptInputSelectContent>
@@ -178,6 +187,7 @@ const ChatInputAreaContent = ({
                 <button
                   type="button"
                   className="ml-1 text-muted-foreground hover:text-foreground"
+                  aria-label={t('ai.chat.removeFile', 'Remove {{name}}', { name: f.name })}
                   onClick={() => onToggleFileSelection(f.id)}
                 >
                   <X className="size-3" />
@@ -194,11 +204,19 @@ const ChatInputAreaContent = ({
               >
                 <FileIcon className="size-3 shrink-0" />
                 <span className="max-w-[100px] truncate">{f.name}</span>
-                {f.uploading && <span className="text-muted-foreground">…</span>}
+                {f.uploading && (
+                  <span
+                    className="text-muted-foreground"
+                    aria-label={t('ai.chat.uploading', 'Uploading…')}
+                  >
+                    …
+                  </span>
+                )}
                 {f.error && <span>{f.error}</span>}
                 <button
                   type="button"
                   className="ml-1 text-muted-foreground hover:text-foreground"
+                  aria-label={t('ai.chat.removeFile', 'Remove {{name}}', { name: f.name })}
                   onClick={() => onRemoveUploadingFile(f.id)}
                 >
                   <X className="size-3" />
@@ -209,7 +227,12 @@ const ChatInputAreaContent = ({
             {uploadError && <p className="w-full text-xs text-destructive">{uploadError}</p>}
           </div>
           <PromptInputSubmit
-            disabled={!hasText && !isStreaming}
+            disabled={!isStreaming && (!hasText || isUploading)}
+            title={
+              isUploading
+                ? t('ai.chat.waitForUploads', 'Waiting for uploads to finish…')
+                : undefined
+            }
             onStop={onStop}
             status={isStreaming ? 'streaming' : 'ready'}
           />

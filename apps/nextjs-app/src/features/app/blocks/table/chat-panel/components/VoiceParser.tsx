@@ -2,6 +2,7 @@
 
 import { aiTtsStream } from '@teable/openapi';
 import { Mic, MicOff, StopCircle, Volume2 } from 'lucide-react';
+import { useTranslation } from 'next-i18next';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   PromptInputButton,
@@ -55,6 +56,7 @@ interface IVoiceParserProps {
 }
 
 export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoiceParserProps) => {
+  const { t } = useTranslation('common');
   const controller = usePromptInputController();
 
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -68,6 +70,10 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
   // Stable ref to setInput — avoids re-initialising recognition on every text change
   const setInputRef = useRef(controller.textInput.setInput);
   setInputRef.current = controller.textInput.setInput;
+  const inputValueRef = useRef(controller.textInput.value);
+  inputValueRef.current = controller.textInput.value;
+  // Text already in the input when dictation started; the transcript is appended to it.
+  const dictationBaseRef = useRef('');
 
   const sttSupported =
     typeof window !== 'undefined' &&
@@ -165,12 +171,14 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
     recognition.lang = navigator.language || 'en-US';
 
     recognition.onresult = (event: ISpeechRecognitionEvent) => {
+      // Rebuild the full transcript from all results so interim updates replace each other.
       let transcript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         transcript += event.results[i][0]?.transcript ?? '';
       }
       if (transcript.trim()) {
-        setInputRef.current(transcript);
+        const base = dictationBaseRef.current;
+        setInputRef.current(base ? `${base} ${transcript.trim()}` : transcript.trim());
       }
     };
 
@@ -192,6 +200,7 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
       setIsListening(false);
     } else {
       setIsVoiceActive(true);
+      dictationBaseRef.current = inputValueRef.current.trimEnd();
       try {
         recognitionRef.current.start();
         setIsListening(true);
@@ -201,7 +210,8 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
     }
   }, [isListening]);
 
-  // Auto-play TTS after each AI reply when voice mode is active.
+  // Auto-play TTS for the reply to a dictated message. Voice mode then turns
+  // off, so later typed messages aren't read aloud unless the mic is used again.
   // fromUserGesture is false here — we rely on sticky activation from the
   // prior mic-button click; if the browser blocks it the error is logged.
   useEffect(() => {
@@ -209,6 +219,7 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
     prevIsStreamingRef.current = isStreaming;
 
     if (!justFinished || !isVoiceActive) return;
+    setIsVoiceActive(false);
     void playTts(lastAssistantMessage, false);
   }, [isStreaming, isVoiceActive, lastAssistantMessage, playTts]);
 
@@ -225,12 +236,19 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
   );
 
   const canSpeak = !!lastAssistantMessage && !isStreaming;
+  const readAloudLabel = isSpeaking
+    ? t('ai.chat.stopReading', 'Stop reading')
+    : t('ai.chat.readAloud', 'Read response aloud');
+  const micLabel = isListening
+    ? t('ai.chat.stopListening', 'Stop listening')
+    : t('ai.chat.voiceInput', 'Voice input');
 
   return (
     <div className="flex items-center gap-0.5">
       {/* Read-aloud button — always visible, play/stop toggle */}
       <PromptInputButton
-        tooltip={isSpeaking ? 'Stop reading' : 'Read response aloud'}
+        tooltip={readAloudLabel}
+        aria-label={readAloudLabel}
         disabled={!canSpeak && !isSpeaking}
         onClick={() => (isSpeaking ? stopSpeaking() : void playTts(lastAssistantMessage, true))}
       >
@@ -248,7 +266,9 @@ export const VoiceParser = ({ baseId, isStreaming, lastAssistantMessage }: IVoic
             <span className="pointer-events-none absolute inset-0 animate-ping rounded-full bg-destructive/25" />
           )}
           <PromptInputButton
-            tooltip={isListening ? 'Stop listening' : 'Voice input'}
+            tooltip={micLabel}
+            aria-label={micLabel}
+            aria-pressed={isListening}
             onClick={toggleListening}
             className={isListening ? 'text-destructive' : undefined}
           >

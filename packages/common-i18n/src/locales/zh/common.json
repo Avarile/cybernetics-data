@@ -1472,7 +1472,55 @@
       "emptyState": "随时询问关于数据的问题。",
       "inputPlaceholder": "提问…（回车发送）",
       "errorMessage": "出错了，请重试。",
-      "rowsSelected": "已选择 {{count}} 行作为上下文"
+      "rowsSelected": "已选择 {{count}} 行作为上下文",
+      "tabChat": "对话",
+      "tabFiles": "文件",
+      "attachFile": "添加附件",
+      "files": "文件",
+      "selectAgent": "选择智能体",
+      "agentLocal": "本地 AI",
+      "agents": {
+        "knowledge": "知识搜索",
+        "rag": "RAG 搜索"
+      },
+      "selectFilesTitle": "选择文件作为上下文",
+      "searchFiles": "搜索文件…",
+      "removeFile": "移除 {{name}}",
+      "removeContext": "从上下文中移除所选行",
+      "uploading": "上传中…",
+      "uploadFailed": "上传失败",
+      "uploadTypeNotAllowed": "不支持该文件类型。支持：PDF、TXT、Markdown、HTML、CSV、Word。",
+      "uploadTooLarge": "文件“{{name}}”超过 10 MB 限制。",
+      "waitForUploads": "正在等待文件上传完成…",
+      "clearSession": "清空会话",
+      "clearSessionTitle": "清空对话？",
+      "clearSessionDescription": "这将永久删除本会话中的所有消息，且无法撤销。",
+      "switchToLocal": "切换到本地 AI",
+      "switchAgentTitle": "切换智能体？",
+      "switchAgentDescription": "切换智能体将开始新的对话，当前对话将不再在此显示。",
+      "switchAgentConfirm": "切换",
+      "resumedSession": "↩ 已恢复上次会话",
+      "retry": "重试",
+      "error": {
+        "unauthorized": "登录已过期，请重新登录。",
+        "forbidden": "您没有在此数据库中使用 AI 的权限。",
+        "rateLimit": "请求过于频繁，请稍后再试。",
+        "server": "AI 服务不可用。请确认已配置 AI 提供商后重试。"
+      },
+      "readAloud": "朗读回复",
+      "stopReading": "停止朗读",
+      "voiceInput": "语音输入",
+      "stopListening": "停止聆听"
+    },
+    "files": {
+      "description": "此处上传的文件可作为 AI 上下文使用。",
+      "upload": "上传文件",
+      "empty": "暂无上传的文件。",
+      "uploadFirst": "上传文件",
+      "deleteFile": "删除 {{name}}",
+      "deleteTitle": "删除文件？",
+      "deleteDescription": "“{{name}}”将被删除，且不能再作为 AI 上下文使用。",
+      "deleteFailed": "删除文件失败，请重试。"
     }
   }
 }

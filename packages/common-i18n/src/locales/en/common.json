@@ -1475,7 +1475,55 @@
       "emptyState": "Ask anything about your data.",
       "inputPlaceholder": "Ask a question… (Enter to send)",
       "errorMessage": "Something went wrong. Please try again.",
-      "rowsSelected": "{{count}} rows selected as context"
+      "rowsSelected": "{{count}} rows selected as context",
+      "tabChat": "Chat",
+      "tabFiles": "Files",
+      "attachFile": "Attach file",
+      "files": "Files",
+      "selectAgent": "Select agent",
+      "agentLocal": "Local AI",
+      "agents": {
+        "knowledge": "Knowledge Search",
+        "rag": "RAG Search"
+      },
+      "selectFilesTitle": "Select files as context",
+      "searchFiles": "Search files…",
+      "removeFile": "Remove {{name}}",
+      "removeContext": "Remove selected rows from context",
+      "uploading": "Uploading…",
+      "uploadFailed": "Upload failed",
+      "uploadTypeNotAllowed": "File type not allowed. Supported: PDF, TXT, Markdown, HTML, CSV, Word.",
+      "uploadTooLarge": "File \"{{name}}\" exceeds the 10 MB limit.",
+      "waitForUploads": "Waiting for uploads to finish…",
+      "clearSession": "Clear session",
+      "clearSessionTitle": "Clear conversation?",
+      "clearSessionDescription": "This will permanently delete all messages in this session. This action cannot be undone.",
+      "switchToLocal": "Switch to Local AI",
+      "switchAgentTitle": "Switch agent?",
+      "switchAgentDescription": "Switching agents starts a new conversation. The current conversation will no longer be shown here.",
+      "switchAgentConfirm": "Switch",
+      "resumedSession": "↩ Resumed previous session",
+      "retry": "Retry",
+      "error": {
+        "unauthorized": "Your session has expired. Please sign in again.",
+        "forbidden": "You don't have permission to use AI in this base.",
+        "rateLimit": "Too many requests. Please wait a moment and try again.",
+        "server": "The AI service is unavailable. Check that an AI provider is configured, then try again."
+      },
+      "readAloud": "Read response aloud",
+      "stopReading": "Stop reading",
+      "voiceInput": "Voice input",
+      "stopListening": "Stop listening"
+    },
+    "files": {
+      "description": "Files uploaded here are available as AI context.",
+      "upload": "Upload file",
+      "empty": "No files uploaded yet.",
+      "uploadFirst": "Upload a file",
+      "deleteFile": "Delete {{name}}",
+      "deleteTitle": "Delete file?",
+      "deleteDescription": "\"{{name}}\" will be removed and can no longer be used as AI context.",
+      "deleteFailed": "Failed to delete the file. Please try again."
     }
   }
 }
