@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import type { Action } from '@teable/core';
 import { Task } from '@teable/openapi';
 import type { IAiGenerateRo } from '@teable/openapi';
@@ -20,10 +20,20 @@ import { ModelResolverService } from './model-resolver.service';
 
 // Record-level write permissions; holding any one of these makes the caller a writer.
 const WRITE_ACTIONS: Action[] = ['record|create', 'record|update', 'record|delete'];
+// Mastra agents the backend will route to. Anything else is rejected before the
+// agentId reaches the Mastra URL path.
+const KNOWN_MASTRA_AGENTS = new Set([
+  'knowledge-manager-non-rag',
+  'knowledge-manager-rag',
+  'knowledge-manager-reactive',
+]);
 // Mastra agents whose toolset can mutate data and therefore require write permission.
 // (The RAG agent's ingest tools are a known residual — gating them per-tool inside
 // the Mastra service is tracked as a follow-up; see the hardening plan.)
-const WRITE_CAPABLE_MASTRA_AGENTS = new Set(['knowledge-manager-non-rag']);
+const WRITE_CAPABLE_MASTRA_AGENTS = new Set([
+  'knowledge-manager-non-rag',
+  'knowledge-manager-reactive',
+]);
 
 @Injectable()
 export class GenerationService {
@@ -182,6 +192,9 @@ export class GenerationService {
     // Route to Mastra when an agentId is supplied. The memory scope (resourceId)
     // is derived from the authenticated session, never trusted from the client (H1).
     if (aiGenerateRo.agentId && userId) {
+      if (!KNOWN_MASTRA_AGENTS.has(aiGenerateRo.agentId)) {
+        throw new BadRequestException(`Unknown agent: ${aiGenerateRo.agentId}`);
+      }
       if (WRITE_CAPABLE_MASTRA_AGENTS.has(aiGenerateRo.agentId) && !canWrite) {
         throw new ForbiddenException(
           'You do not have write access to use this agent on this base.'

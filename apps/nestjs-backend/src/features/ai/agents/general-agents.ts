@@ -12,9 +12,10 @@ const execFileAsync = promisify(execFile);
 
 // The only executables the sandbox may run: the bundled Teable helper scripts.
 // Writing scripts are gated separately (see canWrite in the bash tool).
+// `query-db` is deliberately absent: it ran unscoped SQL with the app's DB credentials.
+// Read SQL goes through the in-process `queryDatabase` tool instead.
 const SANDBOX_SCRIPTS = [
   'get-records',
-  'query-db',
   'lookup-link-id',
   'create-records',
   'update-record',
@@ -22,6 +23,22 @@ const SANDBOX_SCRIPTS = [
 ] as const;
 type SandboxScript = (typeof SANDBOX_SCRIPTS)[number];
 const WRITE_SCRIPTS = new Set<SandboxScript>(['create-records', 'update-record', 'delete-record']);
+
+// Environment variables a helper script may see. Everything else (database URLs,
+// MASTRA_API_KEY, provider keys, ...) is withheld from the child process.
+// TEABLE_* stays only until the scripts move to an in-process data gateway.
+const SANDBOX_ENV_ALLOWLIST = ['PATH', 'NODE_ENV', 'TEABLE_API_TOKEN', 'TEABLE_BASE_URL'] as const;
+
+export function buildSandboxEnv(
+  source: Record<string, string | undefined> = process.env
+): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const key of SANDBOX_ENV_ALLOWLIST) {
+    const value = source[key];
+    if (value !== undefined) env[key] = value;
+  }
+  return env;
+}
 
 // Lazy singleton — initialised on first query so NestJS config / dotenv has time to load.
 let _pool: Pool | null | undefined = undefined;
@@ -81,6 +98,8 @@ export function createNodeSandbox(workingDirectory: string): ISandbox {
       // No shell: arg is a single argv entry, so shell metacharacters are inert.
       return execFileAsync('node', [scriptPath, arg], {
         cwd,
+        // Cast: the app's ProcessEnv augmentation makes NODE_ENV mandatory.
+        env: buildSandboxEnv() as NodeJS.ProcessEnv,
         timeout: 60_000,
         maxBuffer: 10 * 1024 * 1024,
       });
@@ -292,7 +311,7 @@ export const bashTool = tool({
   description:
     'Run a bundled Teable helper script in the loaded skill directory. Provide the script ' +
     'name and a single JSON string argument — e.g. script "get-records", ' +
-    'arg \'{"tableId":"tblXXX","take":20}\'. Available scripts: get-records, query-db, ' +
+    'arg \'{"tableId":"tblXXX","take":20}\'. Available scripts: get-records, ' +
     'lookup-link-id, create-records, update-record, delete-record. ' +
     'The TEABLE_API_TOKEN environment variable must be set in the process environment. ' +
     'Always call loadSkill first so the working directory is set.',
@@ -600,7 +619,7 @@ For link fields, the value is a JSONB array of objects with a "title" key:
 
 ## Running helper scripts
 Use the \`bash\` tool with a \`script\` name and a single JSON \`arg\` string — never a shell
-command line. Available scripts: get-records, query-db, lookup-link-id (read); create-records,
+command line. Available scripts: get-records, lookup-link-id (read); create-records,
 update-record, delete-record (write). Example: \`bash({ script: "lookup-link-id", arg: '{"tableId":"tblXXX","fieldId":"fldXXX","value":"Acme"}' })\`.
 Write scripts require write permission and will be refused otherwise — do not retry them.
 
