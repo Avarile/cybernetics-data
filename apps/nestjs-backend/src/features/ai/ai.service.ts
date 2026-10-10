@@ -2,8 +2,8 @@
  * AiService — thin facade that composes all AI sub-services.
  * External modules should inject AiService; sub-services are implementation details.
  */
-import { Injectable } from '@nestjs/common';
 import type { OpenAIProvider } from '@ai-sdk/openai';
+import { Injectable } from '@nestjs/common';
 import { HttpErrorCode } from '@teable/core';
 import type { IAiGenerateRo, IGetAIConfig, GatewayModelTag, LLMProvider } from '@teable/openapi';
 import type { ImageModel } from 'ai';
@@ -190,16 +190,6 @@ export class AiService {
 
   generateStream(baseId: string, aiGenerateRo: IAiGenerateRo, response: Response): Promise<void> {
     return this.generationService.generateStream(baseId, aiGenerateRo, response);
-  }
-
-  ingestStream(
-    baseId: string,
-    files: { buffer: Buffer; mimetype: string; originalname: string }[],
-    targetTable: string,
-    description: string | undefined,
-    response: Response
-  ): Promise<void> {
-    return this.generationService.ingestStream(baseId, files, targetTable, description, response);
   }
 
   generateText(baseId: string, aiGenerateRo: IAiGenerateRo): Promise<string> {

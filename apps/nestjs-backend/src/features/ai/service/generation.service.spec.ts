@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { GenerationService } from './generation.service';
 
@@ -31,13 +31,16 @@ describe('GenerationService.generateStream agent gating', () => {
   });
 
   it.each(['knowledge-manager-non-rag', reactiveAgent])(
-    'forbids %s without record write permission',
+    'lets a read-only user use %s (the agents only read)',
     async (agentId) => {
       const { service, viaMastra } = createService(['record|read']);
-      await expect(service.generateStream('bse1', request(agentId), response)).rejects.toThrow(
-        ForbiddenException
+      await service.generateStream('bse1', request(agentId), response);
+      expect(viaMastra).toHaveBeenCalledWith(
+        'bse1',
+        expect.objectContaining({ agentId }),
+        response,
+        false
       );
-      expect(viaMastra).not.toHaveBeenCalled();
     }
   );
 

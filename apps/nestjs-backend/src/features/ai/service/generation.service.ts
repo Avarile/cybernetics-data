@@ -13,7 +13,6 @@ import { PermissionService } from '../../auth/permission.service';
 import { ChatFileService } from '../../chat-file/chat-file.service';
 import { runGeneralInfoAgent } from '../agents/general-agents';
 import type { AgentInput } from '../agents/general-agents';
-import { runIngestionAgent } from '../agents/ingestion-agent';
 import { getTaskModelKey } from '../util';
 import { AiConfigService } from './ai-config.service';
 import { MastraClientService } from './mastra-client.service';
@@ -29,13 +28,6 @@ const WRITE_ACTIONS: Action[] = ['record|create', 'record|update', 'record|delet
 const KNOWN_MASTRA_AGENTS = new Set([
   'knowledge-manager-non-rag',
   'knowledge-manager-rag',
-  'knowledge-manager-reactive',
-]);
-// Mastra agents whose toolset can mutate data and therefore require write permission.
-// (The RAG agent's ingest tools are a known residual — gating them per-tool inside
-// the Mastra service is tracked as a follow-up; see the hardening plan.)
-const WRITE_CAPABLE_MASTRA_AGENTS = new Set([
-  'knowledge-manager-non-rag',
   'knowledge-manager-reactive',
 ]);
 
@@ -232,7 +224,6 @@ export class GenerationService {
     response: Response
   ): Promise<void> {
     const userId = this.cls.get('user').id;
-    const canWrite = await this.resolveCanWrite(baseId);
 
     // Route to Mastra when an agentId is supplied. The memory scope (resourceId)
     // is derived from the authenticated session, never trusted from the client (H1).
@@ -240,14 +231,11 @@ export class GenerationService {
       if (!KNOWN_MASTRA_AGENTS.has(aiGenerateRo.agentId)) {
         throw new BadRequestException(`Unknown agent: ${aiGenerateRo.agentId}`);
       }
-      if (WRITE_CAPABLE_MASTRA_AGENTS.has(aiGenerateRo.agentId) && !canWrite) {
-        throw new ForbiddenException(
-          'You do not have write access to use this agent on this base.'
-        );
-      }
       if (aiGenerateRo.threadId) {
         await this.assertThreadOwnership(aiGenerateRo.threadId, userId, aiGenerateRo.agentId);
       }
+      // The agents only read; canWrite gates the RAG agent's vector-index tools.
+      const canWrite = await this.resolveCanWrite(baseId);
       return this.generateStreamViaMastra(
         baseId,
         { ...aiGenerateRo, resourceId: userId },
@@ -296,7 +284,7 @@ export class GenerationService {
         const result = await runGeneralInfoAgent(
           modelInstance,
           input,
-          { baseId, aiData: this.aiDataService, canWrite },
+          { baseId, aiData: this.aiDataService },
           abortController.signal
         );
 
@@ -397,82 +385,6 @@ export class GenerationService {
       this.logger.error(`[generateStream] Error after headers sent: ${(err as Error).message}`);
       try {
         response.write('\n\n[error] The assistant encountered an error. Please try again.');
-      } catch {
-        /* response already closed */
-      }
-      response.end();
-    } finally {
-      response.off('close', onClose);
-    }
-  }
-
-  async ingestStream(
-    baseId: string,
-    files: { buffer: Buffer; mimetype: string; originalname: string }[],
-    targetTable: string,
-    description: string | undefined,
-    response: Response
-  ): Promise<void> {
-    // Ingestion creates records — require write permission (H3).
-    if (!(await this.resolveCanWrite(baseId))) {
-      throw new ForbiddenException('You do not have write access to ingest data into this base.');
-    }
-
-    // Abort the ingestion agent when the client disconnects (M1).
-    const abortController = new AbortController();
-    const onClose = () => abortController.abort();
-    response.on('close', onClose);
-
-    try {
-      const config = await this.aiConfigService.getAIConfig(baseId);
-      const modelKey = getTaskModelKey(config, Task.Coding);
-      if (!modelKey) throw new Error('Model key is not set');
-
-      const modelInstance = await this.modelResolverService.getModelInstance(
-        modelKey,
-        config.llmProviders
-      );
-
-      const fileParts = await Promise.all(
-        files.map(async (f) => {
-          const text = await this.chatFileService.extractTextFromBuffer(f.buffer, f.mimetype);
-          return text ? `--- File: ${f.originalname} ---\n${text}` : null;
-        })
-      );
-      const fileContext = fileParts.filter(Boolean).join('\n\n');
-
-      const descriptionLine = description ? `\nAdditional instructions: ${description}` : '';
-      const prompt =
-        `Ingest the following file content into the table named "${targetTable}".${descriptionLine}\n\n` +
-        `<file_context>\n${fileContext}\n</file_context>`;
-
-      response.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-
-      const result = await runIngestionAgent(
-        modelInstance,
-        { prompt },
-        { baseId, aiData: this.aiDataService, canWrite: true },
-        abortController.signal
-      );
-
-      let totalText = 0;
-      for await (const chunk of result.textStream) {
-        if (chunk) {
-          totalText += chunk.length;
-          response.write(chunk);
-        }
-      }
-      if (totalText === 0) {
-        response.write('Ingestion completed but the agent produced no output. Please try again.');
-      }
-
-      response.end();
-    } catch (err) {
-      if (abortController.signal.aborted) return;
-      if (!response.headersSent) throw err;
-      this.logger.error(`[ingestStream] Error after headers sent: ${(err as Error).message}`);
-      try {
-        response.write('\n\n[error] Ingestion failed. Please try again.');
       } catch {
         /* response already closed */
       }

@@ -26,16 +26,6 @@ export interface IUploadingFile {
 
 export const PANEL_DEFAULT_WIDTH = 320;
 
-export const INGEST_ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'text/plain',
-  'text/markdown',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/msword',
-];
-
-export const INGEST_ALLOWED_EXTENSIONS = '.pdf,.docx,.doc,.txt,.md';
-
 export const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'text/plain',

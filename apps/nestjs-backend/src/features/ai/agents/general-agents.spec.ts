@@ -1,28 +1,21 @@
+import { MockLanguageModelV3 } from 'ai/test';
 import { describe, expect, it } from 'vitest';
-import { buildSandboxEnv } from './general-agents';
+import { createGeneralInfoAgent, generalInfoInstructions } from './general-agents';
 
-describe('buildSandboxEnv', () => {
-  it('passes only allow-listed variables to sandbox scripts', () => {
-    const env = buildSandboxEnv({
-      PATH: '/usr/bin',
-      NODE_ENV: 'test',
-      TEABLE_API_TOKEN: 'token',
-      TEABLE_BASE_URL: 'http://localhost:3000',
-      PRISMA_DATABASE_URL: 'postgresql://user:secret@db/app',
-      DATABASE_URL: 'postgresql://user:secret@db/app',
-      MASTRA_API_KEY: 'mastra-secret',
-      OPENAI_API_KEY: 'sk-secret',
-    });
-
-    expect(env).toEqual({
-      PATH: '/usr/bin',
-      NODE_ENV: 'test',
-      TEABLE_API_TOKEN: 'token',
-      TEABLE_BASE_URL: 'http://localhost:3000',
-    });
+describe('Local AI agent', () => {
+  it('has only the read-only data tools', () => {
+    const agent = createGeneralInfoAgent(new MockLanguageModelV3());
+    expect(Object.keys(agent.tools).sort()).toEqual([
+      'describeTable',
+      'getRecords',
+      'listTables',
+      'queryRecords',
+    ]);
   });
 
-  it('omits allow-listed variables that are not set', () => {
-    expect(buildSandboxEnv({ PATH: '/usr/bin' })).toEqual({ PATH: '/usr/bin' });
+  it('tells the model it cannot change data and must not claim it did', () => {
+    expect(generalInfoInstructions).toContain('You cannot create, update');
+    expect(generalInfoInstructions).toContain('Never claim a change was made');
+    expect(generalInfoInstructions).not.toMatch(/bash|loadSkill|create-records/);
   });
 });

@@ -1,15 +1,15 @@
 import { useTranslation } from 'next-i18next';
 
 interface IChatPanelTabsProps {
-  activeTab: 'chat' | 'files' | 'ingest';
+  activeTab: 'chat' | 'files';
   fileCount: number;
-  onTabChange: (tab: 'chat' | 'files' | 'ingest') => void;
+  onTabChange: (tab: 'chat' | 'files') => void;
 }
 
 export const ChatPanelTabs = ({ activeTab, fileCount, onTabChange }: IChatPanelTabsProps) => {
   const { t } = useTranslation('common');
 
-  const tabClass = (tab: 'chat' | 'files' | 'ingest') =>
+  const tabClass = (tab: 'chat' | 'files') =>
     `px-4 py-1.5 font-medium transition-colors ${
       activeTab === tab
         ? 'border-b-2 border-primary text-foreground'
@@ -29,9 +29,6 @@ export const ChatPanelTabs = ({ activeTab, fileCount, onTabChange }: IChatPanelT
         {fileCount > 0 && (
           <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs">{fileCount}</span>
         )}
-      </button>
-      <button className={tabClass('ingest')} onClick={() => onTabChange('ingest')}>
-        {t('ai.chat.tabIngest', 'Ingest')}
       </button>
     </div>
   );
