@@ -2,6 +2,13 @@
 import { Inject } from '@nestjs/common';
 import { registerAs } from '@nestjs/config';
 
+const toNonNegativeInt = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value);
+  return value !== undefined && value !== '' && Number.isInteger(parsed) && parsed >= 0
+    ? parsed
+    : fallback;
+};
+
 const toPositiveInt = (value: string | undefined, fallback: number) => {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
@@ -21,6 +28,8 @@ export const aiDataConfig = registerAs('aiData', () => ({
   serviceKey: process.env.MASTRA_API_KEY || undefined,
   /** Hard expiry of a context. It is also revoked as soon as the chat turn ends. */
   contextTtlSeconds: toPositiveInt(process.env.AI_DATA_CONTEXT_TTL_SECONDS, 180),
+  /** Data calls one user may make per minute, across all agents and replicas. 0 turns it off. */
+  rateLimitPerMinute: toNonNegativeInt(process.env.AI_DATA_RATE_LIMIT_PER_MINUTE, 120),
 }));
 
 export const AiDataConfig = () => Inject(aiDataConfig.KEY);

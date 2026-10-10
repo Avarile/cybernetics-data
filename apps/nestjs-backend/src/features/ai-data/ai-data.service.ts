@@ -10,6 +10,7 @@ import { PermissionService } from '../auth/permission.service';
 import { FieldOpenApiService } from '../field/open-api/field-open-api.service';
 import { RecordService } from '../record/record.service';
 import { TableOpenApiService } from '../table/open-api/table-open-api.service';
+import { AiDataAuditService } from './ai-data-audit.service';
 import { capRecords } from './ai-data.limits';
 import type { IAiDataRecord } from './ai-data.limits';
 import {
@@ -89,11 +90,12 @@ export class AiDataService {
     private readonly permissionService: PermissionService,
     private readonly tableService: TableOpenApiService,
     private readonly fieldService: FieldOpenApiService,
-    private readonly recordService: RecordService
+    private readonly recordService: RecordService,
+    private readonly audit: AiDataAuditService
   ) {}
 
   listTables(baseId: string): Promise<IAiDataTableSummary[]> {
-    return this.serialize(async () => {
+    return this.tracked('listTables', baseId, undefined, async () => {
       this.assertPrefix(baseId, IdPrefix.Base, 'base id');
       await this.authorize(baseId, [tableRead]);
       return this.loadTables(baseId);
@@ -101,7 +103,7 @@ export class AiDataService {
   }
 
   describeTable(baseId: string, tableRef: string) {
-    return this.serialize(async () => {
+    return this.tracked('describeTable', baseId, tableRef, async () => {
       const table = await this.resolveTable(baseId, tableRef);
       await this.authorize(table.id, [tableRead, fieldRead]);
       const fields = await this.loadFields(table.id);
@@ -115,7 +117,7 @@ export class AiDataService {
   }
 
   queryRecords(baseId: string, args: IAiDataQueryArgs): Promise<IAiDataRecordsResult> {
-    return this.serialize(async () => {
+    return this.tracked('queryRecords', baseId, args.tableId, async () => {
       const table = await this.resolveTable(baseId, args.tableId);
       await this.authorize(table.id, [recordRead, fieldRead]);
       const fields = await this.loadFields(table.id);
@@ -163,7 +165,7 @@ export class AiDataService {
     recordIds: string[],
     options: { fieldKeyType?: IAiDataFieldKeyType } = {}
   ) {
-    return this.serialize(async () => {
+    return this.tracked('getRecords', baseId, tableRef, async () => {
       const table = await this.resolveTable(baseId, tableRef);
       await this.authorize(table.id, [recordRead, fieldRead]);
 
@@ -210,6 +212,50 @@ export class AiDataService {
   }
 
   // ── helpers ────────────────────────────────────────────────────────────────
+
+  /**
+   * Serialize, rate-limit and audit one operation. The rate limit is checked before
+   * any authorization or data access; every outcome, including refusals, is audited.
+   */
+  private tracked<T>(
+    op: string,
+    baseId: string,
+    table: string | undefined,
+    task: () => Promise<T>
+  ): Promise<T> {
+    return this.serialize(async () => {
+      const started = Date.now();
+      const userId = this.cls.get('user')?.id ?? 'unknown';
+      const via = this.cls.get('origin')?.byApi ? 'internal-api' : 'session';
+      try {
+        await this.audit.checkRate(userId);
+        const result = await task();
+        this.audit.record({
+          op,
+          userId,
+          baseId,
+          table,
+          via,
+          ok: true,
+          rows: AiDataAuditService.rowsOf(result),
+          ms: Date.now() - started,
+        });
+        return result;
+      } catch (error) {
+        this.audit.record({
+          op,
+          userId,
+          baseId,
+          table,
+          via,
+          ok: false,
+          status: AiDataAuditService.statusOf(error),
+          ms: Date.now() - started,
+        });
+        throw error;
+      }
+    });
+  }
 
   private assertPrefix(id: string, prefix: IdPrefix, label: string) {
     if (typeof id !== 'string' || !id.startsWith(prefix)) {

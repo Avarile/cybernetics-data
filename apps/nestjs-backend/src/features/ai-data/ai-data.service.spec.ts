@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, HttpException, NotFoundException } from '@nestjs/common';
 import { SortFunc } from '@teable/core';
 import { describe, expect, it, vi } from 'vitest';
 import { AiDataService } from './ai-data.service';
@@ -56,6 +56,7 @@ const build = (
     table?: Record<string, any>;
     field?: Record<string, any>;
     config?: Partial<typeof config>;
+    audit?: Record<string, any>;
   } = {}
 ) => {
   const cls = makeCls('tokenA');
@@ -89,15 +90,21 @@ const build = (
     })),
     ...overrides.record,
   };
+  const audit = {
+    checkRate: vi.fn(async () => undefined),
+    record: vi.fn(),
+    ...overrides.audit,
+  };
   const service = new AiDataService(
     { ...config, ...overrides.config } as any,
     cls as any,
     permission as any,
     table as any,
     field as any,
-    record as any
+    record as any,
+    audit as any
   );
-  return { service, cls, permission, table, field, record };
+  return { service, cls, permission, table, field, record, audit };
 };
 
 const queryArgs = (record: { getRecords: { mock: { calls: unknown[][] } } }) =>
@@ -426,5 +433,50 @@ describe('AiDataService serialization', () => {
     const second = service.listTables(baseA);
     await expect(first).rejects.toThrow('first fails');
     await expect(second).resolves.toHaveLength(4);
+  });
+});
+
+describe('AiDataService audit and rate limit', () => {
+  it('audits each call with user, base, table, transport and row count', async () => {
+    const { service, cls, audit } = build();
+    cls.store.user = { id: 'usr1' };
+    cls.store.origin = { byApi: true };
+    await service.queryRecords(baseA, { tableId: 'Knowledge' });
+
+    expect(audit.checkRate).toHaveBeenCalledWith('usr1');
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        op: 'queryRecords',
+        userId: 'usr1',
+        baseId: baseA,
+        table: 'Knowledge',
+        via: 'internal-api',
+        ok: true,
+        rows: 1,
+      })
+    );
+  });
+
+  it('audits refusals with their status', async () => {
+    const { service, audit } = build();
+    await expect(service.describeTable(baseA, tableB)).rejects.toThrow(tableNotFound);
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ op: 'describeTable', ok: false, status: 404, via: 'session' })
+    );
+  });
+
+  it('stops a rate-limited call before any permission check or data access', async () => {
+    const { service, permission, record, table, audit } = build({
+      audit: {
+        checkRate: vi.fn(async () => {
+          throw new HttpException('slow down', 429);
+        }),
+      },
+    });
+    await expect(service.queryRecords(baseA, { tableId: tableA })).rejects.toThrow('slow down');
+    expect(permission.validPermissions).not.toHaveBeenCalled();
+    expect(table.getTables).not.toHaveBeenCalled();
+    expect(record.getRecords).not.toHaveBeenCalled();
+    expect(audit.record).toHaveBeenCalledWith(expect.objectContaining({ ok: false, status: 429 }));
   });
 });
