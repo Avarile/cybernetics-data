@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { aiDataContextCacheKey, generateAiDataContextToken } from './ai-data-context';
 import { AiDataContextService } from './ai-data-context.service';
 
 const makeCache = () => {
@@ -16,64 +17,79 @@ const makeCache = () => {
   };
 };
 
-const config = {
-  contextSecret: 's'.repeat(48),
-  serviceKey: 'mastra-key',
-  contextTtlSeconds: 180,
-};
+const config = { serviceKey: 'mastra-key', contextTtlSeconds: 180 };
 
-const build = (overrides: Partial<typeof config> = {}) => {
-  const cache = makeCache();
+const build = (overrides: Partial<typeof config> = {}, cache = makeCache()) => {
   const service = new AiDataContextService({ ...config, ...overrides } as any, cache as any);
   return { service, cache };
 };
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe('AiDataContextService', () => {
-  it('is enabled only when both the secret and the service key are set', () => {
+  it('is enabled only when the Mastra service key is set', () => {
     expect(build().service.enabled).toBe(true);
-    expect(build({ contextSecret: undefined }).service.enabled).toBe(false);
     expect(build({ serviceKey: undefined }).service.enabled).toBe(false);
   });
 
-  it('issues a context that checks out while it is live', async () => {
+  it('stores who the token acts as under a hash of the token, with the TTL', async () => {
     const { service, cache } = build();
-    const { token, requestId } = await service.issue('usr1', 'bse1');
+    const { token } = await service.issue('usr1', 'bse1');
 
-    expect(cache.setDetail).toHaveBeenCalledWith(`ai-data:context:${requestId}`, true, 180);
-    const result = await service.check(token);
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.claims).toMatchObject({ userId: 'usr1', baseId: 'bse1', requestId });
-    }
+    const key = aiDataContextCacheKey(token);
+    expect(cache.setDetail).toHaveBeenCalledWith(
+      key,
+      expect.objectContaining({ userId: 'usr1', baseId: 'bse1' }),
+      180
+    );
+    expect([...cache.store.keys()].some((k) => k.includes(token))).toBe(false);
   });
 
-  it('rejects a context replayed after it was revoked', async () => {
+  it('checks out while live and returns the stored user and base', async () => {
     const { service } = build();
-    const { token, requestId } = await service.issue('usr1', 'bse1');
-    await service.revoke(requestId);
-    expect(await service.check(token)).toEqual({ ok: false, reason: 'revoked' });
+    const { token } = await service.issue('usr1', 'bse1');
+    const result = await service.check(token);
+    expect(result).toMatchObject({ ok: true, claims: { userId: 'usr1', baseId: 'bse1' } });
   });
 
-  it('rejects a context that was never issued here, even if correctly signed elsewhere', async () => {
-    const { service: issuer } = build();
-    const { service: other } = build();
-    const { token } = await issuer.issue('usr1', 'bse1');
-    // Same secret, but this replica's cache never saw the request id.
-    expect(await other.check(token)).toEqual({ ok: false, reason: 'revoked' });
+  it('rejects a token replayed after it was revoked', async () => {
+    const { service } = build();
+    const { token } = await service.issue('usr1', 'bse1');
+    await service.revoke(token);
+    expect(await service.check(token)).toEqual({ ok: false, reason: 'unknown' });
+  });
+
+  it('rejects a well-formed token that was never issued', async () => {
+    const { service } = build();
+    expect(await service.check(generateAiDataContextToken())).toEqual({
+      ok: false,
+      reason: 'unknown',
+    });
+  });
+
+  it('rejects an expired context even if the cache still has it', async () => {
+    const { service } = build();
+    const { token } = await service.issue('usr1', 'bse1');
+    vi.useFakeTimers();
+    vi.setSystemTime(Date.now() + 181_000);
+    expect(await service.check(token)).toEqual({ ok: false, reason: 'expired' });
+  });
+
+  it('rejects malformed tokens without touching the cache', async () => {
+    const { service, cache } = build();
+    for (const token of [undefined, '', 'x', 42, 'a'.repeat(100)]) {
+      expect(await service.check(token)).toEqual({ ok: false, reason: 'malformed' });
+    }
+    expect(cache.get).not.toHaveBeenCalled();
   });
 
   it('rejects everything when disabled', async () => {
-    const { service } = build();
-    const { token } = await service.issue('usr1', 'bse1');
-    const disabled = new AiDataContextService(
-      { ...config, serviceKey: undefined } as any,
-      makeCache() as any
-    );
+    const cache = makeCache();
+    const { service: issuer } = build({}, cache);
+    const { token } = await issuer.issue('usr1', 'bse1');
+    const { service: disabled } = build({ serviceKey: undefined }, cache);
     expect(await disabled.check(token)).toEqual({ ok: false, reason: 'disabled' });
-  });
-
-  it('refuses to issue without a secret', async () => {
-    const { service } = build({ contextSecret: undefined });
-    await expect(service.issue('usr1', 'bse1')).rejects.toThrow(/AI_DATA_CONTEXT_SECRET/);
   });
 });

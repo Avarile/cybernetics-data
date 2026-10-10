@@ -66,8 +66,6 @@ export const envValidationSchema = Joi.object({
   // production if it is missing (see MastraClientService).
   MASTRA_URL: Joi.string().uri().default('http://localhost:4111'),
   MASTRA_API_KEY: Joi.string().optional(),
-  // HMAC key for the user context the backend hands to Mastra (ai-data internal endpoint).
-  AI_DATA_CONTEXT_SECRET: Joi.string().min(32).optional(),
 
   // Base graph budgets. Deliberately without Joi `.default()`: Joi writes
   // defaults onto process.env before the config factory runs, so the defaults

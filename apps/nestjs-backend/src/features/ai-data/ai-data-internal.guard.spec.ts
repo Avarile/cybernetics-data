@@ -3,7 +3,7 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { AI_DATA_CONTEXT_HEADER, AiDataInternalGuard } from './ai-data-internal.guard';
 
-const claims = { userId: 'usr1', baseId: 'bse1', requestId: 'r'.repeat(20), exp: 9e9 };
+const claims = { userId: 'usr1', baseId: 'bse1', exp: 9e9 };
 
 const build = (opts: { enabled?: boolean; check?: any; serviceKey?: string } = {}) => {
   const contextService = {
@@ -28,7 +28,7 @@ const ctx = (headers: Record<string, string | undefined>) => {
 const goodHeaders = { authorization: 'Bearer mastra-key', [AI_DATA_CONTEXT_HEADER]: 'v1.x.y' };
 
 describe('AiDataInternalGuard', () => {
-  it('lets a valid call through and attaches the signed claims', async () => {
+  it('lets a valid call through and attaches the context claims', async () => {
     const { guard, contextService } = build();
     const { req, context } = ctx(goodHeaders);
     await expect(guard.canActivate(context)).resolves.toBe(true);
@@ -58,7 +58,7 @@ describe('AiDataInternalGuard', () => {
     expect(contextService.check).not.toHaveBeenCalled();
   });
 
-  it.each(['malformed', 'bad-signature', 'expired', 'revoked'])(
+  it.each(['malformed', 'unknown', 'expired', 'disabled'])(
     'rejects a %s context with 401 and attaches nothing',
     async (reason) => {
       const { guard } = build({ check: async () => ({ ok: false, reason }) });

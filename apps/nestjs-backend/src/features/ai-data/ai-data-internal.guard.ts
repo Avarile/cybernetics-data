@@ -19,8 +19,9 @@ const safeEqual = (a: string, b: string) => {
 /**
  * Guards the internal ai-data endpoint. Two checks, both required:
  * 1. the caller is the Mastra service (bearer MASTRA_API_KEY), and
- * 2. it presents a live context signed by this backend, which names the user and base.
- * The endpoint answers 404 while either secret is unset, so it does not exist by default.
+ * 2. it presents a live context token issued by this backend for the current chat
+ *    turn, which names the user and base.
+ * The endpoint answers 404 while MASTRA_API_KEY is unset, so it does not exist by default.
  */
 @Injectable()
 export class AiDataInternalGuard implements CanActivate {

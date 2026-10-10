@@ -51,8 +51,8 @@ type IArgs<K extends IAiDataInternalOp> = z.infer<(typeof aiDataInternalBodies)[
 export type IAiDataInternalOp = keyof typeof aiDataInternalBodies;
 
 /**
- * Read-only data access for the Mastra service, acting as the user named in the
- * signed context. Public to the session guards; AiDataInternalGuard does the auth.
+ * Read-only data access for the Mastra service, acting as the user the context
+ * token was issued for. Public to the session guards; AiDataInternalGuard does the auth.
  */
 @Controller('api/internal/ai-data')
 @Public()

@@ -9,7 +9,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { AiDataInternalController } from './ai-data-internal.controller';
 
-const claims = { userId: 'usr1', baseId: 'bseCTX', requestId: 'r'.repeat(20), exp: 9e9 };
+const claims = { userId: 'usr1', baseId: 'bseCTX', exp: 9e9 };
 const dbUser = {
   id: 'usr1',
   name: 'Sam',

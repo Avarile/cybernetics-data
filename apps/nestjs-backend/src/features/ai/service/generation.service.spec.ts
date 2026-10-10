@@ -58,7 +58,7 @@ describe('GenerationService.generateStream agent gating', () => {
   });
 });
 
-describe('GenerationService Mastra path: signed AI data context', () => {
+describe('GenerationService Mastra path: AI data context', () => {
   const makeResponse = () => {
     const written: string[] = [];
     return {
@@ -84,7 +84,7 @@ describe('GenerationService Mastra path: signed AI data context', () => {
     });
     const aiDataContextService = {
       enabled: opts.enabled,
-      issue: vi.fn(async () => ({ token: 'v1.signed.token', requestId: 'req-1' })),
+      issue: vi.fn(async () => ({ token: 'opaque-token' })),
       revoke: vi.fn(async () => undefined),
     };
     Object.assign(service, {
@@ -108,8 +108,8 @@ describe('GenerationService Mastra path: signed AI data context', () => {
 
     expect(aiDataContextService.issue).toHaveBeenCalledWith('usr1', 'bse1');
     const body = (streamAgent.mock.calls[0] as unknown[])[1] as Record<string, unknown>;
-    expect(body.requestContext).toEqual({ aiDataContext: 'v1.signed.token' });
-    expect(aiDataContextService.revoke).toHaveBeenCalledWith('req-1');
+    expect(body.requestContext).toEqual({ aiDataContext: 'opaque-token' });
+    expect(aiDataContextService.revoke).toHaveBeenCalledWith('opaque-token');
     expect(written.join('')).toContain('hello');
   });
 
@@ -119,7 +119,7 @@ describe('GenerationService Mastra path: signed AI data context', () => {
     const { res } = makeResponse();
 
     await service.generateStream('bse1', ragRequest as never, res as never);
-    expect(aiDataContextService.revoke).toHaveBeenCalledWith('req-1');
+    expect(aiDataContextService.revoke).toHaveBeenCalledWith('opaque-token');
   });
 
   it('sends no context when the feature is not configured', async () => {

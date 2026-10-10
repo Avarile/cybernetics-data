@@ -20,7 +20,7 @@ import { MastraClientService } from './mastra-client.service';
 import { ModelCapabilityService } from './model-capability.service';
 import { ModelResolverService } from './model-resolver.service';
 
-type IDataContext = { token: string; requestId: string };
+type IDataContext = { token: string };
 
 // Record-level write permissions; holding any one of these makes the caller a writer.
 const WRITE_ACTIONS: Action[] = ['record|create', 'record|update', 'record|delete'];
@@ -94,7 +94,7 @@ export class GenerationService {
   private async releaseDataContext(dataContext: IDataContext | undefined) {
     if (!dataContext) return;
     try {
-      await this.aiDataContextService.revoke(dataContext.requestId);
+      await this.aiDataContextService.revoke(dataContext.token);
     } catch (err) {
       this.logger.error(`Failed to revoke AI data context: ${(err as Error).message}`);
     }
