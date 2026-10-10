@@ -1128,6 +1128,7 @@ export type I18nTranslations = {
                         "gatewayErrorForbidden": string;
                         "gatewayErrorNetwork": string;
                         "pleaseTest": string;
+                        "untestedKeyLeave": string;
                         "test": string;
                         "testing": string;
                         "attachmentTest": {

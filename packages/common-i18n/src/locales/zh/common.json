@@ -843,6 +843,7 @@
           "gatewayErrorForbidden": "访问被拒绝，请在 Vercel 控制台检查账户状态",
           "gatewayErrorNetwork": "网络错误，请检查网络连接或代理配置",
           "pleaseTest": "请点击测试验证 API 密钥是否有效",
+          "untestedKeyLeave": "您输入的 AI Gateway API 密钥尚未测试通过，因此未保存。确定要离开吗？",
           "test": "测试",
           "testing": "测试中...",
           "attachmentTest": {

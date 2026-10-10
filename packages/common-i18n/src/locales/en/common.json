@@ -846,6 +846,7 @@
           "gatewayErrorForbidden": "Access forbidden. Please check your account status in the Vercel dashboard",
           "gatewayErrorNetwork": "Network error. Please check your connection or proxy settings",
           "pleaseTest": "Please click Test to verify the API key",
+          "untestedKeyLeave": "The AI Gateway API key you entered has not been tested, so it is not saved. Leave anyway?",
           "test": "Test",
           "testing": "Testing...",
           "attachmentTest": {

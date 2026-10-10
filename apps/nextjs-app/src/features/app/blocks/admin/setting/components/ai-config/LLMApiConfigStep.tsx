@@ -12,6 +12,7 @@ import type {
 } from '@teable/openapi';
 import { Button, Input, Label, cn, Switch } from '@teable/ui-lib/shadcn';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { Control } from 'react-hook-form';
@@ -113,6 +114,41 @@ export function LLMApiConfigStep({
       localGatewayKey === (aiConfig?.aiGatewayApiKey || ''));
 
   const canProceed = mode === 'gateway' ? isGatewayKeyVerified : hasProviders;
+
+  // A gateway key is only saved after a successful test, so warn before leaving with one
+  // that was typed but not (successfully) tested — it would be silently discarded.
+  const hasUntestedGatewayKey =
+    mode === 'gateway' &&
+    hasLocalGatewayKey &&
+    testResult !== 'success' &&
+    localGatewayKey !== (aiConfig?.aiGatewayApiKey || '');
+
+  const router = useRouter();
+  useEffect(() => {
+    if (!hasUntestedGatewayKey) return;
+    const message = t('admin.setting.ai.wizard.untestedKeyLeave');
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      // Legacy support: some older browsers require returnValue to be set
+      event.returnValue = '';
+    };
+    const handleRouteChangeStart = (url: string) => {
+      if (window.confirm(message)) return;
+      router.events.emit('routeChangeError', new Error('Route change aborted'), url, {
+        shallow: false,
+      });
+      // Throwing is the only way to cancel a Next.js pages-router navigation.
+      throw 'Route change aborted: untested AI Gateway key';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+    };
+  }, [hasUntestedGatewayKey, router, t]);
 
   // Get saved attachment test from aiConfig
   const savedAttachmentTest = useMemo(() => aiConfig?.attachmentTest, [aiConfig?.attachmentTest]);
