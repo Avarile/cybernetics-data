@@ -78,15 +78,23 @@ export class OAuthService {
     }));
   };
 
-  async getOAuth(clientId: string): Promise<OAuthGetVo> {
-    const res = await this.prismaService.oAuthApp.findUnique({
+  // OAuth client ids are public (they appear in authorize URLs and in the
+  // authorized-apps list), so every management call must also match the owner.
+  private async getOwnedOAuthApp(clientId: string) {
+    const app = await this.prismaService.oAuthApp.findFirst({
       where: {
         clientId,
+        createdBy: this.cls.get('user.id'),
       },
     });
-    if (!res) {
+    if (!app) {
       throw new NotFoundException('OAuth client not found');
     }
+    return app;
+  }
+
+  async getOAuth(clientId: string): Promise<OAuthGetVo> {
+    const res = await this.getOwnedOAuthApp(clientId);
     const secrets = await this.getSecrets(clientId);
     return this.convertToVo(
       pick(
@@ -111,6 +119,7 @@ export class OAuthService {
 
   async updateOAuth(clientId: string, ro: OAuthCreateRo): Promise<OAuthUpdateVo> {
     const { redirectUris, name, description, scopes, homepage, logo } = ro;
+    await this.getOwnedOAuthApp(clientId);
     const res = await this.prismaService.oAuthApp.update({
       where: {
         clientId,
@@ -142,6 +151,7 @@ export class OAuthService {
   }
 
   async deleteOAuth(clientId: string): Promise<void> {
+    await this.getOwnedOAuthApp(clientId);
     await this.prismaService.$tx(async (prisma) => {
       await prisma.oAuthApp.delete({
         where: {
@@ -174,6 +184,7 @@ export class OAuthService {
   }
 
   async generateSecret(clientId: string): Promise<GenerateOAuthSecretVo> {
+    await this.getOwnedOAuthApp(clientId);
     const secret = getRandomString(40).toLocaleLowerCase();
     const hashedSecret = await bcrypt.hash(secret, 10);
 
@@ -198,6 +209,7 @@ export class OAuthService {
   }
 
   async deleteSecret(clientId: string, secretId: string): Promise<void> {
+    await this.getOwnedOAuthApp(clientId);
     await this.prismaService.oAuthAppSecret.delete({
       where: {
         id: secretId,

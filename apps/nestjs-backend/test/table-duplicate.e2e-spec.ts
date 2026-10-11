@@ -21,8 +21,18 @@ import {
   generateWorkflowId,
   Relationship,
 } from '@teable/core';
-import type { ICreateBaseVo, IDuplicateTableVo, ITableFullVo } from '@teable/openapi';
+import { PrismaService } from '@teable/db-main-prisma';
+import type {
+  ICreateBaseVo,
+  ICreateSpaceVo,
+  IDuplicateTableVo,
+  ITableFullVo,
+} from '@teable/openapi';
 import {
+  CREATE_BASE,
+  CREATE_SPACE,
+  DUPLICATE_TABLE,
+  urlBuilder,
   createField,
   getFields,
   duplicateTable,
@@ -39,6 +49,8 @@ import {
 import { omit } from 'lodash';
 import { x_20 } from './data-helpers/20x';
 import { x_20_link, x_20_link_from_lookups } from './data-helpers/20x-link';
+import { createNewUserAxios } from './utils/axios-instance/new-user';
+import { getError } from './utils/get-error';
 
 import {
   createTable,
@@ -839,6 +851,44 @@ describe('OpenAPI TableController for duplicate (e2e)', () => {
         })
       ).data.records;
       expect(records[0].fields[buttonField.id]).toBeUndefined();
+    });
+  });
+
+  describe('duplicate table across bases', () => {
+    let victimTable: ITableFullVo;
+
+    beforeAll(async () => {
+      victimTable = await createTable(baseId, { name: 'cross-base victim' });
+    });
+
+    afterAll(async () => {
+      await permanentDeleteTable(baseId, victimTable.id);
+    });
+
+    it('rejects duplicating a table that is not in the base named by the route', async () => {
+      const outsiderAxios = await createNewUserAxios({
+        email: 'duplicate-outsider@example.com',
+        password: '12345678',
+      });
+      const { data: space } = await outsiderAxios.post<ICreateSpaceVo>(CREATE_SPACE, {
+        name: 'outsider space',
+      });
+      const { data: outsiderBase } = await outsiderAxios.post<ICreateBaseVo>(CREATE_BASE, {
+        spaceId: space.id,
+      });
+      // New bases take the V2 path, which already scopes by base. Force the
+      // legacy V1 path that the fix covers.
+      await app
+        .get(PrismaService)
+        .base.update({ where: { id: outsiderBase.id }, data: { v2Enabled: false } });
+
+      const error = await getError(() =>
+        outsiderAxios.post(
+          urlBuilder(DUPLICATE_TABLE, { baseId: outsiderBase.id, tableId: victimTable.id }),
+          { name: 'stolen copy', includeRecords: true }
+        )
+      );
+      expect(error?.status).toBe(404);
     });
   });
 });

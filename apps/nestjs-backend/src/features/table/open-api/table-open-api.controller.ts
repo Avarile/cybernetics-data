@@ -160,8 +160,7 @@ export class TableController {
   }
 
   @UseV2Feature('duplicateTable')
-  @Permissions('table|create')
-  @Permissions('table|read')
+  @Permissions('table|create', 'table|read')
   @Post(':tableId/duplicate')
   async duplicateTable(
     @Param('baseId') baseId: string,

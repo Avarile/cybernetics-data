@@ -10,14 +10,15 @@ import {
 } from '@teable/v2-core';
 import { difference } from 'lodash';
 import { ClsService } from 'nestjs-cls';
-import { z } from 'zod';
 import { BaseConfig, type IBaseConfig } from '../../../configs/base.config';
 import { CustomHttpException, getDefaultCodeByStatus } from '../../../custom.exception';
 import { EventEmitterService } from '../../../event-emitter/event-emitter.service';
 import { Events } from '../../../event-emitter/events';
 import type { IClsStore } from '../../../types/cls';
+import { assertPublicHost } from '../../../utils/ssrf-guard';
 import { V2ContainerService } from '../../v2/v2-container.service';
 import { V2ExecutionContextFactory } from '../../v2/v2-execution-context.factory';
+import { classifyImportUrl } from './import-url';
 
 /**
  * V2 Import Open API Service
@@ -38,24 +39,30 @@ export class ImportOpenApiV2Service {
   ) {}
 
   /**
-   * Resolve a relative URL to an absolute URL.
-   * If the URL is already absolute, return as-is.
+   * Resolve a relative URL to an absolute URL and reject unsafe targets.
+   * The v2 import adapters fetch with the global fetch, which cannot take the
+   * SSRF-safe agent, so untrusted hosts are checked here before hand-off.
    */
-  private resolveUrl(url: string): string {
-    const trimmedUrl = url.trim();
-    if (z.string().url().safeParse(trimmedUrl).success) {
-      return trimmedUrl;
+  private async resolveUrl(url: string): Promise<string> {
+    const target = classifyImportUrl(url);
+    if (target.kind === 'absolute') {
+      if (!target.trusted) {
+        try {
+          await assertPublicHost(new URL(target.url).hostname);
+        } catch {
+          throw new CustomHttpException('Invalid import file URL', HttpErrorCode.VALIDATION_ERROR);
+        }
+      }
+      return target.url;
     }
     const storagePrefix =
       this.baseConfig.storagePrefix ?? process.env.STORAGE_PREFIX ?? process.env.PUBLIC_ORIGIN;
     if (storagePrefix) {
-      const normalizedPrefix = storagePrefix.replace(/\/$/, '');
-      const normalizedPath = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
-      return `${normalizedPrefix}${normalizedPath}`;
+      return `${storagePrefix.replace(/\/$/, '')}${target.path}`;
     }
     // For relative URLs, use localhost with the configured port
     const port = this.configService.get<number>('PORT') || 3000;
-    return `http://localhost:${port}${trimmedUrl}`;
+    return `http://localhost:${port}${target.path}`;
   }
 
   private throwV2Error(
@@ -150,7 +157,7 @@ export class ImportOpenApiV2Service {
     }
 
     // Resolve relative URL to absolute URL
-    const resolvedUrl = this.resolveUrl(attachmentUrl);
+    const resolvedUrl = await this.resolveUrl(attachmentUrl);
 
     // Align with v1 behavior: treat 0 (or negative) as no limit
     const normalizedMaxRowCount =

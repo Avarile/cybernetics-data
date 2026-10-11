@@ -68,14 +68,23 @@ export class TableDuplicateService {
   async duplicateTable(baseId: string, tableId: string, duplicateRo: IDuplicateTableRo) {
     const { includeRecords, name } = duplicateRo;
     this.disableTableDomainDataLoader();
-    const {
-      id: sourceTableId,
-      icon,
-      description,
-      dbTableName,
-    } = await this.prismaService.tableMeta.findUniqueOrThrow({
-      where: { id: tableId },
+    // The permission guard authorises the route's baseId, so the source
+    // table must belong to that base.
+    const sourceTable = await this.prismaService.tableMeta.findFirst({
+      where: { id: tableId, baseId },
     });
+    if (!sourceTable) {
+      throw new CustomHttpException(
+        `Table not found with id: ${tableId}`,
+        HttpErrorCode.NOT_FOUND,
+        {
+          localization: {
+            i18nKey: 'httpErrors.table.notFound',
+          },
+        }
+      );
+    }
+    const { id: sourceTableId, icon, description, dbTableName } = sourceTable;
     const userId = this.cls.get('user.id');
     let newTableVo:
       | {
@@ -117,7 +126,10 @@ export class TableDuplicateService {
         );
 
         await this.duplicateAttachments(sourceTableId, newTableVo.id, sourceToTargetFieldMap);
-        await this.duplicateLinkJunction({ [sourceTableId]: newTableVo.id }, sourceToTargetFieldMap);
+        await this.duplicateLinkJunction(
+          { [sourceTableId]: newTableVo.id },
+          sourceToTargetFieldMap
+        );
         await this.emitTableDuplicateAuditLog(newTableVo.id, count, duplicateRo);
       }
 

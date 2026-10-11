@@ -14,7 +14,9 @@ import { z } from 'zod';
 import type { ZodType } from 'zod';
 import { CustomHttpException } from '../../../custom.exception';
 import { exceptionParse } from '../../../utils/exception-parse';
+import { getSsrfSafeFetchAgent } from '../../../utils/ssrf-guard';
 import { toLineDelimitedStream } from './delimiter-stream';
+import { classifyImportUrl } from './import-url';
 
 export const DEFAULT_IMPORT_CPU_USAGE = 0.5;
 
@@ -236,13 +238,23 @@ export abstract class Importer {
   }
 
   async getFile() {
-    const { url: _url, type } = this.config;
-    let url = _url.trim();
-    if (!z.string().url().safeParse(url).success) {
-      url = `http://localhost:${process.env.PORT}${url}`;
-    }
+    const { url: rawUrl, type } = this.config;
+    const target = classifyImportUrl(rawUrl);
+    const url =
+      target.kind === 'relative'
+        ? `http://localhost:${process.env.PORT}${target.path}`
+        : target.url;
+    const agent =
+      target.kind === 'absolute' && !target.trusted ? getSsrfSafeFetchAgent() : undefined;
 
-    const { body: stream, headers } = await fetch(url);
+    let response: Awaited<ReturnType<typeof fetch>>;
+    try {
+      response = await fetch(url, { agent });
+    } catch {
+      // Includes requests blocked by the SSRF-safe agent; do not echo internals.
+      throw new CustomHttpException('Failed to fetch import file', HttpErrorCode.VALIDATION_ERROR);
+    }
+    const { body: stream, headers } = response;
 
     const supportType = importTypeMap[type].accept.split(',');
 

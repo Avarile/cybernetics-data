@@ -4,11 +4,17 @@ import type { OAuthCreateVo } from '@teable/openapi';
 import {
   deleteOAuthSecret,
   generateOAuthSecret,
+  OAUTH_DELETE,
+  OAUTH_GET,
+  OAUTH_SECRET_GENERATE,
+  OAUTH_UPDATE,
   oauthCreate,
   oauthDelete,
   oauthGet,
   oauthUpdate,
+  urlBuilder,
 } from '@teable/openapi';
+import { createNewUserAxios } from './utils/axios-instance/new-user';
 import { getError } from './utils/get-error';
 import { initApp } from './utils/init-app';
 
@@ -151,5 +157,39 @@ describe('OpenAPI OAuthController (e2e)', () => {
       },
     });
     expect(authorizedRes).toHaveLength(0);
+  });
+
+  it('rejects management of an OAuth app by a user who does not own it', async () => {
+    const { data: ownApp } = await oauthCreate(oauthData);
+    const otherUserAxios = await createNewUserAxios({
+      email: 'oauth-other-user@example.com',
+      password: '12345678',
+    });
+    const { clientId } = ownApp;
+
+    const getErr = await getError(() => otherUserAxios.get(urlBuilder(OAUTH_GET, { clientId })));
+    expect(getErr?.status).toBe(404);
+
+    const updateErr = await getError(() =>
+      otherUserAxios.put(urlBuilder(OAUTH_UPDATE, { clientId }), {
+        ...oauthData,
+        redirectUris: ['https://attacker.example.com/callback'],
+      })
+    );
+    expect(updateErr?.status).toBe(404);
+
+    const secretErr = await getError(() =>
+      otherUserAxios.post(urlBuilder(OAUTH_SECRET_GENERATE, { clientId }))
+    );
+    expect(secretErr?.status).toBe(404);
+
+    const deleteErr = await getError(() =>
+      otherUserAxios.delete(urlBuilder(OAUTH_DELETE, { clientId }))
+    );
+    expect(deleteErr?.status).toBe(404);
+
+    // The owner's app is untouched.
+    const res = await oauthGet(clientId);
+    expect(res.data.redirectUris).toEqual(oauthData.redirectUris);
   });
 });

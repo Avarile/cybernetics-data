@@ -18,7 +18,6 @@ import { BaseNodeModule } from './features/base-node/base-node.module';
 import { BaseShareModule } from './features/base-share/base-share.module';
 import { BuiltinAssetsInitModule } from './features/builtin-assets-init';
 import { CanaryModule } from './features/canary';
-import { ChatModule } from './features/chat/chat.module';
 import { ChatFileModule } from './features/chat-file/chat-file.module';
 import { CollaboratorModule } from './features/collaborator/collaborator.module';
 import { CommentOpenApiModule } from './features/comment/comment-open-api.module';
@@ -75,7 +74,6 @@ export const appModules = {
     BaseModule,
     BaseNodeModule,
     IntegrityModule,
-    ChatModule,
     AttachmentsModule,
     ChatFileModule,
     WsModule,
