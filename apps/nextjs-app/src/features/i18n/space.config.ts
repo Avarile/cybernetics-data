@@ -1,9 +1,9 @@
 import type { I18nActiveNamespaces } from '@/lib/i18n';
 
 export interface ISpaceConfig {
-  i18nNamespaces: I18nActiveNamespaces<'common' | 'space' | 'sdk'>;
+  i18nNamespaces: I18nActiveNamespaces<'common' | 'space' | 'sdk' | 'onboarding'>;
 }
 
 export const spaceConfig: ISpaceConfig = {
-  i18nNamespaces: ['common', 'space', 'sdk'],
+  i18nNamespaces: ['common', 'space', 'sdk', 'onboarding'],
 };

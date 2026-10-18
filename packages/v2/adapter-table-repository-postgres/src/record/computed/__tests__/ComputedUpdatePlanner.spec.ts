@@ -2,8 +2,12 @@ import { BaseId, FieldId, RecordId, TableId } from '@teable/v2-core';
 import { ok } from 'neverthrow';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ComputedUpdatePlanner } from '../ComputedUpdatePlanner';
-import type { ComputedDependencyEdge } from '../ComputedUpdatePlanner';
+import {
+  collectPlanTableIds,
+  ComputedUpdatePlanner,
+  pruneMissingTablesFromPlan,
+} from '../ComputedUpdatePlanner';
+import type { ComputedDependencyEdge, ComputedUpdatePlan } from '../ComputedUpdatePlanner';
 import type {
   FieldDependencyGraphData,
   FieldDependencyEdge,
@@ -1932,5 +1936,81 @@ describe('ComputedUpdatePlanner', () => {
         )
       ).toBe(true);
     });
+  });
+});
+
+describe('pruneMissingTablesFromPlan', () => {
+  const baseId = BaseId.create(`bse${'a'.repeat(16)}`)._unsafeUnwrap();
+  const seedTableId = TableId.create(`tbl${'b'.repeat(16)}`)._unsafeUnwrap();
+  const otherTableId = TableId.create(`tbl${'c'.repeat(16)}`)._unsafeUnwrap();
+  const seedFieldId = FieldId.create(`fld${'d'.repeat(16)}`)._unsafeUnwrap();
+  const otherFieldId = FieldId.create(`fld${'e'.repeat(16)}`)._unsafeUnwrap();
+  const seedRecordId = RecordId.create(`rec${'f'.repeat(16)}`)._unsafeUnwrap();
+  const otherRecordId = RecordId.create(`rec${'g'.repeat(16)}`)._unsafeUnwrap();
+
+  const createPlan = (overrides: Partial<ComputedUpdatePlan> = {}): ComputedUpdatePlan => ({
+    baseId,
+    seedTableId,
+    seedRecordIds: [seedRecordId],
+    extraSeedRecords: [],
+    steps: [
+      { tableId: seedTableId, fieldIds: [seedFieldId], level: 0 },
+      { tableId: otherTableId, fieldIds: [otherFieldId], level: 1 },
+    ],
+    edges: [
+      {
+        fromFieldId: seedFieldId,
+        toFieldId: otherFieldId,
+        fromTableId: seedTableId,
+        toTableId: otherTableId,
+        order: 0,
+      },
+    ],
+    estimatedComplexity: 2,
+    changeType: 'insert',
+    sameTableBatches: [],
+    ...overrides,
+  });
+
+  it('lists every table the plan touches', () => {
+    const plan = createPlan({
+      extraSeedRecords: [{ tableId: otherTableId, recordIds: [otherRecordId] }],
+    });
+
+    expect(collectPlanTableIds(plan).map((id) => id.toString())).toEqual([
+      seedTableId.toString(),
+      otherTableId.toString(),
+    ]);
+  });
+
+  it('drops steps and edges for a missing target table', () => {
+    const pruned = pruneMissingTablesFromPlan(createPlan(), new Set([seedTableId.toString()]));
+
+    expect(pruned.seedRecordIds).toEqual([seedRecordId]);
+    expect(pruned.steps.map((step) => step.tableId.toString())).toEqual([seedTableId.toString()]);
+    expect(pruned.edges).toHaveLength(0);
+  });
+
+  it('keeps work seeded by extra records when only the seed table is missing', () => {
+    const plan = createPlan({
+      extraSeedRecords: [{ tableId: otherTableId, recordIds: [otherRecordId] }],
+    });
+
+    const pruned = pruneMissingTablesFromPlan(plan, new Set([otherTableId.toString()]));
+
+    expect(pruned.seedRecordIds).toHaveLength(0);
+    expect(pruned.extraSeedRecords).toEqual(plan.extraSeedRecords);
+    expect(pruned.steps.map((step) => step.tableId.toString())).toEqual([otherTableId.toString()]);
+  });
+
+  it('leaves no steps when the seed table is missing and nothing else seeds the plan', () => {
+    const pruned = pruneMissingTablesFromPlan(
+      createPlan({ seedAllTableIds: [otherTableId] }),
+      new Set([otherTableId.toString()])
+    );
+
+    expect(pruned.seedRecordIds).toHaveLength(0);
+    expect(pruned.steps).toHaveLength(0);
+    expect(pruned.sameTableBatches).toHaveLength(0);
   });
 });

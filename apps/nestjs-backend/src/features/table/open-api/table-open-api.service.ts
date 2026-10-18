@@ -444,6 +444,30 @@ export class TableOpenApiService {
     });
   }
 
+  /**
+   * Drop queued computed-update tasks that touch only the given tables. A worker would
+   * otherwise retry them against tables that no longer exist until they dead-letter.
+   * Tasks that also touch surviving tables, or that a worker is already processing, stay
+   * queued: the worker prunes the steps for the missing tables when it runs them.
+   */
+  async cleanComputedUpdateTasks(baseId: string, tableIds: string[]) {
+    if (!tableIds.length) return;
+    const dataPrisma = this.dataPrismaService.txClient();
+    // The outbox lives in the v2 data database; skip if it was never created there, since a
+    // failing statement would abort the surrounding deletion transaction.
+    const [{ exists }] = await dataPrisma.$queryRaw<{ exists: boolean }[]>`
+      SELECT to_regclass('computed_update_outbox') IS NOT NULL AS exists`;
+    if (!exists) return;
+
+    await dataPrisma.$executeRaw`
+      DELETE FROM computed_update_outbox
+      WHERE base_id = ${baseId}
+        AND status <> 'processing'
+        AND seed_table_id = ANY(${tableIds}::text[])
+        AND cardinality(affected_table_ids) > 0
+        AND affected_table_ids <@ ${tableIds}::text[]`;
+  }
+
   async cleanTablesRelatedData(baseId: string, tableIds: string[]) {
     const metaPrisma = this.prismaService.txClient();
 
@@ -451,6 +475,8 @@ export class TableOpenApiService {
     // Callers that skip this leave rows in `reference` whose field ids resolve to
     // nothing, which breaks every reference-graph walk that reaches them.
     await this.cleanReferenceFieldIds(tableIds);
+
+    await this.cleanComputedUpdateTasks(baseId, tableIds);
 
     // delete field for table
     await metaPrisma.field.deleteMany({

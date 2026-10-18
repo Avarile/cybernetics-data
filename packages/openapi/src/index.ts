@@ -49,3 +49,4 @@ export * from './base-share';
 export * from './types';
 export * from './user-integration';
 export * from './base-graph';
+export * from './schema-pack';

@@ -3,6 +3,7 @@ import {
   domainError,
   FieldId,
   registerAfterCommit,
+  Table,
   TableByIdSpec,
   TableId,
   v2CoreTokens,
@@ -32,7 +33,11 @@ import type {
   ComputedUpdatePlan,
   ComputedUpdatePlanner,
 } from '../ComputedUpdatePlanner';
-import { splitSeedGroupsForPlan } from '../ComputedUpdatePlanner';
+import {
+  collectPlanTableIds,
+  pruneMissingTablesFromPlan,
+  splitSeedGroupsForPlan,
+} from '../ComputedUpdatePlanner';
 import { createComputedUpdateRun } from '../ComputedUpdateRun';
 import { isComputedUpdateLockUnavailable } from '../ComputedUpdateLock';
 import { toErrorLogFields } from '../errorLog';
@@ -589,6 +594,7 @@ export class ComputedUpdateWorker {
       | 'deserialize_plan'
       | 'collect_seed_field_ids'
       | 'collect_seed_table_ids'
+      | 'prune_missing_tables'
       | 'acquire_locks'
       | 'execute_plan'
       | 'publish_events'
@@ -660,22 +666,39 @@ export class ComputedUpdateWorker {
         taskId: computedTask.id,
       });
 
+      failurePhase = 'prune_missing_tables';
+      const pruneResult = await this.pruneMissingTables(
+        computedTask,
+        planResult.value,
+        txContext,
+        runLogContext
+      );
+      if (pruneResult.isErr()) return err(pruneResult.error);
+      const plan = pruneResult.value;
+      // Every table the remaining work needed is gone: finish the task without executing.
+      if (plan !== planResult.value && plan.steps.length === 0) {
+        failurePhase = 'mark_done';
+        const doneResult = await this.outbox.markDone(computedTask, txContext);
+        if (doneResult.isErr()) return err(doneResult.error);
+        return ok(doneResult.value);
+      }
+
       failurePhase = 'acquire_locks';
-      const lockResult = await this.updater.acquireLocks(planResult.value, txContext, {
+      const lockResult = await this.updater.acquireLocks(plan, txContext, {
         logContext: runLogContext,
         wait: false,
       });
       if (lockResult.isErr()) return err(lockResult.error);
 
       failurePhase = 'execute_plan';
-      const stageResult = await this.updater.execute(planResult.value, txContext, run, {
+      const stageResult = await this.updater.execute(plan, txContext, run, {
         collectChanges: true,
       });
       if (stageResult.isErr()) return err(stageResult.error);
 
       const events = buildComputedUpdateEvents(
         stageResult.value.changesByStep,
-        planResult.value.baseId,
+        plan.baseId,
         computedTask.orchestration
       );
       if (events.length > 0) {
@@ -700,7 +723,7 @@ export class ComputedUpdateWorker {
 
       failurePhase = 'plan_next_stage';
       const nextPlanResult = await this.planNextStage(
-        planResult.value,
+        plan,
         txContext,
         stageFieldIdsResult.value,
         seedGroups,
@@ -799,6 +822,45 @@ export class ComputedUpdateWorker {
     }
 
     await publish();
+  }
+
+  /**
+   * Drop the plan parts that touch tables deleted since the task was enqueued, so a stale
+   * task finishes instead of failing with "Missing target table" until it dead-letters.
+   * Returns the original plan object when every table still exists.
+   */
+  private async pruneMissingTables(
+    task: ComputedUpdateOutboxItem,
+    plan: ComputedUpdatePlan,
+    context: IExecutionContext,
+    logContext: Record<string, unknown>
+  ): Promise<Result<ComputedUpdatePlan, DomainError>> {
+    const tableIds = collectPlanTableIds(plan);
+    const specResult = Table.specs(plan.baseId)
+      .withoutBaseId()
+      .byIds([...tableIds])
+      .build();
+    if (specResult.isErr()) return err(specResult.error);
+    const tablesResult = await this.tableRepository.find(context, specResult.value);
+    if (tablesResult.isErr()) return err(tablesResult.error);
+
+    const existingTableIds = new Set(tablesResult.value.map((table) => table.id().toString()));
+    const missingTableIds = tableIds
+      .map((tableId) => tableId.toString())
+      .filter((tableId) => !existingTableIds.has(tableId));
+    if (missingTableIds.length === 0) return ok(plan);
+
+    const pruned = pruneMissingTablesFromPlan(plan, existingTableIds);
+    this.logger.warn('computed:outbox:missing_tables_pruned', {
+      taskId: task.id,
+      missingTableIds,
+      stepCount: plan.steps.length,
+      remainingStepCount: pruned.steps.length,
+      edgeCount: plan.edges.length,
+      remainingEdgeCount: pruned.edges.length,
+      ...logContext,
+    });
+    return ok(pruned);
   }
 
   private async handleTaskFailure(

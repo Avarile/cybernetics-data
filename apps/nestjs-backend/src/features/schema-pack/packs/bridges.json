@@ -1,0 +1,84 @@
+[
+  {
+    "packs": ["progress", "people"],
+    "fields": [
+      {
+        "table": "projects",
+        "field": {
+          "key": "lead_by",
+          "name": "lead_by",
+          "type": "link",
+          "link": {
+            "table": "contacts",
+            "relationship": "manyOne",
+            "lookupField": "email",
+            "symmetric": {
+              "key": "projects",
+              "name": "projects"
+            }
+          }
+        }
+      },
+      {
+        "table": "tasks",
+        "field": {
+          "key": "assigned_to",
+          "name": "assigned_to",
+          "type": "link",
+          "link": {
+            "table": "contacts",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "tasks",
+              "name": "tasks"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "packs": ["progress", "knowledge"],
+    "fields": [
+      {
+        "table": "goals",
+        "field": {
+          "key": "refer_knowledge",
+          "name": "refer_knowledge",
+          "type": "link",
+          "link": {
+            "table": "knowledges",
+            "relationship": "manyMany",
+            "isOneWay": true
+          }
+        }
+      },
+      {
+        "table": "projects",
+        "field": {
+          "key": "refer_knowledge",
+          "name": "refer_knowledge",
+          "type": "link",
+          "link": {
+            "table": "knowledges",
+            "relationship": "manyMany",
+            "isOneWay": true
+          }
+        }
+      },
+      {
+        "table": "tasks",
+        "field": {
+          "key": "refer_knowledge",
+          "name": "refer_knowledge",
+          "type": "link",
+          "link": {
+            "table": "knowledges",
+            "relationship": "manyMany",
+            "isOneWay": true
+          }
+        }
+      }
+    ]
+  }
+]

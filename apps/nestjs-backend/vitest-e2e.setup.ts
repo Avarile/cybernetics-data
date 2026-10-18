@@ -1,6 +1,8 @@
+import fs from 'fs';
 import path from 'path';
 import type { INestApplication } from '@nestjs/common';
-import { DriverClient, parseDsn } from '@teable/core';
+import { DriverClient, isParsableDsn, parseDsn } from '@teable/core';
+import { getDatabaseUrl } from '@teable/db-main-prisma';
 import dotenv from 'dotenv-flow';
 import { buildSync } from 'esbuild';
 
@@ -63,6 +65,44 @@ globalThis.testConfig = {
   driver: DriverClient.Pg,
 };
 
+const dsnKey = (url: string) => {
+  const { host, port, db } = parseDsn(url);
+  return `${host === 'localhost' ? '127.0.0.1' : host}:${port}/${db}`;
+};
+
+// E2E specs create and permanently delete users, spaces and bases, and a dev backend polling
+// the same database picks up their leftover computed tasks. Refuse to run against the working
+// database from .env.development.local (e.g. when NODE_ENV=development loads that file).
+function assertNotWorkingDatabase() {
+  const workingEnvFile = path.join(__dirname, '../nextjs-app/.env.development.local');
+  if (!fs.existsSync(workingEnvFile)) return;
+
+  const workingEnv = dotenv.parse([workingEnvFile]);
+  const workingDbs = new Set(
+    (['meta', 'data'] as const)
+      .map((target) => tryGetDatabaseUrl(target, workingEnv))
+      .filter((url): url is string => isParsableDsn(url))
+      .map(dsnKey)
+  );
+  for (const target of ['meta', 'data'] as const) {
+    const url = tryGetDatabaseUrl(target, process.env);
+    if (url && isParsableDsn(url) && workingDbs.has(dsnKey(url))) {
+      throw new Error(
+        `E2E ${target} database ${dsnKey(url)} is the working database from ${workingEnvFile}. ` +
+          'Run with NODE_ENV=test and PRISMA_DATABASE_URL pointing at a dedicated test database.'
+      );
+    }
+  }
+}
+
+function tryGetDatabaseUrl(target: 'meta' | 'data', env: NodeJS.ProcessEnv) {
+  try {
+    return getDatabaseUrl(target, env);
+  } catch {
+    return undefined;
+  }
+}
+
 function compileWorkerFile() {
   const entryFile = path.join(__dirname, 'src/worker/**.ts');
   const outFile = path.join(__dirname, 'dist/worker');
@@ -78,6 +118,7 @@ function compileWorkerFile() {
 
 async function setup() {
   dotenv.config({ path: '../nextjs-app' });
+  assertNotWorkingDatabase();
 
   // Use sync mode for v2 computed updates in tests
   process.env.V2_COMPUTED_UPDATE_MODE = 'sync';
@@ -100,4 +141,6 @@ async function setup() {
   compileWorkerFile();
 }
 
-export default setup();
+// Await so a failed setup (e.g. the working-database guard) aborts the file instead of
+// surfacing as an unhandled rejection while the specs still run.
+export default await setup();

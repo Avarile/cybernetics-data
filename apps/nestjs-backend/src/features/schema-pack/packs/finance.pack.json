@@ -1,0 +1,681 @@
+{
+  "id": "finance",
+  "version": 1,
+  "tables": [
+    {
+      "key": "finance_Accounts",
+      "name": "finance_Accounts",
+      "icon": "🏦",
+      "fields": [
+        {
+          "key": "Name",
+          "name": "Name",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "Scope",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Personal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Business",
+                "color": "blueLight1"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Type",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Checking",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Savings",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Credit Card",
+                "color": "blueBright"
+              },
+              {
+                "name": "Cash",
+                "color": "blue"
+              },
+              {
+                "name": "Investment",
+                "color": "blueDark1"
+              },
+              {
+                "name": "Mortgage",
+                "color": "redBright"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Institution",
+          "name": "Institution",
+          "type": "singleLineText"
+        },
+        {
+          "key": "Opening_Balance",
+          "name": "Opening Balance",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Opening_Balance_Date",
+          "name": "Opening Balance Date",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "Active",
+          "name": "Active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "Own_Txn_Total",
+          "name": "Own Txn Total",
+          "type": "rollup",
+          "lookup": {
+            "link": "finance_Transactions",
+            "field": "Signed_Amount"
+          },
+          "options": {
+            "expression": "sum({values})",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Incoming_Transfer_Total",
+          "name": "Incoming Transfer Total",
+          "type": "rollup",
+          "lookup": {
+            "link": "finance_Transactions_linked",
+            "field": "Amount"
+          },
+          "options": {
+            "expression": "sum({values})",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Net_Activity",
+          "name": "Net Activity",
+          "type": "formula",
+          "options": {
+            "expression": "{@Own_Txn_Total} + {@Incoming_Transfer_Total}",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Current_Balance",
+          "name": "Current Balance",
+          "type": "formula",
+          "options": {
+            "expression": "{@Opening_Balance} + {@Net_Activity}",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "finance_Categories",
+      "name": "finance_Categories",
+      "icon": "🗃️",
+      "fields": [
+        {
+          "key": "Name",
+          "name": "Name",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "Type",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Income",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Expense",
+                "color": "blueLight1"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Scope",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Personal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Business",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Shared",
+                "color": "blueBright"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Parent_Category",
+          "name": "Parent Category",
+          "type": "link",
+          "link": {
+            "table": "finance_Categories",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Categories",
+              "name": "finance_Categories"
+            }
+          }
+        },
+        {
+          "key": "Parent_Name",
+          "name": "Parent Name",
+          "type": "singleLineText",
+          "lookup": {
+            "link": "Parent_Category",
+            "field": "Name"
+          },
+          "isLookup": true
+        },
+        {
+          "key": "Full_Path",
+          "name": "Full Path",
+          "type": "formula",
+          "options": {
+            "expression": "IF({@Parent_Name}, {@Parent_Name}&\" > \"&{@Name}, {@Name})",
+            "timeZone": "utc"
+          }
+        }
+      ]
+    },
+    {
+      "key": "finance_Payees",
+      "name": "finance_Payees",
+      "icon": "🧾",
+      "fields": [
+        {
+          "key": "Name",
+          "name": "Name",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "Type",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Vendor",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Client",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Employer",
+                "color": "blueBright"
+              },
+              {
+                "name": "Store",
+                "color": "blue"
+              },
+              {
+                "name": "Person",
+                "color": "blueDark1"
+              },
+              {
+                "name": "Other",
+                "color": "cyanLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Scope",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Personal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Business",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Both",
+                "color": "blueBright"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Default_Category",
+          "name": "Default Category",
+          "type": "link",
+          "link": {
+            "table": "finance_Categories",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Payees",
+              "name": "finance_Payees"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "finance_Tags",
+      "name": "finance_Tags",
+      "icon": "🔖",
+      "optional": true,
+      "fields": [
+        {
+          "key": "Name",
+          "name": "Name",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "Color",
+          "name": "Color",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Light Blue",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Blue",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Deep Blue",
+                "color": "blueBright"
+              },
+              {
+                "name": "Orange",
+                "color": "orangeBright"
+              },
+              {
+                "name": "Green",
+                "color": "greenBright"
+              },
+              {
+                "name": "Deep Red",
+                "color": "redDark1"
+              },
+              {
+                "name": "Light Green",
+                "color": "greenLight1"
+              }
+            ]
+          }
+        },
+        {
+          "key": "finance_Transactions",
+          "name": "finance_Transactions",
+          "type": "link",
+          "link": {
+            "table": "finance_Transactions",
+            "relationship": "manyMany",
+            "symmetric": {
+              "key": "Tags",
+              "name": "Tags"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "finance_Budgets",
+      "name": "finance_Budgets",
+      "icon": "📊",
+      "optional": true,
+      "fields": [
+        {
+          "key": "Month",
+          "name": "Month",
+          "type": "date",
+          "isPrimary": true,
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "Planned_Amount",
+          "name": "Planned Amount",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Category",
+          "name": "Category",
+          "type": "link",
+          "link": {
+            "table": "finance_Categories",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Budgets",
+              "name": "finance_Budgets"
+            }
+          }
+        },
+        {
+          "key": "Scope",
+          "name": "Scope",
+          "type": "singleSelect",
+          "lookup": {
+            "link": "Category",
+            "field": "Scope"
+          },
+          "isLookup": true
+        },
+        {
+          "key": "Actual_Spent",
+          "name": "Actual Spent",
+          "type": "rollup",
+          "lookup": {
+            "link": "finance_Transactions",
+            "field": "Amount"
+          },
+          "options": {
+            "expression": "sum({values})",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Variance",
+          "name": "Variance",
+          "type": "formula",
+          "options": {
+            "expression": "{@Planned_Amount} - {@Actual_Spent}",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "pct_Used",
+          "name": "% Used",
+          "type": "formula",
+          "options": {
+            "expression": "IF({@Planned_Amount}=0, 0, ROUND({@Actual_Spent}/{@Planned_Amount}*100, 1))",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "decimal",
+              "precision": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "finance_Transactions",
+      "name": "finance_Transactions",
+      "icon": "💸",
+      "fields": [
+        {
+          "key": "Description",
+          "name": "Description",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "Date",
+          "name": "Date",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "Type",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Income",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Expense",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Transfer",
+                "color": "blueBright"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Amount",
+          "name": "Amount",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        },
+        {
+          "key": "Recurring",
+          "name": "Recurring",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": false
+          }
+        },
+        {
+          "key": "Recurring_Frequency",
+          "name": "Recurring Frequency",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Weekly",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Monthly",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Yearly",
+                "color": "blueBright"
+              }
+            ]
+          }
+        },
+        {
+          "key": "Receipt",
+          "name": "Receipt",
+          "type": "attachment"
+        },
+        {
+          "key": "Notes",
+          "name": "Notes",
+          "type": "longText"
+        },
+        {
+          "key": "Account",
+          "name": "Account",
+          "type": "link",
+          "link": {
+            "table": "finance_Accounts",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Transactions",
+              "name": "finance_Transactions"
+            }
+          }
+        },
+        {
+          "key": "Transfer_Account",
+          "name": "Transfer Account",
+          "type": "link",
+          "link": {
+            "table": "finance_Accounts",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Transactions_linked",
+              "name": "finance_Transactions (linked)"
+            }
+          }
+        },
+        {
+          "key": "Category",
+          "name": "Category",
+          "type": "link",
+          "link": {
+            "table": "finance_Categories",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Transactions",
+              "name": "finance_Transactions"
+            }
+          }
+        },
+        {
+          "key": "Payee",
+          "name": "Payee",
+          "type": "link",
+          "link": {
+            "table": "finance_Payees",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Transactions",
+              "name": "finance_Transactions"
+            }
+          }
+        },
+        {
+          "key": "Budget",
+          "name": "Budget",
+          "type": "link",
+          "link": {
+            "table": "finance_Budgets",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "finance_Transactions",
+              "name": "finance_Transactions"
+            }
+          }
+        },
+        {
+          "key": "Scope",
+          "name": "Scope",
+          "type": "singleSelect",
+          "lookup": {
+            "link": "Account",
+            "field": "Scope"
+          },
+          "isLookup": true
+        },
+        {
+          "key": "Signed_Amount",
+          "name": "Signed Amount",
+          "type": "formula",
+          "options": {
+            "expression": "IF(OR({@Type}=\"Expense\", {@Type}=\"Transfer\"), -{@Amount}, {@Amount})",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "{{currencySymbol}}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

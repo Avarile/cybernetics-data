@@ -45,7 +45,9 @@ export const buildRecordTools = (): IMcpTool[] => [
         take: take + 1,
         skip,
         viewId: args.viewId,
-        search: args.search ? [args.search] : undefined,
+        // The third element (hideNotMatchRow) is what turns search into a filter;
+        // without it the search only highlights and every row comes back.
+        search: args.search ? [args.search, undefined, true] : undefined,
         projection: args.projection,
         fieldKeyType: FieldKeyType.Id,
       } as never)) as { records: { id: string; fields: Record<string, unknown> }[] };

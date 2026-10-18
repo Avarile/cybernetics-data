@@ -1,394 +1,551 @@
-# Base Graph — from Knowledge Graph to all-table graph
+# Schema Onboarding — choose your starter data model on first login
 
-Status: **analysis + proposed design, not started**
-Branch: `feat-update-knowledge-graph`
-Scope: `apps/nextjs-app/src/pages/base/[baseId]/knowledge-graph.tsx` and everything behind it.
+Status: **implemented 2026-10-19** (tracked as CYBERDATA-29…40 in the cybernetics workspace)
+Branch: `feat-dataschema-onboarding` · Base: `feat-db-setup`
+Scope: `/space/[spaceId]` first visit, a new `schema-pack` backend feature, a dev-time extractor.
 
-> The previous content of this file (MCP server design) is in git history:
+> **Deviations decided during implementation** (the sections below are the original design):
+>
+> - **Not one transaction.** Base and table DDL run on the data-DB connection, outside the meta
+>   transaction, so §5.5's single `$tx` is impossible. The installer logs everything it creates and
+>   undoes it on failure (deletes the new base, or the new tables/fields of an existing base).
+> - **Routes.** Install is `POST /api/schema-pack/install` with `spaceId` in the body
+>   (`base|create` via `@ResourceMeta`, like create-from-template), not under `/api/space/:id`.
+> - **No standalone extractor script.** The source schema is captured through the
+>   cybernetics-data MCP (no local server/PAT) into
+>   `features/schema-pack/extract/__fixtures__/data-centre.schema.json`, with manual checks noted
+>   in the fixture. `pack-map.ts` + `build-packs.ts` live in the backend so the transform is
+>   unit-tested, and `UPDATE_PACKS=1 vitest run src/features/schema-pack/extract` regenerates
+>   `packs/*.json`.
+> - **Seeds.** Finance categories ship flat (the source has no parents). auditlog is optional, off.
+> - **Onboarding columns** are `onboarding_status` / `onboarding_time`; existing users are
+>   backfilled `legacy`. The space page latches the wizard for the visit so the base created
+>   mid-install does not unmount it.
+> - **Theme.** This fork's default theme is dark-styled under the `light` class, so pack accents are
+>   translucent (`bg-sky-500/10`) instead of light/dark tint pairs.
+> - **Re-entry** is also offered per base ("Add schema packs" in the base card menu).
+
+> The previous content of this file (Base Graph design) is in git history:
 > `git show HEAD:scripts/customized/developments/current-design.md`.
 
-Every path and behaviour below was read from the working tree. Live table list from base
-`data-centre` (`bseJEuE54y5caWO0Xc8`) on 2026-09-26: 21 tables — `goals`, `projects`, `tasks`,
-`contacts`, `contact_profession`, `contact_type`, `companies`, `knowledges`, `knowledge_type`,
-`project_frameworks`, `table_references`, `finance_*` ×6, `auditlog`, `system_info`,
-`system_status`, `template_table`.
+Every schema fact below was read live from base `data-centre` (`bseJEuE54y5caWO0Xc8`) on
+2026-10-18 via the `cybernetics-data` MCP server. Every code path was read from the working tree.
 
 ---
 
-## Part A — How it works today
+## 1. Goal in one paragraph
 
-### A.1 Request path at a glance
+A brand-new user who opens their space for the first time is not dropped into an empty base.
+Instead they see a full-screen, friendly wizard that offers four **schema packs** —
+**Progress**, **People**, **Knowledge**, **Finance** — each one a proven slice of the
+`data-centre` base. They pick any combination, tweak a couple of options (currency, timezone,
+starter rows), preview exactly what will be built, and get a ready-to-use, fully linked base in a
+few seconds. When two packs that belong together are picked (e.g. Progress + People), the
+cross-links between them (task → assignee) are built too.
+
+---
+
+## 2. What the source base contains, and how it splits into packs
+
+### 2.1 Inventory (21 tables)
+
+| Pack | Tables | Internal relationships |
+|---|---|---|
+| **Progress** | `goals`, `projects`, `tasks`, *opt.* `project_frameworks` | goal 1─N project (`projects`/`belong_goals`), project 1─N task (`tasks`/`belong_project`) |
+| **People** | `contacts`, `companies`, `contact_type`, `contact_profession`, *opt.* `auditlog` | contact N─1 company / type / profession; auditlog N─1 contact (`generated_by_contact`) |
+| **Knowledge** | `knowledges`, `knowledge_type` | knowledge N─1 type; knowledge self-tree (`knowledge_parent`/`knowledges`); knowledge N─N `related_knowledge`; type self-tree (`parent_type`/`child_types`) |
+| **Finance** | `finance_Accounts`, `finance_Categories`, `finance_Payees`, `finance_Tags`, `finance_Budgets`, `finance_Transactions` | transaction N─1 account, transfer account, category, payee, budget; N─N tags; category self-tree; payee → default category; budget N─1 category |
+| *excluded* | `template_table`, `system_info`, `system_status`, `table_references` | internal / instance-specific — never shipped |
+
+`template_table` is not shipped, but it **is** the definition of the *standard field mixin* every
+non-finance table carries: `title` (primary), `context` (long text, markdown), `created_at`,
+`updated_at`, `deleted_at`, `is_active` (default ✓), `id` (auto number).
+
+### 2.2 Bridges — links that cross packs
+
+Built **only when both packs are selected** (and added later if the missing pack is installed
+into the same base — see §5.6).
+
+| Bridge | Field(s) | Kind |
+|---|---|---|
+| Progress × People | `projects.lead_by` → `contacts` · `tasks.assigned_to` → `contacts` (symmetric `contacts.projects`, `contacts.tasks`) | many-one, two-way |
+| Progress × Knowledge | `goals.refer_knowledge`, `projects.refer_knowledge`, `tasks.refer_knowledge` → `knowledges` | many-many, one-way |
+| People × Finance | none today | — |
+| Knowledge × Finance | none today | — |
+
+### 2.3 Computed fields the installer must rebuild in order
+
+| Table | Field | Kind | Depends on |
+|---|---|---|---|
+| `finance_Transactions` | `Signed Amount` | formula `IF(OR(Type="Expense",Type="Transfer"), -Amount, Amount)` | `Type`, `Amount` |
+| `finance_Transactions` | `Scope` | lookup (single select) | `Account` → `finance_Accounts.Scope` |
+| `finance_Accounts` | `Own Txn Total`, `Incoming Transfer Total` | rollup `sum` | the two transaction links |
+| `finance_Accounts` | `Net Activity` → `Current Balance` | formulas | rollups, `Opening Balance` |
+| `finance_Categories` | `Parent Name` → `Full Path` | lookup → formula | `Parent Category` |
+| `finance_Budgets` | `Scope`, `Actual Spent` → `Variance`, `% Used` | lookup, rollup → formulas | `Category`, transactions |
+
+The MCP schema view does not expose lookup/rollup sources; the extractor (§5.2) reads them from
+the full field VO (`lookupOptions`), so they are copied exactly rather than guessed here.
+
+### 2.4 Things found in the source that must **not** be copied as-is
+
+| Finding | Why it matters | Proposed handling |
+|---|---|---|
+| `knowledge_type.credentials` is a plain-text field | Invites storing secrets in clear text in every new user's base | **Drop** from the pack |
+| Records in `knowledge_type` (and `contact_type`) include personal and sensitive categories | Seed rows would leak the owner's private data to every new user | **Never** copy records automatically; seed rows are hand-written (§5.3) |
+| All date fields hard-code `timeZone: Australia/Melbourne` | Wrong for most users | Installer substitutes the timezone chosen in the wizard |
+| All currency fields hard-code `symbol: "$"` | Wrong outside AUD/USD | Installer substitutes the chosen currency |
+| `knowledge_type.parent_type` is one-way, and `child_types` points at a symmetric field not present in the table | Broken / orphaned hierarchy pair | Emit one clean two-way `parent_type` ⇄ `child_types` pair |
+| `finance_Tags.Color` choice "Organge" | Typo | Fix to "Orange" |
+| `projects.progress` uses `finished-reviewing`; `tasks.progress` uses `finished_reviewing` | Inconsistent vocabulary | **Keep as-is** (recommended): the AI chat, MCP tools and the `project-management` skill address these by name — new bases must behave the same as the source |
+
+Table and field **names are kept exactly** (including the capitalised `finance_*` naming) for the
+same reason: the AI chat and MCP tooling are written against these names, so a new user's base
+works with them out of the box.
+
+---
+
+## 3. User experience
+
+### 3.1 Who sees it, and when
+
+- Shown when **all** are true: the user has never completed or skipped onboarding, the user is
+  **owner** of the space, and the space has **no bases**.
+- Invited collaborators never see it (they are joining someone else's data).
+- Always re-openable later: the space page's **+ Create base** button becomes a split button with
+  **"Start from schema packs…"**, which opens the same wizard (steps 2–5) in a large dialog.
+
+### 3.2 Flow
 
 ```
-Browser                                   Next.js SSR                    NestJS
-───────                                   ───────────                    ──────
-/base/:baseId/knowledge-graph ──► getServerSideProps
-                                    prefetch base + basePermission ──► (existing APIs)
-                                    NOT the graph (see §A.2)
-◄── HTML + dehydratedState
-DynamicKnowledgeGraph (ssr:false, lazy three.js chunk)
-  └ KnowledgeGraph
-      ├ useKnowledgeGraph()      ── GET /api/base/:baseId/knowledge-graph ──► KnowledgeGraphController.getKnowledgeGraph
-      │                                                                        └ KnowledgeGraphService.getGraph
-      │                                                                            ├ assertTablesInBase
-      │                                                                            ├ readTypes      (1 SQL)
-      │                                                                            ├ readKnowledges (1 SQL)
-      │                                                                            └ assembleKnowledgeGraph (pure)
-      └ KnowledgeNodeDetailPanel
-          └ useKnowledgeGraphNode(id) ─ GET …/knowledge-graph/node/:nodeId ──► KnowledgeGraphService.getNode
+ ① Welcome ──► ② Choose packs ──► ③ Personalise ──► ④ Review ──► ⑤ Building ──► ⑥ Ready
+                    │                                              │ error
+                    └─ "Skip, start empty" ─► empty base           └─► retry (nothing half-built)
 ```
 
-### A.2 Page (`pages/base/[baseId]/knowledge-graph.tsx`)
+Steps ②–④ form a 3-dot stepper ("Choose · Personalise · Review"). Back is always allowed and
+never loses choices.
 
-- `withEnv(ensureLogin(withAuthSSR(...)))` — login is enforced server-side.
-- SSR prefetches only `ReactQueryKeys.base` and `getBasePermission`, which `BaseLayout` needs.
-  The graph is **not** prefetched on purpose: `fetchQuery` rejects on error (a backend 404 would
-  become a hard 500), and the consumer is `ssr: false`, so a dehydrated graph would never be used.
-- The component is `DynamicKnowledgeGraph` → `next/dynamic(..., { ssr: false })` because
-  `react-force-graph-3d` touches `window` at import time. That also keeps three.js out of the
-  initial chunk.
-- Entry point: sidebar link in `blocks/base/base-side-bar/BasePageRouter.tsx:101`.
+### 3.3 Visual language
 
-### A.3 Backend (`apps/nestjs-backend/src/features/knowledge-graph/`)
+- **Full-screen takeover** on first login (not a small modal): the moment deserves room. A soft
+  radial gradient background built from the four pack accents at ~6 % opacity; a quiet top bar with
+  the brand mark (left) and "Skip for now" (right).
+- **One accent per pack**, used consistently on the card, the preview cluster, the review tab and
+  the final "open" card:
+
+  | Pack | Accent (Tailwind) | Icon (`lucide-react`, already a dependency) | Title | One-line promise |
+  |---|---|---|---|---|
+  | Progress | `sky` | `Target` | Goals, projects & tasks | Turn big goals into projects and daily tasks, and see what's moving. |
+  | People | `violet` | `Users` | Contacts & companies | Remember who's who, how you know them, and who's leading what. |
+  | Knowledge | `emerald` | `BookOpen` | Notes & know-how | A tree of everything you've learned, linked to the work it supports. |
+  | Finance | `amber` | `Wallet` | Accounts, budgets & spending | Track every dollar across accounts, with budgets that check themselves. |
+
+- Components only from `@teable/ui-lib/shadcn` (Button, Card, Checkbox, Switch, Select, Tabs,
+  Tooltip, ScrollArea, Progress, Dialog, Sheet) — no new UI dependency.
+- Motion with `tailwindcss-animate` (already in ui-lib): cards fade-and-rise in 40 ms stagger,
+  selection is a 150 ms ring + tint, preview edges draw in. Everything collapses to opacity-only
+  under `prefers-reduced-motion`.
+- Light and dark: tints use `{accent}-50` / `dark:{accent}-950/40`, rings `{accent}-500`; all text
+  stays on `foreground` / `muted-foreground` tokens so contrast holds in both themes.
+
+### 3.4 ① Welcome
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ◆ cybernetics                                                  Skip for now  │
+│                                                                              │
+│                         👋  Welcome, {name}                                  │
+│               Let's shape your data centre in under a minute.                │
+│                                                                              │
+│      Pick the areas of life and work you want to organise — we'll build      │
+│      the tables, links and formulas for you. You can add more any time.      │
+│                                                                              │
+│                           [  Get started  → ]                                │
+│                                                                              │
+│              ● sky   ● violet   ● emerald   ● amber   (pack dots drift in)   │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.5 ② Choose packs — the heart of the flow
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ◆ cybernetics            ● Choose ─ ○ Personalise ─ ○ Review     Skip for now │
+│                                                                              │
+│  What do you want to organise?                       ┌─ Your base ─────────┐ │
+│  Choose one or more. Recommended: Progress + Knowledge│                     │ │
+│                                                       │   (goals)           │ │
+│  ┌──────────────────────────┐ ┌──────────────────────┐│     │               │ │
+│  │ ◎ Target            [✓] │ │ ◎ Users          [ ] ││  (projects)╌╌╌╌┐   │ │
+│  │ Goals, projects & tasks  │ │ Contacts & companies ││     │          ╎   │ │
+│  │ Turn big goals into …    │ │ Remember who's who … ││  (tasks)╌╌╌(contacts)│
+│  │                          │ │                      ││     ╎      faded    │ │
+│  │ goals · projects · tasks │ │ contacts · companies ││  (knowledges)       │ │
+│  │ ✓ 10-stage progress      │ │ ✓ types & professions││     │              │ │
+│  │ ✓ priorities & deadlines │ │ ✓ who leads what     ││  (knowledge_type)   │ │
+│  └──────────────────────────┘ └──────────────────────┘│                     │ │
+│  ┌──────────────────────────┐ ┌──────────────────────┐│ 6 tables · 2 packs  │ │
+│  │ ◎ BookOpen          [✓] │ │ ◎ Wallet         [ ] ││ + Add People to     │ │
+│  │ Notes & know-how         │ │ Accounts, budgets …  ││   assign tasks  [+] │ │
+│  │ …                        │ │ …                    │└─────────────────────┘ │
+│  └──────────────────────────┘ └──────────────────────┘                       │
+│                                                                              │
+│  Select all                                               [ Continue → ]     │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Pack card** (`PackCard`)
+- Large tap target, whole card toggles. `role="checkbox"`, `aria-checked`, focus ring; keys
+  `1`–`4` toggle cards, `Enter` continues.
+- Content: icon in an accent-tinted circle, title, promise, table chips, three "what you get"
+  bullets (from the pack catalog, §5.4), and a **"Peek inside"** link that opens a side sheet with
+  the field list for each table.
+- Selected: accent ring, tinted background, filled check badge; unselected cards keep full colour
+  (no greying out — every choice should feel inviting).
+
+**Live preview** (`SchemaPreview`, right column; bottom sheet on mobile)
+- A small hand-laid SVG relation map: one cluster per pack in its accent colour, nodes = tables,
+  solid edges = internal links.
+- **Bridges are the "aha" moment**: when only one side is selected, the bridge is drawn dashed
+  and faded, with the missing pack's node as a ghost; selecting the other pack animates the edge
+  solid. Under the map, a nudge: *"Add People to assign tasks to contacts [+]"* — one click adds it.
+- Footer counter: `N tables · M links · K packs`, computed from the catalog.
+
+`Continue` is disabled with a hint ("Pick at least one") until one pack is selected.
+**Default selection: none** — the recommendation is shown as text and one-click chip, not
+pre-ticked, so the user makes the choice consciously.
+
+### 3.6 ③ Personalise
+
+```
+  Make it yours
+  ┌ General ───────────────────────────────────────────────────────────────┐
+  │ Base name         [ My data centre                    ]  🧭 icon picker │
+  │ Timezone          [ Australia/Melbourne ▾ ]  (detected from browser)    │
+  │ Starter rows      (●) Include examples so it doesn't feel empty         │
+  └────────────────────────────────────────────────────────────────────────┘
+  ┌ ● Progress ────────────────────────┐ ┌ ● Finance ──────────────────────┐
+  │ [✓] Project frameworks library     │ │ Currency  [ AUD $ ▾ ]           │
+  │     (OKR, PDCA, meeting strategies)│ │ [✓] Budgets  [✓] Tags           │
+  └────────────────────────────────────┘ └─────────────────────────────────┘
+  ┌ ● People ──────────────────────────┐
+  │ [ ] Interaction log (auditlog)     │
+  └────────────────────────────────────┘
+```
+
+- Only sections for selected packs are shown.
+- Optional tables are switches; turning one off also removes fields that depend on it (e.g.
+  Budgets off → `finance_Transactions.Budget` and the budget rollups go). The preview updates.
+- Core tables of a pack cannot be switched off (keeps the pack coherent and the formulas valid).
+- Timezone defaults to `Intl.DateTimeFormat().resolvedOptions().timeZone`; currency defaults from
+  the browser locale, choices from a fixed allowlist.
+
+### 3.7 ④ Review
+
+```
+  Here's what we'll build                     {n} tables · {n} fields · {n} links
+  ┌ [● Progress] [● People] [● Knowledge] [● Finance] ─────────────────────────┐
+  │  tasks                                                    ▸ 14 fields      │
+  │    Aa title   ¶ context   ◉ progress (7)   ◉ priority (5)   📅 started_at   │
+  │    📅 finished_at   ↗ belong_project   ↗ assigned_to ⟵ People bridge        │
+  │    + 5 standard fields (created_at, updated_at, …)                          │
+  │  projects                                                 ▸ 13 fields      │
+  │  goals                                                    ▸ 10 fields      │
+  └────────────────────────────────────────────────────────────────────────────┘
+  ← Back                                                     [ Build my base ✨ ]
+```
+
+- Field rows use the same field-type icons as the grid header (`@teable/sdk` field icon map), so
+  the user meets the vocabulary they'll see in the table.
+- Bridge fields carry a small accent tag naming the other pack.
+- The counts in the header are real (from the install plan), not marketing numbers.
+
+### 3.8 ⑤ Building
+
+- The preview map from step ② moves to centre stage and plays an "assembling" loop (nodes pulse
+  in accent colour). Beside it, the plan list: *Creating tables → Linking → Formulas & rollups →
+  Starter rows*.
+- **No fake progress.** The install is one request (§5.5); steps show a running spinner, and
+  checkmarks only cascade (600 ms total) once the server confirms success.
+- Typical duration 3–10 s. After 20 s a reassurance line appears ("Still working — big packs take
+  a moment").
+- Failure: the transaction rolls back, so nothing half-built exists. Show the server's message,
+  **Try again** (same choices) and **Back to review**.
+
+### 3.9 ⑥ Ready
+
+```
+                         ✓  Your data centre is ready
+              6 tables are waiting for you. Where do you want to start?
+
+     ┌ ● Progress ──────────┐ ┌ ● Knowledge ─────────┐ ┌ ✦ See it as a graph ─┐
+     │ Open tasks →         │ │ Open knowledges →    │ │ Every record, linked │
+     └──────────────────────┘ └──────────────────────┘ └──────────────────────┘
+                 Tip: ask the AI assistant "add my first project"
+```
+
+- One card per installed pack (opens its primary table: `tasks`, `contacts`, `knowledges`,
+  `finance_Transactions`), plus **See it as a graph** (the existing base-graph page) when two or
+  more packs are installed.
+
+### 3.10 Mobile (< 768 px)
+
+Cards stack in one column; the preview becomes a sticky bottom bar ("6 tables · View map") that
+opens a `Sheet`; Personalise sections become an accordion; Review tabs become a select.
+Full-screen takeover stays full-screen.
+
+### 3.11 Copy and i18n
+
+New namespace `onboarding` in `packages/common-i18n/src/locales/{en,zh}/onboarding.json`
+(other locales fall back to `en`). Pack titles, promises and bullets come from the catalog as
+i18n keys, not from the pack JSON, so translators never touch schema files.
+
+---
+
+## 4. Architecture overview
+
+```
+ dev time                                   runtime
+ ────────                                   ───────
+ data-centre base ──► fixture ──► build-packs.ts ──►  packs/*.pack.json  (checked in, PR-reviewed)
+ (bseJEuE54y5caWO0Xc8)  (via MCP)  + pack-map.ts          seeds/*.json   (hand-written)
+                                                   │
+                       GET  /api/schema-pack ◄─────┤  catalog: packs, tables, field summaries, bridges
+ Wizard (Next.js) ───► POST /api/space/:spaceId/schema-pack/install
+                                                   │  plan (pure) ─► SchemaPackInstaller (one $tx)
+                                                   ▼
+                                        new base: tables, links, computed fields, views, seed rows
+                       PATCH /api/user/onboarding  (completed | skipped)
+```
+
+Why a declarative pack spec instead of "duplicate the source base" (what
+`BaseService.createBaseFromTemplate` does today):
+
+1. Users pick a **subset**; duplicating copies all 21 tables and would need surgical deletes.
+2. Bridges must appear only when both ends exist — a duplicate can't express that.
+3. Timezone/currency substitution and the cleanups in §2.4 need a transform step anyway.
+4. The source is a **personal, private base**; runtime must not read it on behalf of other users.
+
+---
+
+## 5. Backend design
+
+### 5.1 Pack spec (shared types in `packages/openapi/src/schema-pack/`)
+
+```ts
+export type SchemaPackId = 'progress' | 'people' | 'knowledge' | 'finance';
+
+export interface ISchemaPack {
+  id: SchemaPackId;
+  version: number;                 // bump on any schema change
+  tables: ISchemaPackTable[];
+}
+
+export interface ISchemaPackTable {
+  key: string;                     // stable symbolic id, e.g. 'tasks'
+  name: string;                    // exact source name
+  icon?: string;
+  optional?: boolean;              // switchable in Personalise
+  fields: ISchemaPackField[];
+  views?: ISchemaPackView[];       // copied from the source table's views
+}
+
+export interface ISchemaPackField {
+  key: string;                     // e.g. 'tasks.assigned_to'
+  name: string;
+  type: FieldType;
+  isPrimary?: boolean;
+  options: unknown;                // field options with every id replaced by a {key} placeholder
+  lookup?: { linkField: string; target: string }; // for lookups / rollups
+  requiresTables?: string[];       // dropped when any listed table is not installed
+}
+
+export interface ISchemaPackBridge {
+  packs: [SchemaPackId, SchemaPackId];
+  fields: ISchemaPackField[];      // link fields; symmetric side generated by the link type
+}
+```
+
+- Formula expressions are stored with placeholders: `{finance_Transactions.Amount}` instead of
+  `{flde1ox2n7Q30UUP938}`. The installer rewrites them to real field ids.
+- `{{timezone}}` and `{{currencySymbol}}` placeholders replace the hard-coded values (§2.4).
+- Validated with zod at load time (backend boot) — a bad pack file fails fast in CI, not at a
+  user's first login.
+
+### 5.2 Extractor (dev-time) — `apps/nestjs-backend/src/features/schema-pack/extract/`
+
+"Generate the schema from my existing base" happens here, once per change, by a developer:
+
+1. Capture the tables/fields of `bseJEuE54y5caWO0Xc8` through the cybernetics-data MCP into
+   `extract/__fixtures__/data-centre.schema.json`. **Schema only — never records.** Note any
+   manual checks or inferred values in the fixture's `note`.
+2. `build-packs.ts` applies `pack-map.ts`: table → pack, optional tables, excluded fields
+   (`credentials`), unmapped tables never shipped (`system_*`, `table_references`,
+   `template_table`), fixes from §2.4, and the bridges.
+3. It rewrites all ids to keys and emits
+   `apps/nestjs-backend/src/features/schema-pack/packs/{progress,people,knowledge,finance}.pack.json`
+   plus `bridges.json`; every change it makes is listed in its `report`.
+4. `build-packs.spec.ts` is a golden test: committed packs must equal the build output.
+   `UPDATE_PACKS=1 pnpm -F @teable/backend exec vitest run src/features/schema-pack/extract`
+   rewrites them; review the diff in git.
+
+### 5.3 Seed rows — `apps/nestjs-backend/src/features/schema-pack/seeds/`
+
+Hand-written, generic, small:
+
+| Table | Rows |
+|---|---|
+| `contact_type` | family, friend, colleague, client, self |
+| `knowledge_type` | general, how-to, reference, project lessons, personal (as a tree of 2 levels) |
+| `project_frameworks` | OKR goal setting, PDCA project cycle, one-on-one meeting, decision log |
+| `finance_Categories` | the 24 generic income/expense categories from the source (Food, Transport, Utilities, Rent & Housing, Business Income, Refunds, …) with parents |
+| `finance_Accounts` | "Everyday account" (Checking, Personal), opening balance 0 |
+| `goals` → `projects` → `tasks` | one linked example: "Get organised" → "Set up my data centre" → 3 tasks |
+| `knowledges` | one "Welcome — how this knowledge base works" note |
+
+Installed only when "Starter rows" is on; each seed row's `context` says it's an example and can be
+deleted.
+
+### 5.4 Module — `apps/nestjs-backend/src/features/schema-pack/`
 
 | File | Role |
 |---|---|
-| `knowledge-graph.controller.ts` | `GET api/base/:baseId/knowledge-graph` and `GET …/node/:nodeId`, both `@Permissions('record\|read')`. Sets `ETag`, `Cache-Control: private, no-cache` |
-| `knowledge-graph.service.ts` | Resolves the two tables, reads rows, builds breadcrumbs |
-| `knowledge-graph.assembler.ts` | **Pure** function `assembleKnowledgeGraph(types, knowledges, opts)` → `{nodes, links, stats}` |
-| `knowledge-type-tree.ts` | Generic hierarchy engine: `breakCycles`, `resolveHierarchy`, `orderDepthFirst` over `IHierarchyRow {recordId, title, parentRecordId}` |
-| `types.ts` | `KNOWLEDGE_FIELD` — field **names** resolved at request time, and allowed field types |
-| `configs/knowledge.config.ts` | `KNOWLEDGE_TABLE_ID`, `KNOWLEDGE_TYPE_TABLE_ID` (defaults are the data-centre ids), `KNOWLEDGE_GRAPH_MAX_NODES=2000`, `KNOWLEDGE_GRAPH_MAX_LINKS=6000` |
+| `schema-pack.module.ts` | Imports Table/Field/Record/View open-api modules |
+| `schema-pack.catalog.ts` | Loads + zod-validates pack JSON at boot; builds the catalog VO |
+| `schema-pack.planner.ts` | **Pure** `planInstall(packs, options, catalog, existingTables?) → IInstallPlan` — table list, ordered field phases, bridges, seeds, counts |
+| `schema-pack.installer.ts` | Executes a plan inside one `prismaService.$tx` |
+| `schema-pack.controller.ts` | The routes below |
+| `schema-pack.planner.spec.ts` | Unit tests (§7) |
 
-**`getGraph(baseId)`**
+### 5.5 API
 
-1. `assertTablesInBase` — both configured tables must belong to `:baseId`, else 404. This is what
-   stops a member of another base from reading these tables through their own base id.
-2. `resolveFields` — loads the table's fields, looks them up **by name**, asserts type
-   (`title` text, `deleted_at` date, `knowledge_type`/`parent_type`/`knowledge_parent` single-valued
-   Link, `related_knowledge` Link). Missing required field → 404; wrong type → 400.
-3. `readRows` — `recordService.getRecordsFields(tableId, { fieldKeyType: Id, projection, filter:
-   deleted_at is empty, ignoreViewQuery: true, take: max + 1 })`. One SQL per table. `take + 1`
-   detects truncation without `COUNT(*)`.
-4. `assembleKnowledgeGraph`:
-   - sort by `title, recordId` (deterministic → stable ETag),
-   - `breakCycles` on `parent_type` and on `knowledge_parent`, then depth/root resolution,
-   - emits a synthetic `core` node, one `type:<rec>` per type, a synthetic
-     `type:__unclassified__` bucket when needed, one `kn:<rec>` per knowledge,
-   - structural links (`core-type`, `type-parent`, `type-knowledge`, `knowledge-parent`) are never
-     dropped; `knowledge-knowledge` relations are deduped (two-way link arrives twice) and cut to
-     the remaining link budget,
-   - `degree`, `depth`, `rootTypeId` (colour key) are precomputed server-side.
-5. ETag = sha1 of the whole assembled payload.
-
-**`getNode(baseId, nodeId)`** parses the `type:`/`kn:` prefix, `getRecord` with `title`, `context`,
-`knowledge_type`, `related_knowledge`, then **re-reads the whole type table (and, for knowledges,
-the whole knowledge table)** to build a cycle-consistent breadcrumb.
-
-Contract lives in `packages/openapi/src/knowledge-graph/{types,get,get-node}.ts`
-(`KNOWLEDGE_GRAPH_VERSION = 3`; node tiers `core|type|knowledge`; link tiers are a closed enum).
-
-### A.4 State management (frontend, `blocks/knowledge-graph/`)
-
-Three layers, cleanly separated:
-
-| Layer | Holder | Contents |
+| Method & path | Permission | Body / result |
 |---|---|---|
-| **Server state** | React Query | `ReactQueryKeys.knowledgeGraph(baseId)`, `knowledgeGraphNode(baseId, nodeId)`; `staleTime 60s`, `gcTime 5m`, `refetchOnWindowFocus: false`. Refresh button = `invalidateQueries` |
-| **View state** | zustand `useKnowledgeGraphStore` (not persisted) | `focusedNodeId`, `hiddenTypeIds` (**exclusions** — empty = show all), `autoRotate`, `showLegend`, `searchQuery` |
-| **Derived state** | `useMemo` in `KnowledgeGraph.tsx` | `buildSimulationGraph(data, hiddenTypeIds)` — expands hidden ids to the whole subtree (`hiddenClosure`, fixpoint), filters nodes/links, **clones** everything (the force lib mutates nodes). Also `visibleCounts`, `typeNodes`, `legendHiddenTypeIds`, `siblingCount` |
-| Browser-owned | DOM | fullscreen (`useFullscreen` reads `document.fullscreenElement`), container size (`useResizeObserver`) |
+| `GET /api/schema-pack` | logged in | catalog: packs → tables → field summaries (name, type, isComputed), bridges, counts, i18n keys |
+| `POST /api/schema-pack/plan` | logged in | `{packs, options}` → plan counts + table/field list (drives Review so the numbers match the install exactly) |
+| `POST /api/space/:spaceId/schema-pack/install` | `base\|create` on space | `{packs, options, baseId?}` → `{baseId, tables: {key, id}[]}` |
+| `PATCH /api/user/onboarding` | self | `{status: 'completed' \| 'skipped'}` |
 
-Rendering: `KnowledgeGraphCanvas` wraps `react-force-graph-3d`; tier-keyed lookup tables in
-`utils/graphTheme.ts` drive size, charge, link distance/strength, radial "sphere" force, focus
-distance, and colour (hue from `rootTypeId`). Search (`KnowledgeNodeSearch`) and the legend filter
-work only on the already-loaded payload.
+Install `options` (zod, at the controller boundary):
+`baseName` (1–100 chars), `icon` (single emoji), `timezone` (must be in
+`Intl.supportedValuesOf('timeZone')`), `currency` (allowlist), `starterRows` (bool),
+`optionalTables` (subset of the selected packs' optional keys). `packs`: non-empty, unique, known
+ids. Unknown keys rejected.
+
+Install phases (one transaction, `thresholdConfig.bigTransactionTimeout`, same as template apply):
+
+1. Create base (name, icon) — or use `baseId` when adding packs to an existing base.
+2. Create each table **with** its primary and plain fields in one call (so the default
+   Name/Count/Status fields are not created and then deleted).
+3. Create link fields — internal, then bridges whose both packs are present.
+4. Create lookups → rollups → formulas in the planner's topological order, placeholders resolved.
+5. Create views from the pack (or keep the default grid).
+6. Insert seed rows (if on), resolving links by seed key.
+7. If this was first-run onboarding, set the user's onboarding status to `completed`.
+
+Any failure rolls back everything. The response returns only after commit.
+
+### 5.6 Adding packs later
+
+The re-entry wizard calls install with `baseId`. The planner receives the base's existing tables
+(matched by **name**), skips tables already present, and adds bridges whose other end now exists
+(e.g. People added later → `tasks.assigned_to` appears). A table name that exists with a
+conflicting shape is reported in the plan and skipped, never overwritten.
+
+### 5.7 Onboarding state
+
+- Prisma: add `onboardingTime DateTime? @map("onboarding_time")` and
+  `onboardingStatus String? @map("onboarding_status")` to `User` (`packages/db-main-prisma`).
+- Migration backfills existing users with `status = 'legacy'`, so only users created after the
+  release see the wizard.
+- Exposed on `IUserMeVo` so SSR and the client can read it.
+
+### 5.8 First-visit routing — `apps/nextjs-app/src/pages/space/[spaceId].tsx`
+
+Today an owner entering an empty space gets a base auto-created and is redirected
+(`[spaceId].tsx`, "If owner enters an empty space, auto-create a base and redirect"). Change:
+
+```ts
+const me = await ssrApi.getUserMe();
+const needsOnboarding = isOwner && basesInSpace.length === 0 && !me.onboardingStatus;
+if (needsOnboarding) → render SpaceInnerPage with `showOnboarding` prop (no auto-create)
+else (existing behaviour)
+```
+
+"Skip for now" calls `PATCH /api/user/onboarding {skipped}` then the existing `createBase` path,
+so a skipper gets exactly today's experience. Self-hosted signups have no auto-created space
+(`createUserWithSettingCheck` only creates one on cloud) — they reach the wizard after creating
+their first space; no change needed there.
 
 ---
 
-## Part B — Problems and restrictions
+## 6. Frontend design
 
-### B.1 Structural (block the all-tables goal)
+```
+apps/nextjs-app/src/features/app/blocks/space/schema-onboarding/
+  SchemaOnboarding.tsx        full-screen shell (first run) — step state machine
+  SchemaPackDialog.tsx        same steps ②–⑥ in a Dialog (re-entry from + Create base)
+  steps/WelcomeStep.tsx
+  steps/ChoosePacksStep.tsx
+  steps/PersonaliseStep.tsx
+  steps/ReviewStep.tsx
+  steps/BuildingStep.tsx
+  steps/ReadyStep.tsx
+  components/PackCard.tsx
+  components/PackPeekSheet.tsx
+  components/SchemaPreview.tsx      SVG relation map; fixed cluster layout per pack
+  hooks/useSchemaPackCatalog.ts     react-query GET catalog
+  hooks/useInstallPlan.ts           react-query POST plan (debounced on choice change)
+  hooks/useInstallSchemaPacks.ts    mutation; invalidates baseAll / space queries
+  packTheme.ts                      accent classes + lucide icon per pack id
+  state.ts                          wizard state (packs, options, step) — persisted to sessionStorage
+```
 
-| # | Restriction | Where | Effect |
-|---|---|---|---|
-| R1 | **Two table ids are fixed in env config**, defaulting to data-centre ids | `knowledge.config.ts` | Only one base can ever have a graph; any other base 404s. No way to add a table without a deploy |
-| R2 | **Field semantics bound by magic names** (`title`, `deleted_at`, `knowledge_type`, …) | `types.ts` | Renaming a column in the UI breaks the page (404/400). Other tables do not follow these names (their primary field is not `title`) |
-| R3 | **Domain baked into the published contract**: tier enums `core/type/knowledge`, link-tier enum, `type:`/`kn:` prefixes | `openapi/src/knowledge-graph/types.ts` | Any new table requires a contract change and a version bump |
-| R4 | **Frontend styling keyed by tier enum** (`NODE_VAL`, `LINK_DISTANCE`, `TIER_CHARGE`, `LABELLED_TIERS`, `rootTypeId` hue) | `graphTheme.ts`, `KnowledgeGraphCanvas.tsx` | Unknown tiers fall back to neutral defaults — works, but looks like one grey cloud |
-| R5 | **Only self-links + one type link are understood.** Cross-table links (task→project→goal, transaction→payee/category/account, contact→company) are invisible | service specs | The actually interesting base-wide structure is not in the graph |
-| R6 | **No server-side filtering**; the only filter is "hide type subtree" on the client | store/`buildSimulationGraph` | Useless once the dataset exceeds the node budget: the kept subset is "first 2000 by title" |
-
-### B.2 Performance / scale
-
-| # | Issue | Detail |
-|---|---|---|
-| P1 | Full-table read on every request | Nothing cached server-side. The ETag is computed **after** the full read + assembly, so it saves bandwidth only, never DB work. The controller notes browsers never see a 304 anyway |
-| P2 | `getNode` reads both whole tables to render one breadcrumb | Fine at 2k rows; an all-tables version must not copy this |
-| P3 | Truncation is alphabetical | `sorted.slice(0, max)` — deterministic, but semantically arbitrary. `auditlog` / `finance_Transactions` would crowd everything else out |
-| P4 | 3D force layout ceiling | `react-force-graph-3d` + a SpriteText per labelled node is comfortable to ~3–5k nodes / ~10k links on a laptop GPU; a whole base can exceed that |
-
-### B.3 Correctness / UX
-
-| # | Issue | Detail |
-|---|---|---|
-| U1 | **zustand store is a global singleton, not keyed by base** | Navigating base A → base B keeps `focusedNodeId` and `hiddenTypeIds` from A; `reset()` is only called from the toolbar |
-| U2 | Dead state | `searchQuery`/`setSearchQuery` are never read — `KnowledgeNodeSearch` keeps its own state |
-| U3 | No freshness signal | `staleTime 60s`, no focus refetch, no realtime: edits in the grid are not reflected until manual refresh |
-| U4 | Detail panel is read-only and knowledge-specific | Shows `context` only; no "open record", no edit, no other fields |
-| U5 | View state is not in the URL | A filtered/focused graph cannot be linked or bookmarked |
-| U6 | Soft-delete is a naming convention (`deleted_at`) | Other tables have no such column; Teable's own deletion is real deletion + trash |
-| U7 | Misleading comment | `CANVAS_BACKGROUND` comment says the app is dark-only, but the value `#f5f0e8` is a light cream |
-
-### B.4 Permissions (must be carried into the new design)
-
-- Check is **base-level** `record|read` only. `RecordPermissionService.wrapView` is a no-op in this
-  build. *(Corrected during implementation: `getRecordsFields` does go through `wrapView`, via
-  `buildFilterSortQuery` → `prepareQuery`. The earlier claim that it skips it was wrong.)* So reads
-  through `RecordService` inherit any future record/field permission enforcement; do not add a
-  raw-SQL path that bypasses it (see §C.6).
-- The existing **ERD endpoint** (`GET /api/base/:baseId/erd`, `GraphService.generateBaseErd`) already
-  computes table + link-field topology — but it is guarded by `base|update`, so read-only members
-  cannot use it. Reuse its internals, not the route.
+- Wizard state lives in one `useReducer`; sessionStorage keeps it across an accidental refresh.
+- `SchemaPreview` layout is static per pack (no physics) — four quadrants, nodes pre-placed — so
+  it is cheap, stable and identical for every user. Bridges are paths between quadrants.
+- `SpaceInnerPage.tsx`: render `<SchemaOnboarding />` when `showOnboarding`; turn
+  "+ Create base" into a split button with "Start from schema packs…".
+- New `ReactQueryKeys.schemaPackCatalog()` and `schemaPackPlan(...)` in `@teable/sdk/config`.
 
 ---
 
-## Part C — Target design: schema-driven "Base Graph"
+## 7. Testing
 
-### C.1 Principle
-
-Stop encoding the knowledge domain in code. The graph is derived from Teable's own metadata:
-
-- **Node** = a record (plus optional synthetic *table hub* / *group* nodes).
-- **Edge** = a value in a **Link field** whose foreign table is also in the graph. Link metadata
-  (`foreignTableId`, `relationship`, `symmetricFieldId`, `isOneWay`) says everything needed.
-- **Hierarchy** = an optional single-valued **self-link** per table (today: `parent_type`,
-  `knowledge_parent`) — the existing `knowledge-type-tree.ts` engine is already generic and is
-  reused as-is.
-- **Grouping** = an optional single-valued link to another table used as a bucket (today:
-  `knowledge_type`).
-- **Label** = the table's **primary field** (via `getPrimaryField`), not a field named `title`.
-- **Filtering** = Teable's own `IFilter` / saved views, per table, evaluated server-side.
-
-The current knowledge graph becomes a **preset** of this engine (§C.7), not a separate code path.
-
-### C.2 API (new module `features/base-graph`, mounted under `api/base/:baseId/graph`)
-
-All routes `@Permissions('record|read')` under `:baseId` so `PermissionGuard` resolves the base.
-
-**1. `GET /graph/schema`** — what can be graphed.
-
-```ts
-{
-  tables: {
-    id, name, icon, primaryFieldId,
-    approxRecordCount,           // cheap estimate, for the table picker
-    linkFields: { id, name, foreignTableId, relationship, isOneWay, symmetricFieldId,
-                  isSelfLink, isMultipleCellValue }[],
-    suggestedHierarchyFieldId?,   // single-valued self-link, if exactly one
-  }[]
-}
-```
-Built from `tableMeta` + field loader, reusing `GraphService.getBaseErdContext` logic without its
-`base|update` guard. No record reads.
-
-**2. `POST /graph/query`** — the graph. POST because `IFilter` is a nested tree.
-
-```ts
-IBaseGraphQueryRo = {
-  tables: {
-    tableId: string;
-    viewId?: string;            // use a saved view's filter/sort (reuses the grid's filter UX)
-    filter?: IFilter;           // or an ad-hoc filter; ANDed with the view's
-    limit?: number;             // per-table budget (default derived from global)
-    hierarchyFieldId?: string;  // single-valued self-link → tree edges
-    groupByFieldId?: string;    // single-valued link to another included table → bucket edges
-  }[];
-  linkFieldIds?: string[];      // which link fields become edges; default = all between included tables
-  showTableHubs?: boolean;      // synthetic `tbl:` node per table, tethering its roots
-  maxNodes?: number;            // clamped server-side to config max
-  maxLinks?: number;
-}
-```
-
-Response (contract **v4**, generic):
-
-```ts
-node = { id, kind: 'record'|'table'|'group', tableId, recordId|null, label,
-         parentId|null, colorKey, depth, degree }
-link = { source, target, kind: 'hierarchy'|'group'|'hub'|'link', fieldId|null }
-stats = { perTable: { tableId, emitted, truncated }[], nodeCount, linkCount,
-          truncated: { nodes, links }, cyclesDropped, danglingLinks }
-etag
-```
-
-- Node id: `rec:<recordId>` (Teable record ids are globally unique; `tableId` travels in the node),
-  `tbl:<tableId>` for hubs. `colorKey` = `tableId` by default, or the hierarchy/group root — the
-  same idea as `rootTypeId` today, generalised.
-- `distance`/`value` are **dropped from the payload**: physics is presentation, it moves to
-  `graphTheme.ts` keyed by `link.kind`.
-
-**3. `GET /graph/node/:recordId?tableId=`** — detail. Primary + up to N non-computed fields
-(respecting the table's field order / a view's visible fields), plus per-link-field neighbour
-counts. Breadcrumb computed by walking the hierarchy field **per record** with a depth cap —
-*not* by re-reading the whole table (fixes P2). Consistency with the graph's cycle-cut is achieved
-by returning `ancestors` from the cached assembled graph when the node is in it (see C.5), and only
-falling back to the walk for nodes outside it.
-
-**4. `POST /graph/expand`** — `{ recordId, tableId, linkFieldIds?, limit }` → neighbours not yet in
-the client's graph. Lets the user start small (filtered) and grow outward, which is what makes
-`auditlog`/`finance_Transactions` usable at all (fixes P3/P4).
-
-Validation at the boundary (zod): every `tableId` belongs to `:baseId` (generalised
-`assertTablesInBase`, batched in one query), every `fieldId`/`viewId` belongs to its table,
-hierarchy/group fields are single-valued links of the right target. Wrong input → 400, not an empty
-graph.
-
-### C.3 Backend engine
-
-```
-BaseGraphService.query(ro)
-  ├ resolveSchema(baseId, ro)          → validated table/field plan (one metadata pass)
-  ├ for each table (parallel, bounded):
-  │     recordService.getRecordsFields(tableId, {
-  │       viewId, filter, ignoreViewQuery: !viewId, fieldKeyType: Id,
-  │       projection: [primary, hierarchyField?, groupField?, ...edgeLinkFields],
-  │       take: limit + 1 })
-  ├ assembleBaseGraph(rows, plan, budget)   ← pure, unit-tested like today's assembler
-  └ etag
-```
-
-Pure assembler rules (generalising what the current one already does well):
-
-1. Sort per table by `(label, recordId)` before truncating → stable subset and ETag.
-2. Hierarchy per table: `breakCycles` → `resolveHierarchy` → `orderDepthFirst` (existing code).
-3. Exactly one structural parent per node: hierarchy parent › group bucket › table hub › none.
-4. **Symmetric-link dedupe via metadata**: for a two-way link, read edges from one side only —
-   the field whose id sorts first of `{fieldId, symmetricFieldId}` when both tables are included;
-   if only one side's table is included, that side. Replaces today's "read only the ManyOne side"
-   hand rule and the `pairKey` dedupe (keep `pairKey` as a safety net).
-5. Edges whose other endpoint was filtered/truncated out are counted in `danglingLinks`, not drawn.
-   The client may offer "expand" on nodes with dangling links.
-6. Structural links never displaced by the link budget; `link` edges truncated deterministically.
-
-Config (`base-graph.config.ts`): `BASE_GRAPH_MAX_NODES` (default 5000), `BASE_GRAPH_MAX_LINKS`
-(15000), `BASE_GRAPH_DEFAULT_TABLE_LIMIT` (1000). The two `KNOWLEDGE_*_TABLE_ID` env vars disappear.
-
-### C.4 Filtering model
-
-Two layers, both server-side:
-
-- **Per-table filter** — `viewId` and/or `IFilter`. Reusing views means the user filters with the
-  exact UI they already know from the grid, and the frontend can reuse
-  `@teable/sdk/components/filter` (`BaseFilter`, `FilterWithTable`) for ad-hoc filters.
-- **Which relationships** — `linkFieldIds`. Unticking `tasks.project` removes those edges.
-
-Client-only (instant, no refetch): hide table, hide subtree (today's `hiddenTypeIds` generalised to
-`hiddenNodeIds` + `hiddenTableIds`), search, focus.
-
-Default when a table is added without a filter: `limit` = default table limit, and
-`auditlog`/`system_*`/`template_table` are unticked in the picker by default (a UI default, not a
-server rule).
-
-### C.5 Caching and freshness
-
-- **Cheap ETag before the read**: every Teable data table has `__last_modified_time`. One query per
-  table — `max(__last_modified_time), count(*)` under the same filter — plus a hash of the
-  normalised query DTO gives an ETag *without* reading rows or assembling. On match, return 304 /
-  cached payload. Fixes P1. (Deletes lower `count`, so they invalidate too; verify with the trash
-  restore path.)
-- In-process LRU (or existing cache service, if Redis-backed) keyed by `(baseId, queryHash, etag)`,
-  TTL ~60s. Also stores per-node ancestors for the detail endpoint.
-- Frontend: `refetchOnWindowFocus: true` becomes cheap once 304s are real. Later: listen for
-  `TABLE_RECORD_CREATE/UPDATE/DELETE` on the included tables via the existing realtime channel and
-  invalidate the query key (debounced ~2s).
-
-### C.6 Permission rules
-
-- Route guard: `record|read` on the base (unchanged).
-- Every read stays on `RecordService.getRecordsFields/getRecord` — no raw SQL on data tables — so
-  any future record/field permission enforcement there is inherited automatically. The one
-  exception, the ETag probe in C.5, only returns aggregates; if record-level permissions are ever
-  enabled, it must be routed through `RecordPermissionService.getReadQuerySource` too.
-- Cross-base links (link fields whose foreign table is in another base) are **excluded** in v4:
-  following them would require a permission check against the other base.
-
-### C.7 Knowledge graph as a preset
-
-```ts
-KNOWLEDGE_PRESET: IBaseGraphQueryRo = {
-  tables: [
-    { tableId: knowledge_type, hierarchyFieldId: <parent_type> },
-    { tableId: knowledges, hierarchyFieldId: <knowledge_parent>, groupByFieldId: <knowledge_type>,
-      filter: deleted_at is empty },
-  ],
-  linkFieldIds: [<related_knowledge>],
-  showTableHubs: false,
-}
-```
-
-Field ids are resolved from `/graph/schema` by name **once, client-side, when the preset is
-created**, then stored by id — renames no longer break it (fixes R2). The synthetic `core` node
-becomes an optional "base" hub. Old route `GET /knowledge-graph` can stay as a thin adapter over the
-engine for one release, then be removed.
-
-Presets are saved per base. Recommended storage: a `graph_presets` record in the base itself
-(queryable by the MCP server too) — or, simpler for v1, `localStorage` keyed by `baseId`.
-
-### C.8 Frontend
-
-**Routing**: `pages/base/[baseId]/graph.tsx` (keep `knowledge-graph` as a redirect with
-`?preset=knowledge`). SSR stays as today — prefetch base/permission only.
-
-**State**
-
-| Layer | Holder | Contents |
-|---|---|---|
-| Query (shareable) | **URL** (`?q=<compressed query DTO>&preset=&focus=rec:…`) | tables, views/filters, link fields. Source of truth for what is fetched → bookmarkable, back button works (fixes U5) |
-| Server | React Query | `['base-graph', baseId, 'schema']`, `['base-graph', baseId, hash(query)]` with `placeholderData: keepPreviousData` so changing a filter doesn't blank the canvas; expansions merged into a separate `['base-graph', baseId, hash, 'expanded']` list |
-| View | zustand, **one store per base** (`createStore` in a context provider mounted by the page, or `reset()` in an effect on `baseId` change) | `focusedNodeId`, `hiddenNodeIds`, `hiddenTableIds`, `autoRotate`, `showLegend`, `renderMode: '3d'\|'2d'`. Drop dead `searchQuery` (fixes U1, U2) |
-| Derived | `useMemo` | `buildSimulationGraph(data ∪ expanded, hidden…)` — same clone-before-handing-to-force-lib rule |
-
-**Components**
-
-- `GraphQueryPanel` (new, collapsible, left): table checklist with colour swatch + approx count,
-  per-table view picker and "Filter…" (`FilterWithTable`), hierarchy/group field selects,
-  relationship (link field) checklist. Edits the URL, not the store.
-- `Legend`: grouped by table, then by group/hierarchy root; toggles hide tables/subtrees.
-- `NodeDetailPanel` (generic): primary + fields rendered with the SDK's `CellValue`
-  renderers; per-link-field neighbour counts with "expand"; **"Open record"** opening the SDK
-  `ExpandRecord` modal in place — the user can edit, and on close the graph query is invalidated
-  (fixes U4, closes the loop with the grid).
-- `graphTheme.ts`: keyed by `node.kind`/`link.kind` instead of the domain tier; colour from
-  `colorKey` (table → hue, depth → lightness, as today for types). Labels only for hubs, groups,
-  focused node, and top-degree nodes to keep sprite count bounded.
-- Optional 2D renderer (`react-force-graph-2d`, same props) for large graphs (P4).
-
-### C.9 Integration points
-
-- Table view header / record expand menu: **"Show in graph"** → `/base/:id/graph?q={that table +
-  current view}&focus=rec:…`.
-- MCP server (`features/mcp`, same backend): add `get_graph` / `get_record_neighbors` tools calling
-  `BaseGraphService` directly — the same permission path, no duplicate logic.
-- Base sidebar entry renamed "Graph"; knowledge preset one click away.
+| Level | What |
+|---|---|
+| Unit — planner | every one of the 15 pack subsets: table set, bridges present iff both packs, optional-table pruning removes dependent fields, computed fields topologically valid, placeholders all resolvable |
+| Unit — catalog | every pack JSON passes zod; no field id literals (`fld…`) survive in options/expressions; no `credentials` field |
+| E2E — backend | install each single pack and all four; assert counts; insert a transaction and check `Current Balance`, `Variance`, `% Used`; add People to a Progress-only base and assert bridge fields appear; forced failure leaves no base behind |
+| E2E — routing | new user + empty owned space → wizard, no base auto-created; legacy user → today's behaviour; collaborator → no wizard |
+| Frontend unit | card toggling (mouse + keys 1–4), bridge preview state, Continue disabled with none selected, error state keeps choices |
+| Extractor | snapshot test against a fixture schema JSON (no network) |
 
 ---
 
-## Part D — Delivery plan
+## 8. Decisions needed
 
-| Phase | Work | Exit criterion |
+| # | Question | Recommendation |
 |---|---|---|
-| **0 — Quick fixes** (independent) | Reset store on `baseId` change; remove `searchQuery`; fix `CANVAS_BACKGROUND` comment | Switching bases shows a clean graph |
-| **1 — Engine** | `features/base-graph`: schema route, query route, pure `assembleBaseGraph` + spec (port the existing assembler spec cases as the knowledge-preset regression suite), openapi v4 contract | Knowledge preset via `/graph/query` produces the same node/edge set as `/knowledge-graph` today (spec-asserted) |
-| **2 — Generic UI** | New page, URL-state query, query panel, kind-keyed theme, generic detail panel + ExpandRecord | Can graph goals→projects→tasks and contacts→companies with view filters |
-| **3 — Scale & freshness** | `/graph/expand`, pre-read ETag + cache, focus refetch, 2D mode | 20k-row `finance_Transactions` usable via filter + expand; unchanged data returns 304 |
-| **4 — Integration** | Saved presets, "Show in graph" deep links, realtime invalidation, MCP tools, retire `/knowledge-graph` routes and `KNOWLEDGE_*` env | Old module deleted |
+| 1 | Keep source names exactly (`finance_*` casing, `finished-reviewing` vs `finished_reviewing`)? | **Keep** — AI chat and MCP skills depend on them |
+| 2 | Ship `auditlog` in People as optional "Interaction log"? | **Yes, optional, off by default** |
+| 3 | Show the wizard to existing users once? | **No** — backfill as `legacy`; they can use "Start from schema packs…" |
+| 4 | Starter rows on by default? | **On** — an empty base is the least friendly first impression |
+| 5 | One base for all packs, or one base per pack? | **One base** — bridges and the graph view need the tables together |
+| 6 | Locales at launch | `en` + `zh`, others fall back to `en` |
 
-### Open questions
+---
 
-1. Presets: stored in the base (shared, visible to MCP) or per-user localStorage?
-2. Should one-way link fields (no symmetric) be graphed by default, or opt-in?
-3. Include lookup/rollup relationships as edges (the ERD does), or only real Link fields? Proposed:
-   Link only in v4.
-4. Is a record-level permission model planned? If yes, §C.6's ETag probe needs the permission CTE
-   before Phase 3.
+## 9. Files touched (summary)
+
+| Area | Files |
+|---|---|
+| Extractor | `apps/nestjs-backend/src/features/schema-pack/extract/` (`pack-map.ts`, `build-packs.ts`, spec, fixture) |
+| Shared types | `packages/openapi/src/schema-pack/*` (types, zod, route clients) |
+| Backend | `apps/nestjs-backend/src/features/schema-pack/**` (module, catalog, planner, installer, controller, packs/, seeds/), register in app module |
+| Prisma | `packages/db-main-prisma/prisma/template.prisma` + migration (User onboarding columns) |
+| User | `user.service.ts` / user controller: `PATCH /api/user/onboarding`, `IUserMeVo` fields |
+| SSR | `apps/nextjs-app/src/pages/space/[spaceId].tsx` |
+| Frontend | `blocks/space/schema-onboarding/**`, `blocks/space/SpaceInnerPage.tsx` |
+| i18n | `packages/common-i18n/src/locales/{en,zh}/onboarding.json`, `features/i18n/space.config.ts` |

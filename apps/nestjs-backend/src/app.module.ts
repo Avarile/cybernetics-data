@@ -40,6 +40,7 @@ import { PluginChartModule } from './features/plugin/official/chart/plugin-chart
 import { PluginModule } from './features/plugin/plugin.module';
 import { PluginContextMenuModule } from './features/plugin-context-menu/plugin-context-menu.module';
 import { PluginPanelModule } from './features/plugin-panel/plugin-panel.module';
+import { SchemaPackModule } from './features/schema-pack/schema-pack.module';
 import { SelectionModule } from './features/selection/selection.module';
 import { AdminOpenApiModule } from './features/setting/open-api/admin-open-api.module';
 import { SettingOpenApiModule } from './features/setting/open-api/setting-open-api.module';
@@ -109,6 +110,7 @@ export const appModules = {
     BuiltinAssetsInitModule,
     V2Module,
     BaseGraphModule,
+    SchemaPackModule,
     // MCP_ENABLED=false registers no MCP routes at all.
     ...(process.env.MCP_ENABLED === 'false' ? [] : [McpModule]),
   ],

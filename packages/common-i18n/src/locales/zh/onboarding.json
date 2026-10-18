@@ -1,0 +1,126 @@
+{
+  "skip": "暂时跳过",
+  "back": "返回",
+  "continue": "继续",
+  "steps": {
+    "choose": "选择",
+    "personalise": "个性化",
+    "review": "确认"
+  },
+  "welcome": {
+    "title": "欢迎，{{name}}",
+    "subtitle": "一分钟内搭好你的数据中心。",
+    "body": "选择你想整理的生活和工作领域，我们会为你建好数据表、关联和公式。之后随时可以再添加。",
+    "start": "开始"
+  },
+  "choose": {
+    "title": "你想整理哪些内容？",
+    "subtitle": "可以选择一个或多个。",
+    "recommended": "推荐：进度 + 知识",
+    "selectAll": "全选",
+    "pickOne": "至少选择一项才能继续",
+    "peek": "查看详情",
+    "peekTitle": "{{pack}} 包含的内容",
+    "optional": "可选",
+    "keyboardHint": "提示：按 1–4 可切换选择",
+    "preview": "你的数据库",
+    "previewEmpty": "选择一个模块，看看你的数据库成形",
+    "previewCount": "来自{{packs}}的 {{tables}} 张表",
+    "nudge": "添加{{pack}}，即可{{benefit}}",
+    "viewMap": "查看结构图"
+  },
+  "packs": {
+    "progress": {
+      "name": "进度",
+      "title": "目标、项目与任务",
+      "promise": "把大目标拆成项目和每日任务，随时看到进展。",
+      "bullet1": "10 个阶段的项目进度",
+      "bullet2": "优先级、开始和完成时间",
+      "bullet3": "项目和任务看板"
+    },
+    "people": {
+      "name": "人脉",
+      "title": "联系人与公司",
+      "promise": "记住每个人是谁、怎么认识的，以及谁在负责什么。",
+      "bullet1": "按类型和职业整理联系人",
+      "bullet2": "公司及其成员",
+      "bullet3": "邮箱和电话一目了然"
+    },
+    "knowledge": {
+      "name": "知识",
+      "title": "笔记与经验",
+      "promise": "把学到的一切整理成知识树，并关联到它支持的工作。",
+      "bullet1": "父子层级的笔记树",
+      "bullet2": "可嵌套的分类",
+      "bullet3": "相关笔记互相关联"
+    },
+    "finance": {
+      "name": "财务",
+      "title": "账户、预算与支出",
+      "promise": "跟踪每个账户的每一笔钱，预算自动核对。",
+      "bullet1": "实时账户余额",
+      "bullet2": "预算差额与使用比例",
+      "bullet3": "分类、收付款方和票据"
+    }
+  },
+  "bridges": {
+    "progress+people": "把任务和项目分配给联系人",
+    "progress+knowledge": "把笔记关联到目标、项目和任务"
+  },
+  "personalise": {
+    "title": "个性化设置",
+    "general": "通用",
+    "baseName": "数据库名称",
+    "defaultBaseName": "我的数据中心",
+    "icon": "图标",
+    "timezone": "时区",
+    "timezoneHint": "已根据浏览器自动识别",
+    "starterRows": "示例数据",
+    "starterRowsHint": "添加几条示例，让数据库不再空荡荡",
+    "currency": "货币",
+    "tables": {
+      "project_frameworks": "项目方法库",
+      "project_frameworksHint": "OKR、PDCA 与会议方法",
+      "auditlog": "互动记录",
+      "auditlogHint": "与每位联系人的往来记录",
+      "finance_Budgets": "预算",
+      "finance_BudgetsHint": "按分类的月度计划",
+      "finance_Tags": "标签",
+      "finance_TagsHint": "交易的自定义标签"
+    }
+  },
+  "review": {
+    "title": "将为你创建以下内容",
+    "counts": "{{tables}} 张表 · {{fields}} 个字段 · {{links}} 个关联",
+    "standardFields": "+ {{count}} 个标准字段",
+    "fields": "{{count}} 个字段",
+    "bridge": "关联{{pack}}",
+    "build": "创建我的数据库",
+    "loadError": "无法生成预览。",
+    "retry": "重试"
+  },
+  "building": {
+    "title": "正在创建你的数据库",
+    "tables": "创建数据表",
+    "links": "建立关联",
+    "computed": "公式与汇总",
+    "seeds": "示例数据",
+    "slow": "仍在处理中，模块较多时需要稍等片刻。",
+    "failed": "出了点问题，没有创建任何内容。",
+    "tryAgain": "重试",
+    "backToReview": "返回确认"
+  },
+  "ready": {
+    "title": "你的数据中心已就绪",
+    "subtitle": "{{count}} 张表已准备好，想从哪里开始？",
+    "open": "打开 {{table}}",
+    "graph": "以关系图查看",
+    "graphHint": "所有记录，互相关联",
+    "tip": "提示：可以让 AI 助手“添加我的第一个项目”"
+  },
+  "entry": {
+    "fromPacks": "从模块开始",
+    "dialogTitle": "添加模块"
+  },
+  "loadError": "无法加载模块。"
+}

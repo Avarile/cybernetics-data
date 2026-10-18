@@ -62,7 +62,7 @@ const FOCUS_TRANSITION_MS = 900;
  * budget — and a cylinder thins with distance, where an unset width renders a
  * dimensionless line that holds 1px at every zoom level.
  */
-const LINK_COLOR = '#475569';
+const LINK_COLOR = '#575b5c';
 const LINK_OPACITY = 0.14;
 
 interface ITrackballControls {

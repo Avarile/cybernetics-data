@@ -1,0 +1,2756 @@
+{
+  "source": "bseJEuE54y5caWO0Xc8",
+  "capturedAt": "2026-10-18",
+  "note": "Schema only, no records. Captured through the cybernetics-data MCP server; lookup/rollup sources of finance_Accounts were checked against live totals, finance_Budgets.Actual Spent is inferred from its formulas (no budget rows exist). system_info, system_status and table_references are omitted (never shipped).",
+  "tables": [
+    {
+      "id": "tbl0ofT8w2VvgJlTx6M",
+      "name": "template_table",
+      "fields": [
+        {
+          "id": "fldFZYBzcnnGHEpHKLC",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzvzXrZcxBwqBGqvc",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldRc0ZWOHIt51B0aJ7",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldi0RL6sxKS7XpuJVH",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldydemuc9W36m7B4gF",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld2PAw8JqOLgsNmRZZ",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldPxXJVJe6MUn9qZ2D",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblbGSzWdR7KEtPVClg",
+      "name": "goals",
+      "fields": [
+        {
+          "id": "fld8ipvRLGq7YTgPQkI",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldEoRNZHELqaaQbNTE",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldF6ePvL85DjAaNBMX",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldWsQ0qTEw6e6WPv4V",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldHyMiD5GAs8FI3ei8",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldRA4LarPTZ8fwagzt",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "flduksVpaxButKuoBP5",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldlHvInBnEeptWDAvI",
+          "name": "deadline",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "None",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldKMG4vwodJPQRjw5y",
+          "name": "projects",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tbliD8gcOTRk9RZ9SmR",
+            "lookupFieldId": "fldiDksJhyT8mDAhCBP",
+            "isOneWay": false,
+            "symmetricFieldId": "flduhpVlKOqQrmbIQv2"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldRMySX5jvdIUWIkGB",
+          "name": "refer_knowledge",
+          "type": "link",
+          "options": {
+            "relationship": "manyMany",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tbliD8gcOTRk9RZ9SmR",
+      "name": "projects",
+      "fields": [
+        {
+          "id": "fldiDksJhyT8mDAhCBP",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldnzxFdoNG8bN1y4kC",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldRVnmWZ3Wb9ReEC9k",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldj85aGVZVUyo2xerD",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldG6RCwocmogw71RqY",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldF4pjQ5r6H0qSsbdy",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldsF1jpTNEc9ueidVf",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldmosZm5TTPkuyo5hr",
+          "name": "tasks",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblOMgDiajqa1moRRjE",
+            "lookupFieldId": "fldGqUoXO7oyq6ufX2Y",
+            "isOneWay": false,
+            "symmetricFieldId": "fld6X3nrMTQlYiV5XSa"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldYje9YsvEa6e7QotE",
+          "name": "progress",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "backlog",
+                "color": "grayLight1"
+              },
+              {
+                "name": "preparing",
+                "color": "gray"
+              },
+              {
+                "name": "initiated",
+                "color": "blueBright"
+              },
+              {
+                "name": "in-progress",
+                "color": "blueDark1"
+              },
+              {
+                "name": "finished-reviewing",
+                "color": "greenLight2"
+              },
+              {
+                "name": "finished-validating",
+                "color": "greenLight1"
+              },
+              {
+                "name": "finished-testing",
+                "color": "green"
+              },
+              {
+                "name": "finalized",
+                "color": "greenDark1"
+              },
+              {
+                "name": "onhold",
+                "color": "red"
+              },
+              {
+                "name": "cancelled",
+                "color": "pinkLight1"
+              }
+            ],
+            "preventAutoNewOptions": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "flduhpVlKOqQrmbIQv2",
+          "name": "belong_goals",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblbGSzWdR7KEtPVClg",
+            "lookupFieldId": "fld8ipvRLGq7YTgPQkI",
+            "isOneWay": false,
+            "symmetricFieldId": "fldKMG4vwodJPQRjw5y"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJKSNWzxTU1K5o83t",
+          "name": "lead_by",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tbl6730ZOe0zToNrcIr",
+            "lookupFieldId": "fldzbqogNQXHBtVmnEk",
+            "isOneWay": false,
+            "symmetricFieldId": "fldNbxFUAUxD0cr0y74"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldCw3cnpw8EWs09C1v",
+          "name": "refer_knowledge",
+          "type": "link",
+          "options": {
+            "relationship": "manyMany",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblOMgDiajqa1moRRjE",
+      "name": "tasks",
+      "fields": [
+        {
+          "id": "fldGqUoXO7oyq6ufX2Y",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldaOhjcXqdiF3IRVB1",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldYNEyagDaFRoxV8zF",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldVlGp4CjCeiNLC6cb",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldkdTbYu0f3LaYK7wl",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJMclfBagyBukSxoy",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld2s647Pe9XgapERLS",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldG7fZN9XhOa0lMy33",
+          "name": "progress",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "backlog",
+                "color": "grayBright"
+              },
+              {
+                "name": "in-progress",
+                "color": "blueBright"
+              },
+              {
+                "name": "finished_reviewing",
+                "color": "greenLight1"
+              },
+              {
+                "name": "finished_validating",
+                "color": "green"
+              },
+              {
+                "name": "onhold",
+                "color": "yellowDark1"
+              },
+              {
+                "name": "cancelled",
+                "color": "red"
+              },
+              {
+                "name": "closed",
+                "color": "purpleDark1"
+              }
+            ],
+            "defaultValue": "backlog",
+            "preventAutoNewOptions": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldMTuydiWUFAgtqAPX",
+          "name": "priority",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "urgent",
+                "color": "redDark1"
+              },
+              {
+                "name": "important",
+                "color": "redBright"
+              },
+              {
+                "name": "prioritise",
+                "color": "yellowBright"
+              },
+              {
+                "name": "normal",
+                "color": "blue"
+              },
+              {
+                "name": "can wait",
+                "color": "green"
+              }
+            ],
+            "defaultValue": "normal",
+            "preventAutoNewOptions": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld3ZGyfGzogzwHt5Md",
+          "name": "assigned_to",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tbl6730ZOe0zToNrcIr",
+            "lookupFieldId": "fldlcgf8tb0mWkzv3Rd",
+            "isOneWay": false,
+            "symmetricFieldId": "fldJpc8su89m0QNJXLF"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldj3Xb1g9nUX4iFqE0",
+          "name": "started_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldn95wbkTqefn18WdO",
+          "name": "finished_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld6X3nrMTQlYiV5XSa",
+          "name": "belong_project",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tbliD8gcOTRk9RZ9SmR",
+            "lookupFieldId": "fldiDksJhyT8mDAhCBP",
+            "isOneWay": false,
+            "symmetricFieldId": "fldmosZm5TTPkuyo5hr"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJzsKyzBaDFt7bHIu",
+          "name": "refer_knowledge",
+          "type": "link",
+          "options": {
+            "relationship": "manyMany",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tbl6730ZOe0zToNrcIr",
+      "name": "contacts",
+      "fields": [
+        {
+          "id": "fldlcgf8tb0mWkzv3Rd",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldsDus6yQL6Q9H4usS",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld1EXv9F20i1ksvMjH",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldhx83brxxWUM3wo8z",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldgYAbYZrzm9JpXqXL",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldwYDp4zuh2pBu056h",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldR1lD5gDXCEMNJCrT",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzbqogNQXHBtVmnEk",
+          "name": "email",
+          "type": "singleLineText",
+          "options": {
+            "showAs": {
+              "type": "email"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJjAX79KRdKf58tbL",
+          "name": "firstname",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "flduzs6A7IbVnVAco9v",
+          "name": "lastname",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld7xdpslRgUB150twC",
+          "name": "mobile",
+          "type": "singleLineText",
+          "options": {
+            "showAs": {
+              "type": "phone"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldDFnZypupBS2dbhqG",
+          "name": "contact_type",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblrMiMCmGdGCflTjiR",
+            "lookupFieldId": "fldsD3kxMuGElBCxZZF",
+            "isOneWay": false,
+            "symmetricFieldId": "fldMazdn4wmjJOUXx3r"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld9omvy6ameuOPTpSi",
+          "name": "contact_profession",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblq4hkjd22A2DrjPOu",
+            "lookupFieldId": "fldMu6BJhAkCw9JrAnm",
+            "isOneWay": false,
+            "symmetricFieldId": "fldy0lyphmTPROXQbX7"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldwJddcFyWcXG9CPRJ",
+          "name": "contact_company",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblU0Z5v0KsrhJRG8Gy",
+            "lookupFieldId": "fldnkaU2joaulzvD7Zx",
+            "isOneWay": false,
+            "symmetricFieldId": "fldCexvaWYRDxUJnQ1r"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJpc8su89m0QNJXLF",
+          "name": "tasks",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblOMgDiajqa1moRRjE",
+            "lookupFieldId": "fldGqUoXO7oyq6ufX2Y",
+            "isOneWay": false,
+            "symmetricFieldId": "fld3ZGyfGzogzwHt5Md"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzY2OVMAx546FsQYk",
+          "name": "auditlog",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblc5RVuBn9hW5u3bk3",
+            "lookupFieldId": "fldKf5LWhFVKFzPK7aa",
+            "isOneWay": false,
+            "symmetricFieldId": "fldALTRDyg4ntVFRRtb"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldNbxFUAUxD0cr0y74",
+          "name": "projects",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tbliD8gcOTRk9RZ9SmR",
+            "lookupFieldId": "fldiDksJhyT8mDAhCBP",
+            "isOneWay": false,
+            "symmetricFieldId": "fldJKSNWzxTU1K5o83t"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblq4hkjd22A2DrjPOu",
+      "name": "contact_profession",
+      "fields": [
+        {
+          "id": "fldMu6BJhAkCw9JrAnm",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldeERGjrw8j0f1PpNj",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldANeJKicuaPotUjax",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldm2nuYBHxo9vJEcme",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldhw0znIIWTizJY8HD",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldCRNrPmzL6bp7SjLk",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldMw8XcbzwBRGxgNWS",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldy0lyphmTPROXQbX7",
+          "name": "contacts",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tbl6730ZOe0zToNrcIr",
+            "lookupFieldId": "fldlcgf8tb0mWkzv3Rd",
+            "isOneWay": false,
+            "symmetricFieldId": "fld9omvy6ameuOPTpSi"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblrMiMCmGdGCflTjiR",
+      "name": "contact_type",
+      "fields": [
+        {
+          "id": "fldsD3kxMuGElBCxZZF",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldmMtwto0uRumexJtL",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldpn9Rdg1wuRJmwgTK",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldCpK30JkQruV0F7bd",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldw7umilF8EcSYxFLl",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldjlV0ZBHYNIOxtc5i",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldv79NQEMJTsCXEbqm",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldMazdn4wmjJOUXx3r",
+          "name": "contacts",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tbl6730ZOe0zToNrcIr",
+            "lookupFieldId": "fldlcgf8tb0mWkzv3Rd",
+            "isOneWay": false,
+            "symmetricFieldId": "fldDFnZypupBS2dbhqG"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblU0Z5v0KsrhJRG8Gy",
+      "name": "companies",
+      "fields": [
+        {
+          "id": "fldnkaU2joaulzvD7Zx",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldWwho9AHVGZjnIzN9",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldfdTfLiumtMWRP6Nq",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldPTTfC53JnWa2kYcS",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld7xkQGrJxYkRkjRoH",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldV1eF1URe7zIPQb82",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzJ5l98CUX4qKdbLT",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldCexvaWYRDxUJnQ1r",
+          "name": "contacts",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tbl6730ZOe0zToNrcIr",
+            "lookupFieldId": "fldlcgf8tb0mWkzv3Rd",
+            "isOneWay": false,
+            "symmetricFieldId": "fldwJddcFyWcXG9CPRJ"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblVTWb1kxXSFPBq4Fq",
+      "name": "knowledges",
+      "fields": [
+        {
+          "id": "fldROFj15OlD8COVxX0",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld5tr2rH8oJXLrjUo9",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldRs8i67CkuzpDyubP",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldCpv0ts2jxxgQPg7n",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldNS9SNNWG07NnBZhE",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldZKMuaBBPd6tIzSG3",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldNxPGGDuchpHCvz0U",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldAEK8ULw9urxE0qiF",
+          "name": "knowledge_type",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblWcq6Kof1AFHvbC5e",
+            "lookupFieldId": "fldvL1LqKmEAfNKVBCO",
+            "isOneWay": false,
+            "symmetricFieldId": "fldtBWHVokGwcAywjtc"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzUUVy3q1vSWURhZD",
+          "name": "knowledge_parent",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": false,
+            "symmetricFieldId": "fldKzPJEFtElf4liepG"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldKzPJEFtElf4liepG",
+          "name": "knowledges",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": false,
+            "symmetricFieldId": "fldzUUVy3q1vSWURhZD"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldz7U2RsCfm0j1RZOs",
+          "name": "related_knowledge",
+          "type": "link",
+          "options": {
+            "relationship": "manyMany",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": false,
+            "symmetricFieldId": "fldTvK8TAoC33yBFbqa"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblWcq6Kof1AFHvbC5e",
+      "name": "knowledge_type",
+      "fields": [
+        {
+          "id": "fldvL1LqKmEAfNKVBCO",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldsnpIqBqoYZJxZwI5",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldAPzS5RXnhHUrVlmu",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld1TMYMRUBblTyTIuU",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldMcIaV4FSsuV9OG9J",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldte086UL30roxKKAl",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldD6MxhSrpatAbHd0k",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldtBWHVokGwcAywjtc",
+          "name": "knowledges",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblVTWb1kxXSFPBq4Fq",
+            "lookupFieldId": "fldROFj15OlD8COVxX0",
+            "isOneWay": false,
+            "symmetricFieldId": "fldAEK8ULw9urxE0qiF"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld1s2dEom17aZIu4nx",
+          "name": "credentials",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldehPY6CjjdpeK3H6j",
+          "name": "child_types",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblWcq6Kof1AFHvbC5e",
+            "lookupFieldId": "fldvL1LqKmEAfNKVBCO",
+            "isOneWay": false,
+            "symmetricFieldId": "fldhCf1NQf4Tl4VDFMN"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld924GlXY0tL5um2wk",
+          "name": "parent_type",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblWcq6Kof1AFHvbC5e",
+            "lookupFieldId": "fldvL1LqKmEAfNKVBCO",
+            "isOneWay": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblc5RVuBn9hW5u3bk3",
+      "name": "auditlog",
+      "fields": [
+        {
+          "id": "fldKf5LWhFVKFzPK7aa",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldfAa9ngLN2nXHprIp",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzxpuvNPbo52I2YFJ",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldu7eojyMBVLRPp4eU",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldkueiEnQ4eA4VkvGR",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld3ei3sxIk9hCWzcg5",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldLcdMlVWLzGRgiQbo",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldALTRDyg4ntVFRRtb",
+          "name": "generated_by_contact",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tbl6730ZOe0zToNrcIr",
+            "lookupFieldId": "fldlcgf8tb0mWkzv3Rd",
+            "isOneWay": false,
+            "symmetricFieldId": "fldzY2OVMAx546FsQYk"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tbl6oTxXnstZGJNrHpm",
+      "name": "project_frameworks",
+      "fields": [
+        {
+          "id": "fldi05ZCxsEFOEwJDlD",
+          "name": "title",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldtxhDAHpdRIwUZjjM",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldtBnf6iI9c7peOwia",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "expression": "CREATED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld55s41QfUczU8vfUG",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "expression": "LAST_MODIFIED_TIME()",
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldzt062tszaw0rDAux",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldkHYy9R9x70vXLFuY",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld4Oz0AsMPaMVty7y4",
+          "name": "id",
+          "type": "autoNumber",
+          "options": {
+            "expression": "AUTO_NUMBER()"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldX8DlWEqoxTAtFyxj",
+          "name": "type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "goal-management",
+                "color": "redDark1"
+              },
+              {
+                "name": "project-management",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "meeting-strategy",
+                "color": "orangeDark1"
+              },
+              {
+                "name": "conversation-strategy",
+                "color": "greenDark1"
+              },
+              {
+                "name": "business-management",
+                "color": "tealBright"
+              }
+            ],
+            "preventAutoNewOptions": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblp2Jvb2g90PN3fX4d",
+      "name": "finance_Categories",
+      "fields": [
+        {
+          "id": "flddvHdoGLLLyFYTXlM",
+          "name": "Name",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldBazKuxdsorHnlCmZ",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Income",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Expense",
+                "color": "blueLight1"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "flddiHU2kAnTeZG49P4",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Personal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Business",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Shared",
+                "color": "blueBright"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldmknXtvhmpIUmjTcP",
+          "name": "Parent Category",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddvHdoGLLLyFYTXlM",
+            "isOneWay": false,
+            "symmetricFieldId": "fldQADwmtwhv2Qe0UCa"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldQADwmtwhv2Qe0UCa",
+          "name": "finance_Categories",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddvHdoGLLLyFYTXlM",
+            "isOneWay": false,
+            "symmetricFieldId": "fldmknXtvhmpIUmjTcP"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldYtNHk7iAhQlQHQvd",
+          "name": "Parent Name",
+          "type": "singleLineText",
+          "options": {},
+          "isLookup": true,
+          "isComputed": true,
+          "lookupOptions": {
+            "linkFieldId": "fldmknXtvhmpIUmjTcP",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddvHdoGLLLyFYTXlM"
+          },
+          "isPrimary": false
+        },
+        {
+          "id": "fldZZlGOiOHRb84DjDV",
+          "name": "Full Path",
+          "type": "formula",
+          "options": {
+            "expression": "IF({fldYtNHk7iAhQlQHQvd}, {fldYtNHk7iAhQlQHQvd}&\" > \"&{flddvHdoGLLLyFYTXlM}, {flddvHdoGLLLyFYTXlM})",
+            "timeZone": "utc"
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldPKGGlI8LBZ9GOO5F",
+          "name": "finance_Payees",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblpyC3PfoG0DN8dQ2t",
+            "lookupFieldId": "fldnbT296ypPXkiJkkF",
+            "isOneWay": false,
+            "symmetricFieldId": "fld6XnWnCCu7GsWfJzh"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld3qDsS1na7qJVvPZ1",
+          "name": "finance_Budgets",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblDk3iXFz5YiYUkwz6",
+            "lookupFieldId": "fldzRSk36rF2iLqoc1A",
+            "isOneWay": false,
+            "symmetricFieldId": "fldfCZXAsjS3nEM0MGW"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld2hxfGgtrPZk5h8cW",
+          "name": "finance_Transactions",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "fldRZcBYKr6w2GWw5lm",
+            "isOneWay": false,
+            "symmetricFieldId": "fldlU2BpJBZFcNcFhom"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblJLklwpGwbrfDlwIz",
+      "name": "finance_Accounts",
+      "fields": [
+        {
+          "id": "fldSzvd0NAglB9qhsp1",
+          "name": "Name",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldZFxk5O8qT6AF6QV2",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Personal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Business",
+                "color": "blueLight1"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldaZgFxywk8cZT9l8V",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Checking",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Savings",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Credit Card",
+                "color": "blueBright"
+              },
+              {
+                "name": "Cash",
+                "color": "blue"
+              },
+              {
+                "name": "Investment",
+                "color": "blueDark1"
+              },
+              {
+                "name": "Mortgage",
+                "color": "redBright"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldEHOdmX1nYcAaaybH",
+          "name": "Institution",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldiOOafvV1UPDJtV1f",
+          "name": "Opening Balance",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldBjBPMxjYpGxs0yJ5",
+          "name": "Opening Balance Date",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldRyzp4jLRtGqUd6gu",
+          "name": "Active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld5aM7gN7NhK7AYuVM",
+          "name": "finance_Transactions",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "fldRZcBYKr6w2GWw5lm",
+            "isOneWay": false,
+            "symmetricFieldId": "fldcg0wB2iVE8DZCVHm"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "flddwaQQ81OY23P2Jbt",
+          "name": "finance_Transactions (linked)",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "fldRZcBYKr6w2GWw5lm",
+            "isOneWay": false,
+            "symmetricFieldId": "fldIeT7aNuRjEAVlyqL"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldxGuTHGj0kFXhVEQ0",
+          "name": "Own Txn Total",
+          "type": "rollup",
+          "options": {
+            "expression": "sum({values})",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "lookupOptions": {
+            "linkFieldId": "fld5aM7gN7NhK7AYuVM",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "flddkw1CxatR4zrvXd0"
+          },
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldShPCh4zNp2NRgBYo",
+          "name": "Incoming Transfer Total",
+          "type": "rollup",
+          "options": {
+            "expression": "sum({values})",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "lookupOptions": {
+            "linkFieldId": "flddwaQQ81OY23P2Jbt",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "flde1ox2n7Q30UUP938"
+          },
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld04GdZkCiVlkrABed",
+          "name": "Net Activity",
+          "type": "formula",
+          "options": {
+            "expression": "{fldxGuTHGj0kFXhVEQ0} + {fldShPCh4zNp2NRgBYo}",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldSTUAw8v0UMcTivzf",
+          "name": "Current Balance",
+          "type": "formula",
+          "options": {
+            "expression": "{fldiOOafvV1UPDJtV1f} + {fld04GdZkCiVlkrABed}",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblpyC3PfoG0DN8dQ2t",
+      "name": "finance_Payees",
+      "fields": [
+        {
+          "id": "fldnbT296ypPXkiJkkF",
+          "name": "Name",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJ8YwtDNxCKZvPNVO",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Vendor",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Client",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Employer",
+                "color": "blueBright"
+              },
+              {
+                "name": "Store",
+                "color": "blue"
+              },
+              {
+                "name": "Person",
+                "color": "blueDark1"
+              },
+              {
+                "name": "Other",
+                "color": "cyanLight2"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldf7p7Ub27gXLzi7nP",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Personal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Business",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Both",
+                "color": "blueBright"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld6XnWnCCu7GsWfJzh",
+          "name": "Default Category",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddvHdoGLLLyFYTXlM",
+            "isOneWay": false,
+            "symmetricFieldId": "fldPKGGlI8LBZ9GOO5F"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldnu4hjQgCGdofNWv3",
+          "name": "finance_Transactions",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "fldRZcBYKr6w2GWw5lm",
+            "isOneWay": false,
+            "symmetricFieldId": "fld8WNu5jDIr55RNkSu"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblhOQKXpSzr0Ezh8rR",
+      "name": "finance_Tags",
+      "fields": [
+        {
+          "id": "fldie2h6YM3fA6WPH0Z",
+          "name": "Name",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldZQDvslg2GJfBTE9K",
+          "name": "Color",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Light Blue",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Blue",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Deep Blue",
+                "color": "blueBright"
+              },
+              {
+                "name": "Organge",
+                "color": "orangeBright"
+              },
+              {
+                "name": "Green",
+                "color": "greenBright"
+              },
+              {
+                "name": "Deep Red",
+                "color": "redDark1"
+              },
+              {
+                "name": "Light Green",
+                "color": "greenLight1"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldTX2wREzbxeaKDl06",
+          "name": "finance_Transactions",
+          "type": "link",
+          "options": {
+            "relationship": "manyMany",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "fldRZcBYKr6w2GWw5lm",
+            "isOneWay": false,
+            "symmetricFieldId": "fldXRiV3NxrspHNLQFO"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblDk3iXFz5YiYUkwz6",
+      "name": "finance_Budgets",
+      "fields": [
+        {
+          "id": "fldzRSk36rF2iLqoc1A",
+          "name": "Month",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldJXYFV5eXNnALW40c",
+          "name": "Planned Amount",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldfCZXAsjS3nEM0MGW",
+          "name": "Category",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddvHdoGLLLyFYTXlM",
+            "isOneWay": false,
+            "symmetricFieldId": "fld3qDsS1na7qJVvPZ1"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldWtNgqZiz6JcSAUkB",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {},
+          "isLookup": true,
+          "isComputed": true,
+          "lookupOptions": {
+            "linkFieldId": "fldfCZXAsjS3nEM0MGW",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddiHU2kAnTeZG49P4"
+          },
+          "isPrimary": false
+        },
+        {
+          "id": "fld0MY2qyEpHKu2xqqP",
+          "name": "finance_Transactions",
+          "type": "link",
+          "options": {
+            "relationship": "oneMany",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "fldRZcBYKr6w2GWw5lm",
+            "isOneWay": false,
+            "symmetricFieldId": "fldVYJYqgs9p2GQSf9a"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldCEyMLCffN6AU15n9",
+          "name": "Actual Spent",
+          "type": "rollup",
+          "options": {
+            "expression": "sum({values})",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "lookupOptions": {
+            "linkFieldId": "fld0MY2qyEpHKu2xqqP",
+            "foreignTableId": "tblylfLkXFkYH2qB0ZQ",
+            "lookupFieldId": "flde1ox2n7Q30UUP938"
+          },
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldBbkdGPNoAwaD1nMc",
+          "name": "Variance",
+          "type": "formula",
+          "options": {
+            "expression": "{fldJXYFV5eXNnALW40c} - {fldCEyMLCffN6AU15n9}",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldYGBsE6yNmObjpM3B",
+          "name": "% Used",
+          "type": "formula",
+          "options": {
+            "expression": "IF({fldJXYFV5eXNnALW40c}=0, 0, ROUND({fldCEyMLCffN6AU15n9}/{fldJXYFV5eXNnALW40c}*100, 1))",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "decimal",
+              "precision": 1
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        }
+      ]
+    },
+    {
+      "id": "tblylfLkXFkYH2qB0ZQ",
+      "name": "finance_Transactions",
+      "fields": [
+        {
+          "id": "fldRZcBYKr6w2GWw5lm",
+          "name": "Description",
+          "type": "singleLineText",
+          "options": {},
+          "isPrimary": true,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldZIgdLJ79xoDQK5u4",
+          "name": "Date",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "Australia/Melbourne"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldIqRcX7gZ1zn9Kmz0",
+          "name": "Type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Income",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Expense",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Transfer",
+                "color": "blueBright"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "flde1ox2n7Q30UUP938",
+          "name": "Amount",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldAiqG7oB0DCPeDL7K",
+          "name": "Recurring",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": false
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldTMF1faN48Lrd3vS4",
+          "name": "Recurring Frequency",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "Weekly",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Monthly",
+                "color": "blueLight1"
+              },
+              {
+                "name": "Yearly",
+                "color": "blueBright"
+              }
+            ]
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldlgu9WLxc0FznWjO5",
+          "name": "Receipt",
+          "type": "attachment",
+          "options": {},
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldW2RsBfTxd362FjfO",
+          "name": "Notes",
+          "type": "longText",
+          "options": {},
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldcg0wB2iVE8DZCVHm",
+          "name": "Account",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblJLklwpGwbrfDlwIz",
+            "lookupFieldId": "fldSzvd0NAglB9qhsp1",
+            "isOneWay": false,
+            "symmetricFieldId": "fld5aM7gN7NhK7AYuVM"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldIeT7aNuRjEAVlyqL",
+          "name": "Transfer Account",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblJLklwpGwbrfDlwIz",
+            "lookupFieldId": "fldSzvd0NAglB9qhsp1",
+            "isOneWay": false,
+            "symmetricFieldId": "flddwaQQ81OY23P2Jbt"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldlU2BpJBZFcNcFhom",
+          "name": "Category",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblp2Jvb2g90PN3fX4d",
+            "lookupFieldId": "flddvHdoGLLLyFYTXlM",
+            "isOneWay": false,
+            "symmetricFieldId": "fld2hxfGgtrPZk5h8cW"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fld8WNu5jDIr55RNkSu",
+          "name": "Payee",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblpyC3PfoG0DN8dQ2t",
+            "lookupFieldId": "fldnbT296ypPXkiJkkF",
+            "isOneWay": false,
+            "symmetricFieldId": "fldnu4hjQgCGdofNWv3"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldXRiV3NxrspHNLQFO",
+          "name": "Tags",
+          "type": "link",
+          "options": {
+            "relationship": "manyMany",
+            "foreignTableId": "tblhOQKXpSzr0Ezh8rR",
+            "lookupFieldId": "fldie2h6YM3fA6WPH0Z",
+            "isOneWay": false,
+            "symmetricFieldId": "fldTX2wREzbxeaKDl06"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldVYJYqgs9p2GQSf9a",
+          "name": "Budget",
+          "type": "link",
+          "options": {
+            "relationship": "manyOne",
+            "foreignTableId": "tblDk3iXFz5YiYUkwz6",
+            "lookupFieldId": "fldzRSk36rF2iLqoc1A",
+            "isOneWay": false,
+            "symmetricFieldId": "fld0MY2qyEpHKu2xqqP"
+          },
+          "isPrimary": false,
+          "isComputed": false,
+          "isLookup": false
+        },
+        {
+          "id": "fldV9EFPhFI8W0OOMbF",
+          "name": "Scope",
+          "type": "singleSelect",
+          "options": {},
+          "isLookup": true,
+          "isComputed": true,
+          "lookupOptions": {
+            "linkFieldId": "fldcg0wB2iVE8DZCVHm",
+            "foreignTableId": "tblJLklwpGwbrfDlwIz",
+            "lookupFieldId": "fldZFxk5O8qT6AF6QV2"
+          },
+          "isPrimary": false
+        },
+        {
+          "id": "flddkw1CxatR4zrvXd0",
+          "name": "Signed Amount",
+          "type": "formula",
+          "options": {
+            "expression": "IF(OR({fldIqRcX7gZ1zn9Kmz0}=\"Expense\", {fldIqRcX7gZ1zn9Kmz0}=\"Transfer\"), -{flde1ox2n7Q30UUP938}, {flde1ox2n7Q30UUP938})",
+            "timeZone": "utc",
+            "formatting": {
+              "type": "currency",
+              "precision": 2,
+              "symbol": "$"
+            }
+          },
+          "isComputed": true,
+          "isPrimary": false,
+          "isLookup": false
+        }
+      ]
+    }
+  ]
+}

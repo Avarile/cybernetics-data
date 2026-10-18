@@ -4,3 +4,4 @@ export * from './update-notify-meta';
 export * from './update-lang';
 export * from './last-visit';
 export * from './track-event';
+export * from './update-onboarding';

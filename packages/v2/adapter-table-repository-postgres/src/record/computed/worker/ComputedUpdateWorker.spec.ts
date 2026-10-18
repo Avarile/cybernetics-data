@@ -39,7 +39,15 @@ const createUnitOfWork = (): IUnitOfWork => ({
   withTransaction: vi.fn().mockImplementation(async (_ctx, fn) => fn(_ctx)),
 });
 
-const createTableRepository = (): ITableRepository => ({}) as unknown as ITableRepository;
+// `find` reports which plan tables still exist; tasks reference TABLE_ID unless a test says otherwise.
+const createTableRepository = (existingTableIds: string[] = [TABLE_ID]): ITableRepository =>
+  ({
+    find: vi
+      .fn()
+      .mockResolvedValue(
+        ok(existingTableIds.map((id) => ({ id: () => TableId.create(id)._unsafeUnwrap() })))
+      ),
+  }) as unknown as ITableRepository;
 
 const createBackfillService = (): ComputedFieldBackfillService =>
   ({
@@ -352,6 +360,103 @@ describe('ComputedUpdateWorker', () => {
       expect(result.isOk()).toBe(true);
       expect(result._unsafeUnwrap()).toBe(1);
       expect(markDone).toHaveBeenCalledWith(task, expect.anything());
+    });
+
+    it('prunes steps and edges for tables deleted after the task was enqueued', async () => {
+      const deletedTableId = `tbl${'f'.repeat(16)}`;
+      const deletedFieldId = `fld${'f'.repeat(16)}`;
+      const task = createMockTask({
+        steps: [
+          { level: 0, tableId: TABLE_ID, fieldIds: [FIELD_ID] },
+          { level: 1, tableId: deletedTableId, fieldIds: [deletedFieldId] },
+        ],
+        edges: [
+          {
+            fromFieldId: FIELD_ID,
+            toFieldId: deletedFieldId,
+            fromTableId: TABLE_ID,
+            toTableId: deletedTableId,
+            order: 0,
+          },
+        ],
+        affectedTableIds: [TABLE_ID, deletedTableId],
+      });
+      const markDone = vi.fn().mockResolvedValue(ok(true));
+      const markFailed = vi.fn().mockResolvedValue(ok(true));
+      const execute = vi.fn().mockResolvedValue(ok({ changesByStep: [] }));
+      const logger = createLogger();
+
+      const worker = new ComputedUpdateWorker(
+        createOutboxStub({
+          claimBatch: vi.fn().mockResolvedValue(ok([task])),
+          markDone,
+          markFailed,
+        }),
+        defaultComputedUpdateOutboxConfig,
+        createUpdaterStub({
+          execute,
+          collectDirtySeedGroups: vi
+            .fn()
+            .mockResolvedValue(ok({ groups: [], seedAllTableIds: [] })),
+        }),
+        {
+          planStage: vi.fn().mockResolvedValue(ok({ steps: [], edges: [] })),
+        } as unknown as ComputedUpdatePlanner,
+        createUnitOfWork(),
+        logger,
+        createHasher(),
+        createTableRepository([TABLE_ID]),
+        createBackfillService(),
+        createEventBus()
+      );
+
+      const result = await worker.runOnce({ workerId: 'worker-1', limit: 10 });
+
+      expect(result._unsafeUnwrap()).toBe(1);
+      expect(markFailed).not.toHaveBeenCalled();
+      expect(markDone).toHaveBeenCalledWith(task, expect.anything());
+      const executedPlan = execute.mock.calls[0][0];
+      expect(
+        executedPlan.steps.map((step: { tableId: TableId }) => step.tableId.toString())
+      ).toEqual([TABLE_ID]);
+      expect(executedPlan.edges).toHaveLength(0);
+      expect(logger.warn).toHaveBeenCalledWith(
+        'computed:outbox:missing_tables_pruned',
+        expect.objectContaining({ missingTableIds: [deletedTableId], remainingStepCount: 1 })
+      );
+    });
+
+    it('marks the task done without executing when every table it needs is gone', async () => {
+      const task = createMockTask();
+      const markDone = vi.fn().mockResolvedValue(ok(true));
+      const markFailed = vi.fn().mockResolvedValue(ok(true));
+      const execute = vi.fn();
+      const collectDirtySeedGroups = vi.fn();
+
+      const worker = new ComputedUpdateWorker(
+        createOutboxStub({
+          claimBatch: vi.fn().mockResolvedValue(ok([task])),
+          markDone,
+          markFailed,
+        }),
+        defaultComputedUpdateOutboxConfig,
+        createUpdaterStub({ execute, collectDirtySeedGroups }),
+        {} as ComputedUpdatePlanner,
+        createUnitOfWork(),
+        createLogger(),
+        createHasher(),
+        createTableRepository([]),
+        createBackfillService(),
+        createEventBus()
+      );
+
+      const result = await worker.runOnce({ workerId: 'worker-1', limit: 10 });
+
+      expect(result._unsafeUnwrap()).toBe(1);
+      expect(markDone).toHaveBeenCalledWith(task, expect.anything());
+      expect(markFailed).not.toHaveBeenCalled();
+      expect(execute).not.toHaveBeenCalled();
+      expect(collectDirtySeedGroups).not.toHaveBeenCalled();
     });
 
     it('publishes computed update events with orchestration metadata from the outbox task', async () => {

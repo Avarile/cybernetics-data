@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
 import { axios } from '../axios';
-import { userNotifyMetaSchema } from '../user';
+import { userNotifyMetaSchema, userOnboardingStatusSchema } from '../user';
 import { registerRoute } from '../utils';
 import { z } from '../zod';
 
@@ -16,6 +16,9 @@ export const userMeVoSchema = z.object({
   hasPassword: z.boolean(),
   isAdmin: z.boolean().nullable().optional(),
   lang: z.string().nullable().optional(),
+  onboardingStatus: userOnboardingStatusSchema.nullable().optional().meta({
+    description: 'Null until the user completes or skips first-run onboarding',
+  }),
   organization: z
     .object({
       id: z.string(),

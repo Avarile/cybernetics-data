@@ -1,0 +1,104 @@
+{
+  "pack": "progress",
+  "tables": [
+    {
+      "table": "goals",
+      "rows": [
+        {
+          "key": "get_organised",
+          "fields": {
+            "title": "Get organised",
+            "context": "Example row — edit or delete it. A goal is an outcome you want; projects deliver it."
+          }
+        }
+      ]
+    },
+    {
+      "table": "projects",
+      "rows": [
+        {
+          "key": "setup",
+          "fields": {
+            "title": "Set up my data centre",
+            "progress": "initiated",
+            "context": "Example row — edit or delete it."
+          },
+          "links": {
+            "belong_goals": ["get_organised"]
+          }
+        }
+      ]
+    },
+    {
+      "table": "tasks",
+      "rows": [
+        {
+          "fields": {
+            "title": "Pick the schema packs I need",
+            "progress": "closed",
+            "priority": "normal",
+            "context": "Example row — edit or delete it."
+          },
+          "links": {
+            "belong_project": ["setup"]
+          }
+        },
+        {
+          "fields": {
+            "title": "Add my first real project",
+            "progress": "backlog",
+            "priority": "important",
+            "context": "Example row — edit or delete it."
+          },
+          "links": {
+            "belong_project": ["setup"]
+          }
+        },
+        {
+          "fields": {
+            "title": "Invite someone to collaborate",
+            "progress": "backlog",
+            "priority": "can wait",
+            "context": "Example row — edit or delete it."
+          },
+          "links": {
+            "belong_project": ["setup"]
+          }
+        }
+      ]
+    },
+    {
+      "table": "project_frameworks",
+      "rows": [
+        {
+          "fields": {
+            "title": "OKR goal setting",
+            "type": "goal-management",
+            "context": "One objective, three to five measurable key results, reviewed weekly."
+          }
+        },
+        {
+          "fields": {
+            "title": "PDCA project cycle",
+            "type": "project-management",
+            "context": "Plan, Do, Check, Act — close each loop with what you learned."
+          }
+        },
+        {
+          "fields": {
+            "title": "One-on-one meeting",
+            "type": "meeting-strategy",
+            "context": "Their agenda first, then yours, then agreed next steps."
+          }
+        },
+        {
+          "fields": {
+            "title": "Decision log",
+            "type": "business-management",
+            "context": "Record the decision, the options considered and why."
+          }
+        }
+      ]
+    }
+  ]
+}

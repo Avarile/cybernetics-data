@@ -1,0 +1,35 @@
+{
+  "pack": "people",
+  "tables": [
+    {
+      "table": "contact_type",
+      "rows": [
+        {
+          "fields": {
+            "title": "family"
+          }
+        },
+        {
+          "fields": {
+            "title": "friend"
+          }
+        },
+        {
+          "fields": {
+            "title": "colleague"
+          }
+        },
+        {
+          "fields": {
+            "title": "client"
+          }
+        },
+        {
+          "fields": {
+            "title": "self"
+          }
+        }
+      ]
+    }
+  ]
+}

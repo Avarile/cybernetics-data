@@ -37,6 +37,10 @@ export const ReactQueryKeys = {
 
   baseGraphSchema: (baseId: string) => ['base-graph-schema', baseId] as const,
 
+  schemaPackCatalog: () => ['schema-pack-catalog'] as const,
+
+  schemaPackPlan: (planHash: string) => ['schema-pack-plan', planHash] as const,
+
   /** `queryHash` is the normalised query; the prefix alone invalidates every graph. */
   baseGraph: (baseId: string, queryHash?: string) =>
     (queryHash ? ['base-graph', baseId, queryHash] : ['base-graph', baseId]) as readonly string[],

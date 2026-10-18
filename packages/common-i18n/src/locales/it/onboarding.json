@@ -1,0 +1,126 @@
+{
+  "skip": "Skip for now",
+  "back": "Back",
+  "continue": "Continue",
+  "steps": {
+    "choose": "Choose",
+    "personalise": "Personalise",
+    "review": "Review"
+  },
+  "welcome": {
+    "title": "Welcome, {{name}}",
+    "subtitle": "Let's shape your data centre in under a minute.",
+    "body": "Pick the areas of life and work you want to organise — we'll build the tables, links and formulas for you. You can add more any time.",
+    "start": "Get started"
+  },
+  "choose": {
+    "title": "What do you want to organise?",
+    "subtitle": "Choose one or more.",
+    "recommended": "Recommended: Progress + Knowledge",
+    "selectAll": "Select all",
+    "pickOne": "Pick at least one to continue",
+    "peek": "Peek inside",
+    "peekTitle": "Inside {{pack}}",
+    "optional": "optional",
+    "keyboardHint": "Tip: press 1–4 to toggle a pack",
+    "preview": "Your base",
+    "previewEmpty": "Pick a pack to see your base take shape",
+    "previewCount": "{{tables}} tables from {{packs}}",
+    "nudge": "Add {{pack}} to {{benefit}}",
+    "viewMap": "View map"
+  },
+  "packs": {
+    "progress": {
+      "name": "Progress",
+      "title": "Goals, projects & tasks",
+      "promise": "Turn big goals into projects and daily tasks, and see what's moving.",
+      "bullet1": "10-stage project progress",
+      "bullet2": "Priorities, start and finish dates",
+      "bullet3": "Kanban boards for projects and tasks"
+    },
+    "people": {
+      "name": "People",
+      "title": "Contacts & companies",
+      "promise": "Remember who's who, how you know them, and who's leading what.",
+      "bullet1": "Contacts with types and professions",
+      "bullet2": "Companies and the people in them",
+      "bullet3": "Email and phone at a glance"
+    },
+    "knowledge": {
+      "name": "Knowledge",
+      "title": "Notes & know-how",
+      "promise": "A tree of everything you've learned, linked to the work it supports.",
+      "bullet1": "Notes in a parent and child tree",
+      "bullet2": "Typed and nested categories",
+      "bullet3": "Related notes linked both ways"
+    },
+    "finance": {
+      "name": "Finance",
+      "title": "Accounts, budgets & spending",
+      "promise": "Track every dollar across accounts, with budgets that check themselves.",
+      "bullet1": "Live account balances",
+      "bullet2": "Budgets with variance and % used",
+      "bullet3": "Categories, payees and receipts"
+    }
+  },
+  "bridges": {
+    "progress+people": "assign tasks and projects to people",
+    "progress+knowledge": "link notes to goals, projects and tasks"
+  },
+  "personalise": {
+    "title": "Make it yours",
+    "general": "General",
+    "baseName": "Base name",
+    "defaultBaseName": "My data centre",
+    "icon": "Icon",
+    "timezone": "Timezone",
+    "timezoneHint": "Detected from your browser",
+    "starterRows": "Starter rows",
+    "starterRowsHint": "Include a few examples so it doesn't feel empty",
+    "currency": "Currency",
+    "tables": {
+      "project_frameworks": "Project frameworks library",
+      "project_frameworksHint": "OKR, PDCA and meeting playbooks",
+      "auditlog": "Interaction log",
+      "auditlogHint": "A running log of what happened with each contact",
+      "finance_Budgets": "Budgets",
+      "finance_BudgetsHint": "Monthly plans per category",
+      "finance_Tags": "Tags",
+      "finance_TagsHint": "Free-form labels on transactions"
+    }
+  },
+  "review": {
+    "title": "Here's what we'll build",
+    "counts": "{{tables}} tables · {{fields}} fields · {{links}} links",
+    "standardFields": "+ {{count}} standard fields",
+    "fields": "{{count}} fields",
+    "bridge": "with {{pack}}",
+    "build": "Build my base",
+    "loadError": "We couldn't prepare the preview.",
+    "retry": "Try again"
+  },
+  "building": {
+    "title": "Building your base",
+    "tables": "Creating tables",
+    "links": "Linking them together",
+    "computed": "Formulas & rollups",
+    "seeds": "Starter rows",
+    "slow": "Still working — big packs take a moment.",
+    "failed": "Something went wrong, and nothing was created.",
+    "tryAgain": "Try again",
+    "backToReview": "Back to review"
+  },
+  "ready": {
+    "title": "Your data centre is ready",
+    "subtitle": "{{count}} tables are waiting for you. Where do you want to start?",
+    "open": "Open {{table}}",
+    "graph": "See it as a graph",
+    "graphHint": "Every record, linked",
+    "tip": "Tip: ask the AI assistant \"add my first project\""
+  },
+  "entry": {
+    "fromPacks": "Start from schema packs",
+    "dialogTitle": "Add schema packs"
+  },
+  "loadError": "We couldn't load the schema packs."
+}

@@ -1,0 +1,521 @@
+{
+  "id": "progress",
+  "version": 1,
+  "tables": [
+    {
+      "key": "goals",
+      "name": "goals",
+      "icon": "🎯",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "context",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "deleted_at",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "deadline",
+          "name": "deadline",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "None",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "projects",
+      "name": "projects",
+      "icon": "📁",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "context",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "deleted_at",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "progress",
+          "name": "progress",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "backlog",
+                "color": "grayLight1"
+              },
+              {
+                "name": "preparing",
+                "color": "gray"
+              },
+              {
+                "name": "initiated",
+                "color": "blueBright"
+              },
+              {
+                "name": "in-progress",
+                "color": "blueDark1"
+              },
+              {
+                "name": "finished-reviewing",
+                "color": "greenLight2"
+              },
+              {
+                "name": "finished-validating",
+                "color": "greenLight1"
+              },
+              {
+                "name": "finished-testing",
+                "color": "green"
+              },
+              {
+                "name": "finalized",
+                "color": "greenDark1"
+              },
+              {
+                "name": "onhold",
+                "color": "red"
+              },
+              {
+                "name": "cancelled",
+                "color": "pinkLight1"
+              }
+            ],
+            "preventAutoNewOptions": true
+          }
+        },
+        {
+          "key": "belong_goals",
+          "name": "belong_goals",
+          "type": "link",
+          "link": {
+            "table": "goals",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "projects",
+              "name": "projects"
+            }
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "Board",
+          "type": "kanban",
+          "stackField": "progress"
+        }
+      ]
+    },
+    {
+      "key": "tasks",
+      "name": "tasks",
+      "icon": "✅",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "context",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "deleted_at",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "progress",
+          "name": "progress",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "backlog",
+                "color": "grayBright"
+              },
+              {
+                "name": "in-progress",
+                "color": "blueBright"
+              },
+              {
+                "name": "finished_reviewing",
+                "color": "greenLight1"
+              },
+              {
+                "name": "finished_validating",
+                "color": "green"
+              },
+              {
+                "name": "onhold",
+                "color": "yellowDark1"
+              },
+              {
+                "name": "cancelled",
+                "color": "red"
+              },
+              {
+                "name": "closed",
+                "color": "purpleDark1"
+              }
+            ],
+            "defaultValue": "backlog",
+            "preventAutoNewOptions": true
+          }
+        },
+        {
+          "key": "priority",
+          "name": "priority",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "urgent",
+                "color": "redDark1"
+              },
+              {
+                "name": "important",
+                "color": "redBright"
+              },
+              {
+                "name": "prioritise",
+                "color": "yellowBright"
+              },
+              {
+                "name": "normal",
+                "color": "blue"
+              },
+              {
+                "name": "can wait",
+                "color": "green"
+              }
+            ],
+            "defaultValue": "normal",
+            "preventAutoNewOptions": true
+          }
+        },
+        {
+          "key": "started_at",
+          "name": "started_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "finished_at",
+          "name": "finished_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "belong_project",
+          "name": "belong_project",
+          "type": "link",
+          "link": {
+            "table": "projects",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "tasks",
+              "name": "tasks"
+            }
+          }
+        }
+      ],
+      "views": [
+        {
+          "name": "Board",
+          "type": "kanban",
+          "stackField": "progress"
+        }
+      ]
+    },
+    {
+      "key": "project_frameworks",
+      "name": "project_frameworks",
+      "icon": "🧭",
+      "optional": true,
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "context",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "deleted_at",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "type",
+          "name": "type",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "goal-management",
+                "color": "redDark1"
+              },
+              {
+                "name": "project-management",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "meeting-strategy",
+                "color": "orangeDark1"
+              },
+              {
+                "name": "conversation-strategy",
+                "color": "greenDark1"
+              },
+              {
+                "name": "business-management",
+                "color": "tealBright"
+              }
+            ],
+            "preventAutoNewOptions": true
+          }
+        }
+      ]
+    }
+  ]
+}

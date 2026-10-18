@@ -14,7 +14,9 @@ import type { NextPageWithLayout } from '@/lib/type';
 import withAuthSSR from '@/lib/withAuthSSR';
 import withEnv from '@/lib/withEnv';
 
-const Node: NextPageWithLayout = () => <SpaceInnerPage />;
+const Node: NextPageWithLayout<{ showOnboarding?: boolean }> = ({ showOnboarding }) => (
+  <SpaceInnerPage showOnboarding={showOnboarding} />
+);
 export const getServerSideProps: GetServerSideProps = withEnv(
   ensureLogin(
     withAuthSSR(async (context, ssrApi) => {
@@ -45,9 +47,13 @@ export const getServerSideProps: GetServerSideProps = withEnv(
       const { action, tid } = context.query;
       const isTemplateApply = action === 'createFromTemplate' && tid;
 
+      // A new owner entering an empty space picks schema packs instead of getting a blank base.
+      const isEmptyOwnedSpace = isOwner && basesInSpace.length === 0 && !isTemplateApply;
+      const showOnboarding = isEmptyOwnedSpace && !(await ssrApi.getUserMe()).onboardingStatus;
+
       // If owner enters an empty space, auto-create a base and redirect
       // Skip auto-create if template apply is requested
-      if (isOwner && basesInSpace.length === 0 && !isTemplateApply) {
+      if (isEmptyOwnedSpace && !showOnboarding) {
         const newBase = await ssrApi.createBase({
           spaceId: spaceId as string,
         });
@@ -97,6 +103,7 @@ export const getServerSideProps: GetServerSideProps = withEnv(
             uniq([...spaceConfig.i18nNamespaces, ...settingConfig.i18nNamespaces])
           )),
           dehydratedState: dehydrate(queryClient),
+          showOnboarding,
         },
       };
     })

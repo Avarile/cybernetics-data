@@ -339,6 +339,8 @@ model User {
   lastModifiedTime     DateTime? @updatedAt @map("last_modified_time")
   permanentDeletedTime DateTime? @map("permanent_deleted_time")
   refMeta              String?   @map("ref_meta")
+  onboardingStatus     String?   @map("onboarding_status")
+  onboardingTime       DateTime? @map("onboarding_time")
 
   accounts Account[]
 

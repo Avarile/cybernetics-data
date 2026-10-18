@@ -1,0 +1,66 @@
+{
+  "pack": "knowledge",
+  "tables": [
+    {
+      "table": "knowledge_type",
+      "rows": [
+        {
+          "key": "general",
+          "fields": {
+            "title": "general"
+          }
+        },
+        {
+          "key": "project",
+          "fields": {
+            "title": "project"
+          }
+        },
+        {
+          "key": "personal",
+          "fields": {
+            "title": "personal"
+          }
+        },
+        {
+          "fields": {
+            "title": "general - how-to"
+          },
+          "links": {
+            "parent_type": ["general"]
+          }
+        },
+        {
+          "fields": {
+            "title": "general - reference"
+          },
+          "links": {
+            "parent_type": ["general"]
+          }
+        },
+        {
+          "fields": {
+            "title": "project - lessons"
+          },
+          "links": {
+            "parent_type": ["project"]
+          }
+        }
+      ]
+    },
+    {
+      "table": "knowledges",
+      "rows": [
+        {
+          "fields": {
+            "title": "Welcome — how this knowledge base works",
+            "context": "Example row — edit or delete it.\n\nEach note has a type and can sit under a parent note, so your knowledge grows as a tree. Link related notes to each other, and link notes to the goals, projects and tasks they support."
+          },
+          "links": {
+            "knowledge_type": ["general"]
+          }
+        }
+      ]
+    }
+  ]
+}

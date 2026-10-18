@@ -15,6 +15,7 @@ import { ReactQueryKeys } from '@teable/sdk/config';
 import { useIsMobile } from '@teable/sdk/hooks';
 import { cn, ScrollArea } from '@teable/ui-lib/shadcn';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
+import { LayoutTemplate } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -29,10 +30,11 @@ import { useIsCloud } from '../../hooks/useIsCloud';
 import { useSetting } from '../../hooks/useSetting';
 import { useTemplateMonitor } from '../base/duplicate/useTemplateMonitor';
 import { BaseList } from './BaseList';
+import { SchemaOnboarding, SchemaPackDialog } from './schema-onboarding';
 import { StarButton } from './space-side-bar/StarButton';
 import { useBaseList } from './useBaseList';
 
-export const SpaceInnerPage: React.FC = () => {
+export const SpaceInnerPage: React.FC<{ showOnboarding?: boolean }> = ({ showOnboarding }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const isCloud = useIsCloud();
@@ -47,6 +49,9 @@ export const SpaceInnerPage: React.FC = () => {
   const [renaming, setRenaming] = useState<boolean>(false);
   const [spaceName, setSpaceName] = useState<string>();
   const [settingModalOpen, setSettingModalOpen] = useState(false);
+  const [packsOpen, setPacksOpen] = useState(false);
+  // Latched for the visit: the wizard creates a base mid-flow, which must not unmount it.
+  const [onboarding] = useState(Boolean(showOnboarding));
 
   const { data: space } = useQuery({
     queryKey: ReactQueryKeys.space(spaceId),
@@ -207,6 +212,17 @@ export const SpaceInnerPage: React.FC = () => {
             </div>
           )}
 
+          {canCreateBase && Boolean(basesInSpace?.length) && (
+            <Button
+              size="xs"
+              variant="outline"
+              className="mr-2 gap-1.5"
+              onClick={() => setPacksOpen(true)}
+            >
+              <LayoutTemplate className="size-3.5" />
+              {t('onboarding:entry.fromPacks')}
+            </Button>
+          )}
           <SpaceActionBar
             space={space}
             buttonSize={'xs'}
@@ -246,10 +262,20 @@ export const SpaceInnerPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">{t('space:spaceIsEmpty')}</p>
                 </div>
                 {canCreateBase && (
-                  <Button onClick={handleCreateBase} disabled={createBaseLoading}>
-                    <Plus className="size-4" />
-                    {t('space:action.createBase')}
-                  </Button>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button onClick={() => setPacksOpen(true)}>
+                      <LayoutTemplate className="size-4" />
+                      {t('onboarding:entry.fromPacks')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCreateBase}
+                      disabled={createBaseLoading}
+                    >
+                      <Plus className="size-4" />
+                      {t('space:action.createBase')}
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
@@ -263,6 +289,11 @@ export const SpaceInnerPage: React.FC = () => {
             </ScrollArea>
           </div>
         </div>
+
+        {canCreateBase && (
+          <SchemaPackDialog spaceId={spaceId} open={packsOpen} onOpenChange={setPacksOpen} />
+        )}
+        {onboarding && <SchemaOnboarding spaceId={spaceId} />}
 
         <SpaceInnerSettingModal
           open={settingModalOpen}

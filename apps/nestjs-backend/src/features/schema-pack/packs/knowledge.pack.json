@@ -1,0 +1,199 @@
+{
+  "id": "knowledge",
+  "version": 1,
+  "tables": [
+    {
+      "key": "knowledges",
+      "name": "knowledges",
+      "icon": "📚",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "context",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "deleted_at",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "knowledge_type",
+          "name": "knowledge_type",
+          "type": "link",
+          "link": {
+            "table": "knowledge_type",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "knowledges",
+              "name": "knowledges"
+            }
+          }
+        },
+        {
+          "key": "knowledge_parent",
+          "name": "knowledge_parent",
+          "type": "link",
+          "link": {
+            "table": "knowledges",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "knowledges",
+              "name": "knowledges"
+            }
+          }
+        },
+        {
+          "key": "related_knowledge",
+          "name": "related_knowledge",
+          "type": "link",
+          "link": {
+            "table": "knowledges",
+            "relationship": "manyMany",
+            "isOneWay": true
+          }
+        }
+      ]
+    },
+    {
+      "key": "knowledge_type",
+      "name": "knowledge_type",
+      "icon": "🗂️",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "context",
+          "name": "context",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "deleted_at",
+          "name": "deleted_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "parent_type",
+          "name": "parent_type",
+          "type": "link",
+          "link": {
+            "table": "knowledge_type",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "child_types",
+              "name": "child_types"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

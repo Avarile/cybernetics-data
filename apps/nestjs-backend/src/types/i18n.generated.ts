@@ -1994,6 +1994,132 @@ export type I18nTranslations = {
             "description": string;
         };
     };
+    "onboarding": {
+        "skip": string;
+        "back": string;
+        "continue": string;
+        "steps": {
+            "choose": string;
+            "personalise": string;
+            "review": string;
+        };
+        "welcome": {
+            "title": string;
+            "subtitle": string;
+            "body": string;
+            "start": string;
+        };
+        "choose": {
+            "title": string;
+            "subtitle": string;
+            "recommended": string;
+            "selectAll": string;
+            "pickOne": string;
+            "peek": string;
+            "peekTitle": string;
+            "optional": string;
+            "keyboardHint": string;
+            "preview": string;
+            "previewEmpty": string;
+            "previewCount": string;
+            "nudge": string;
+            "viewMap": string;
+        };
+        "packs": {
+            "progress": {
+                "name": string;
+                "title": string;
+                "promise": string;
+                "bullet1": string;
+                "bullet2": string;
+                "bullet3": string;
+            };
+            "people": {
+                "name": string;
+                "title": string;
+                "promise": string;
+                "bullet1": string;
+                "bullet2": string;
+                "bullet3": string;
+            };
+            "knowledge": {
+                "name": string;
+                "title": string;
+                "promise": string;
+                "bullet1": string;
+                "bullet2": string;
+                "bullet3": string;
+            };
+            "finance": {
+                "name": string;
+                "title": string;
+                "promise": string;
+                "bullet1": string;
+                "bullet2": string;
+                "bullet3": string;
+            };
+        };
+        "bridges": {
+            "progress+people": string;
+            "progress+knowledge": string;
+        };
+        "personalise": {
+            "title": string;
+            "general": string;
+            "baseName": string;
+            "defaultBaseName": string;
+            "icon": string;
+            "timezone": string;
+            "timezoneHint": string;
+            "starterRows": string;
+            "starterRowsHint": string;
+            "currency": string;
+            "tables": {
+                "project_frameworks": string;
+                "project_frameworksHint": string;
+                "auditlog": string;
+                "auditlogHint": string;
+                "finance_Budgets": string;
+                "finance_BudgetsHint": string;
+                "finance_Tags": string;
+                "finance_TagsHint": string;
+            };
+        };
+        "review": {
+            "title": string;
+            "counts": string;
+            "standardFields": string;
+            "fields": string;
+            "bridge": string;
+            "build": string;
+            "loadError": string;
+            "retry": string;
+        };
+        "building": {
+            "title": string;
+            "tables": string;
+            "links": string;
+            "computed": string;
+            "seeds": string;
+            "slow": string;
+            "failed": string;
+            "tryAgain": string;
+            "backToReview": string;
+        };
+        "ready": {
+            "title": string;
+            "subtitle": string;
+            "open": string;
+            "graph": string;
+            "graphHint": string;
+            "tip": string;
+        };
+        "entry": {
+            "fromPacks": string;
+            "dialogTitle": string;
+        };
+        "loadError": string;
+    };
     "plugin": {
         "add": string;
         "title": {

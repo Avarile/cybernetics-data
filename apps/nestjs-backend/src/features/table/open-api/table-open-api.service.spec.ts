@@ -220,9 +220,13 @@ describe('TableOpenApiService.createTable', () => {
 });
 
 describe('TableOpenApiService.cleanTablesRelatedData', () => {
-  it('routes metadata cleanup to meta prisma and trash/history cleanup to data prisma', async () => {
+  const createClients = (outboxExists = true) => {
     const metaTxClient = {
-      field: { deleteMany: vi.fn().mockResolvedValue(undefined) },
+      field: {
+        findMany: vi.fn().mockResolvedValue([{ id: 'fldA' }]),
+        deleteMany: vi.fn().mockResolvedValue(undefined),
+      },
+      reference: { deleteMany: vi.fn().mockResolvedValue(undefined) },
       view: { deleteMany: vi.fn().mockResolvedValue(undefined) },
       attachmentsTable: { deleteMany: vi.fn().mockResolvedValue(undefined) },
       ops: { deleteMany: vi.fn().mockResolvedValue(undefined) },
@@ -233,17 +237,19 @@ describe('TableOpenApiService.cleanTablesRelatedData', () => {
       recordHistory: { deleteMany: vi.fn().mockResolvedValue(undefined) },
       tableTrash: { deleteMany: vi.fn().mockResolvedValue(undefined) },
       recordTrash: { deleteMany: vi.fn().mockResolvedValue(undefined) },
+      $queryRaw: vi.fn().mockResolvedValue([{ exists: outboxExists }]),
+      $executeRaw: vi.fn().mockResolvedValue(0),
     };
-    const prismaService = {
-      txClient: vi.fn().mockReturnValue(metaTxClient),
-    };
-    const dataPrismaService = {
-      txClient: vi.fn().mockReturnValue(dataTxClient),
-    };
+    return { metaTxClient, dataTxClient };
+  };
 
-    const service = new TableOpenApiService(
-      prismaService as never,
-      dataPrismaService as never,
+  const createService = (
+    metaTxClient: ReturnType<typeof createClients>['metaTxClient'],
+    dataTxClient: ReturnType<typeof createClients>['dataTxClient']
+  ) =>
+    new TableOpenApiService(
+      { txClient: vi.fn().mockReturnValue(metaTxClient) } as never,
+      { txClient: vi.fn().mockReturnValue(dataTxClient) } as never,
       {} as never,
       {} as never,
       {} as never,
@@ -261,6 +267,35 @@ describe('TableOpenApiService.cleanTablesRelatedData', () => {
       {} as never,
       {} as never
     );
+
+  it('deletes queued computed-update tasks that only touch the deleted tables', async () => {
+    const { metaTxClient, dataTxClient } = createClients();
+
+    await createService(metaTxClient, dataTxClient).cleanTablesRelatedData('bseTest', [
+      'tblA',
+      'tblB',
+    ]);
+
+    expect(dataTxClient.$executeRaw).toHaveBeenCalledTimes(1);
+    const [sqlParts, ...params] = dataTxClient.$executeRaw.mock.calls[0];
+    expect((sqlParts as string[]).join('?')).toContain('DELETE FROM computed_update_outbox');
+    expect((sqlParts as string[]).join('?')).toContain("status <> 'processing'");
+    expect(params).toEqual(['bseTest', ['tblA', 'tblB'], ['tblA', 'tblB']]);
+  });
+
+  it('skips the computed-update cleanup when the outbox table does not exist', async () => {
+    const { metaTxClient, dataTxClient } = createClients(false);
+
+    await createService(metaTxClient, dataTxClient).cleanTablesRelatedData('bseTest', ['tblA']);
+
+    expect(dataTxClient.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(dataTxClient.$executeRaw).not.toHaveBeenCalled();
+    expect(metaTxClient.field.deleteMany).toHaveBeenCalled();
+  });
+
+  it('routes metadata cleanup to meta prisma and trash/history cleanup to data prisma', async () => {
+    const { metaTxClient, dataTxClient } = createClients();
+    const service = createService(metaTxClient, dataTxClient);
 
     await service.cleanTablesRelatedData('bseTest', ['tblA', 'tblB']);
 

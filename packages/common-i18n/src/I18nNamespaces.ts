@@ -6,6 +6,7 @@ import type dashboard from './locales/en/dashboard.json';
 import type developer from './locales/en/developer.json';
 import type mcp from './locales/en/mcp.json';
 import type oauth from './locales/en/oauth.json';
+import type onboarding from './locales/en/onboarding.json';
 import type plugin from './locales/en/plugin.json';
 import type sdk from './locales/en/sdk.json';
 import type setting from './locales/en/setting.json';
@@ -32,4 +33,5 @@ export interface I18nNamespaces {
   chart: typeof chart;
   baseGraph: typeof baseGraph;
   mcp: typeof mcp;
+  onboarding: typeof onboarding;
 }

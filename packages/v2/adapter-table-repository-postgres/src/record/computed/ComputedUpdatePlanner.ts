@@ -1228,6 +1228,53 @@ export const splitSeedGroupsForPlan = (
   };
 };
 
+/**
+ * Every table a plan reads from or writes to.
+ */
+export const collectPlanTableIds = (plan: ComputedUpdatePlan): ReadonlyArray<TableId> => {
+  const ids = new Map<string, TableId>();
+  const add = (tableId: TableId) => ids.set(tableId.toString(), tableId);
+  add(plan.seedTableId);
+  plan.extraSeedRecords.forEach((group) => add(group.tableId));
+  plan.seedAllTableIds?.forEach(add);
+  plan.steps.forEach((step) => add(step.tableId));
+  plan.edges.forEach((edge) => {
+    add(edge.fromTableId);
+    add(edge.toTableId);
+  });
+  return [...ids.values()];
+};
+
+/**
+ * Drop the parts of a plan that touch tables which no longer exist, e.g. a table or base
+ * deleted after an async task was enqueued. Nothing can be dirtied in or written to a missing
+ * table, so its seeds, steps and edges are removed instead of failing the whole task.
+ */
+export const pruneMissingTablesFromPlan = (
+  plan: ComputedUpdatePlan,
+  existingTableIds: ReadonlySet<string>
+): ComputedUpdatePlan => {
+  const exists = (tableId: TableId) => existingTableIds.has(tableId.toString());
+  const seedTableExists = exists(plan.seedTableId);
+  const extraSeedRecords = plan.extraSeedRecords.filter((group) => exists(group.tableId));
+  const seedAllTableIds = plan.seedAllTableIds?.filter(exists);
+  // Without its seed table, only the remaining extra seed records can make anything dirty.
+  const hasSeedSource = seedTableExists || extraSeedRecords.length > 0;
+
+  return {
+    ...plan,
+    seedRecordIds: seedTableExists ? plan.seedRecordIds : [],
+    beforeImageRecords: seedTableExists ? plan.beforeImageRecords : [],
+    extraSeedRecords,
+    seedAllTableIds,
+    steps: hasSeedSource ? plan.steps.filter((step) => exists(step.tableId)) : [],
+    edges: plan.edges.filter((edge) => exists(edge.fromTableId) && exists(edge.toTableId)),
+    sameTableBatches: hasSeedSource
+      ? plan.sameTableBatches.filter((batch) => exists(batch.tableId))
+      : [],
+  };
+};
+
 const topoSort = (
   edges: ReadonlyArray<FieldDependencyEdge>,
   fieldIdSet: Set<string>

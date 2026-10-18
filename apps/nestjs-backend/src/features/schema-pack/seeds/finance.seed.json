@@ -1,0 +1,192 @@
+{
+  "pack": "finance",
+  "tables": [
+    {
+      "table": "finance_Categories",
+      "rows": [
+        {
+          "fields": {
+            "Name": "Food",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Dining & Takeaway",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Transport",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Shopping",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Utilities",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Insurance",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Subscriptions & Software",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Entertainment",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Travel & Accommodation",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Cash Withdrawal",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Rent & Housing",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Council & Government",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Education & Childcare",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Donations",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Personal Transfers",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Business Expenses",
+            "Type": "Expense",
+            "Scope": "Business"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Health & Wellness",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Vehicle & Rego",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Uncategorized",
+            "Type": "Expense",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Business Income",
+            "Type": "Income",
+            "Scope": "Business"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Client Payments",
+            "Type": "Income",
+            "Scope": "Business"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Rental Income",
+            "Type": "Income",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Insurance Payout",
+            "Type": "Income",
+            "Scope": "Personal"
+          }
+        },
+        {
+          "fields": {
+            "Name": "Refunds",
+            "Type": "Income",
+            "Scope": "Personal"
+          }
+        }
+      ]
+    },
+    {
+      "table": "finance_Accounts",
+      "rows": [
+        {
+          "fields": {
+            "Name": "Everyday account",
+            "Type": "Checking",
+            "Scope": "Personal",
+            "Opening_Balance": 0,
+            "Active": true
+          }
+        }
+      ]
+    }
+  ]
+}

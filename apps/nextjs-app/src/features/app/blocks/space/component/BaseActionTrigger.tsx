@@ -36,6 +36,7 @@ import { useTranslation } from 'next-i18next';
 import React from 'react';
 import { BaseShareDialog } from '../../base/base-side-bar/BaseShareDialog';
 import { useDuplicateBaseStore } from '../../base/duplicate/useDuplicateBaseStore';
+import { SchemaPackDialog } from '../schema-onboarding';
 import { EditableSpaceSelect } from './EditableSpaceSelect';
 
 interface IBaseActionTrigger {
@@ -46,6 +47,8 @@ interface IBaseActionTrigger {
   showExport: boolean;
   showMove: boolean;
   showShare?: boolean;
+  /** Offer adding schema packs to this base. */
+  showAddPacks?: boolean;
   onRename?: () => void;
   onDelete?: (permanent?: boolean) => void;
   align?: 'center' | 'end' | 'start';
@@ -61,15 +64,17 @@ export const BaseActionTrigger: React.FC<React.PropsWithChildren<IBaseActionTrig
     showExport,
     showMove,
     showShare,
+    showAddPacks,
     onDelete,
     onRename,
     align = 'end',
   } = props;
-  const { t } = useTranslation(['common', 'space']);
+  const { t } = useTranslation(['common', 'space', 'onboarding']);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
   const [deleteConfirm, setDeleteConfirm] = React.useState(false);
   const [shareOpen, setShareOpen] = React.useState(false);
+  const [packsOpen, setPacksOpen] = React.useState(false);
   const [exportConfirm, setExportConfirm] = React.useState(false);
   const [exportState, setExportState] = React.useState<'idle' | 'loading' | 'done'>('idle');
   const [exportDownloadUrl, setExportDownloadUrl] = React.useState<string | null>(null);
@@ -148,7 +153,15 @@ export const BaseActionTrigger: React.FC<React.PropsWithChildren<IBaseActionTrig
     return () => window.removeEventListener('export-base-complete', handleExportComplete);
   }, [exportState, base.name]);
 
-  if (!showDelete && !showRename && !showDuplicate && !showExport && !showMove && !showShare) {
+  if (
+    !showDelete &&
+    !showRename &&
+    !showDuplicate &&
+    !showExport &&
+    !showMove &&
+    !showShare &&
+    !showAddPacks
+  ) {
     return null;
   }
 
@@ -212,6 +225,12 @@ export const BaseActionTrigger: React.FC<React.PropsWithChildren<IBaseActionTrig
               {t('actions.duplicate')}
             </DropdownMenuItem>
           )}
+          {showAddPacks && (
+            <DropdownMenuItem onClick={() => setPacksOpen(true)}>
+              <Database className="mr-2" />
+              {t('onboarding:entry.dialogTitle')}
+            </DropdownMenuItem>
+          )}
           {showShare && (
             <DropdownMenuItem onClick={() => setShareOpen(true)}>
               <Share2 className="mr-2" />
@@ -249,6 +268,15 @@ export const BaseActionTrigger: React.FC<React.PropsWithChildren<IBaseActionTrig
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {showAddPacks && (
+        <SchemaPackDialog
+          spaceId={base.spaceId}
+          baseId={base.id}
+          open={packsOpen}
+          onOpenChange={setPacksOpen}
+        />
+      )}
 
       <ConfirmDialog
         open={deleteConfirm}

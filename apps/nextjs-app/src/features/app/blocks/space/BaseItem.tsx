@@ -241,6 +241,7 @@ export const BaseItem: FC<IBaseItemProps> = (props) => {
           showExport={hasUpdatePermission}
           showMove={hasMovePermission}
           showShare={hasUpdatePermission}
+          showAddPacks={hasUpdatePermission}
           onDelete={onDelete}
           onRename={startEditing}
         >

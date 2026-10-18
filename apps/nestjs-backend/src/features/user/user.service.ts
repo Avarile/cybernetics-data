@@ -326,6 +326,13 @@ export class UserService {
     });
   }
 
+  async updateOnboarding(id: string, status: 'completed' | 'skipped') {
+    await this.prismaService.txClient().user.update({
+      data: { onboardingStatus: status, onboardingTime: new Date() },
+      where: { id, deletedTime: null },
+    });
+  }
+
   private async generateDefaultAvatar(id: string) {
     const path = join(StorageAdapter.getDir(UploadType.Avatar), id);
     const bucket = StorageAdapter.getBucket(UploadType.Avatar);
