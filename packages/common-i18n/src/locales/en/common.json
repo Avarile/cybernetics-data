@@ -1150,30 +1150,34 @@
         "signupVerification": {
           "subject": "Signup Verification - {{brandName}}",
           "title": "Signup verification",
-          "message": "Your verification code is {{code}}, please use it within {{expiresIn}} minutes."
+          "message": "Use the code below to finish signing up."
         },
         "domainVerification": {
           "subject": "Domain Verification - {{brandName}}",
           "title": "Domain verification",
-          "message": "Your verification code is {{code}}, please use it within {{expiresIn}} minutes."
+          "message": "Use the code below to verify your domain."
         },
         "changeEmailVerification": {
           "subject": "Change Email Verification - {{brandName}}",
           "title": "Change email verification",
-          "message": "Your verification code is {{code}}, please use it within {{expiresIn}} minutes."
+          "message": "Use the code below to confirm your new email address."
         },
         "twoFactorSetup": {
           "subject": "Confirm two-factor authentication - {{brandName}}",
           "title": "Confirm two-factor authentication",
-          "enableMessage": "You asked to turn on two-factor authentication. Your verification code is {{code}}, please use it within {{expiresIn}} minutes.",
-          "disableMessage": "You asked to turn off two-factor authentication. Your verification code is {{code}}, please use it within {{expiresIn}} minutes."
+          "enableMessage": "You asked to turn on two-factor authentication. Use the code below to confirm.",
+          "disableMessage": "You asked to turn off two-factor authentication. Use the code below to confirm."
         },
         "twoFactorSignin": {
           "subject": "Your sign-in code - {{brandName}}",
           "title": "Sign-in code",
-          "message": "Your sign-in code is {{code}}, please use it within {{expiresIn}} minutes. If you didn't just try to sign in, change your password now."
-        }
+          "message": "Use the code below to finish signing in.",
+          "notice": "Wasn't you? Someone may know your password. Change it right away."
+        },
+        "expiresIn": "This code expires in {{expiresIn}} minutes.",
+        "ignoreNotice": "Didn't request this? You can safely ignore this email."
       },
+      "linkFallback": "Button not working? Copy this link into your browser:",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}} added you to the {{fieldName}} field of a record in {{tableName}}",
         "title": "<strong>{{fromUserName}}</strong> added you to the <strong>{{fieldName}}</strong> field of a record in <strong>{{tableName}}</strong>",

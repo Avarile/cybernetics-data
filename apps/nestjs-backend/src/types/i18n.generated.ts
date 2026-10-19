@@ -1473,8 +1473,12 @@ export type I18nTranslations = {
                         "subject": string;
                         "title": string;
                         "message": string;
+                        "notice": string;
                     };
+                    "expiresIn": string;
+                    "ignoreNotice": string;
                 };
+                "linkFallback": string;
                 "collaboratorCellTag": {
                     "subject": string;
                     "title": string;

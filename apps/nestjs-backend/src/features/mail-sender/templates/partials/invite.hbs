@@ -1,13 +1,16 @@
 <tr>
-  <td style='padding: 30px; text-align: center;'>
-    <h2 style='margin: 0;'>{{{title}}}</h2>
-    <p style='margin: 18px 0;'>
-      {{{message}}}
+  <td>
+    <h1 class='h1' style='margin: 0 0 16px; font-size: 20px; line-height: 28px; font-weight: 600; color: #14191A;'>{{{title}}}</h1>
+    <p class='text' style='margin: 0 0 28px; font-size: 15px; line-height: 24px; color: #3F4749;'>{{{message}}}</p>
+    <table role='presentation' class='btn' border='0' cellpadding='0' cellspacing='0'>
+      <tr>
+        <td style='border-radius: 6px; background-color: #2B7A89;'>
+          <a href='{{inviteUrl}}' style='display: inline-block; padding: 11px 20px; font-size: 14px; font-weight: 600; line-height: 20px; color: #FFFFFF; text-decoration: none; border-radius: 6px; background-color: #2B7A89;'>{{buttonText}}</a>
+        </td>
+      </tr>
+    </table>
+    <p class='muted' style='margin: 24px 0 0; font-size: 13px; line-height: 20px; color: #7A8284;'>
+      {{linkFallback}} <a href='{{inviteUrl}}' style='color: #2B7A89; word-break: break-all;'>{{inviteUrl}}</a>
     </p>
-    <a
-      href='{{inviteUrl}}'
-      class='button'
-      style='background-color: rgb(24, 24, 27); color: rgb(250, 250, 250); padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin: 20px 0;'
-    >{{buttonText}}</a>
   </td>
 </tr>

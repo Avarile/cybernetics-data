@@ -760,19 +760,22 @@
         "signupVerification": {
           "subject": "Подтверждение регистрации - {{brandName}}",
           "title": "Подтверждение регистрации",
-          "message": "Ваш код подтверждения {{code}}, используйте его в течение {{expiresIn}} минут."
+          "message": "Введите код ниже, чтобы завершить регистрацию."
         },
         "domainVerification": {
           "subject": "Подтверждение домена - {{brandName}}",
           "title": "Подтверждение домена",
-          "message": "Ваш одноразовый код: {{code}}, используйте его в течение {{expiresIn}} минут."
+          "message": "Введите код ниже, чтобы подтвердить домен."
         },
         "changeEmailVerification": {
           "subject": "Подтверждение смены email - {{brandName}}",
           "title": "Подтверждение смены email",
-          "message": "Ваш код подтверждения {{code}}, используйте его в течение {{expiresIn}} минут."
-        }
+          "message": "Введите код ниже, чтобы подтвердить новый адрес электронной почты."
+        },
+        "expiresIn": "Срок действия кода истекает через {{expiresIn}} мин.",
+        "ignoreNotice": "Не запрашивали код? Просто проигнорируйте это письмо."
       },
+      "linkFallback": "Кнопка не работает? Скопируйте эту ссылку в браузер:",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}} добавил вас в поле {{fieldName}} записи в {{tableName}}",
         "title": "<strong>{{fromUserName}}</strong> добавил вас в поле <strong>{{fieldName}}</strong> записи в <strong>{{tableName}}</strong>",

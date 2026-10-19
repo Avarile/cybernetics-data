@@ -1,38 +1,19 @@
 <tr>
-    <td style="padding: 30px; text-align: center;">
-        <p style="margin: 18px 0 24px 0;">
-            {{{title}}}:
-        </p>
-        <div style="display: inline-block; max-width: 560px; width: 100%; text-align: left;">
-            {{#each recordTitles}}
-                <a
-                    href="{{../viewRecordUrlPrefix}}?recordId={{this.id}}&fromNotify={{../notifyId}}"
-                    target="_blank"
-                    style="
-                        display: inline-block;
-                        width: calc(50% - 24px);
-                        padding: 6px 8px;
-                        margin: 6px 8px;
-                        background-color: #f4f4f5;
-                        color: #3276dc;
-                        border-radius: 6px;
-                        text-decoration: none;
-                        font-weight: 500;
-                        font-size: 14px;
-                        border: 1px solid #e4e4e7;
-                        transition: background-color 0.2s ease;
-                        text-align: center;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        box-sizing: border-box;
-                        vertical-align: top;
-                    "
-                    onmouseover="this.style.backgroundColor='#e4e4e7'"
-                    onmouseout="this.style.backgroundColor='#f4f4f5'"
-                    title="{{this.title}}"
-                >{{this.title}}</a>
-            {{/each}}
-        </div>
-    </td>
+  <td>
+    <p class='text' style='margin: 0 0 20px; font-size: 16px; line-height: 26px; color: #3F4749;'>{{{title}}}:</p>
+    <table role='presentation' width='100%' border='0' cellpadding='0' cellspacing='0'>
+      {{#each recordTitles}}
+        <tr>
+          <td class='rule' style='padding: 10px 0; border-top: 1px solid #ECECEA; font-size: 14px; line-height: 20px;'>
+            <a
+              href='{{../viewRecordUrlPrefix}}?recordId={{this.id}}&fromNotify={{../notifyId}}'
+              target='_blank'
+              title='{{this.title}}'
+              style='color: #2B7A89; font-weight: 500; text-decoration: none;'
+            >{{this.title}}&nbsp;&rarr;</a>
+          </td>
+        </tr>
+      {{/each}}
+    </table>
+  </td>
 </tr>

@@ -284,6 +284,7 @@ export class MailSenderService {
           args: { name, email, resourceAlias, resourceName },
         }),
         buttonText: this.i18n.t('common.email.templates.invite.buttonText'),
+        linkFallback: this.i18n.t('common.email.templates.linkFallback'),
       },
     };
   }
@@ -347,6 +348,7 @@ export class MailSenderService {
           args: { fromUserName, fieldName, tableName },
         }),
         buttonText: this.i18n.t('common.email.templates.collaboratorCellTag.buttonText'),
+        linkFallback: this.i18n.t('common.email.templates.linkFallback'),
       },
     };
   }
@@ -390,6 +392,7 @@ export class MailSenderService {
         partialBody: 'common-body',
         brandName,
         brandLogo,
+        linkFallback: this.i18n.t('common.email.templates.linkFallback'),
         ...info,
       },
     };
@@ -437,6 +440,7 @@ export class MailSenderService {
           args: { brandName, code, times },
         }),
         buttonText: this.i18n.t('common.email.templates.waitlistInvite.buttonText'),
+        linkFallback: this.i18n.t('common.email.templates.linkFallback'),
         buttonUrl: waitlistInviteUrl,
       },
     };
@@ -460,6 +464,7 @@ export class MailSenderService {
         title: this.i18n.t('common.email.templates.resetPassword.title'),
         message: this.i18n.t('common.email.templates.resetPassword.message'),
         buttonText: this.i18n.t('common.email.templates.resetPassword.buttonText'),
+        linkFallback: this.i18n.t('common.email.templates.linkFallback'),
         buttonUrl: resetPasswordUrl,
       },
     };
@@ -507,6 +512,18 @@ export class MailSenderService {
     }
   }
 
+  // Shared context for the email-verify-code partial, which shows the code on its own line
+  private verifyCodeContext(code: string, expiresIn: string, notice?: string) {
+    return {
+      partialBody: 'email-verify-code',
+      code,
+      expiresNote: this.i18n.t('common.email.templates.emailVerifyCode.expiresIn', {
+        args: { expiresIn: parseInt(expiresIn) },
+      }),
+      notice: notice ?? this.i18n.t('common.email.templates.emailVerifyCode.ignoreNotice'),
+    };
+  }
+
   private async sendTwoFactorSetupEmailOptions(payload: {
     code: string;
     expiresIn: string;
@@ -514,25 +531,20 @@ export class MailSenderService {
   }) {
     const { code, expiresIn, action } = payload;
     const { brandName, brandLogo } = await this.settingOpenApiService.getServerBrand();
-    const args = { code, expiresIn: parseInt(expiresIn) };
     return {
       subject: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.subject', {
         args: { brandName },
       }),
       template: 'normal',
       context: {
-        partialBody: 'email-verify-code',
+        ...this.verifyCodeContext(code, expiresIn),
         brandName,
         brandLogo,
         title: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.title'),
         message:
           action === 'enable'
-            ? this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.enableMessage', {
-                args,
-              })
-            : this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.disableMessage', {
-                args,
-              }),
+            ? this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.enableMessage')
+            : this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.disableMessage'),
       },
     };
   }
@@ -546,13 +558,15 @@ export class MailSenderService {
       }),
       template: 'normal',
       context: {
-        partialBody: 'email-verify-code',
+        ...this.verifyCodeContext(
+          code,
+          expiresIn,
+          this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.notice')
+        ),
         brandName,
         brandLogo,
         title: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.title'),
-        message: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.message', {
-          args: { code, expiresIn: parseInt(expiresIn) },
-        }),
+        message: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.message'),
       },
     };
   }
@@ -583,16 +597,11 @@ export class MailSenderService {
       }),
       template: 'normal',
       context: {
-        partialBody: 'email-verify-code',
+        ...this.verifyCodeContext(code, expiresIn),
         brandName,
         brandLogo,
         title: this.i18n.t('common.email.templates.emailVerifyCode.signupVerification.title'),
-        message: this.i18n.t('common.email.templates.emailVerifyCode.signupVerification.message', {
-          args: {
-            code,
-            expiresIn: parseInt(expiresIn),
-          },
-        }),
+        message: this.i18n.t('common.email.templates.emailVerifyCode.signupVerification.message'),
       },
     };
   }
@@ -609,18 +618,12 @@ export class MailSenderService {
       ),
       template: 'normal',
       context: {
-        partialBody: 'email-verify-code',
+        ...this.verifyCodeContext(code, expiresIn),
         brandName,
         brandLogo,
         title: this.i18n.t('common.email.templates.emailVerifyCode.changeEmailVerification.title'),
         message: this.i18n.t(
-          'common.email.templates.emailVerifyCode.changeEmailVerification.message',
-          {
-            args: {
-              code,
-              expiresIn: parseInt(expiresIn),
-            },
-          }
+          'common.email.templates.emailVerifyCode.changeEmailVerification.message'
         ),
       },
     };
@@ -642,18 +645,13 @@ export class MailSenderService {
       }),
       template: 'normal',
       context: {
-        partialBody: 'email-verify-code',
+        ...this.verifyCodeContext(code, expiresIn),
         brandName,
         brandLogo,
         title: this.i18n.t('common.email.templates.emailVerifyCode.domainVerification.title', {
           args: { domain, name },
         }),
-        message: this.i18n.t('common.email.templates.emailVerifyCode.domainVerification.message', {
-          args: {
-            code,
-            expiresIn: parseInt(expiresIn),
-          },
-        }),
+        message: this.i18n.t('common.email.templates.emailVerifyCode.domainVerification.message'),
       },
     };
   }

@@ -804,19 +804,22 @@
         "signupVerification": {
           "subject": "登録確認 - {{brandName}}",
           "title": "登録確認",
-          "message": "確認コードは{{code}}です。{{expiresIn}}分以内に使用してください。"
+          "message": "以下のコードを入力して登録を完了してください。"
         },
         "domainVerification": {
           "subject": "ドメイン確認 - {{brandName}}",
           "title": "ドメイン確認",
-          "message": "あなたのワンタイムコードは：{{code}}です。{{expiresIn}}分以内に使用してください。"
+          "message": "以下のコードを入力してドメインを認証してください。"
         },
         "changeEmailVerification": {
           "subject": "メール変更確認 - {{brandName}}",
           "title": "メール変更確認",
-          "message": "確認コードは{{code}}です。{{expiresIn}}分以内に使用してください。"
-        }
+          "message": "以下のコードを入力して新しいメールアドレスを確認してください。"
+        },
+        "expiresIn": "このコードの有効期限は{{expiresIn}}分です。",
+        "ignoreNotice": "心当たりがない場合は、このメールを無視してください。"
       },
+      "linkFallback": "ボタンが機能しない場合は、このリンクをブラウザにコピーしてください：",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}}があなたを{{tableName}}のレコードの{{fieldName}}フィールドに追加しました",
         "title": "<strong>{{fromUserName}}</strong>があなたを<strong>{{tableName}}</strong>のレコードの<strong>{{fieldName}}</strong>フィールドに追加しました",

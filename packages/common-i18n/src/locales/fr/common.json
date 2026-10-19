@@ -802,19 +802,22 @@
         "signupVerification": {
           "subject": "Vérification d'inscription - {{brandName}}",
           "title": "Vérification d'inscription",
-          "message": "Votre code de vérification est {{code}}, veuillez l'utiliser dans {{expiresIn}} minutes."
+          "message": "Utilisez le code ci-dessous pour finaliser votre inscription."
         },
         "domainVerification": {
           "subject": "Vérification de domaine - {{brandName}}",
           "title": "Vérification de domaine",
-          "message": "Votre code à usage unique est : {{code}}, veuillez l'utiliser dans {{expiresIn}} minutes."
+          "message": "Utilisez le code ci-dessous pour vérifier votre domaine."
         },
         "changeEmailVerification": {
           "subject": "Vérification de changement d'e-mail - {{brandName}}",
           "title": "Vérification de changement d'e-mail",
-          "message": "Votre code de vérification est {{code}}, veuillez l'utiliser dans {{expiresIn}} minutes."
-        }
+          "message": "Utilisez le code ci-dessous pour confirmer votre nouvelle adresse e-mail."
+        },
+        "expiresIn": "Ce code expire dans {{expiresIn}} minutes.",
+        "ignoreNotice": "Vous n'êtes pas à l'origine de cette demande ? Vous pouvez ignorer cet e-mail."
       },
+      "linkFallback": "Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}} vous a ajouté au champ {{fieldName}} d'un enregistrement dans {{tableName}}",
         "title": "<strong>{{fromUserName}}</strong> vous a ajouté au champ <strong>{{fieldName}}</strong> d'un enregistrement dans <strong>{{tableName}}</strong>",

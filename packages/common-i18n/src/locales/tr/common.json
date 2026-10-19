@@ -761,19 +761,22 @@
         "signupVerification": {
           "subject": "Kayıt Doğrulama - {{brandName}}",
           "title": "Kayıt Doğrulama",
-          "message": "Doğrulama kodunuz {{code}}, lütfen {{expiresIn}} dakika içinde kullanın."
+          "message": "Kaydınızı tamamlamak için aşağıdaki kodu kullanın."
         },
         "domainVerification": {
           "subject": "Alan Adı Doğrulama - {{brandName}}",
           "title": "Alan Adı Doğrulama",
-          "message": "Tek kullanımlık kodunuz: {{code}}, lütfen {{expiresIn}} dakika içinde kullanın."
+          "message": "Alan adınızı doğrulamak için aşağıdaki kodu kullanın."
         },
         "changeEmailVerification": {
           "subject": "E-posta Değiştirme Doğrulama - {{brandName}}",
           "title": "E-posta Değiştirme Doğrulama",
-          "message": "Doğrulama kodunuz {{code}}, lütfen {{expiresIn}} dakika içinde kullanın."
-        }
+          "message": "Yeni e-posta adresinizi onaylamak için aşağıdaki kodu kullanın."
+        },
+        "expiresIn": "Bu kodun süresi {{expiresIn}} dakika içinde dolar.",
+        "ignoreNotice": "Bunu siz istemediyseniz bu e-postayı yok sayabilirsiniz."
       },
+      "linkFallback": "Düğme çalışmıyor mu? Bu bağlantıyı tarayıcınıza kopyalayın:",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}} sizi {{tableName}} tablosundaki bir kaydın {{fieldName}} alanına ekledi",
         "title": "<strong>{{fromUserName}}</strong> sizi <strong>{{tableName}}</strong> tablosundaki bir kaydın <strong>{{fieldName}}</strong> alanına ekledi",

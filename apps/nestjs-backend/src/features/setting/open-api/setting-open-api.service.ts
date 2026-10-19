@@ -122,7 +122,7 @@ export class SettingOpenApiService {
   async getServerBrand(): Promise<{ brandName: string; brandLogo: string }> {
     const logoPath = join(StorageAdapter.getDir(UploadType.Logo), EMAIL_LOGO_TOKEN);
     return {
-      brandName: 'Teable',
+      brandName: 'Cybernetics-data',
       brandLogo: getPublicFullStorageUrl(logoPath),
     };
   }

@@ -797,19 +797,22 @@
         "signupVerification": {
           "subject": "Registrierungsbestätigung - {{brandName}}",
           "title": "Registrierungsbestätigung",
-          "message": "Ihr Bestätigungscode lautet {{code}}. Bitte verwenden Sie ihn innerhalb von {{expiresIn}} Minuten."
+          "message": "Verwenden Sie den folgenden Code, um Ihre Registrierung abzuschließen."
         },
         "domainVerification": {
           "subject": "Domain-Verifizierung - {{brandName}}",
           "title": "Domain-Verifizierung",
-          "message": "Ihr Einmalcode lautet: {{code}}. Bitte verwenden Sie ihn innerhalb von {{expiresIn}} Minuten."
+          "message": "Verwenden Sie den folgenden Code, um Ihre Domain zu verifizieren."
         },
         "changeEmailVerification": {
           "subject": "E-Mail-Änderungsbestätigung - {{brandName}}",
           "title": "E-Mail-Änderungsbestätigung",
-          "message": "Ihr Bestätigungscode lautet {{code}}. Bitte verwenden Sie ihn innerhalb von {{expiresIn}} Minuten."
-        }
+          "message": "Verwenden Sie den folgenden Code, um Ihre neue E-Mail-Adresse zu bestätigen."
+        },
+        "expiresIn": "Dieser Code läuft in {{expiresIn}} Minuten ab.",
+        "ignoreNotice": "Sie haben das nicht angefordert? Dann können Sie diese E-Mail ignorieren."
       },
+      "linkFallback": "Schaltfläche funktioniert nicht? Kopieren Sie diesen Link in Ihren Browser:",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}} hat Sie zum Feld {{fieldName}} eines Datensatzes in {{tableName}} hinzugefügt",
         "title": "<strong>{{fromUserName}}</strong> hat Sie zum Feld <strong>{{fieldName}}</strong> eines Datensatzes in <strong>{{tableName}}</strong> hinzugefügt",

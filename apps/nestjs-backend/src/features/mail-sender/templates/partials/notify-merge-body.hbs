@@ -1,6 +1,13 @@
-
 {{#each list}}
   {{#with context}}
     {{> (lookup . 'partialBody') }}
   {{/with}}
+  {{#unless @last}}
+    <tr>
+      <td height='32' style='height: 32px; line-height: 32px; font-size: 0;'>&nbsp;</td>
+    </tr>
+    <tr>
+      <td class='rule' height='32' style='height: 32px; line-height: 32px; font-size: 0; border-top: 1px solid #ECECEA;'>&nbsp;</td>
+    </tr>
+  {{/unless}}
 {{/each}}

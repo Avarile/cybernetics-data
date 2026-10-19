@@ -1147,30 +1147,34 @@
         "signupVerification": {
           "subject": "注册验证 - {{brandName}}",
           "title": "注册验证",
-          "message": "您的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。"
+          "message": "请使用以下验证码完成注册。"
         },
         "domainVerification": {
           "subject": "域名验证 - {{brandName}}",
           "title": "域名验证",
-          "message": "您的一次性验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。"
+          "message": "请使用以下验证码验证您的域名。"
         },
         "changeEmailVerification": {
           "subject": "更改电子邮件验证 - {{brandName}}",
           "title": "更改电子邮件验证",
-          "message": "您的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。"
+          "message": "请使用以下验证码确认您的新邮箱地址。"
         },
         "twoFactorSetup": {
           "subject": "确认双重验证 - {{brandName}}",
           "title": "确认双重验证",
-          "enableMessage": "你正在开启双重验证。你的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。",
-          "disableMessage": "你正在关闭双重验证。你的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。"
+          "enableMessage": "你正在开启双重验证，请使用以下验证码确认。",
+          "disableMessage": "你正在关闭双重验证，请使用以下验证码确认。"
         },
         "twoFactorSignin": {
           "subject": "你的登录验证码 - {{brandName}}",
           "title": "登录验证码",
-          "message": "你的登录验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。如果不是你本人在登录，请立即修改密码。"
-        }
+          "message": "请使用以下验证码完成登录。",
+          "notice": "不是你本人在登录？你的密码可能已泄露，请立即修改。"
+        },
+        "expiresIn": "验证码将在 {{expiresIn}} 分钟后过期。",
+        "ignoreNotice": "如果这不是您本人的操作，请忽略此邮件。"
       },
+      "linkFallback": "按钮无法使用？请将以下链接复制到浏览器中打开：",
       "collaboratorCellTag": {
         "subject": "{{fromUserName}} 添加您到 {{tableName}} 的 {{fieldName}} 字段中的记录",
         "title": "<strong>{{fromUserName}}</strong> 添加您到 <strong>{{tableName}}</strong> 的 <strong>{{fieldName}}</strong> 字段中的记录",
