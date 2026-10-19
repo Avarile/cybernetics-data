@@ -4,7 +4,6 @@
   "continue": "继续",
   "steps": {
     "choose": "选择",
-    "personalise": "个性化",
     "review": "确认"
   },
   "welcome": {
@@ -16,11 +15,13 @@
   "choose": {
     "title": "你想整理哪些内容？",
     "subtitle": "可以选择一个或多个。",
-    "recommended": "推荐：进度 + 知识",
+    "recommended": "推荐",
     "selectAll": "全选",
     "pickOne": "至少选择一项才能继续",
     "peek": "查看详情",
     "peekTitle": "{{pack}} 包含的内容",
+    "addPack": "添加{{pack}}",
+    "removePack": "移除{{pack}}",
     "optional": "可选",
     "keyboardHint": "提示：按 1–4 可切换选择",
     "preview": "你的数据库",
@@ -68,16 +69,17 @@
     "progress+knowledge": "把笔记关联到目标、项目和任务"
   },
   "personalise": {
-    "title": "个性化设置",
-    "general": "通用",
     "baseName": "数据库名称",
     "defaultBaseName": "我的数据中心",
     "icon": "图标",
     "timezone": "时区",
     "timezoneHint": "已根据浏览器自动识别",
+    "timezoneSearch": "搜索时区",
+    "timezoneEmpty": "没有匹配的时区",
     "starterRows": "示例数据",
     "starterRowsHint": "添加几条示例，让数据库不再空荡荡",
     "currency": "货币",
+    "extraTables": "附加表",
     "tables": {
       "project_frameworks": "项目方法库",
       "project_frameworksHint": "OKR、PDCA 与会议方法",
@@ -91,9 +93,16 @@
   },
   "review": {
     "title": "将为你创建以下内容",
-    "counts": "{{tables}} 张表 · {{fields}} 个字段 · {{links}} 个关联",
+    "options": "选项",
+    "extraTables": "{{count}} 张附加表",
+    "statTables": "数据表",
+    "statFields": "字段",
+    "statLinks": "关联",
     "standardFields": "+ {{count}} 个标准字段",
     "fields": "{{count}} 个字段",
+    "addsFields": "新增 {{count}} 个字段",
+    "existing": "已存在",
+    "bridgeCount": "{{count}} 个跨模块关联",
     "bridge": "关联{{pack}}",
     "build": "创建我的数据库",
     "loadError": "无法生成预览。",

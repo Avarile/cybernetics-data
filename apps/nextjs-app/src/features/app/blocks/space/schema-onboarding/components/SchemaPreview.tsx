@@ -24,7 +24,16 @@ const POSITIONS: Record<string, [number, number]> = {
   finance_Tags: [254, 266],
 };
 
-const label = (name: string) => name.replace(/^finance_/, '').replace(/_/g, ' ');
+/** Names that would run into their neighbours at a readable size. */
+const SHORT: Record<string, string> = {
+  project_frameworks: 'frameworks',
+  contact_type: 'contact types',
+  contact_profession: 'professions',
+  knowledge_type: 'note types',
+};
+
+const label = (key: string, name: string) =>
+  SHORT[key] ?? name.replace(/^finance_/, '').replace(/_/g, ' ');
 
 export interface ISchemaPreviewProps {
   catalog: ISchemaPackCatalogVo;
@@ -32,13 +41,73 @@ export interface ISchemaPreviewProps {
   optionalTables: string[];
   /** Nodes pulse while the base is being built. */
   building?: boolean;
+  /** Light up this pack's tables, picked or not, and dim the rest. */
+  highlight?: SchemaPackId | null;
   className?: string;
 }
 
+/**
+ * Build animation: tables pop in one by one and then breathe while the server works, and links
+ * draw themselves in after them. Plain CSS because it needs per-element lengths and delays.
+ */
+const BUILD_CSS = `
+@keyframes sp-pop { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes sp-breathe { 50% { opacity: 0.55; } }
+@keyframes sp-draw { from { stroke-dashoffset: var(--sp-len); } to { stroke-dashoffset: 0; } }
+.sp-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sp-pop 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both, sp-breathe 2s ease-in-out infinite;
+  animation-delay: var(--sp-delay), calc(var(--sp-delay) + 1.6s);
+}
+.sp-draw {
+  stroke-dasharray: var(--sp-len);
+  animation: sp-draw 600ms ease-out both;
+  animation-delay: var(--sp-delay);
+}
+@media (prefers-reduced-motion: reduce) { .sp-pop, .sp-draw { animation: none; } }
+`;
+const NODE_STAGGER_MS = 70;
+const EDGE_STAGGER_MS = 45;
+
+const animationVars = (delay: number, length?: number) =>
+  ({
+    '--sp-delay': `${Math.round(delay)}ms`,
+    ...(length === undefined ? {} : { '--sp-len': String(length) }),
+  }) as React.CSSProperties;
+
 type NodeState = 'on' | 'ghost' | 'off';
+type LineState = 'solid' | 'pending' | 'hidden';
+/** Relative to a hovered pack: its own tables are lit, the others dimmed. */
+type Focus = 'lit' | 'dim' | undefined;
+
+const focusOf = (pack: SchemaPackId, highlight?: SchemaPackId | null): Focus =>
+  !highlight ? undefined : pack === highlight ? 'lit' : 'dim';
+
+const lineState = (a: NodeState, b: NodeState): LineState =>
+  a === 'on' && b === 'on' ? 'solid' : a === 'on' || b === 'on' ? 'pending' : 'hidden';
+
+const edgeOpacity = (line: LineState, focus: Focus) => {
+  if (focus === 'dim') return 'opacity-10';
+  if (line === 'solid') return 'opacity-90';
+  return line === 'pending' || focus === 'lit' ? 'opacity-40' : 'opacity-0';
+};
+
+const nodeOpacity = (state: NodeState, focus: Focus) => {
+  if (focus === 'dim') return 'opacity-10';
+  if (state === 'on' || focus === 'lit') return 'opacity-100';
+  return state === 'ghost' ? 'opacity-50' : 'opacity-25';
+};
+
+const nodeFill = (state: NodeState, pack: SchemaPackId, focus: Focus) => {
+  if (state === 'on') return PACK_THEME[pack].node;
+  return focus === 'lit'
+    ? cn('fill-background', PACK_THEME[pack].edge)
+    : 'fill-background stroke-muted-foreground';
+};
 
 export const SchemaPreview = (props: ISchemaPreviewProps) => {
-  const { catalog, packs, optionalTables, building, className } = props;
+  const { catalog, packs, optionalTables, building, highlight, className } = props;
 
   const { nodes, edges } = useMemo(() => {
     const nodes = catalog.packs.flatMap((pack) =>
@@ -66,11 +135,13 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
       p.tables.forEach((t) => t.fields.forEach((f) => addEdge(t.key, f.linkTo, false)))
     );
     catalog.bridges.forEach((b) => b.fields.forEach((f) => addEdge(f.table, f.field.linkTo, true)));
-    return { nodes, edges, byKey };
+    return { nodes, edges };
   }, [catalog, packs, optionalTables]);
 
   const stateOf = (key: string) => nodes.find((n) => n.key === key)?.state ?? 'off';
-  const onCount = nodes.filter((n) => n.state === 'on').length;
+  const onKeys = nodes.filter((n) => n.state === 'on').map((n) => n.key);
+  const onCount = onKeys.length;
+  let drawn = 0;
 
   return (
     <svg
@@ -79,29 +150,34 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
       aria-label={`${onCount} tables`}
       className={cn('h-auto w-full select-none', className)}
     >
+      {building && <style>{BUILD_CSS}</style>}
       {edges.map((edge) => {
         const a = POSITIONS[edge.from];
         const b = POSITIONS[edge.to];
         if (!a || !b) return null;
-        const sa = stateOf(edge.from);
-        const sb = stateOf(edge.to);
-        const solid = sa === 'on' && sb === 'on';
-        const half = !solid && (sa === 'on' || sb === 'on');
+        const line = lineState(stateOf(edge.from), stateOf(edge.to));
+        const focus = focusOf(edge.pack, highlight);
+        const draw = building && line === 'solid';
+        const delay = onCount * NODE_STAGGER_MS + drawn * EDGE_STAGGER_MS;
+        if (draw) drawn += 1;
         return (
           <line
             key={`${edge.from}~${edge.to}`}
             data-testid={edge.bridge ? `bridge-${edge.from}-${edge.to}` : undefined}
-            data-state={solid ? 'solid' : half ? 'pending' : 'hidden'}
+            data-state={line}
             x1={a[0]}
             y1={a[1]}
             x2={b[0]}
             y2={b[1]}
             strokeWidth={edge.bridge ? 1.6 : 1.2}
-            strokeDasharray={solid ? undefined : '3 3'}
+            strokeDasharray={line === 'solid' ? undefined : '3 3'}
+            style={draw ? animationVars(delay, Math.hypot(b[0] - a[0], b[1] - a[1])) : undefined}
             className={cn(
               'transition-opacity duration-300 motion-reduce:transition-none',
+              draw && 'sp-draw',
               edge.bridge ? 'stroke-foreground/50' : PACK_THEME[edge.pack].edge,
-              solid ? 'opacity-90' : half ? 'opacity-30' : 'opacity-0'
+              // Bridges join two packs, so they never dim with one of them.
+              edgeOpacity(line, edge.bridge && focus === 'dim' ? undefined : focus)
             )}
           />
         );
@@ -109,19 +185,18 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
       {nodes.map((node) => {
         const pos = POSITIONS[node.key];
         if (!pos) return null;
+        const focus = focusOf(node.pack, highlight);
+        const order = building ? onKeys.indexOf(node.key) : -1;
         return (
           <g
             key={node.key}
             data-testid={`node-${node.key}`}
             data-state={node.state}
+            style={order >= 0 ? animationVars(order * NODE_STAGGER_MS) : undefined}
             className={cn(
               'transition-opacity duration-300 motion-reduce:transition-none',
-              node.state === 'on'
-                ? 'opacity-100'
-                : node.state === 'ghost'
-                  ? 'opacity-40'
-                  : 'opacity-20',
-              building && node.state === 'on' && 'animate-pulse motion-reduce:animate-none'
+              nodeOpacity(node.state, focus),
+              order >= 0 && 'sp-pop'
             )}
           >
             <circle
@@ -130,20 +205,19 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
               r={node.optional ? 5.5 : 7.5}
               strokeWidth={1.5}
               strokeDasharray={node.state === 'on' ? undefined : '2 2'}
-              className={cn(
-                node.state === 'on'
-                  ? PACK_THEME[node.pack].node
-                  : 'fill-background stroke-muted-foreground'
-              )}
+              className={nodeFill(node.state, node.pack, focus)}
             />
-            <text
-              x={pos[0]}
-              y={pos[1] + 18}
-              textAnchor="middle"
-              className="fill-muted-foreground text-[8px]"
-            >
-              {label(node.name)}
-            </text>
+            {/* Unpicked tables stay unlabelled until their card is hovered: dots, not a word cloud. */}
+            {(node.state !== 'off' || focus === 'lit') && (
+              <text
+                x={pos[0]}
+                y={pos[1] + 19}
+                textAnchor="middle"
+                className="fill-muted-foreground text-[10px]"
+              >
+                {label(node.key, node.name)}
+              </text>
+            )}
           </g>
         );
       })}

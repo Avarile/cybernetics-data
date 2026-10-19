@@ -8,10 +8,12 @@ interface IEmojiPicker {
   className?: string;
   disabled?: boolean;
   onChange?: (emoji: string) => void;
+  /** Inside a dialog, so the picker keeps wheel scrolling. */
+  modal?: boolean;
 }
 
 export const EmojiPicker: FC<PropsWithChildren<IEmojiPicker>> = (props) => {
-  const { children, className, onChange, disabled } = props;
+  const { children, className, onChange, disabled, modal } = props;
   const { resolvedTheme } = useTheme();
 
   if (disabled) {
@@ -23,7 +25,7 @@ export const EmojiPicker: FC<PropsWithChildren<IEmojiPicker>> = (props) => {
   };
 
   return (
-    <Popover>
+    <Popover modal={modal}>
       <PopoverTrigger asChild>
         <div className={cn('rounded transition-colors', className)}>{children}</div>
       </PopoverTrigger>

@@ -2000,7 +2000,6 @@ export type I18nTranslations = {
         "continue": string;
         "steps": {
             "choose": string;
-            "personalise": string;
             "review": string;
         };
         "welcome": {
@@ -2017,6 +2016,8 @@ export type I18nTranslations = {
             "pickOne": string;
             "peek": string;
             "peekTitle": string;
+            "addPack": string;
+            "removePack": string;
             "optional": string;
             "keyboardHint": string;
             "preview": string;
@@ -2064,16 +2065,17 @@ export type I18nTranslations = {
             "progress+knowledge": string;
         };
         "personalise": {
-            "title": string;
-            "general": string;
             "baseName": string;
             "defaultBaseName": string;
             "icon": string;
             "timezone": string;
             "timezoneHint": string;
+            "timezoneSearch": string;
+            "timezoneEmpty": string;
             "starterRows": string;
             "starterRowsHint": string;
             "currency": string;
+            "extraTables": string;
             "tables": {
                 "project_frameworks": string;
                 "project_frameworksHint": string;
@@ -2087,9 +2089,16 @@ export type I18nTranslations = {
         };
         "review": {
             "title": string;
-            "counts": string;
+            "options": string;
+            "extraTables": string;
+            "statTables": string;
+            "statFields": string;
+            "statLinks": string;
             "standardFields": string;
             "fields": string;
+            "addsFields": string;
+            "existing": string;
+            "bridgeCount": string;
             "bridge": string;
             "build": string;
             "loadError": string;

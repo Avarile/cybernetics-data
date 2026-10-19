@@ -1,12 +1,13 @@
 import { FieldType } from '@teable/core';
 import type { ISchemaPackCatalogVo, ISchemaPackPlanVo } from '@teable/openapi';
 import { vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@/test-utils';
+import { act, cleanup, fireEvent, render, screen } from '@/test-utils';
+import { BuildOptions } from './components/BuildOptions';
 import { createInitialState, restoreState } from './state';
+import { BuildingStep } from './steps/BuildingStep';
 import { ChoosePacksStep } from './steps/ChoosePacksStep';
-import { PersonaliseStep } from './steps/PersonaliseStep';
 import { ReadyStep } from './steps/ReadyStep';
-import { ReviewStep, reviewTabs } from './steps/ReviewStep';
+import { ReviewStep, reviewGroups } from './steps/ReviewStep';
 
 const title = { key: 'title', name: 'title', type: FieldType.SingleLineText };
 const catalog: ISchemaPackCatalogVo = {
@@ -59,6 +60,8 @@ describe('restoreState', () => {
 
   it('never resumes mid-build, and goes back to Choose when no pack survives', () => {
     expect(restoreState({ step: 'building', packs: ['finance'] }).step).toBe('review');
+    // Personalise has folded into Review.
+    expect(restoreState({ step: 'personalise', packs: ['finance'] }).step).toBe('review');
     expect(restoreState({ step: 'review', packs: ['crm'] }).step).toBe('choose');
     expect(restoreState({ step: 'nowhere' }).step).toBeUndefined();
   });
@@ -70,29 +73,66 @@ describe('restoreState', () => {
 });
 
 describe('ReviewStep', () => {
-  it('shows a tab for every pack the plan changes, not only the picked ones', () => {
-    expect(reviewTabs(['people'], plan)).toEqual([
+  it('groups every pack the plan changes, not only the picked ones', () => {
+    expect(reviewGroups(['people'], plan)).toEqual([
       { pack: 'people', picked: true },
       { pack: 'progress', picked: false },
     ]);
-    expect(reviewTabs(['people'], undefined)).toEqual([{ pack: 'people', picked: true }]);
+    expect(reviewGroups(['people'], undefined)).toEqual([{ pack: 'people', picked: true }]);
   });
 
-  it('marks the extra tab and shows why the plan failed', () => {
-    const props = {
-      packs: ['people' as const],
-      isLoading: false,
-      onRetry: vi.fn(),
-      onBack: vi.fn(),
-      onBuild: vi.fn(),
-    };
+  const props = { packs: ['people' as const], isLoading: false, onRetry: vi.fn() };
+
+  it('marks the extra group and shows why the plan failed', () => {
     const { rerender } = render(<ReviewStep {...props} plan={plan} isError={false} />);
-    expect(screen.getAllByRole('tab')).toHaveLength(2);
+    expect(screen.getAllByRole('region')).toHaveLength(2);
     expect(screen.getByText('review.inBase')).toBeTruthy();
 
     rerender(<ReviewStep {...props} plan={plan} isError errorMessage="tasks.priority is number" />);
     expect(screen.getByText('tasks.priority is number')).toBeTruthy();
-    expect(screen.queryAllByRole('tab')).toHaveLength(0);
+    expect(screen.queryAllByRole('region')).toHaveLength(0);
+    expect(screen.queryByTestId('plan-counts')).toBeNull();
+  });
+
+  it('lists tables as rows that open onto their fields, flagging ones already in the base', () => {
+    render(<ReviewStep {...props} plan={plan} isError={false} />);
+    expect(screen.getByTestId('plan-counts').textContent).toContain('review.statLinks');
+    expect(screen.getByText('review.existing')).toBeTruthy();
+    expect(screen.queryByText('assigned_to')).toBeNull();
+    fireEvent.click(screen.getByText('tasks'));
+    expect(screen.getByText('assigned_to')).toBeTruthy();
+  });
+});
+
+describe('BuildingStep', () => {
+  const props = {
+    catalog,
+    packs: ['people' as const],
+    optionalTables: [],
+    starterRows: true,
+    onRetry: vi.fn(),
+    onBack: vi.fn(),
+  };
+
+  it('walks one line through the phases, and ticks them only once the server is done', () => {
+    vi.useFakeTimers();
+    try {
+      const { rerender } = render(<BuildingStep {...props} done={false} />);
+      expect(screen.getByText('building.tables')).toBeTruthy();
+      expect(screen.queryByText('building.links')).toBeNull();
+      act(() => {
+        vi.advanceTimersByTime(60_000);
+      });
+      // Holds on the last phase instead of looping, and says it is slow.
+      expect(screen.getByText('building.seeds')).toBeTruthy();
+      expect(screen.getByText('building.slow')).toBeTruthy();
+
+      rerender(<BuildingStep {...props} done />);
+      expect(screen.getAllByRole('listitem')).toHaveLength(4);
+      expect(screen.queryByText('building.slow')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
@@ -101,14 +141,7 @@ describe('ChoosePacksStep in the re-entry dialog', () => {
     const onToggle = vi.fn();
     render(
       <div role="dialog">
-        <ChoosePacksStep
-          catalog={catalog}
-          packs={[]}
-          optionalTables={[]}
-          onToggle={onToggle}
-          onSelectAll={vi.fn()}
-          onContinue={vi.fn()}
-        />
+        <ChoosePacksStep catalog={catalog} packs={[]} onToggle={onToggle} onContinue={vi.fn()} />
       </div>
     );
     const card = screen.getAllByRole('checkbox')[0];
@@ -118,24 +151,41 @@ describe('ChoosePacksStep in the re-entry dialog', () => {
   });
 });
 
-describe('PersonaliseStep', () => {
-  const props = {
-    catalog,
-    onChange: vi.fn(),
-    onToggleOptional: vi.fn(),
-    onBack: vi.fn(),
-    onContinue: vi.fn(),
+describe('BuildOptions', () => {
+  const withExtras: ISchemaPackCatalogVo = {
+    ...catalog,
+    packs: catalog.packs.map((pack) =>
+      pack.id === 'people'
+        ? {
+            ...pack,
+            tables: [
+              ...pack.tables,
+              { key: 'auditlog', name: 'auditlog', optional: true, fields: [title] },
+            ],
+          }
+        : pack
+    ),
   };
+  const props = { catalog: withExtras, onChange: vi.fn(), onToggleOptional: vi.fn() };
+  const state = { ...createInitialState({ baseName: '' }), packs: ['people' as const] };
 
   it('asks for a name only when a new base is created', () => {
-    const state = { ...createInitialState({ baseName: '' }), packs: ['people' as const] };
-    const { rerender } = render(<PersonaliseStep {...props} state={state} />);
+    const { rerender } = render(<BuildOptions {...props} state={state} />);
     expect(screen.getAllByLabelText('personalise.baseName').length).toBeGreaterThan(0);
-    expect(screen.getByText('continue').closest('button')!.disabled).toBe(true);
 
-    rerender(<PersonaliseStep {...props} state={state} addingToBase />);
+    rerender(<BuildOptions {...props} state={state} addingToBase />);
     expect(screen.queryAllByLabelText('personalise.baseName')).toHaveLength(0);
-    expect(screen.getByText('continue').closest('button')!.disabled).toBe(false);
+  });
+
+  it('folds the options behind a summary and toggles extra tables as tiles', () => {
+    render(<BuildOptions {...props} state={state} />);
+    expect(screen.getByText(/review\.extraTables/)).toBeTruthy();
+    expect(screen.queryByRole('checkbox', { name: 'auditlog' })).toBeNull();
+    fireEvent.click(screen.getByText('review.options'));
+    const tile = screen.getByRole('checkbox', { name: 'auditlog' });
+    expect(tile.getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(tile);
+    expect(props.onToggleOptional).toHaveBeenCalledWith('auditlog');
   });
 });
 
@@ -154,6 +204,9 @@ describe('ReadyStep', () => {
       '/base/bseA'
     );
     fireEvent.click(screen.getByText('ready.done'));
-    expect(onDone).toHaveBeenCalled();
+    expect(onDone).toHaveBeenCalledTimes(1);
+    // Going into the base closes the dialog too, instead of leaving it open over the page.
+    fireEvent.click(screen.getByText('ready.openBase'));
+    expect(onDone).toHaveBeenCalledTimes(2);
   });
 });

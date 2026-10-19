@@ -2,10 +2,11 @@ import { FieldType } from '@teable/core';
 import type { ISchemaPackCatalogVo, SchemaPackId } from '@teable/openapi';
 import { vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@/test-utils';
+import { BaseRail, pendingBridges } from './components/BaseRail';
 import { SchemaPreview } from './components/SchemaPreview';
 import type { IWizardState } from './state';
-import { createInitialState, guessCurrency, wizardReducer } from './state';
-import { ChoosePacksStep, pendingBridges } from './steps/ChoosePacksStep';
+import { canAdvance, createInitialState, guessCurrency, wizardReducer } from './state';
+import { ChoosePacksStep } from './steps/ChoosePacksStep';
 
 const text = (key: string) => ({ key, name: key, type: FieldType.SingleLineText });
 const link = (key: string, linkTo: string) => ({ key, name: key, type: FieldType.Link, linkTo });
@@ -100,6 +101,19 @@ describe('wizard state', () => {
     ['zh-CN', 'CNY'],
     ['pt-BR', 'USD'],
   ])('guesses %s → %s', (locale, currency) => expect(guessCurrency(locale)).toBe(currency));
+
+  it('gates the footer button on a pack, then on a plan and a name for a new base', () => {
+    const into = { addingToBase: false, planReady: false };
+    expect(canAdvance(initial, into)).toBe(false);
+    expect(canAdvance({ ...initial, packs: ['people'] }, into)).toBe(true);
+    const review = { ...initial, step: 'review' as const };
+    expect(canAdvance(review, into)).toBe(false);
+    expect(canAdvance(review, { ...into, planReady: true })).toBe(true);
+    const unnamed = { ...review, baseName: '  ' };
+    expect(canAdvance(unnamed, { ...into, planReady: true })).toBe(false);
+    expect(canAdvance(unnamed, { addingToBase: true, planReady: true })).toBe(true);
+    expect(canAdvance({ ...initial, step: 'building' }, { ...into, planReady: true })).toBe(false);
+  });
 });
 
 describe('bridges', () => {
@@ -130,22 +144,57 @@ describe('bridges', () => {
   });
 });
 
+describe('the base rail', () => {
+  it('labels an unpicked pack’s tables only while its card is hovered', () => {
+    const { rerender } = render(<SchemaPreview catalog={catalog} packs={[]} optionalTables={[]} />);
+    expect(screen.queryByText('goals')).toBeNull();
+    rerender(
+      <SchemaPreview catalog={catalog} packs={[]} optionalTables={[]} highlight="progress" />
+    );
+    expect(screen.getByText('goals')).toBeTruthy();
+    expect(screen.getByText('frameworks')).toBeTruthy();
+    expect(screen.queryByText('contacts')).toBeNull();
+  });
+
+  it('shows a peeked pack with a way to add it and a way back to the map', () => {
+    const onToggle = vi.fn();
+    const onClosePeek = vi.fn();
+    const props = { catalog, optionalTables: [], onToggle, onClosePeek, peek: 'people' as const };
+    const { rerender } = render(<BaseRail {...props} packs={[]} />);
+    expect(screen.getByText('packs.people.bullet1')).toBeTruthy();
+    fireEvent.click(screen.getByText('choose.addPack'));
+    expect(onToggle).toHaveBeenLastCalledWith('people');
+    rerender(<BaseRail {...props} packs={['people']} />);
+    expect(screen.getByText('choose.removePack')).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('back'));
+    expect(onClosePeek).toHaveBeenCalled();
+  });
+});
+
 describe('ChoosePacksStep', () => {
   const setup = (packs: SchemaPackId[]) => {
     const onToggle = vi.fn();
     const onContinue = vi.fn();
+    const onPeek = vi.fn();
     render(
       <ChoosePacksStep
         catalog={catalog}
         packs={packs}
-        optionalTables={[]}
         onToggle={onToggle}
-        onSelectAll={vi.fn()}
+        onPeek={onPeek}
         onContinue={onContinue}
       />
     );
-    return { onToggle, onContinue };
+    return { onToggle, onContinue, onPeek };
   };
+
+  it('badges the recommended packs and peeks without toggling', () => {
+    const { onToggle, onPeek } = setup([]);
+    expect(screen.getAllByText('choose.recommended')).toHaveLength(2);
+    fireEvent.click(screen.getAllByText('choose.peek')[2]);
+    expect(onPeek).toHaveBeenLastCalledWith('knowledge');
+    expect(onToggle).not.toHaveBeenCalled();
+  });
 
   it('toggles a pack from its card and from the number keys', () => {
     const { onToggle } = setup([]);
@@ -168,11 +217,13 @@ describe('ChoosePacksStep', () => {
     ]);
   });
 
-  it('cannot continue with nothing picked', () => {
+  it('continues on Enter only once a pack is picked', () => {
     const { onContinue } = setup([]);
-    const continueButton = screen.getAllByRole('button').find((b) => b.hasAttribute('disabled'));
-    expect(continueButton).toBeDefined();
     fireEvent.keyDown(window, { key: 'Enter' });
     expect(onContinue).not.toHaveBeenCalled();
+    cleanup();
+    const picked = setup(['people']);
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(picked.onContinue).toHaveBeenCalled();
   });
 });

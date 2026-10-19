@@ -273,6 +273,7 @@ export const BaseActionTrigger: React.FC<React.PropsWithChildren<IBaseActionTrig
         <SchemaPackDialog
           spaceId={base.spaceId}
           baseId={base.id}
+          baseName={base.name}
           open={packsOpen}
           onOpenChange={setPacksOpen}
         />

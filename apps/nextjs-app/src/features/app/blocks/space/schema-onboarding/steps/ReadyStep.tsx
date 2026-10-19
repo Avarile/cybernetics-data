@@ -10,7 +10,7 @@ export interface IReadyStepProps {
   result: ISchemaPackInstallVo;
   /** The packs went into an existing base, so only some tables are new. */
   addedToBase?: boolean;
-  /** Dialog mode: close the wizard. */
+  /** Dialog mode: close the wizard, from the Done button or on the way into the base. */
   onDone?: () => void;
 }
 
@@ -36,6 +36,7 @@ export const ReadyStep = ({ packs, result, addedToBase, onDone }: IReadyStepProp
             <Link
               key={pack}
               href={`/base/${result.baseId}/${table!.id}`}
+              onClick={onDone}
               className="group flex items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-shadow hover:shadow-md"
             >
               <span
@@ -62,6 +63,7 @@ export const ReadyStep = ({ packs, result, addedToBase, onDone }: IReadyStepProp
         {!entries.length && (
           <Link
             href={`/base/${result.baseId}`}
+            onClick={onDone}
             className="group flex items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-shadow hover:shadow-md"
           >
             <span className="flex size-10 items-center justify-center rounded-full bg-muted">
@@ -74,6 +76,7 @@ export const ReadyStep = ({ packs, result, addedToBase, onDone }: IReadyStepProp
         {packs.length > 1 && (
           <Link
             href={`/base/${result.baseId}/graph`}
+            onClick={onDone}
             className="group flex items-center gap-3 rounded-2xl border border-dashed p-4 text-left hover:bg-muted"
           >
             <span className="flex size-10 items-center justify-center rounded-full bg-muted">

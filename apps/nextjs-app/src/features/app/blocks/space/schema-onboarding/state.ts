@@ -1,7 +1,7 @@
 import type { SchemaPackCurrency, SchemaPackId } from '@teable/openapi';
 import { SCHEMA_PACK_CURRENCIES, SCHEMA_PACK_IDS } from '@teable/openapi';
 
-export type WizardStep = 'welcome' | 'choose' | 'personalise' | 'review' | 'building' | 'ready';
+export type WizardStep = 'welcome' | 'choose' | 'review' | 'building' | 'ready';
 
 export interface IWizardState {
   step: WizardStep;
@@ -148,9 +148,24 @@ export const wizardReducer = (state: IWizardState, action: WizardAction): IWizar
   }
 };
 
+/** Whether the footer's main button is live: a pack to choose, then a plan and a base name. */
+export const canAdvance = (
+  state: Pick<IWizardState, 'step' | 'packs' | 'baseName'>,
+  { addingToBase, planReady }: { addingToBase: boolean; planReady: boolean }
+) => {
+  switch (state.step) {
+    case 'choose':
+      return state.packs.length > 0;
+    case 'review':
+      return planReady && (addingToBase || Boolean(state.baseName.trim()));
+    default:
+      return false;
+  }
+};
+
 export const CURRENCY_CODES = Object.keys(SCHEMA_PACK_CURRENCIES) as SchemaPackCurrency[];
 
-const STEPS: WizardStep[] = ['welcome', 'choose', 'personalise', 'review', 'building', 'ready'];
+const STEPS: WizardStep[] = ['welcome', 'choose', 'review', 'building', 'ready'];
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isTimeZone = (value: string) => {
   try {
@@ -166,10 +181,11 @@ const isTimeZone = (value: string) => {
  * an older wizard's state, or anything at all. Never resumes mid-build.
  */
 const restoreStep = (step: unknown, packs: SchemaPackId[] | undefined) => {
+  // Personalise was its own step before it folded into Review.
+  if (step === 'building' || step === 'ready' || step === 'personalise') step = 'review';
   if (!STEPS.includes(step as WizardStep)) return undefined;
-  if (step === 'building' || step === 'ready') step = 'review';
   // Nothing to review without a pack: start over at the choice.
-  if (!packs?.length && (step === 'personalise' || step === 'review')) return 'choose';
+  if (!packs?.length && step === 'review') return 'choose';
   return step as WizardStep;
 };
 

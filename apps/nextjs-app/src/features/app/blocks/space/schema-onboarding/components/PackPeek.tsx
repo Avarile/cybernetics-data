@@ -9,7 +9,7 @@ export const PackPeek = ({
 }) => {
   const { t } = useTranslation('onboarding');
   return (
-    <div className="mt-4 space-y-5">
+    <div className="space-y-5">
       {tables.map((table) => (
         <section key={table.key}>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">

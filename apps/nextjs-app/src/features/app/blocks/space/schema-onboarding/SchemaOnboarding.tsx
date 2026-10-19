@@ -28,18 +28,18 @@ export const SchemaOnboarding = ({ spaceId }: { spaceId: string }) => {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-background">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-background">
       <div
         aria-hidden
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top_left,theme(colors.sky.500/0.08),transparent_45%),radial-gradient(ellipse_at_top_right,theme(colors.violet.500/0.08),transparent_45%),radial-gradient(ellipse_at_bottom_left,theme(colors.emerald.500/0.07),transparent_45%),radial-gradient(ellipse_at_bottom_right,theme(colors.amber.500/0.07),transparent_45%)]"
       />
-      <header className="relative flex items-center justify-between px-4 py-3 sm:px-8">
+      <header className="relative flex shrink-0 items-center justify-between px-4 py-3 sm:px-8">
         <span className="text-sm font-semibold">◆ {brandName}</span>
         <Button variant="ghost" size="sm" disabled={skip.isPending} onClick={() => skip.mutate()}>
           {t('onboarding:skip')}
         </Button>
       </header>
-      <main className="relative flex flex-1 flex-col">
+      <main className="relative flex min-h-0 flex-1 flex-col">
         <SchemaPackWizard spaceId={spaceId} mode="onboarding" />
       </main>
     </div>

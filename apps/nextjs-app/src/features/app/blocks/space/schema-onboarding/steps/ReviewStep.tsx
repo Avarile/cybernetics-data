@@ -1,36 +1,39 @@
-import type { ISchemaPackPlanVo, SchemaPackId } from '@teable/openapi';
+import type { ISchemaPackCatalogVo, ISchemaPackPlanVo, SchemaPackId } from '@teable/openapi';
 import { SCHEMA_PACK_IDS } from '@teable/openapi';
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Button,
   cn,
   Skeleton,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
 } from '@teable/ui-lib/shadcn';
-import { Sparkles } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
+import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { FieldRows } from '../components/FieldRows';
 import { PACK_THEME } from '../packTheme';
 
 export interface IReviewStepProps {
   packs: SchemaPackId[];
   plan: ISchemaPackPlanVo | undefined;
+  /** For each table's icon; the plan itself only has names. */
+  catalog?: ISchemaPackCatalogVo;
   isLoading: boolean;
   isError: boolean;
   /** The server's reason, e.g. a field that already exists with another type. */
   errorMessage?: string;
   onRetry: () => void;
-  onBack: () => void;
-  onBuild: () => void;
+  /** Base name and build options, between the counts and the plan. */
+  options?: ReactNode;
 }
 
 /**
  * The picked packs, then any other pack whose tables already in the base gain fields
  * (bridge links when a pack is added later), so every change in the plan is on screen.
  */
-export const reviewTabs = (packs: SchemaPackId[], plan: ISchemaPackPlanVo | undefined) => {
+export const reviewGroups = (packs: SchemaPackId[], plan: ISchemaPackPlanVo | undefined) => {
   const touched = new Set(plan?.tables.map((table) => table.pack));
   const others = SCHEMA_PACK_IDS.filter((id) => !packs.includes(id) && touched.has(id));
   return [
@@ -39,25 +42,79 @@ export const reviewTabs = (packs: SchemaPackId[], plan: ISchemaPackPlanVo | unde
   ];
 };
 
-export const ReviewStep = (props: IReviewStepProps) => {
-  const { packs, plan, isLoading, isError, errorMessage, onRetry, onBack, onBuild } = props;
+const Stat = ({ value, label }: { value: number; label: string }) => (
+  <div className="rounded-xl border bg-card px-3 py-2">
+    <div className="text-xl font-semibold tabular-nums">{value}</div>
+    <div className="text-xs text-muted-foreground">{label}</div>
+  </div>
+);
+
+type PlanTable = ISchemaPackPlanVo['tables'][number];
+
+const TableRow = ({ table, icon }: { table: PlanTable; icon?: string }) => {
   const { t } = useTranslation('onboarding');
-  const tabs = reviewTabs(packs, plan);
+  const bridges = table.fields.filter((field) => field.bridge).length;
+  return (
+    <AccordionItem value={table.key} className="last:border-b-0">
+      <AccordionTrigger className="gap-3 px-4 py-3 hover:bg-muted/50 hover:no-underline">
+        <span aria-hidden className="w-5 text-center text-base leading-none">
+          {icon}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-left">{table.name}</span>
+        {table.existing && (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
+            {t('review.existing')}
+          </span>
+        )}
+        {!table.existing && bridges > 0 && (
+          <span className="rounded-full border border-dashed px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
+            {t('review.bridgeCount', { count: bridges })}
+          </span>
+        )}
+        <span className="text-xs font-normal tabular-nums text-muted-foreground">
+          {table.existing
+            ? t('review.addsFields', { count: table.fields.length })
+            : t('review.fields', { count: table.fields.length })}
+        </span>
+      </AccordionTrigger>
+      <AccordionContent className="px-4" innerClassName="pb-3 pl-8">
+        <FieldRows
+          fields={table.fields.map((field) => ({
+            ...field,
+            badge: field.bridge
+              ? t('review.bridge', { pack: t(`packs.${field.bridge}.name`) })
+              : undefined,
+          }))}
+        />
+      </AccordionContent>
+    </AccordionItem>
+  );
+};
+
+export const ReviewStep = (props: IReviewStepProps) => {
+  const { packs, plan, catalog, isLoading, isError, errorMessage, onRetry, options } = props;
+  const { t } = useTranslation('onboarding');
+  const groups = reviewGroups(packs, plan);
+  const icons = useMemo(
+    () => new Map(catalog?.packs.flatMap((p) => p.tables.map((tb) => [tb.key, tb.icon] as const))),
+    [catalog]
+  );
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">{t('review.title')}</h1>
-        {plan && (
-          <p className="text-sm text-muted-foreground" data-testid="plan-counts">
-            {t('review.counts', {
-              tables: plan.counts.tables,
-              fields: plan.counts.fields,
-              links: plan.counts.links,
-            })}
-          </p>
-        )}
-      </div>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl font-semibold tracking-tight">{t('review.title')}</h1>
+
+      {plan && !isError ? (
+        <div className="grid grid-cols-3 gap-2" data-testid="plan-counts">
+          <Stat value={plan.counts.tables} label={t('review.statTables')} />
+          <Stat value={plan.counts.fields} label={t('review.statFields')} />
+          <Stat value={plan.counts.links} label={t('review.statLinks')} />
+        </div>
+      ) : (
+        isLoading && <Skeleton className="h-[60px] w-full rounded-xl" />
+      )}
+
+      {options}
 
       {isError && (
         <div className="rounded-2xl border border-destructive/40 p-6 text-sm">
@@ -72,62 +129,33 @@ export const ReviewStep = (props: IReviewStepProps) => {
       )}
       {isLoading && !plan && <Skeleton className="h-72 w-full rounded-2xl" />}
 
-      {plan && !isError && (
-        <Tabs defaultValue={packs[0]} className="rounded-2xl border bg-card p-4">
-          <TabsList className="flex h-auto flex-wrap justify-start">
-            {tabs.map(({ pack, picked }) => (
-              <TabsTrigger key={pack} value={pack} className="gap-2">
-                <span className={cn('size-2 rounded-full', PACK_THEME[pack].dot)} />
-                {t(`packs.${pack}.name`)}
-                {!picked && (
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {t('review.inBase')}
-                  </span>
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {tabs.map(({ pack, picked }) => (
-            <TabsContent key={pack} value={pack} className="mt-4 space-y-4">
+      {plan &&
+        !isError &&
+        groups.map(({ pack, picked }) => (
+          <section key={pack} aria-label={t(`packs.${pack}.name`)}>
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-medium">
+              <span className={cn('size-2 rounded-full', PACK_THEME[pack].dot)} />
+              {t(`packs.${pack}.name`)}
               {!picked && (
-                <p className="text-xs text-muted-foreground">
-                  {t('review.inBaseHint', { pack: t(`packs.${pack}.name`) })}
-                </p>
+                <span className="text-xs font-normal text-muted-foreground">
+                  {t('review.inBase')}
+                </span>
               )}
+            </h2>
+            {!picked && (
+              <p className="mb-2 text-xs text-muted-foreground">
+                {t('review.inBaseHint', { pack: t(`packs.${pack}.name`) })}
+              </p>
+            )}
+            <Accordion type="multiple" className="overflow-hidden rounded-2xl border bg-card">
               {plan.tables
                 .filter((table) => table.pack === pack)
                 .map((table) => (
-                  <section key={table.key} className={cn(table.existing && 'opacity-70')}>
-                    <h3 className="mb-2 flex items-baseline justify-between text-sm font-medium">
-                      {table.name}
-                      <span className="text-xs font-normal text-muted-foreground">
-                        {t('review.fields', { count: table.fields.length })}
-                      </span>
-                    </h3>
-                    <FieldRows
-                      fields={table.fields.map((field) => ({
-                        ...field,
-                        badge: field.bridge
-                          ? t('review.bridge', { pack: t(`packs.${field.bridge}.name`) })
-                          : undefined,
-                      }))}
-                    />
-                  </section>
+                  <TableRow key={table.key} table={table} icon={icons.get(table.key)} />
                 ))}
-            </TabsContent>
-          ))}
-        </Tabs>
-      )}
-
-      <div className="mt-2 flex justify-between">
-        <Button variant="ghost" onClick={onBack}>
-          {t('back')}
-        </Button>
-        <Button className="gap-2" onClick={onBuild} disabled={!plan || isError}>
-          {t('review.build')}
-          <Sparkles className="size-4" />
-        </Button>
-      </div>
+            </Accordion>
+          </section>
+        ))}
     </div>
   );
 };
