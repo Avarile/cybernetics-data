@@ -1,20 +1,23 @@
-import { randomUUID } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
-import type { Action, IFieldVo, ILinkFieldOptions } from '@teable/core';
-import { FieldKeyType, generateFieldId, HttpErrorCode, ViewType } from '@teable/core';
+import type { FieldType, IFieldVo, ILinkFieldOptions } from '@teable/core';
+import { FieldKeyType, generateFieldId, HttpErrorCode, Relationship, ViewType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
+  ISchemaPackAddOptions,
+  ISchemaPackAddRo,
   ISchemaPackInstallRo,
   ISchemaPackInstallVo,
   ISchemaPackPlanRo,
   ISchemaPackPlanVo,
+  SchemaPackId,
 } from '@teable/openapi';
 import { SCHEMA_PACK_CURRENCIES } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';
 import { RedisNativeService } from '../../cache/redis-native.service';
 import { CustomHttpException } from '../../custom.exception';
+import { EventEmitterService } from '../../event-emitter/event-emitter.service';
+import { BaseCreateEvent } from '../../event-emitter/events';
 import type { IClsStore } from '../../types/cls';
-import { PermissionService } from '../auth/permission.service';
 import { BaseService } from '../base/base.service';
 import { FieldService } from '../field/field.service';
 import { FieldOpenApiService } from '../field/open-api/field-open-api.service';
@@ -23,23 +26,29 @@ import { TableOpenApiService } from '../table/open-api/table-open-api.service';
 import { prepareCreateTableRo } from '../table/open-api/table.pipe.helper';
 import { UserService } from '../user/user.service';
 import { ViewOpenApiService } from '../view/open-api/view-open-api.service';
-import { getSchemaPackCatalog } from './schema-pack.catalog';
+import type { ICatalogField } from './schema-pack.catalog';
+import { getSchemaPackCatalog, linkTarget } from './schema-pack.catalog';
 import { toFieldRo } from './schema-pack.field-ro';
+import { SchemaPackInstallLock } from './schema-pack.lock';
 import type { IInstallPlan } from './schema-pack.planner';
-import { planInstall, SchemaPackPlanError, toPlanVo } from './schema-pack.planner';
+import { isSameField, planInstall, SchemaPackPlanError, toPlanVo } from './schema-pack.planner';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const INSTALL_LOCK_TTL_SECONDS = 300;
-/** Same-process guard; the Redis lock covers other instances when Redis is the cache provider. */
-const basesBeingInstalled = new Set<string>();
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const INSTALL_ACTIONS: Action[] = ['table|create', 'field|create', 'record|create'];
+interface IExistingFieldRef {
+  id: string;
+  type: FieldType;
+  isLookup?: boolean;
+}
 
 interface IExistingBase {
   tableIds: Map<string, string>;
-  /** Field ids by table name, then field name. */
-  fields: Map<string, Map<string, string>>;
+  /** Fields by table name, then field name. */
+  fields: Map<string, Map<string, IExistingFieldRef>>;
 }
+
+/** Where an install goes: a base it creates, or a base that already exists. */
+type IInstallTarget =
+  | { kind: 'new'; spaceId: string; name: string; icon?: string }
+  | { kind: 'existing'; baseId: string; base: IExistingBase };
 
 /** What one install created, so a failure can remove exactly that. */
 interface IUndoLog {
@@ -48,13 +57,25 @@ interface IUndoLog {
   fields: { tableId: string; fieldId: string }[];
 }
 
+/** Whether a link field holds many records: owners by their relationship, symmetric fields by its inverse. */
+export const holdsMany = (field: ICatalogField, ownerRelationship: Relationship) => {
+  const many = field.spec
+    ? [Relationship.ManyMany, Relationship.OneMany]
+    : [Relationship.ManyMany, Relationship.ManyOne];
+  return many.includes(ownerRelationship);
+};
+
+/**
+ * Access is checked by the routes: `base|create` on the space for a new base, and table, field
+ * and record creation on the base when adding to one.
+ */
 @Injectable()
 export class SchemaPackInstallerService {
   private readonly logger = new Logger(SchemaPackInstallerService.name);
+  private readonly lock: SchemaPackInstallLock;
 
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly permissionService: PermissionService,
     private readonly baseService: BaseService,
     private readonly tableOpenApiService: TableOpenApiService,
     private readonly fieldService: FieldService,
@@ -62,78 +83,58 @@ export class SchemaPackInstallerService {
     private readonly recordOpenApiService: RecordOpenApiService,
     private readonly viewOpenApiService: ViewOpenApiService,
     private readonly userService: UserService,
-    private readonly redis: RedisNativeService,
+    private readonly eventEmitterService: EventEmitterService,
+    redis: RedisNativeService,
     private readonly cls: ClsService<IClsStore>
-  ) {}
+  ) {
+    this.lock = new SchemaPackInstallLock(redis, this.logger);
+  }
 
-  async plan(ro: ISchemaPackPlanRo): Promise<ISchemaPackPlanVo> {
-    const existing = ro.baseId ? await this.readBase(ro.baseId, ['base|read']) : undefined;
-    const catalog = getSchemaPackCatalog();
-    const plan = this.makePlan({ ...ro, starterRows: ro.starterRows ?? true }, existing);
-    return toPlanVo(catalog, plan);
+  async plan(ro: ISchemaPackPlanRo, baseId?: string): Promise<ISchemaPackPlanVo> {
+    const existing = baseId ? await this.loadBase(baseId) : undefined;
+    const plan = this.makePlan(ro.packs, ro.optionalTables, ro.starterRows ?? true, existing);
+    return toPlanVo(getSchemaPackCatalog(), plan);
+  }
+
+  async install(ro: ISchemaPackInstallRo): Promise<ISchemaPackInstallVo> {
+    const target: IInstallTarget = {
+      kind: 'new',
+      spaceId: ro.spaceId,
+      name: ro.options.baseName,
+      icon: ro.options.icon,
+    };
+    const result = await this.run(target, ro.packs, ro.options, ro.completeOnboarding);
+    this.emitBaseCreated(result.baseId, ro.options.baseName, ro.spaceId);
+    return result;
   }
 
   /**
    * Installs into one base are serialised: two concurrent adds would both read the base before
    * either wrote to it, and create every table twice ("contacts", "contacts 2").
    */
-  async install(ro: ISchemaPackInstallRo): Promise<ISchemaPackInstallVo> {
-    if (!ro.baseId) return await this.installUnlocked(ro);
-    // Access first: a caller without rights must get 403, and must not be able to hold the lock.
-    await this.assertBaseAccess(ro.baseId, INSTALL_ACTIONS, ro.spaceId);
-    const release = await this.lockBase(ro.baseId);
+  async addToBase(baseId: string, ro: ISchemaPackAddRo): Promise<ISchemaPackInstallVo> {
+    await this.assertBaseExists(baseId);
+    const release = await this.lock.acquire(baseId);
     try {
-      return await this.installUnlocked(ro, await this.loadBase(ro.baseId));
+      const target: IInstallTarget = {
+        kind: 'existing',
+        baseId,
+        base: await this.loadBase(baseId),
+      };
+      return await this.run(target, ro.packs, ro.options);
     } finally {
       await release();
     }
   }
 
-  private async lockBase(baseId: string) {
-    const busy = () =>
-      new CustomHttpException(
-        'Schema packs are already being added to this base; try again shortly',
-        HttpErrorCode.CONFLICT
-      );
-    if (basesBeingInstalled.has(baseId)) throw busy();
-    basesBeingInstalled.add(baseId);
-    const key = `schema-pack:install-lock:${baseId}`;
-    const token = randomUUID();
-    let viaRedis = false;
-    try {
-      if (!(await this.redis.setnxex(key, INSTALL_LOCK_TTL_SECONDS, token))) {
-        basesBeingInstalled.delete(baseId);
-        throw busy();
-      }
-      viaRedis = true;
-    } catch (error) {
-      if (error instanceof CustomHttpException) throw error;
-      // No Redis (memory cache, single process): the in-process guard is the lock.
-      this.logger.debug(`Schema pack install lock without Redis: ${(error as Error).message}`);
-    }
-    return async () => {
-      basesBeingInstalled.delete(baseId);
-      if (!viaRedis) return;
-      try {
-        if ((await this.redis.get(key)) === token) await this.redis.del(key);
-      } catch {
-        // The TTL frees it.
-      }
-    };
-  }
-
-  private async installUnlocked(
-    ro: ISchemaPackInstallRo,
-    existing?: IExistingBase
+  private async run(
+    target: IInstallTarget,
+    packs: SchemaPackId[],
+    options: ISchemaPackAddOptions,
+    completeOnboarding?: boolean
   ): Promise<ISchemaPackInstallVo> {
-    const plan = this.makePlan(
-      {
-        packs: ro.packs,
-        optionalTables: ro.options.optionalTables,
-        starterRows: ro.options.starterRows,
-      },
-      existing
-    );
+    const existing = target.kind === 'existing' ? target.base : undefined;
+    const plan = this.makePlan(packs, options.optionalTables, options.starterRows, existing);
     const createsSomething =
       plan.tables.some((t) => !t.existing || t.fields.length) ||
       plan.links.length > 0 ||
@@ -147,26 +148,33 @@ export class SchemaPackInstallerService {
 
     const undo: IUndoLog = { tableIds: [], fields: [] };
     try {
-      const result = await this.execute(ro, plan, existing, undo);
-      if (ro.completeOnboarding) {
+      const result = await this.execute(target, options, plan, undo);
+      if (completeOnboarding) {
         await this.userService.updateOnboarding(this.cls.get('user.id'), 'completed');
       }
       return result;
     } catch (error) {
-      await this.rollback(ro.baseId, undo);
+      await this.rollback(target.kind === 'existing' ? target.baseId : undefined, undo);
       throw error;
     }
   }
 
   private makePlan(
-    input: { packs: ISchemaPackPlanRo['packs']; optionalTables: string[]; starterRows: boolean },
+    packs: SchemaPackId[],
+    optionalTables: string[],
+    starterRows: boolean,
     existing?: IExistingBase
   ): IInstallPlan {
-    const names = existing
-      ? new Map([...existing.fields].map(([table, fields]) => [table, new Set(fields.keys())]))
+    const fields = existing
+      ? new Map([...existing.fields].map(([table, byName]) => [table, new Map(byName)]))
       : undefined;
     try {
-      return planInstall(getSchemaPackCatalog(), { ...input, existing: names });
+      return planInstall(getSchemaPackCatalog(), {
+        packs,
+        optionalTables,
+        starterRows,
+        existing: fields,
+      });
     } catch (error) {
       if (error instanceof SchemaPackPlanError) {
         throw new CustomHttpException(error.message, HttpErrorCode.VALIDATION_ERROR);
@@ -175,24 +183,12 @@ export class SchemaPackInstallerService {
     }
   }
 
-  private async readBase(baseId: string, actions: Action[], spaceId?: string) {
-    await this.assertBaseAccess(baseId, actions, spaceId);
-    return await this.loadBase(baseId);
-  }
-
-  private async assertBaseAccess(baseId: string, actions: Action[], spaceId?: string) {
-    const accessTokenId = this.cls.get('accessTokenId');
-    await this.permissionService.validPermissions(baseId, actions);
-    if (accessTokenId) {
-      await this.permissionService.validPermissions(baseId, actions, accessTokenId);
-    }
+  private async assertBaseExists(baseId: string) {
     const base = await this.prismaService.base.findFirst({
       where: { id: baseId, deletedTime: null },
-      select: { spaceId: true },
+      select: { id: true },
     });
-    if (!base || (spaceId && base.spaceId !== spaceId)) {
-      throw new CustomHttpException('Base not found in this space', HttpErrorCode.NOT_FOUND);
-    }
+    if (!base) throw new CustomHttpException('Base not found', HttpErrorCode.NOT_FOUND);
   }
 
   private async loadBase(baseId: string) {
@@ -201,19 +197,33 @@ export class SchemaPackInstallerService {
     for (const table of tables) {
       const fields = await this.fieldOpenApiService.getFields(table.id, { filterHidden: false });
       existing.tableIds.set(table.name, table.id);
-      existing.fields.set(table.name, new Map(fields.map((f) => [f.name, f.id])));
+      existing.fields.set(
+        table.name,
+        new Map(fields.map((f) => [f.name, { id: f.id, type: f.type, isLookup: f.isLookup }]))
+      );
     }
     return existing;
   }
 
+  /** The interceptor-driven event would carry the install result, not the base, so emit it here. */
+  private emitBaseCreated(id: string, name: string, spaceId: string) {
+    const user = this.cls.get('user');
+    const event = new BaseCreateEvent(
+      { id, name, spaceId },
+      { user: user && { id: user.id, name: user.name, email: user.email } }
+    );
+    void this.eventEmitterService.emitAsync(event.name, event);
+  }
+
   // eslint-disable-next-line sonarjs/cognitive-complexity
   private async execute(
-    ro: ISchemaPackInstallRo,
+    target: IInstallTarget,
+    options: ISchemaPackAddOptions,
     plan: IInstallPlan,
-    existing: IExistingBase | undefined,
     undo: IUndoLog
   ): Promise<ISchemaPackInstallVo> {
     const catalog = getSchemaPackCatalog();
+    const existing = target.kind === 'existing' ? target.base : undefined;
     const nameOf = (tableKey: string) => catalog.tables.get(tableKey)!.table.name;
 
     const tableIds = new Map<string, string>();
@@ -223,8 +233,8 @@ export class SchemaPackInstallerService {
       if (!id) continue;
       tableIds.set(key, id);
       for (const field of fields.values()) {
-        const fieldId = existing!.fields.get(table.name)!.get(field.name);
-        if (fieldId) fieldIds.set(`${key}.${field.key}`, fieldId);
+        const found = existing!.fields.get(table.name)!.get(field.name);
+        if (found && isSameField(field, found)) fieldIds.set(`${key}.${field.key}`, found.id);
       }
     }
     const allPlanned = [
@@ -243,20 +253,18 @@ export class SchemaPackInstallerService {
         if (!id) throw new Error(`Schema pack: no id for ${table}.${key}`);
         return id;
       },
-      timezone: ro.options.timezone,
-      currencySymbol: SCHEMA_PACK_CURRENCIES[ro.options.currency],
+      timezone: options.timezone,
+      currencySymbol: SCHEMA_PACK_CURRENCIES[options.currency],
     };
 
-    const baseId =
-      ro.baseId ??
-      (
-        await this.baseService.createBase({
-          spaceId: ro.spaceId,
-          name: ro.options.baseName,
-          icon: ro.options.icon,
-        })
-      ).id;
-    if (!ro.baseId) undo.baseId = baseId;
+    let baseId: string;
+    if (target.kind === 'existing') {
+      baseId = target.baseId;
+    } else {
+      const { spaceId, name, icon } = target;
+      baseId = (await this.baseService.createBase({ spaceId, name, icon })).id;
+      undo.baseId = baseId;
+    }
 
     let fieldCount = 0;
     for (const table of plan.tables) {
@@ -381,10 +389,11 @@ export class SchemaPackInstallerService {
       const fields: Record<string, unknown> = {};
       for (const [key, targets] of Object.entries(links)) {
         const field = catalog.tables.get(table)!.fields.get(key)!;
-        const foreign = field.spec?.link?.table ?? field.symmetricOf!.table;
+        const foreign = linkTarget(catalog, field)!;
+        const owner =
+          field.spec ?? catalog.tables.get(foreign)!.fields.get(field.symmetricOf!.key)!.spec!;
         const ids = targets.map((t) => ({ id: recordIds.get(`${foreign}.${t}`)! }));
-        const many = ['manyMany', 'oneMany'].includes(field.spec?.link?.relationship ?? 'oneMany');
-        fields[fieldId(table, key)] = many ? ids : ids[0];
+        fields[fieldId(table, key)] = holdsMany(field, owner.link!.relationship) ? ids : ids[0];
       }
       await this.recordOpenApiService.updateRecords(tableIds.get(table)!, {
         fieldKeyType: FieldKeyType.Id,
@@ -395,20 +404,33 @@ export class SchemaPackInstallerService {
     return count;
   }
 
+  /** Best effort: every step is attempted, and whatever could not be removed is logged. */
   private async rollback(targetBaseId: string | undefined, undo: IUndoLog) {
-    try {
-      if (undo.baseId) {
-        await this.baseService.permanentDeleteBase(undo.baseId, true);
-        return;
+    const leftovers: string[] = [];
+    const attempt = async (what: string, step: () => Promise<unknown>) => {
+      try {
+        await step();
+      } catch (error) {
+        leftovers.push(`${what} (${(error as Error).message})`);
       }
-      for (const { tableId, fieldId } of undo.fields.reverse()) {
-        await this.fieldOpenApiService.deleteField(tableId, fieldId).catch(() => undefined);
+    };
+    if (undo.baseId) {
+      const baseId = undo.baseId;
+      await attempt(`base ${baseId}`, () => this.baseService.permanentDeleteBase(baseId, true));
+    } else {
+      for (const { tableId, fieldId } of [...undo.fields].reverse()) {
+        await attempt(`field ${tableId}/${fieldId}`, () =>
+          this.fieldOpenApiService.deleteField(tableId, fieldId)
+        );
       }
       if (targetBaseId && undo.tableIds.length) {
-        await this.tableOpenApiService.permanentDeleteTables(targetBaseId, undo.tableIds);
+        await attempt(`tables ${undo.tableIds.join(', ')}`, () =>
+          this.tableOpenApiService.permanentDeleteTables(targetBaseId, undo.tableIds)
+        );
       }
-    } catch (error) {
-      this.logger.error(`Schema pack rollback incomplete: ${(error as Error).message}`);
+    }
+    if (leftovers.length) {
+      this.logger.error(`Schema pack rollback incomplete, left behind: ${leftovers.join('; ')}`);
     }
   }
 }

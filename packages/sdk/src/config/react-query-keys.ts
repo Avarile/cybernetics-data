@@ -39,7 +39,9 @@ export const ReactQueryKeys = {
 
   schemaPackCatalog: () => ['schema-pack-catalog'] as const,
 
-  schemaPackPlan: (planHash: string) => ['schema-pack-plan', planHash] as const,
+  /** `planHash` is the normalised request; the prefix alone invalidates every plan. */
+  schemaPackPlan: (planHash?: string) =>
+    (planHash ? ['schema-pack-plan', planHash] : ['schema-pack-plan']) as readonly string[],
 
   /** `queryHash` is the normalised query; the prefix alone invalidates every graph. */
   baseGraph: (baseId: string, queryHash?: string) =>

@@ -1,6 +1,18 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ISchemaPackCatalogVo, ISchemaPackPlanRo, SchemaPackId } from '@teable/openapi';
-import { getSchemaPackCatalog, installSchemaPacks, planSchemaPackInstall } from '@teable/openapi';
+import type {
+  ISchemaPackAddRo,
+  ISchemaPackCatalogVo,
+  ISchemaPackInstallRo,
+  ISchemaPackPlanRo,
+  SchemaPackId,
+} from '@teable/openapi';
+import {
+  addSchemaPacks,
+  getSchemaPackCatalog,
+  installSchemaPacks,
+  planSchemaPackAdd,
+  planSchemaPackInstall,
+} from '@teable/openapi';
 import { ReactQueryKeys } from '@teable/sdk/config';
 import { useCallback } from 'react';
 
@@ -11,23 +23,40 @@ export const useSchemaPackCatalog = () =>
     staleTime: Infinity,
   });
 
-/** The exact plan the server will execute: Review shows these numbers, not estimates. */
-export const useInstallPlan = (ro: ISchemaPackPlanRo, enabled: boolean) =>
+/**
+ * The exact plan the server will execute: Review shows these numbers, not estimates. A plan for
+ * a new base depends only on the request; a plan into a base also depends on what is in it now.
+ */
+export const useInstallPlan = (
+  ro: ISchemaPackPlanRo,
+  baseId: string | undefined,
+  enabled: boolean
+) =>
   useQuery({
-    queryKey: ReactQueryKeys.schemaPackPlan(JSON.stringify(ro)),
-    queryFn: () => planSchemaPackInstall(ro).then((res) => res.data),
+    queryKey: ReactQueryKeys.schemaPackPlan(JSON.stringify({ ...ro, baseId })),
+    queryFn: () =>
+      (baseId ? planSchemaPackAdd(baseId, ro) : planSchemaPackInstall(ro)).then((res) => res.data),
     enabled: enabled && ro.packs.length > 0,
     placeholderData: keepPreviousData,
-    staleTime: Infinity,
+    staleTime: baseId ? 0 : Infinity,
   });
+
+export type IInstallRequest =
+  | { kind: 'new'; ro: ISchemaPackInstallRo }
+  | { kind: 'existing'; baseId: string; ro: ISchemaPackAddRo };
 
 export const useInstallSchemaPacks = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: installSchemaPacks,
+    mutationFn: (request: IInstallRequest) =>
+      request.kind === 'existing'
+        ? addSchemaPacks(request.baseId, request.ro)
+        : installSchemaPacks(request.ro),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ReactQueryKeys.baseAll() });
       queryClient.invalidateQueries({ queryKey: ReactQueryKeys.recentlyBase() });
+      // Any plan computed before this install is now wrong about what the base holds.
+      queryClient.removeQueries({ queryKey: ReactQueryKeys.schemaPackPlan() });
     },
   });
 };

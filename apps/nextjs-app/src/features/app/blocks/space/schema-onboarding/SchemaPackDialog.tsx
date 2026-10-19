@@ -24,7 +24,14 @@ export const SchemaPackDialog = ({
         <DialogHeader className="px-6 pt-5">
           <DialogTitle>{t('entry.dialogTitle')}</DialogTitle>
         </DialogHeader>
-        {open && <SchemaPackWizard spaceId={spaceId} mode="dialog" baseId={baseId} />}
+        {open && (
+          <SchemaPackWizard
+            spaceId={spaceId}
+            mode="dialog"
+            baseId={baseId}
+            onDone={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

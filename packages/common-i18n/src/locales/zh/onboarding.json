@@ -97,7 +97,9 @@
     "bridge": "关联{{pack}}",
     "build": "创建我的数据库",
     "loadError": "无法生成预览。",
-    "retry": "重试"
+    "retry": "重试",
+    "inBase": "already in this base",
+    "inBaseHint": "These {{pack}} tables are already in the base. They only gain the links to the packs you picked."
   },
   "building": {
     "title": "正在创建你的数据库",
@@ -116,7 +118,10 @@
     "open": "打开 {{table}}",
     "graph": "以关系图查看",
     "graphHint": "所有记录，互相关联",
-    "tip": "提示：可以让 AI 助手“添加我的第一个项目”"
+    "tip": "提示：可以让 AI 助手“添加我的第一个项目”",
+    "addedSubtitle": "Added {{tables}} tables and {{fields}} fields to your base.",
+    "openBase": "Open the base",
+    "done": "Done"
   },
   "entry": {
     "fromPacks": "从模块开始",

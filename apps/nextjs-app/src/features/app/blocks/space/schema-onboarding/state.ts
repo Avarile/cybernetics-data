@@ -149,3 +149,46 @@ export const wizardReducer = (state: IWizardState, action: WizardAction): IWizar
 };
 
 export const CURRENCY_CODES = Object.keys(SCHEMA_PACK_CURRENCIES) as SchemaPackCurrency[];
+
+const STEPS: WizardStep[] = ['welcome', 'choose', 'personalise', 'review', 'building', 'ready'];
+const isString = (value: unknown): value is string => typeof value === 'string';
+const isTimeZone = (value: string) => {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Choices saved before a refresh, keeping only values that are still valid: storage may hold
+ * an older wizard's state, or anything at all. Never resumes mid-build.
+ */
+const restoreStep = (step: unknown, packs: SchemaPackId[] | undefined) => {
+  if (!STEPS.includes(step as WizardStep)) return undefined;
+  if (step === 'building' || step === 'ready') step = 'review';
+  // Nothing to review without a pack: start over at the choice.
+  if (!packs?.length && (step === 'personalise' || step === 'review')) return 'choose';
+  return step as WizardStep;
+};
+
+export const restoreState = (saved: unknown): Partial<IWizardState> => {
+  if (!saved || typeof saved !== 'object') return {};
+  const raw = saved as Record<string, unknown>;
+  const out: Partial<IWizardState> = {};
+  if (Array.isArray(raw.packs)) {
+    out.packs = SCHEMA_PACK_IDS.filter((id) => (raw.packs as unknown[]).includes(id));
+  }
+  const step = restoreStep(raw.step, out.packs);
+  if (step) out.step = step;
+  if (Array.isArray(raw.optionalTables)) out.optionalTables = raw.optionalTables.filter(isString);
+  if (isString(raw.baseName) && raw.baseName.trim()) out.baseName = raw.baseName;
+  if (isString(raw.icon)) out.icon = raw.icon;
+  if (isString(raw.timezone) && isTimeZone(raw.timezone)) out.timezone = raw.timezone;
+  if (CURRENCY_CODES.includes(raw.currency as SchemaPackCurrency)) {
+    out.currency = raw.currency as SchemaPackCurrency;
+  }
+  if (typeof raw.starterRows === 'boolean') out.starterRows = raw.starterRows;
+  return out;
+};

@@ -21,6 +21,8 @@ import { CURRENCY_CODES } from '../state';
 export interface IPersonaliseStepProps {
   catalog: ISchemaPackCatalogVo;
   state: IWizardState;
+  /** Adding to an existing base: it keeps its own name and icon. */
+  addingToBase?: boolean;
   onChange: (patch: Partial<IWizardState>) => void;
   onToggleOptional: (table: string) => void;
   onBack: () => void;
@@ -67,7 +69,7 @@ const Row = ({
 );
 
 export const PersonaliseStep = (props: IPersonaliseStepProps) => {
-  const { catalog, state, onChange, onToggleOptional, onBack, onContinue } = props;
+  const { catalog, state, addingToBase, onChange, onToggleOptional, onBack, onContinue } = props;
   const { t } = useTranslation('onboarding');
   const zones = useMemo(() => timeZones(state.timezone), [state.timezone]);
   const picked = catalog.packs.filter((p) => state.packs.includes(p.id));
@@ -78,23 +80,25 @@ export const PersonaliseStep = (props: IPersonaliseStepProps) => {
 
       <Section>
         <SectionTitle>{t('personalise.general')}</SectionTitle>
-        <Row label={t('personalise.baseName')}>
-          <div className="flex gap-2">
-            <Input
-              aria-label={t('personalise.icon')}
-              className="w-14 text-center"
-              maxLength={4}
-              value={state.icon}
-              onChange={(e) => onChange({ icon: e.target.value })}
-            />
-            <Input
-              aria-label={t('personalise.baseName')}
-              value={state.baseName}
-              maxLength={100}
-              onChange={(e) => onChange({ baseName: e.target.value })}
-            />
-          </div>
-        </Row>
+        {!addingToBase && (
+          <Row label={t('personalise.baseName')}>
+            <div className="flex gap-2">
+              <Input
+                aria-label={t('personalise.icon')}
+                className="w-14 text-center"
+                maxLength={4}
+                value={state.icon}
+                onChange={(e) => onChange({ icon: e.target.value })}
+              />
+              <Input
+                aria-label={t('personalise.baseName')}
+                value={state.baseName}
+                maxLength={100}
+                onChange={(e) => onChange({ baseName: e.target.value })}
+              />
+            </div>
+          </Row>
+        )}
         <Row label={t('personalise.timezone')} hint={t('personalise.timezoneHint')}>
           <Select value={state.timezone} onValueChange={(timezone) => onChange({ timezone })}>
             <SelectTrigger aria-label={t('personalise.timezone')}>
@@ -166,7 +170,7 @@ export const PersonaliseStep = (props: IPersonaliseStepProps) => {
         <Button variant="ghost" onClick={onBack}>
           {t('back')}
         </Button>
-        <Button onClick={onContinue} disabled={!state.baseName.trim()}>
+        <Button onClick={onContinue} disabled={!addingToBase && !state.baseName.trim()}>
           {t('continue')}
         </Button>
       </div>

@@ -97,7 +97,9 @@
     "bridge": "with {{pack}}",
     "build": "Build my base",
     "loadError": "We couldn't prepare the preview.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "inBase": "already in this base",
+    "inBaseHint": "These {{pack}} tables are already in the base. They only gain the links to the packs you picked."
   },
   "building": {
     "title": "Building your base",
@@ -116,7 +118,10 @@
     "open": "Open {{table}}",
     "graph": "See it as a graph",
     "graphHint": "Every record, linked",
-    "tip": "Tip: ask the AI assistant \"add my first project\""
+    "tip": "Tip: ask the AI assistant \"add my first project\"",
+    "addedSubtitle": "Added {{tables}} tables and {{fields}} fields to your base.",
+    "openBase": "Open the base",
+    "done": "Done"
   },
   "entry": {
     "fromPacks": "Start from schema packs",

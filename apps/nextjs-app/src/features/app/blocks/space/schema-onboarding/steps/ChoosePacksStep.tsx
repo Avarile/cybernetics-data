@@ -32,9 +32,11 @@ export const ChoosePacksStep = (props: IChoosePacksStepProps) => {
   const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => {
+    // The wizard itself may sit in a dialog, so only its own sheets switch the shortcuts off.
+    if (peek || mapOpen) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target instanceof Element ? e.target : null;
-      if (target?.closest('input, textarea, [contenteditable="true"], [role="dialog"]')) return;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       const index = Number(e.key) - 1;
       const pack = catalog.packs[index];
       if (pack && !e.metaKey && !e.ctrlKey && !e.altKey) onToggle(pack.id);
@@ -42,7 +44,7 @@ export const ChoosePacksStep = (props: IChoosePacksStepProps) => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [catalog.packs, packs.length, onToggle, onContinue]);
+  }, [catalog.packs, packs.length, onToggle, onContinue, peek, mapOpen]);
 
   const nudges = useMemo(() => pendingBridges(catalog, packs), [catalog, packs]);
   const packNames = packs.map((p) => t(`packs.${p}.name`)).join(' + ');

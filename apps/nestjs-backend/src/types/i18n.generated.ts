@@ -2094,6 +2094,8 @@ export type I18nTranslations = {
             "build": string;
             "loadError": string;
             "retry": string;
+            "inBase": string;
+            "inBaseHint": string;
         };
         "building": {
             "title": string;
@@ -2113,6 +2115,9 @@ export type I18nTranslations = {
             "graph": string;
             "graphHint": string;
             "tip": string;
+            "addedSubtitle": string;
+            "openBase": string;
+            "done": string;
         };
         "entry": {
             "fromPacks": string;

@@ -172,6 +172,13 @@ export const schemaPackInstallOptionsSchema = z
   .strict();
 export type ISchemaPackInstallOptions = z.infer<typeof schemaPackInstallOptionsSchema>;
 
+/** Adding packs to an existing base keeps that base's name and icon. */
+export const schemaPackAddOptionsSchema = schemaPackInstallOptionsSchema.omit({
+  baseName: true,
+  icon: true,
+});
+export type ISchemaPackAddOptions = z.infer<typeof schemaPackAddOptionsSchema>;
+
 export const schemaPackSelectionSchema = schemaPackIdSchema
   .array()
   .min(1)

@@ -6,10 +6,10 @@ import { RecordOpenApiModule } from '../record/open-api/record-open-api.module';
 import { TableOpenApiModule } from '../table/open-api/table-open-api.module';
 import { UserModule } from '../user/user.module';
 import { ViewOpenApiModule } from '../view/open-api/view-open-api.module';
-import { SchemaPackController } from './schema-pack.controller';
+import { SchemaPackBaseController, SchemaPackController } from './schema-pack.controller';
 import { SchemaPackInstallerService } from './schema-pack.installer';
 
-/** PermissionService comes from the @Global() PermissionModule, as in McpModule. */
+/** Access checks run in the global PermissionGuard; EventEmitterService is global too. */
 @Module({
   imports: [
     BaseModule,
@@ -20,7 +20,7 @@ import { SchemaPackInstallerService } from './schema-pack.installer';
     UserModule,
     ViewOpenApiModule,
   ],
-  controllers: [SchemaPackController],
+  controllers: [SchemaPackController, SchemaPackBaseController],
   providers: [SchemaPackInstallerService],
 })
 export class SchemaPackModule {}

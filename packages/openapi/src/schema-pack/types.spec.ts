@@ -1,5 +1,5 @@
 import { FieldType, Relationship } from '@teable/core';
-import { schemaPackInstallRoSchema } from './install';
+import { schemaPackAddRoSchema, schemaPackInstallRoSchema } from './install';
 import { schemaPackFieldSchema, schemaPackSchema } from './types';
 
 const samplePack = {
@@ -79,6 +79,36 @@ describe('install request', () => {
     ['blank base name', { ...valid, options: { ...valid.options, baseName: '   ' } }],
     ['unknown option', { ...valid, options: { ...valid.options, admin: true } }],
   ])('rejects %s', (_label, ro) => {
+    expect(schemaPackInstallRoSchema.safeParse(ro).success).toBe(false);
+  });
+});
+
+describe('add request', () => {
+  const options = {
+    timezone: 'Europe/London',
+    currency: 'GBP',
+    starterRows: false,
+    optionalTables: [],
+  };
+
+  it('takes packs and options, but no space, base id or base name', () => {
+    expect(schemaPackAddRoSchema.safeParse({ packs: ['people'], options }).success).toBe(true);
+    expect(
+      schemaPackAddRoSchema.safeParse({ packs: ['people'], options, spaceId: 'spcAbc' }).success
+    ).toBe(false);
+    expect(
+      schemaPackAddRoSchema.safeParse({ packs: ['people'], options: { ...options, baseName: 'x' } })
+        .success
+    ).toBe(false);
+  });
+
+  it('no longer accepts a base id on the new-base install', () => {
+    const ro = {
+      spaceId: 'spcAbc',
+      packs: ['people'],
+      options: { ...options, baseName: 'Mine' },
+      baseId: 'bseAbc',
+    };
     expect(schemaPackInstallRoSchema.safeParse(ro).success).toBe(false);
   });
 });

@@ -1,5 +1,7 @@
-import type { ISchemaPackInstallRo } from '@teable/openapi';
-import { SchemaPackInstallerService } from './schema-pack.installer';
+import { Relationship } from '@teable/core';
+import type { ISchemaPackAddRo, ISchemaPackInstallRo } from '@teable/openapi';
+import type { ICatalogField } from './schema-pack.catalog';
+import { holdsMany, SchemaPackInstallerService } from './schema-pack.installer';
 
 const ro: ISchemaPackInstallRo = {
   spaceId: 'spcTest',
@@ -12,6 +14,11 @@ const ro: ISchemaPackInstallRo = {
     optionalTables: [],
   },
   completeOnboarding: true,
+};
+
+const addRo: ISchemaPackAddRo = {
+  packs: ['progress'],
+  options: { timezone: 'UTC', currency: 'USD', starterRows: false, optionalTables: [] },
 };
 
 /** A tiny SET NX EX store, so release really has to match the token it acquired with. */
@@ -32,6 +39,7 @@ const fakeRedis = (lockedElsewhere: boolean) => {
 const build = (failOnLink: boolean, cacheLocked = false) => {
   let tableNo = 0;
   const services = {
+    prismaService: { base: { findFirst: vi.fn(async () => ({ id: 'bseExisting' })) } },
     baseService: {
       createBase: vi.fn(async () => ({ id: 'bseNew' })),
       permanentDeleteBase: vi.fn(async () => undefined),
@@ -39,6 +47,7 @@ const build = (failOnLink: boolean, cacheLocked = false) => {
     tableOpenApiService: {
       createTable: vi.fn(async () => ({ id: `tbl${++tableNo}` })),
       permanentDeleteTables: vi.fn(async () => undefined),
+      getTables: vi.fn(async () => [] as { id: string; name: string }[]),
     },
     fieldService: { getField: vi.fn(async (_t: string, id: string) => ({ id, name: 'x' })) },
     fieldOpenApiService: {
@@ -48,18 +57,20 @@ const build = (failOnLink: boolean, cacheLocked = false) => {
       }),
       updateField: vi.fn(async () => undefined),
       deleteField: vi.fn(async () => undefined),
+      getFields: vi.fn(async () => [] as unknown[]),
     },
-    viewOpenApiService: { createView: vi.fn(async () => ({})) },
     recordOpenApiService: { createRecords: vi.fn(), updateRecords: vi.fn() },
+    viewOpenApiService: { createView: vi.fn(async () => ({})) },
     userService: { updateOnboarding: vi.fn(async () => undefined) },
+    eventEmitterService: { emitAsync: vi.fn(async () => []) },
     redis: fakeRedis(cacheLocked),
-    permissionService: { validPermissions: vi.fn(async () => undefined) },
-    prismaService: { base: { findFirst: vi.fn(async () => ({ spaceId: 'spcTest' })) } },
   };
-  const cls = { get: vi.fn((key: string) => (key === 'user.id' ? 'usrMe' : undefined)) };
+  const user = { id: 'usrMe', name: 'Me', email: 'me@example.com' };
+  const cls = {
+    get: vi.fn((key: string) => (key === 'user.id' ? user.id : key === 'user' ? user : undefined)),
+  };
   const installer = new SchemaPackInstallerService(
     services.prismaService as never,
-    services.permissionService as never,
     services.baseService as never,
     services.tableOpenApiService as never,
     services.fieldService as never,
@@ -67,6 +78,7 @@ const build = (failOnLink: boolean, cacheLocked = false) => {
     services.recordOpenApiService as never,
     services.viewOpenApiService as never,
     services.userService as never,
+    services.eventEmitterService as never,
     services.redis as never,
     cls as never
   );
@@ -84,59 +96,108 @@ describe('SchemaPackInstallerService', () => {
     expect(services.baseService.permanentDeleteBase).not.toHaveBeenCalled();
   });
 
-  it('deletes the new base when a step fails, and keeps onboarding open', async () => {
+  it('emits base.create with the new base, not the install result', async () => {
+    const { installer, services } = build(false);
+    await installer.install(ro);
+    expect(services.eventEmitterService.emitAsync).toHaveBeenCalledTimes(1);
+    const [name, event] = services.eventEmitterService.emitAsync.mock.calls[0] as unknown as [
+      string,
+      { payload: unknown; context: unknown },
+    ];
+    expect(name).toBe('base.create');
+    expect(event.payload).toEqual({ base: { id: 'bseNew', name: 'Mine', spaceId: 'spcTest' } });
+    expect(event.context).toMatchObject({ user: { id: 'usrMe' } });
+  });
+
+  it('emits nothing when adding to an existing base', async () => {
+    const { installer, services } = build(false);
+    await installer.addToBase('bseExisting', addRo);
+    expect(services.eventEmitterService.emitAsync).not.toHaveBeenCalled();
+    expect(services.baseService.createBase).not.toHaveBeenCalled();
+  });
+
+  it('deletes the new base when a step fails, keeps onboarding open, and emits nothing', async () => {
     const { installer, services } = build(true);
     await expect(installer.install(ro)).rejects.toThrow('boom');
     expect(services.baseService.permanentDeleteBase).toHaveBeenCalledWith('bseNew', true);
     expect(services.userService.updateOnboarding).not.toHaveBeenCalled();
+    expect(services.eventEmitterService.emitAsync).not.toHaveBeenCalled();
   });
 
-  it('refuses a second concurrent install into the same base with 409', async () => {
+  it('attempts every undo step in an existing base, even after one fails', async () => {
+    const { installer, services } = build(false);
+    // The base already holds goals and projects, so their links are added as fields there.
+    services.tableOpenApiService.getTables.mockResolvedValue([
+      { id: 'tblGoals', name: 'goals' },
+      { id: 'tblProjects', name: 'projects' },
+    ]);
+    services.fieldOpenApiService.deleteField.mockRejectedValueOnce(new Error('locked'));
+    services.viewOpenApiService.createView.mockRejectedValueOnce(new Error('late failure'));
+    await expect(installer.addToBase('bseExisting', addRo)).rejects.toThrow('late failure');
+    const deletes = services.fieldOpenApiService.deleteField.mock.calls.length;
+    const tracked = services.fieldOpenApiService.createField.mock.calls.filter(
+      ([tableId]) => tableId === 'tblGoals' || tableId === 'tblProjects'
+    ).length;
+    expect(deletes).toBeGreaterThan(1);
+    expect(deletes).toBeGreaterThanOrEqual(tracked);
+    expect(services.tableOpenApiService.permanentDeleteTables).toHaveBeenCalledWith(
+      'bseExisting',
+      expect.arrayContaining(['tbl1'])
+    );
+  });
+
+  it('refuses a second concurrent add into the same base with 409', async () => {
     const { installer, services } = build(false);
     let releaseTables: () => void = () => undefined;
-    const getTables = vi
-      .fn()
+    services.tableOpenApiService.getTables
       .mockImplementationOnce(() => new Promise((resolve) => (releaseTables = () => resolve([]))))
       .mockResolvedValue([]);
-    (services.tableOpenApiService as unknown as { getTables: unknown }).getTables = getTables;
-    const first = installer.install({ ...ro, baseId: 'bseExisting' });
-    await vi.waitFor(() => expect(getTables).toHaveBeenCalled());
-    await expect(installer.install({ ...ro, baseId: 'bseExisting' })).rejects.toMatchObject({
+    const first = installer.addToBase('bseExisting', addRo);
+    await vi.waitFor(() => expect(services.tableOpenApiService.getTables).toHaveBeenCalled());
+    await expect(installer.addToBase('bseExisting', addRo)).rejects.toMatchObject({
       status: 409,
     });
     releaseTables();
     await expect(first).resolves.toMatchObject({ baseId: 'bseExisting' });
-    // The lock is released afterwards: a later install into the same base may proceed.
-    await expect(installer.install({ ...ro, baseId: 'bseExisting' })).resolves.toMatchObject({
+    // The lock is released afterwards: a later add into the same base may proceed.
+    await expect(installer.addToBase('bseExisting', addRo)).resolves.toMatchObject({
       baseId: 'bseExisting',
     });
   });
 
   it('refuses when another instance holds the Redis lock', async () => {
     const { installer } = build(false, true);
-    await expect(installer.install({ ...ro, baseId: 'bseElsewhere' })).rejects.toMatchObject({
+    await expect(installer.addToBase('bseElsewhere', addRo)).rejects.toMatchObject({
       status: 409,
     });
   });
 
   it('releases the cache lock even when the install fails', async () => {
     const { installer, services } = build(true);
-    (services.tableOpenApiService as unknown as { getTables: unknown }).getTables = vi.fn(
-      async () => []
-    );
-    await expect(installer.install({ ...ro, baseId: 'bseFails' })).rejects.toThrow('boom');
+    await expect(installer.addToBase('bseFails', addRo)).rejects.toThrow('boom');
     expect(services.redis.del).toHaveBeenCalledWith('schema-pack:install-lock:bseFails');
     expect(services.redis.store.size).toBe(0);
   });
 
-  it('checks access before taking the lock, so outsiders cannot hold it', async () => {
+  it('answers 404 for a missing base before taking the lock', async () => {
     const { installer, services } = build(false);
-    services.permissionService.validPermissions = vi.fn(async () => {
-      throw Object.assign(new Error('forbidden'), { status: 403 });
-    });
-    await expect(installer.install({ ...ro, baseId: 'bseNotMine' })).rejects.toMatchObject({
-      status: 403,
-    });
+    services.prismaService.base.findFirst.mockResolvedValue(null as never);
+    await expect(installer.addToBase('bseGone', addRo)).rejects.toMatchObject({ status: 404 });
     expect(services.redis.setnxex).not.toHaveBeenCalled();
+  });
+});
+
+describe('holdsMany', () => {
+  const owner = { spec: {} } as ICatalogField;
+  const symmetric = { symmetricOf: { table: 't', key: 'k' } } as ICatalogField;
+
+  it.each([
+    [Relationship.ManyOne, false, true],
+    [Relationship.OneMany, true, false],
+    [Relationship.ManyMany, true, true],
+    [Relationship.OneOne, false, false],
+  ])('%s: owner holds many = %s, symmetric holds many = %s', (rel, ownerMany, symMany) => {
+    expect(holdsMany(owner, rel)).toBe(ownerMany);
+    expect(holdsMany(symmetric, rel)).toBe(symMany);
   });
 });

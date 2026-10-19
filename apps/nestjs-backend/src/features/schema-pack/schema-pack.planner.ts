@@ -11,12 +11,18 @@ import { dependenciesOf, isLinkSpec, linkTarget } from './schema-pack.catalog';
 
 export class SchemaPackPlanError extends Error {}
 
+/** What the planner needs to know about a field that is already in the base. */
+export interface IExistingField {
+  type: FieldType;
+  isLookup?: boolean;
+}
+
 export interface IPlanInput {
   packs: SchemaPackId[];
   optionalTables: string[];
   starterRows: boolean;
-  /** Tables already in the target base, by name, with the names of their fields. */
-  existing?: Map<string, Set<string>>;
+  /** Tables already in the target base, by name, with their fields by name. */
+  existing?: Map<string, Map<string, IExistingField>>;
 }
 
 export interface IPlannedTable {
@@ -56,13 +62,22 @@ export interface IInstallPlan {
 const isComputedSpec = (spec: ISchemaPackField) =>
   Boolean(spec.lookup) || spec.type === FieldType.Formula;
 
+const kind = (type: string, isLookup?: boolean) => (isLookup ? `${type} lookup` : type);
+
+/** A same-named field in the base only stands in for a pack field when it has the same type. */
+export const isSameField = (field: ICatalogField, existing: IExistingField) =>
+  existing.type === field.type && Boolean(existing.isLookup) === Boolean(field.spec?.isLookup);
+
 /**
  * Decides exactly what an install creates. Pure: the installer executes the result, and the
  * wizard's Review step shows the same result, so the two can never disagree.
+ *
+ * Only selected tables are changed, plus bridge links to a selected pack. Catalog tables that are
+ * already in the base (matched by name) can be linked to, but are never otherwise repaired.
  */
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export const planInstall = (catalog: ISchemaPackCatalog, input: IPlanInput): IInstallPlan => {
-  const existing = input.existing ?? new Map<string, Set<string>>();
+  const existing = input.existing ?? new Map<string, Map<string, IExistingField>>();
   const optionalKeys = new Set(
     catalog.packs
       .filter((p) => input.packs.includes(p.id))
@@ -82,36 +97,61 @@ export const planInstall = (catalog: ISchemaPackCatalog, input: IPlanInput): IIn
         .filter((t) => !t.optional || input.optionalTables.includes(t.key))
         .map((table) => ({ pack: p.id, table }))
     );
+  const selectedKeys = new Set(selected.map((s) => s.table.key));
   // Tables that will be in the base afterwards: the selection plus catalog tables already there.
-  const present = new Set(selected.map((s) => s.table.key));
+  const present = new Set(selectedKeys);
   for (const [key, { table }] of catalog.tables) {
     if (existing.has(table.name)) present.add(key);
   }
+  const inScope = (field: ICatalogField) =>
+    selectedKeys.has(field.table) || Boolean(field.bridge?.some((p) => input.packs.includes(p)));
 
-  const fieldExists = (field: ICatalogField) =>
-    existing.get(catalog.tables.get(field.table)!.table.name)?.has(field.name) ?? false;
+  const tableName = (field: ICatalogField) => catalog.tables.get(field.table)!.table.name;
+  const existingOf = (field: ICatalogField) => existing.get(tableName(field))?.get(field.name);
+  const fieldExists = (field: ICatalogField) => {
+    const found = existingOf(field);
+    return Boolean(found && isSameField(field, found));
+  };
+  const ref = (f: { table: string; key: string }) => `${f.table}.${f.key}`;
+
+  // Same name, different type: never bound to, and never created over.
+  const conflicting = new Set<string>();
+  const conflicts: string[] = [];
+  const claim = (field: ICatalogField) => {
+    const found = existingOf(field);
+    if (!found || isSameField(field, found)) return true;
+    conflicts.push(
+      `${tableName(field)}.${field.name} is ${kind(found.type, found.isLookup)}, ` +
+        `the pack needs ${kind(field.type, field.spec?.isLookup)}`
+    );
+    return false;
+  };
 
   // A field is available when it already exists, or when this plan will create it.
   const available = new Set<string>();
-  const ref = (f: { table: string; key: string }) => `${f.table}.${f.key}`;
-  for (const [, { fields }] of catalog.tables) {
-    for (const field of fields.values()) if (fieldExists(field)) available.add(ref(field));
+  for (const [key, { fields }] of catalog.tables) {
+    if (!present.has(key)) continue;
+    for (const field of fields.values()) {
+      if (fieldExists(field)) available.add(ref(field));
+      else if (existingOf(field)) conflicting.add(ref(field));
+    }
   }
 
   const tables: IPlannedTable[] = [];
   const created = new Map<string, ICatalogField[]>();
   const record = (field: ICatalogField) => {
-    available.add(ref(field));
+    // A clash is reported, and nothing may be built on top of it.
+    if (claim(field)) available.add(ref(field));
     created.set(field.table, [...(created.get(field.table) ?? []), field]);
   };
 
   for (const { pack, table } of selected) {
     const isExisting = existing.has(table.name);
-    const plain = table.fields.filter((f) => !isLinkSpec(f) && !isComputedSpec(f));
-    const toCreate = isExisting
-      ? plain.filter((f) => !existing.get(table.name)!.has(f.name))
-      : plain;
-    toCreate.forEach((spec) => record(catalog.tables.get(table.key)!.fields.get(spec.key)!));
+    const fields = catalog.tables.get(table.key)!.fields;
+    const toCreate = table.fields
+      .filter((f) => !isLinkSpec(f) && !isComputedSpec(f))
+      .filter((f) => !fieldExists(fields.get(f.key)!));
+    toCreate.forEach((spec) => record(fields.get(spec.key)!));
     tables.push({
       key: table.key,
       name: table.name,
@@ -129,13 +169,20 @@ export const planInstall = (catalog: ISchemaPackCatalog, input: IPlanInput): IIn
     if (!present.has(tableKey)) continue;
     for (const field of fields.values()) {
       const spec = field.spec;
-      if (!spec || !isLinkSpec(spec) || fieldExists(field)) continue;
-      if (!present.has(spec.link!.table)) continue;
-      links.push({ table: tableKey, spec });
+      if (!spec || !isLinkSpec(spec) || !inScope(field) || fieldExists(field)) continue;
+      const link = spec.link!;
+      if (!present.has(link.table)) continue;
+      // The cell shows the foreign primary when the chosen display field is not there.
+      const shown = link.lookupField && available.has(`${link.table}.${link.lookupField}`);
+      links.push({
+        table: tableKey,
+        spec:
+          link.lookupField && !shown
+            ? { ...spec, link: { ...link, lookupField: undefined } }
+            : spec,
+      });
       record(field);
-      if (spec.link!.symmetric) {
-        record(catalog.tables.get(spec.link!.table)!.fields.get(spec.link!.symmetric.key)!);
-      }
+      if (link.symmetric) record(catalog.tables.get(link.table)!.fields.get(link.symmetric.key)!);
     }
   }
 
@@ -144,7 +191,7 @@ export const planInstall = (catalog: ISchemaPackCatalog, input: IPlanInput): IIn
   for (const [tableKey, { fields }] of catalog.tables) {
     if (!present.has(tableKey)) continue;
     for (const field of fields.values()) {
-      if (field.spec && isComputedSpec(field.spec) && !fieldExists(field)) {
+      if (field.spec && isComputedSpec(field.spec) && inScope(field) && !fieldExists(field)) {
         pending.push({ table: tableKey, spec: field.spec });
       }
     }
@@ -161,6 +208,18 @@ export const planInstall = (catalog: ISchemaPackCatalog, input: IPlanInput): IIn
         progressed = true;
       }
     }
+  }
+  // Left out because a table is missing is expected; left out because of a clash is not.
+  for (const { table, spec } of pending) {
+    const blockers = dependenciesOf(catalog, table, spec).filter((d) => conflicting.has(d));
+    if (blockers.length) {
+      conflicts.push(`${table}.${spec.key} needs ${blockers.join(', ')}, which has another type`);
+    }
+  }
+  if (conflicts.length) {
+    throw new SchemaPackPlanError(
+      `The base already has fields with these names but different types: ${conflicts.join('; ')}`
+    );
   }
 
   return { tables, links, computed, seeds: planSeeds(catalog, input, tables, available), created };

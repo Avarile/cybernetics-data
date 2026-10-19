@@ -1,18 +1,24 @@
 /* eslint-disable sonarjs/no-duplicate-string, @typescript-eslint/naming-convention */
-import { FieldKeyType, ViewType } from '@teable/core';
-import type { ISchemaPackInstallRo, ISchemaPackInstallVo } from '@teable/openapi';
+import { FieldKeyType, FieldType, Role, ViewType } from '@teable/core';
+import type { ISchemaPackAddRo, ISchemaPackInstallRo, ISchemaPackInstallVo } from '@teable/openapi';
 import {
+  ADD_SCHEMA_PACKS,
+  addSchemaPacks,
   axios,
+  emailBaseInvitation,
   getSchemaPackCatalog,
   INSTALL_SCHEMA_PACKS,
   installSchemaPacks,
+  planSchemaPackAdd,
   planSchemaPackInstall,
   updateUserOnboarding,
+  urlBuilder,
   userMe,
 } from '@teable/openapi';
 import { createNewUserAxios } from './utils/axios-instance/new-user';
 import { getError } from './utils/get-error';
 import {
+  createField,
   createRecords,
   deleteField,
   getFields,
@@ -44,11 +50,17 @@ const installRo = (
   ...extra,
 });
 
+const addRo = (packs: ISchemaPackAddRo['packs']): ISchemaPackAddRo => ({
+  packs,
+  options: { timezone: 'Europe/London', currency: 'GBP', starterRows: true, optionalTables: [] },
+});
+
 describe('Schema packs (e2e)', () => {
   const created: string[] = [];
+  /** Always a new base; adding to an existing one goes through addSchemaPacks. */
   const install = async (ro: ISchemaPackInstallRo) => {
     const vo = (await installSchemaPacks(ro)).data;
-    if (!ro.baseId) created.push(vo.baseId);
+    created.push(vo.baseId);
     return vo;
   };
   const tableId = (vo: ISchemaPackInstallVo, key: string) =>
@@ -176,15 +188,13 @@ describe('Schema packs (e2e)', () => {
       const progress = await install(installRo(['progress']));
       expect(await fieldNames(tableId(progress, 'tasks'))).not.toContain('assigned_to');
 
-      const people = await install(installRo(['people'], { baseId: progress.baseId }));
+      const people = (await addSchemaPacks(progress.baseId, addRo(['people']))).data;
       expect(people.baseId).toBe(progress.baseId);
       expect(people.tables.map((t) => t.key)).not.toContain('tasks');
       expect(await fieldNames(tableId(progress, 'tasks'))).toContain('assigned_to');
       expect(await fieldNames(tableId(progress, 'projects'))).toContain('lead_by');
 
-      const again = await getError(() =>
-        installSchemaPacks(installRo(['people'], { baseId: progress.baseId }))
-      );
+      const again = await getError(() => addSchemaPacks(progress.baseId, addRo(['people'])));
       expect(again?.status).toBe(400);
     },
     INSTALL_TIMEOUT
@@ -198,17 +208,68 @@ describe('Schema packs (e2e)', () => {
       const priority = (await getFields(tasksId)).find((f) => f.name === 'priority')!;
       await deleteField(tasksId, priority.id);
 
-      const { data: plan } = await planSchemaPackInstall({
+      const { data: plan } = await planSchemaPackAdd(vo.baseId, {
         packs: ['progress'],
         optionalTables: [],
-        baseId: vo.baseId,
       });
       expect(plan.tables.find((t) => t.key === 'tasks')?.fields.map((f) => f.name)).toEqual([
         'priority',
       ]);
-      const repaired = await install(installRo(['progress'], { baseId: vo.baseId }));
+      const repaired = (await addSchemaPacks(vo.baseId, addRo(['progress']))).data;
       expect(repaired.tables).toEqual([]);
       expect(await fieldNames(tasksId)).toContain('priority');
+    },
+    INSTALL_TIMEOUT
+  );
+
+  it(
+    'refuses to build over a same-named field of another type',
+    async () => {
+      const vo = await install(installRo(['progress']));
+      const tasksId = tableId(vo, 'tasks');
+      const priority = (await getFields(tasksId)).find((f) => f.name === 'priority')!;
+      await deleteField(tasksId, priority.id);
+      await createField(tasksId, { name: 'priority', type: FieldType.Number });
+
+      const planError = await getError(() =>
+        planSchemaPackAdd(vo.baseId, { packs: ['progress'], optionalTables: [] })
+      );
+      expect(planError?.status).toBe(400);
+      expect(planError?.message).toContain('tasks.priority');
+      const installError = await getError(() => addSchemaPacks(vo.baseId, addRo(['progress'])));
+      expect(installError?.status).toBe(400);
+    },
+    INSTALL_TIMEOUT
+  );
+
+  it(
+    'lets a creator invited to just the base add packs, and refuses an editor',
+    async () => {
+      const vo = await install(installRo(['progress']));
+      const creator = await createNewUserAxios({
+        email: 'schema-pack-base-creator@e2e.com',
+        password: '12345678',
+      });
+      const editor = await createNewUserAxios({
+        email: 'schema-pack-base-editor@e2e.com',
+        password: '12345678',
+      });
+      await emailBaseInvitation({
+        baseId: vo.baseId,
+        emailBaseInvitationRo: { role: Role.Creator, emails: ['schema-pack-base-creator@e2e.com'] },
+      });
+      await emailBaseInvitation({
+        baseId: vo.baseId,
+        emailBaseInvitationRo: { role: Role.Editor, emails: ['schema-pack-base-editor@e2e.com'] },
+      });
+      const url = urlBuilder(ADD_SCHEMA_PACKS, { baseId: vo.baseId });
+
+      const denied = await getError(() => editor.post(url, addRo(['knowledge'])));
+      expect(denied?.status).toBe(403);
+
+      const { data } = await creator.post<ISchemaPackInstallVo>(url, addRo(['knowledge']));
+      expect(data.baseId).toBe(vo.baseId);
+      expect(await fieldNames(tableId(vo, 'tasks'))).toContain('refer_knowledge');
     },
     INSTALL_TIMEOUT
   );

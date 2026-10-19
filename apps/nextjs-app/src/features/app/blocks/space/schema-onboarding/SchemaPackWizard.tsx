@@ -2,7 +2,7 @@ import type { ISchemaPackInstallVo } from '@teable/openapi';
 import { useSession } from '@teable/sdk/hooks';
 import { Button, cn, Skeleton } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
-import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import {
   useInstallPlan,
   useInstallSchemaPacks,
@@ -10,7 +10,7 @@ import {
   useSchemaPackCatalog,
 } from './hooks';
 import type { IWizardState, WizardStep } from './state';
-import { createInitialState, wizardReducer } from './state';
+import { createInitialState, restoreState, wizardReducer } from './state';
 import { BuildingStep } from './steps/BuildingStep';
 import { ChoosePacksStep } from './steps/ChoosePacksStep';
 import { PersonaliseStep } from './steps/PersonaliseStep';
@@ -22,7 +22,10 @@ export interface ISchemaPackWizardProps {
   spaceId: string;
   /** First-run takeover (starts at Welcome, completes onboarding) or the re-entry dialog. */
   mode: 'onboarding' | 'dialog';
+  /** Add the packs to this base instead of creating one. */
   baseId?: string;
+  /** Dialog mode: close the wizard from the Ready step. */
+  onDone?: () => void;
 }
 
 const STEPPER: WizardStep[] = ['choose', 'personalise', 'review'];
@@ -32,10 +35,7 @@ const storageKey = (spaceId: string) => `schema-onboarding:${spaceId}`;
 const restore = (spaceId: string): Partial<IWizardState> => {
   try {
     const raw = sessionStorage.getItem(storageKey(spaceId));
-    if (!raw) return {};
-    const saved = JSON.parse(raw) as IWizardState;
-    const step = saved.step === 'building' || saved.step === 'ready' ? 'review' : saved.step;
-    return { ...saved, step };
+    return raw ? restoreState(JSON.parse(raw)) : {};
   } catch {
     return {};
   }
@@ -75,7 +75,7 @@ const Stepper = ({ step }: { step: WizardStep }) => {
   );
 };
 
-export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardProps) => {
+export const SchemaPackWizard = ({ spaceId, mode, baseId, onDone }: ISchemaPackWizardProps) => {
   const { t } = useTranslation('onboarding');
   const { user } = useSession();
   const catalogQuery = useSchemaPackCatalog();
@@ -101,13 +101,15 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
     }
   }, [mode, spaceId, state]);
 
+  // Only optional tables of the picked packs; restored state may hold others.
+  const optionalTables = useMemo(
+    () => state.optionalTables.filter((t) => state.packs.some((p) => optionalOf(p).includes(t))),
+    [state.optionalTables, state.packs, optionalOf]
+  );
+
   const planQuery = useInstallPlan(
-    {
-      packs: state.packs,
-      optionalTables: state.optionalTables,
-      starterRows: state.starterRows,
-      ...(baseId ? { baseId } : {}),
-    },
+    { packs: state.packs, optionalTables, starterRows: state.starterRows },
+    baseId,
     state.step === 'review' || state.step === 'personalise'
   );
 
@@ -120,21 +122,28 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
   const build = () => {
     goto('building');
     install.reset();
+    const options = {
+      timezone: state.timezone,
+      currency: state.currency,
+      starterRows: state.starterRows,
+      optionalTables,
+    };
     install.mutate(
-      {
-        spaceId,
-        packs: state.packs,
-        options: {
-          baseName: state.baseName.trim(),
-          ...(state.icon.trim() ? { icon: state.icon.trim() } : {}),
-          timezone: state.timezone,
-          currency: state.currency,
-          starterRows: state.starterRows,
-          optionalTables: state.optionalTables,
-        },
-        ...(baseId ? { baseId } : {}),
-        ...(mode === 'onboarding' ? { completeOnboarding: true } : {}),
-      },
+      baseId
+        ? { kind: 'existing', baseId, ro: { packs: state.packs, options } }
+        : {
+            kind: 'new',
+            ro: {
+              spaceId,
+              packs: state.packs,
+              options: {
+                ...options,
+                baseName: state.baseName.trim() || t('personalise.defaultBaseName'),
+                ...(state.icon.trim() ? { icon: state.icon.trim() } : {}),
+              },
+              ...(mode === 'onboarding' ? { completeOnboarding: true } : {}),
+            },
+          },
       {
         onSuccess: ({ data }) => {
           setResult(data);
@@ -181,7 +190,7 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
         <ChoosePacksStep
           catalog={catalog}
           packs={state.packs}
-          optionalTables={state.optionalTables}
+          optionalTables={optionalTables}
           onToggle={togglePack}
           onSelectAll={() => dispatch({ type: 'selectAll', optionalOf })}
           onContinue={() => goto('personalise')}
@@ -191,6 +200,7 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
         <PersonaliseStep
           catalog={catalog}
           state={state}
+          addingToBase={Boolean(baseId)}
           onChange={(patch) => dispatch({ type: 'set', patch })}
           onToggleOptional={(table) => dispatch({ type: 'toggleOptional', table })}
           onBack={() => goto('choose')}
@@ -203,6 +213,7 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
           plan={planQuery.data}
           isLoading={planQuery.isFetching}
           isError={planQuery.isError}
+          errorMessage={planQuery.error?.message}
           onRetry={() => planQuery.refetch()}
           onBack={() => goto('personalise')}
           onBuild={build}
@@ -212,7 +223,7 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
         <BuildingStep
           catalog={catalog}
           packs={state.packs}
-          optionalTables={state.optionalTables}
+          optionalTables={optionalTables}
           starterRows={state.starterRows}
           done={install.isSuccess}
           error={install.error?.message}
@@ -220,7 +231,14 @@ export const SchemaPackWizard = ({ spaceId, mode, baseId }: ISchemaPackWizardPro
           onBack={() => goto('review')}
         />
       )}
-      {state.step === 'ready' && result && <ReadyStep packs={state.packs} result={result} />}
+      {state.step === 'ready' && result && (
+        <ReadyStep
+          packs={state.packs}
+          result={result}
+          addedToBase={Boolean(baseId)}
+          onDone={onDone}
+        />
+      )}
     </div>
   );
 };

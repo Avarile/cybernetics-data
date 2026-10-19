@@ -15,10 +15,14 @@ export const SchemaOnboarding = ({ spaceId }: { spaceId: string }) => {
   const router = useRouter();
   const { brandName } = useBrand();
 
+  // Base first: if it fails, onboarding stays open (the error is toasted) instead of leaving
+  // a skipped user in an empty space. Once the base exists the space is no longer empty, so the
+  // takeover cannot come back even if recording the skip fails; go on to the base regardless.
   const skip = useMutation({
     mutationFn: async () => {
-      await updateUserOnboarding({ status: 'skipped' });
-      return (await createBase({ spaceId, name: t('common:noun.base') })).data;
+      const base = (await createBase({ spaceId, name: t('common:noun.base') })).data;
+      await updateUserOnboarding({ status: 'skipped' }).catch(() => undefined);
+      return base;
     },
     onSuccess: (base) => router.push({ pathname: '/base/[baseId]', query: { baseId: base.id } }),
   });
