@@ -10,6 +10,8 @@ export * from './user';
 export * from './send-signup-verification-code';
 export * from './change-email';
 export * from './send-change-email-code';
+export * from './two-factor';
+export * from './signin-two-factor';
 export * from './temp-token';
 export * from './delete';
 export * from './waitlist';

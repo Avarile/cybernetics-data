@@ -4,11 +4,11 @@ import { PassportStrategy } from '@nestjs/passport';
 import { HttpErrorCode } from '@teable/core';
 import type { Request } from 'express';
 import { Strategy } from 'passport-local';
-import { CacheService } from '../../../cache/cache.service';
-import { AuthConfig, IAuthConfig } from '../../../configs/auth.config';
 import { CustomHttpException } from '../../../custom.exception';
 import { UserService } from '../../user/user.service';
 import { LocalAuthService } from '../local-auth/local-auth.service';
+import { SigninLockoutService } from '../signin-lockout.service';
+import { TwoFactorService } from '../two-factor/two-factor.service';
 import { pickUserMe } from '../utils';
 
 @Injectable()
@@ -16,8 +16,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly userService: UserService,
     private readonly authService: LocalAuthService,
-    private readonly cacheService: CacheService,
-    @AuthConfig() private readonly authConfig: IAuthConfig
+    private readonly signinLockoutService: SigninLockoutService,
+    private readonly twoFactorService: TwoFactorService
   ) {
     super({
       usernameField: 'email',
@@ -27,6 +27,29 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: Request, email: string, password: string) {
+    const user = await this.validatePassword(req, email, password);
+
+    // Outside the lockout handling below: a correct password must not count as a failed attempt.
+    // Throwing here means LocalAuthGuard never logs the user in, so no session exists yet.
+    if (user.twoFactorEmailEnabled) {
+      const challenge = await this.twoFactorService.createSigninChallenge(user);
+      throw new CustomHttpException(
+        'Two-factor authentication required',
+        HttpErrorCode.TWO_FACTOR_REQUIRED,
+        {
+          ...challenge,
+          localization: {
+            i18nKey: 'httpErrors.auth.twoFactorRequired',
+          },
+        }
+      );
+    }
+
+    await this.userService.refreshLastSignTime(user.id);
+    return pickUserMe(user);
+  }
+
+  private async validatePassword(req: Request, email: string, password: string) {
     try {
       const turnstileToken = req.body?.turnstileToken;
       const remoteIp =
@@ -59,53 +82,9 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
           }
         );
       }
-      await this.userService.refreshLastSignTime(user.id);
-      return pickUserMe(user);
-    } catch (error) {
-      const { maxLoginAttempts, accountLockoutMinutes } = this.authConfig.signin;
-      const hasLockout = maxLoginAttempts && accountLockoutMinutes;
-      const isLockout = await this.cacheService.get(`signin:lockout:${email}`);
-      if (!hasLockout) {
-        throw new CustomHttpException(
-          `Email or password is incorrect`,
-          HttpErrorCode.INVALID_CREDENTIALS,
-          {
-            localization: {
-              i18nKey: 'httpErrors.auth.emailOrPasswordIncorrect',
-            },
-          }
-        );
-      }
-      const lockError = new CustomHttpException(
-        `Your account has been locked out, please try again after ${accountLockoutMinutes} minutes`,
-        HttpErrorCode.TOO_MANY_REQUESTS,
-        {
-          minutes: accountLockoutMinutes,
-          localization: {
-            i18nKey: 'httpErrors.auth.accountLockedOut',
-          },
-        }
-      );
-      if (isLockout) {
-        throw lockError;
-      }
-      // Use atomic increment to prevent race conditions
-      const attempts = await this.cacheService.incr(`signin:attempts:${email}`, 30);
-      if (attempts >= maxLoginAttempts) {
-        await this.cacheService.set(`signin:lockout:${email}`, true, accountLockoutMinutes);
-        await this.cacheService.del(`signin:attempts:${email}`);
-        throw lockError;
-      }
-      throw new CustomHttpException(
-        'Email or password is incorrect',
-        HttpErrorCode.INVALID_CREDENTIALS,
-        {
-          attempts,
-          localization: {
-            i18nKey: 'httpErrors.auth.emailOrPasswordIncorrect',
-          },
-        }
-      );
+      return user;
+    } catch {
+      return await this.signinLockoutService.recordFailure(email);
     }
   }
 }

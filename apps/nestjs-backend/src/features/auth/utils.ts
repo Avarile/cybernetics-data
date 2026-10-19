@@ -8,7 +8,17 @@ export type IPickUserMe = Pick<
   Prisma.UserGetPayload<null>,
   'id' | 'name' | 'avatar' | 'phone' | 'email' | 'password' | 'notifyMeta' | 'isAdmin' | 'lang'
 > &
-  Partial<Pick<Prisma.UserGetPayload<null>, 'onboardingStatus'>>;
+  Partial<Pick<Prisma.UserGetPayload<null>, 'onboardingStatus' | 'twoFactorEmailEnabled'>> & {
+    // a Date from prisma, or an ISO string from UserService.getUserById
+    twoFactorEnabledTime?: Date | string | null;
+  };
+
+const toIsoString = (value: Date | string | null | undefined) => {
+  if (!value) {
+    return null;
+  }
+  return typeof value === 'string' ? value : value.toISOString();
+};
 
 export const pickUserMe = (user: IPickUserMe): IUserMeVo => {
   return {
@@ -20,6 +30,10 @@ export const pickUserMe = (user: IPickUserMe): IUserMeVo => {
         : user.avatar,
     hasPassword: user.password !== null,
     onboardingStatus: (user.onboardingStatus as IUserMeVo['onboardingStatus']) ?? null,
+    twoFactor: {
+      email: Boolean(user.twoFactorEmailEnabled),
+      enabledTime: toIsoString(user.twoFactorEnabledTime),
+    },
   };
 };
 

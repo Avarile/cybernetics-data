@@ -470,7 +470,16 @@ export class MailSenderService {
       | {
           code: string;
           expiresIn: string;
-          type: EmailVerifyCodeType.Signup | EmailVerifyCodeType.ChangeEmail;
+          type:
+            | EmailVerifyCodeType.Signup
+            | EmailVerifyCodeType.ChangeEmail
+            | EmailVerifyCodeType.TwoFactorSignin;
+        }
+      | {
+          code: string;
+          expiresIn: string;
+          action: 'enable' | 'disable';
+          type: EmailVerifyCodeType.TwoFactorSetup;
         }
       | {
           domain: string;
@@ -491,7 +500,76 @@ export class MailSenderService {
         return this.sendChangeEmailCodeEmailOptions(payload);
       case EmailVerifyCodeType.DomainVerification:
         return this.sendDomainVerificationEmailOptions(payload);
+      case EmailVerifyCodeType.TwoFactorSetup:
+        return this.sendTwoFactorSetupEmailOptions(payload);
+      case EmailVerifyCodeType.TwoFactorSignin:
+        return this.sendTwoFactorSigninEmailOptions(payload);
     }
+  }
+
+  private async sendTwoFactorSetupEmailOptions(payload: {
+    code: string;
+    expiresIn: string;
+    action: 'enable' | 'disable';
+  }) {
+    const { code, expiresIn, action } = payload;
+    const { brandName, brandLogo } = await this.settingOpenApiService.getServerBrand();
+    const args = { code, expiresIn: parseInt(expiresIn) };
+    return {
+      subject: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.subject', {
+        args: { brandName },
+      }),
+      template: 'normal',
+      context: {
+        partialBody: 'email-verify-code',
+        brandName,
+        brandLogo,
+        title: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.title'),
+        message:
+          action === 'enable'
+            ? this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.enableMessage', {
+                args,
+              })
+            : this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSetup.disableMessage', {
+                args,
+              }),
+      },
+    };
+  }
+
+  private async sendTwoFactorSigninEmailOptions(payload: { code: string; expiresIn: string }) {
+    const { code, expiresIn } = payload;
+    const { brandName, brandLogo } = await this.settingOpenApiService.getServerBrand();
+    return {
+      subject: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.subject', {
+        args: { brandName },
+      }),
+      template: 'normal',
+      context: {
+        partialBody: 'email-verify-code',
+        brandName,
+        brandLogo,
+        title: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.title'),
+        message: this.i18n.t('common.email.templates.emailVerifyCode.twoFactorSignin.message', {
+          args: { code, expiresIn: parseInt(expiresIn) },
+        }),
+      },
+    };
+  }
+
+  async twoFactorChangedEmailOptions(info: { to: string; enabled: boolean }) {
+    const { to, enabled } = info;
+    return this.commonEmailOptions({
+      to,
+      title: enabled
+        ? this.i18n.t('common.email.templates.twoFactorChanged.enabledTitle')
+        : this.i18n.t('common.email.templates.twoFactorChanged.disabledTitle'),
+      message: enabled
+        ? this.i18n.t('common.email.templates.twoFactorChanged.enabledMessage')
+        : this.i18n.t('common.email.templates.twoFactorChanged.disabledMessage'),
+      buttonUrl: `${this.mailConfig.origin}/auth/forget-password`,
+      buttonText: this.i18n.t('common.email.templates.twoFactorChanged.buttonText'),
+    });
   }
 
   private async sendSignupVerificationEmailOptions(payload: { code: string; expiresIn: string }) {

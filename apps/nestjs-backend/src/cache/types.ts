@@ -28,6 +28,8 @@ export interface ICacheStore {
   [key: `plugin:auth-code:${string}`]: IPluginAuthStore;
   [key: `signin:attempts:${string}`]: number;
   [key: `signin:lockout:${string}`]: boolean;
+  // purpose:token -> hashed emailed code (see VerificationCodeService)
+  [key: `verify-code:${string}:${string}`]: IVerificationCodeCache;
   [key: `query-params:${string}`]: Record<string, unknown>;
   // sha256 of a live AI data context token -> who it acts as (absent = revoked or expired)
   [key: `ai-data:context:${string}`]: IAiDataContextClaims;
@@ -84,6 +86,14 @@ export interface IAttachmentPreviewCache {
 
 export interface IOauth2State {
   redirectUri?: string;
+}
+
+export interface IVerificationCodeCache {
+  codeHash: string;
+  attempts: number;
+  // epoch ms; keeps the original expiry when the entry is re-saved after a wrong guess
+  expiresAt: number;
+  data: Record<string, unknown>;
 }
 
 export interface IResetPasswordEmailCache {

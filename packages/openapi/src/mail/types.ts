@@ -27,6 +27,8 @@ export enum EmailVerifyCodeType {
   Signup = 'signup',
   ChangeEmail = 'changeEmail',
   DomainVerification = 'domainVerification',
+  TwoFactorSetup = 'twoFactorSetup',
+  TwoFactorSignin = 'twoFactorSignin',
 }
 
 export const mailTransportConfigSchema = z.object({

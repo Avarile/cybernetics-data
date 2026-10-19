@@ -90,6 +90,17 @@ export type I18nTranslations = {
             "termsUrl": string;
             "privacyUrl": string;
         };
+        "twoFactor": {
+            "title": string;
+            "desc": string;
+            "verify": string;
+            "resend": string;
+            "resendIn": string;
+            "sent": string;
+            "useDifferentAccount": string;
+            "invalidCode": string;
+            "expired": string;
+        };
     };
     "baseGraph": {
         "title": string;
@@ -515,6 +526,39 @@ export type I18nTranslations = {
                         "title": string;
                         "desc": string;
                         "sendSuccess": string;
+                    };
+                };
+                "twoFactor": {
+                    "title": string;
+                    "on": string;
+                    "off": string;
+                    "descOff": string;
+                    "descOn": string;
+                    "noPassword": string;
+                    "mailNotConfigured": string;
+                    "enable": string;
+                    "disable": string;
+                    "enableTitle": string;
+                    "disableTitle": string;
+                    "sendDesc": string;
+                    "disableWarning": string;
+                    "password": string;
+                    "sendCode": string;
+                    "codeTitle": string;
+                    "codeDesc": string;
+                    "resend": string;
+                    "resendIn": string;
+                    "confirm": string;
+                    "back": string;
+                    "success": {
+                        "enabled": string;
+                        "disabled": string;
+                        "codeSent": string;
+                    };
+                    "error": {
+                        "invalidCode": string;
+                        "invalidPassword": string;
+                        "sendMailRateLimit": string;
                     };
                 };
             };
@@ -1419,6 +1463,17 @@ export type I18nTranslations = {
                         "title": string;
                         "message": string;
                     };
+                    "twoFactorSetup": {
+                        "subject": string;
+                        "title": string;
+                        "enableMessage": string;
+                        "disableMessage": string;
+                    };
+                    "twoFactorSignin": {
+                        "subject": string;
+                        "title": string;
+                        "message": string;
+                    };
                 };
                 "collaboratorCellTag": {
                     "subject": string;
@@ -1565,6 +1620,13 @@ export type I18nTranslations = {
                         "message": string;
                         "buttonText": string;
                     };
+                };
+                "twoFactorChanged": {
+                    "enabledTitle": string;
+                    "enabledMessage": string;
+                    "disabledTitle": string;
+                    "disabledMessage": string;
+                    "buttonText": string;
                 };
             };
             "title": string;
@@ -3197,6 +3259,11 @@ export type I18nTranslations = {
                 "emailOrPasswordIncorrect": string;
                 "accountDeactivated": string;
                 "accountLockedOut": string;
+                "verificationCodeExpired": string;
+                "twoFactorRequired": string;
+                "twoFactorAlreadyEnabled": string;
+                "twoFactorNotEnabled": string;
+                "sendTwoFactorCodeFailed": string;
             };
             "automation": {
                 "buttonClickTriggerDuplicated": string;

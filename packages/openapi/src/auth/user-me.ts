@@ -14,6 +14,12 @@ export const userMeVoSchema = z.object({
   phone: z.string().nullable().optional(),
   notifyMeta: userNotifyMetaSchema,
   hasPassword: z.boolean(),
+  twoFactor: z
+    .object({
+      email: z.boolean(),
+      enabledTime: z.string().nullable().optional(),
+    })
+    .optional(),
   isAdmin: z.boolean().nullable().optional(),
   lang: z.string().nullable().optional(),
   onboardingStatus: userOnboardingStatusSchema.nullable().optional().meta({

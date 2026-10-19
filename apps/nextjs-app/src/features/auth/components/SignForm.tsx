@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { HttpErrorCode, type HttpError } from '@teable/core';
-import type { ISignin, ISignup } from '@teable/openapi';
+import type { ISignin, ISignup, ITwoFactorChallenge } from '@teable/openapi';
 import {
   signup,
   signin,
@@ -26,6 +26,7 @@ import { usePublicSettingQuery } from '@/features/app/hooks/useSetting';
 import { authConfig } from '../../i18n/auth.config';
 import { SendVerificationButton } from './SendVerificationButton';
 import TurnstileWidget from './TurnstileWidget';
+import { TwoFactorCodeStep } from './TwoFactorCodeStep';
 
 export interface ISignForm {
   className?: string;
@@ -45,6 +46,7 @@ export const SignForm: FC<ISignForm> = (props) => {
   const [turnstileToken, setTurnstileToken] = useState<string>();
   const { countdown, setCountdown } = useCutDown();
   const [turnstileKey, setTurnstileKey] = useState<number>(0);
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState<ITwoFactorChallenge>();
   const env = useEnv();
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -54,6 +56,7 @@ export const SignForm: FC<ISignForm> = (props) => {
     disallowSignUp = false,
     turnstileSiteKey,
     signupVerificationSendCodeMailRate = 0,
+    twoFactorSendCodeMailRate = 0,
   } = setting ?? {};
 
   const hasInvitationRedirect = useMemo(() => {
@@ -79,6 +82,7 @@ export const SignForm: FC<ISignForm> = (props) => {
     setSignupVerificationToken(undefined);
     setError(undefined);
     setTurnstileToken(undefined);
+    setTwoFactorChallenge(undefined);
     setCountdown(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
@@ -119,6 +123,11 @@ export const SignForm: FC<ISignForm> = (props) => {
           } else {
             setError(error.message);
           }
+          break;
+        // password accepted, a code was emailed: switch to the code step
+        case HttpErrorCode.TWO_FACTOR_REQUIRED:
+          setTwoFactorChallenge(error.data as ITwoFactorChallenge);
+          setError(undefined);
           break;
         case HttpErrorCode.CONFLICT:
           setError(t('auth:signError.exist'));
@@ -319,7 +328,23 @@ export const SignForm: FC<ISignForm> = (props) => {
           {type === 'signin' ? t('auth:title.signin') : t('auth:title.signup')}
         </h2>
       </div>
-      <form className="relative" onSubmit={onSubmit} onChange={() => setError(undefined)}>
+      {twoFactorChallenge && (
+        <TwoFactorCodeStep
+          challenge={twoFactorChallenge}
+          resendAfter={twoFactorSendCodeMailRate}
+          onSuccess={onSuccess}
+          onBack={(reason) => {
+            setTwoFactorChallenge(undefined);
+            setError(reason);
+          }}
+        />
+      )}
+      {/* hidden rather than unmounted during the code step, so the email stays filled in */}
+      <form
+        className={cn('relative', { hidden: twoFactorChallenge })}
+        onSubmit={onSubmit}
+        onChange={() => setError(undefined)}
+      >
         <div className="grid gap-3">
           <div className="grid gap-3">
             <Label htmlFor="email">{t('auth:label.email')}</Label>

@@ -1,13 +1,11 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { generateUserId, getRandomString, HttpErrorCode, RandomType } from '@teable/core';
+import { generateUserId, getRandomString, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { EmailVerifyCodeType, MailTransporterType, MailType } from '@teable/openapi';
 import type { IChangePasswordRo, IInviteWaitlistVo, ISignup } from '@teable/openapi';
 import * as bcrypt from 'bcrypt';
 import { isEmpty } from 'lodash';
-import ms from 'ms';
 import { ClsService } from 'nestjs-cls';
 import { CacheService } from '../../../cache/cache.service';
 import { AuthConfig, type IAuthConfig } from '../../../configs/auth.config';
@@ -28,6 +26,7 @@ import { SettingService } from '../../setting/setting.service';
 import { UserService } from '../../user/user.service';
 import { SessionStoreService } from '../session/session-store.service';
 import { TurnstileService } from '../turnstile/turnstile.service';
+import { VerificationCodeService } from '../verification-code/verification-code.service';
 
 @Injectable()
 export class LocalAuthService {
@@ -45,9 +44,9 @@ export class LocalAuthService {
     @MailConfig() private readonly mailConfig: IMailConfig,
     @BaseConfig() private readonly baseConfig: IBaseConfig,
     @ThresholdConfig() private readonly thresholdConfig: IThresholdConfig,
-    private readonly jwtService: JwtService,
     private readonly settingService: SettingService,
-    private readonly turnstileService: TurnstileService
+    private readonly turnstileService: TurnstileService,
+    private readonly verificationCodeService: VerificationCodeService
   ) {}
 
   private async encodePassword(password: string) {
@@ -123,19 +122,6 @@ export class LocalAuthService {
     return this.validateUserByEmail(email, pass);
   }
 
-  private jwtSignupCode(email: string, code: string) {
-    return this.jwtService.signAsync(
-      { email, code },
-      { expiresIn: this.authConfig.signupVerificationExpiresIn }
-    );
-  }
-
-  private jwtVerifySignupCode(token: string) {
-    return this.jwtService.verifyAsync<{ email: string; code: string }>(token).catch(() => {
-      throw new CustomHttpException('Verification code is invalid', HttpErrorCode.INVALID_CAPTCHA);
-    });
-  }
-
   private async verifySignup(body: ISignup) {
     const setting = await this.settingService.getSetting();
     if (!setting?.enableEmailVerification) {
@@ -153,9 +139,17 @@ export class LocalAuthService {
         }
       );
     }
-    const { code, email: _email } = await this.jwtVerifySignupCode(verification.token);
-    if (_email !== email || code !== verification.code) {
-      throw new CustomHttpException('Verification code is invalid', HttpErrorCode.INVALID_CAPTCHA);
+    const { email: _email } = await this.verificationCodeService.verify<{ email: string }>(
+      'signup',
+      verification.token,
+      verification.code
+    );
+    if (_email.toLowerCase() !== email.toLowerCase()) {
+      throw new CustomHttpException('Verification code is invalid', HttpErrorCode.INVALID_CAPTCHA, {
+        localization: {
+          i18nKey: 'httpErrors.auth.verificationCodeInvalid',
+        },
+      });
     }
   }
 
@@ -310,11 +304,14 @@ export class LocalAuthService {
         rateLimit: this.thresholdConfig.signupVerificationSendCodeMailRate,
       },
       async () => {
-        const code = getRandomString(4, RandomType.Number);
-        const token = await this.jwtSignupCode(email, code);
-
         const user = await this.userService.getUserByEmail(email);
         this.isRegisteredValidate(user);
+
+        const { token, code, expiresTime } = await this.verificationCodeService.issue(
+          'signup',
+          { email: email.toLowerCase() },
+          this.authConfig.signupVerificationExpiresIn
+        );
 
         // Log verification code sending
         this.logger.log(
@@ -338,12 +335,7 @@ export class LocalAuthService {
             transporterName: MailTransporterType.Notify,
           }
         );
-        return {
-          token,
-          expiresTime: new Date(
-            ms(this.authConfig.signupVerificationExpiresIn) + Date.now()
-          ).toISOString(),
-        };
+        return { token, expiresTime };
       }
     );
   }
@@ -464,22 +456,20 @@ export class LocalAuthService {
 
   async changeEmail(email: string, token: string, code: string) {
     const currentEmail = this.cls.get('user.email');
+    const user = this.cls.get('user');
     const {
-      code: _code,
+      userId,
       email: _currentEmail,
       newEmail,
-    } = await this.jwtService
-      .verifyAsync<{ email: string; code: string; newEmail: string }>(token)
-      .catch(() => {
-        throw new CustomHttpException(
-          'Verification code is invalid',
-          HttpErrorCode.INVALID_CAPTCHA
-        );
-      });
+    } = await this.verificationCodeService.verify<{
+      userId: string;
+      email: string;
+      newEmail: string;
+    }>('change-email', token, code);
     if (
       newEmail.toLowerCase() !== email.toLowerCase() ||
       _currentEmail !== currentEmail ||
-      _code !== code
+      userId !== user.id
     ) {
       throw new CustomHttpException('Verification code is invalid', HttpErrorCode.INVALID_CAPTCHA, {
         localization: {
@@ -487,7 +477,6 @@ export class LocalAuthService {
         },
       });
     }
-    const user = this.cls.get('user');
     const normalizedEmail = newEmail.toLowerCase();
     await this.prismaService.txClient().user.update({
       where: { id: user.id, deletedTime: null, deactivatedTime: null },
@@ -545,10 +534,10 @@ export class LocalAuthService {
             },
           });
         }
-        const code = getRandomString(4, RandomType.Number);
-        const token = await this.jwtService.signAsync(
-          { email, newEmail, code },
-          { expiresIn: this.baseConfig.emailCodeExpiresIn }
+        const { token, code } = await this.verificationCodeService.issue(
+          'change-email',
+          { userId: user.id, email, newEmail: newEmail.toLowerCase() },
+          this.baseConfig.emailCodeExpiresIn
         );
         const emailOptions = await this.mailSenderService.sendEmailVerifyCodeEmailOptions({
           code,

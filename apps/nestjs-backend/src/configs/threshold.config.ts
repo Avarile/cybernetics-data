@@ -43,6 +43,7 @@ export const thresholdConfig = registerAs('threshold', () => ({
       process.env.BACKEND_SIGNUP_VERIFICATION_SEND_CODE_MAIL_RATE ??
       30
   ),
+  twoFactorSendCodeMailRate: Number(process.env.BACKEND_TWO_FACTOR_SEND_CODE_MAIL_RATE ?? 30),
   billing: {
     automationRunGracePeriod: process.env.BILLING_AUTOMATION_RUN_GRACE_PERIOD ?? '3d',
     automationRunNotifyInterval: process.env.BILLING_AUTOMATION_RUN_NOTIFY_INTERVAL ?? '6h',

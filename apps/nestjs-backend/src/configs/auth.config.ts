@@ -47,6 +47,7 @@ export const authConfig = registerAs('auth', () => ({
     process.env.BACKEND_EMAIL_CODE_EXPIRES_IN ??
     process.env.BACKEND_SIGNUP_VERIFICATION_EXPIRES_IN ??
     '30m',
+  twoFactorCodeExpiresIn: process.env.BACKEND_TWO_FACTOR_CODE_EXPIRES_IN ?? '10m',
   socialAuthProviders: process.env.SOCIAL_AUTH_PROVIDERS?.split(',') ?? [],
   github: {
     clientID: process.env.BACKEND_GITHUB_CLIENT_ID,

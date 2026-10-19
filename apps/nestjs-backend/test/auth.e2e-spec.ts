@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import type { INestApplication } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { DriverClient, generateAccountId, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
@@ -47,6 +46,7 @@ import type { AxiosInstance } from 'axios';
 import axios from 'axios';
 import { vi } from 'vitest';
 import { AUTH_SESSION_COOKIE_NAME } from '../src/const';
+import { VerificationCodeService } from '../src/features/auth/verification-code/verification-code.service';
 import { SettingService } from '../src/features/setting/setting.service';
 import { createNewUserAxios } from './utils/axios-instance/new-user';
 import { getError } from './utils/get-error';
@@ -77,8 +77,22 @@ describe('Auth Controller (e2e)', () => {
   });
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     await prismaService.user.deleteMany({ where: { email: authTestEmail } });
   });
+
+  // Codes are only ever emailed, so tests read them where they are issued.
+  const captureIssuedCodes = () => {
+    const codes: string[] = [];
+    const verificationCodeService = app.get(VerificationCodeService);
+    const issue = verificationCodeService.issue.bind(verificationCodeService);
+    vi.spyOn(verificationCodeService, 'issue').mockImplementation(async (...args) => {
+      const issued = await issue(...args);
+      codes.push(issued.code);
+      return issued;
+    });
+    return codes;
+  };
 
   it('api/auth/signup - password min length', async () => {
     const error = await getError(() =>
@@ -176,6 +190,7 @@ describe('Auth Controller (e2e)', () => {
     });
 
     it('api/auth/signup - email verification success', async () => {
+      const codes = captureIssuedCodes();
       const error = await getError(() =>
         signup({
           email: authTestEmail,
@@ -186,17 +201,35 @@ describe('Auth Controller (e2e)', () => {
       const data = error?.data as { token: string; expiresTime: number };
       expect(data.token).not.toBeUndefined();
       expect(data.expiresTime).not.toBeUndefined();
-      const jwtService = app.get(JwtService);
-      const decoded = await jwtService.verifyAsync<{ email: string; code: string }>(data.token);
+      // the token is opaque: no JWT segments, no code inside
+      expect(data.token.split('.')).toHaveLength(1);
+      expect(codes).toHaveLength(1);
+      expect(codes[0]).toMatch(/^\d{6}$/);
       const res = await signup({
         email: authTestEmail,
         password: '12345678a',
         verification: {
           token: data.token,
-          code: decoded.code,
+          code: codes[0],
         },
       });
       expect(res.data.email).toBe(authTestEmail);
+    });
+
+    it('api/auth/signup - code issued for another email is rejected', async () => {
+      const codes = captureIssuedCodes();
+      const res = await sendSignupVerificationCode('other@test-auth.com');
+      const error = await getError(() =>
+        signup({
+          email: authTestEmail,
+          password: '12345678a',
+          verification: {
+            token: res.data.token,
+            code: codes[0],
+          },
+        })
+      );
+      expect(error?.code).toBe(HttpErrorCode.INVALID_CAPTCHA);
     });
   });
 
@@ -279,15 +312,13 @@ describe('Auth Controller (e2e)', () => {
     });
 
     it('api/auth/change-email', async () => {
+      const codes = captureIssuedCodes();
       const codeRes = await changeEmailAxios.post(SEND_CHANGE_EMAIL_CODE, {
         email: changedEmail,
         password: '12345678a',
       });
       expect(codeRes.data.token).not.toBeUndefined();
-      const jwtService = app.get(JwtService);
-      const decoded = await jwtService.verifyAsync<{ email: string; code: string }>(
-        codeRes.data.token
-      );
+      expect(codeRes.data.token.split('.')).toHaveLength(1);
       const newChangeEmailAxios = await createNewUserAxios({
         email: changeEmail,
         password: '12345678a',
@@ -295,7 +326,7 @@ describe('Auth Controller (e2e)', () => {
       const changeRes = await newChangeEmailAxios.patch(CHANGE_EMAIL, {
         email: changedEmail,
         token: codeRes.data.token,
-        code: decoded.code,
+        code: codes[0],
       });
       expect(JSON.stringify(changeRes.headers['set-cookie'])).toContain(
         `"${AUTH_SESSION_COOKIE_NAME}=;`

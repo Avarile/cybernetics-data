@@ -41,6 +41,8 @@ export enum HttpErrorCode {
   FAILED_DEPENDENCY = 'failed_dependency',
   // 460 - The user has reached the limit of the number of users that can be created in the current instance.
   USER_LIMIT_EXCEEDED = 'user_limit_exceeded',
+  // 422 - The password is correct but a second factor is still required to sign in.
+  TWO_FACTOR_REQUIRED = 'two_factor_required',
   // 429 - The user has reached the limit of the number of requests that can be made in the current instance.
   TOO_MANY_REQUESTS = 'too_many_requests',
   // 413 - The request payload is too large.

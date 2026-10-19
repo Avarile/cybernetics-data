@@ -317,6 +317,39 @@
           "placeholder": "DELETE"
         },
         "loading": "Deleting..."
+      },
+      "twoFactor": {
+        "title": "Two-factor authentication",
+        "on": "On",
+        "off": "Off",
+        "descOff": "Ask for a code sent to {{email}} each time you sign in with your password.",
+        "descOn": "On since {{date}}. Signing in with Google, GitHub or SSO isn't affected.",
+        "noPassword": "Add a password to use two-factor authentication.",
+        "mailNotConfigured": "Email delivery isn't configured on this server.",
+        "enable": "Enable",
+        "disable": "Disable",
+        "enableTitle": "Turn on two-factor authentication",
+        "disableTitle": "Turn off two-factor authentication",
+        "sendDesc": "We'll email a 6-digit code to {{email}}.",
+        "disableWarning": "Your account will only be protected by your password.",
+        "password": "Current password",
+        "sendCode": "Send code",
+        "codeTitle": "Check your email",
+        "codeDesc": "We sent a code to {{email}}",
+        "resend": "Resend code",
+        "resendIn": "Resend in {{seconds}}s",
+        "confirm": "Confirm",
+        "back": "Back",
+        "success": {
+          "enabled": "Two-factor authentication is on",
+          "disabled": "Two-factor authentication is off",
+          "codeSent": "Code sent, check your email"
+        },
+        "error": {
+          "invalidCode": "That code is invalid or has expired",
+          "invalidPassword": "The password is incorrect",
+          "sendMailRateLimit": "Please wait {{seconds}} seconds before requesting another code"
+        }
       }
     },
     "notify": {
@@ -1128,6 +1161,17 @@
           "subject": "Change Email Verification - {{brandName}}",
           "title": "Change email verification",
           "message": "Your verification code is {{code}}, please use it within {{expiresIn}} minutes."
+        },
+        "twoFactorSetup": {
+          "subject": "Confirm two-factor authentication - {{brandName}}",
+          "title": "Confirm two-factor authentication",
+          "enableMessage": "You asked to turn on two-factor authentication. Your verification code is {{code}}, please use it within {{expiresIn}} minutes.",
+          "disableMessage": "You asked to turn off two-factor authentication. Your verification code is {{code}}, please use it within {{expiresIn}} minutes."
+        },
+        "twoFactorSignin": {
+          "subject": "Your sign-in code - {{brandName}}",
+          "title": "Sign-in code",
+          "message": "Your sign-in code is {{code}}, please use it within {{expiresIn}} minutes. If you didn't just try to sign in, change your password now."
         }
       },
       "collaboratorCellTag": {
@@ -1275,6 +1319,13 @@
           "message": "Congratulations! Your <a href=\"{{spaceUrl}}\">{{spaceName}}</a> reward claim has been approved. {{amount}} credits have been added, valid for {{expiredDays}} days.",
           "buttonText": "View Space"
         }
+      },
+      "twoFactorChanged": {
+        "enabledTitle": "Two-factor authentication turned on",
+        "enabledMessage": "Two-factor authentication was turned on for your account. Signing in with your password now also needs a code sent to this email. If this wasn't you, reset your password.",
+        "disabledTitle": "Two-factor authentication turned off",
+        "disabledMessage": "Two-factor authentication was turned off for your account. If this wasn't you, reset your password and turn it back on.",
+        "buttonText": "Reset password"
       }
     }
   },

@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import type { IAuthConfig } from '../../../configs/auth.config';
-import { authConfig } from '../../../configs/auth.config';
 import { MailSenderModule } from '../../mail-sender/mail-sender.module';
 import { SettingModule } from '../../setting/setting.module';
 import { UserModule } from '../../user/user.module';
 import { SessionStoreService } from '../session/session-store.service';
 import { SessionModule } from '../session/session.module';
+import { SigninLockoutService } from '../signin-lockout.service';
 import { LocalStrategy } from '../strategies/local.strategy';
 import { TurnstileModule } from '../turnstile/turnstile.module';
+import { TwoFactorController } from '../two-factor/two-factor.controller';
+import { TwoFactorService } from '../two-factor/two-factor.service';
+import { VerificationCodeModule } from '../verification-code/verification-code.module';
 import { LocalAuthController } from './local-auth.controller';
 import { LocalAuthService } from './local-auth.service';
 
@@ -19,18 +20,16 @@ import { LocalAuthService } from './local-auth.service';
     UserModule,
     SessionModule,
     MailSenderModule.register(),
-    JwtModule.registerAsync({
-      useFactory: (config: IAuthConfig) => ({
-        secret: config.jwt.secret,
-        signOptions: {
-          expiresIn: config.jwt.expiresIn,
-        },
-      }),
-      inject: [authConfig.KEY],
-    }),
+    VerificationCodeModule,
   ],
-  providers: [LocalStrategy, LocalAuthService, SessionStoreService],
-  controllers: [LocalAuthController],
+  providers: [
+    LocalStrategy,
+    LocalAuthService,
+    SessionStoreService,
+    SigninLockoutService,
+    TwoFactorService,
+  ],
+  controllers: [LocalAuthController, TwoFactorController],
   exports: [LocalAuthService],
 })
 export class LocalAuthModule {}

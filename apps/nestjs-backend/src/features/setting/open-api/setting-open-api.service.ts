@@ -138,6 +138,8 @@ export class SettingOpenApiService {
       | 'changeEmailSendCodeMailRate'
       | 'resetPasswordSendMailRate'
       | 'signupVerificationSendCodeMailRate'
+      | 'twoFactorSendCodeMailRate'
+      | 'mailConfigured'
     >
   > {
     const setting = await this.getSetting([

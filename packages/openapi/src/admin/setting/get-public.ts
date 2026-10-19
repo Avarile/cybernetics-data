@@ -50,6 +50,8 @@ export const publicSettingVoSchema = settingVoSchema
     changeEmailSendCodeMailRate: z.number().optional(),
     resetPasswordSendMailRate: z.number().optional(),
     signupVerificationSendCodeMailRate: z.number().optional(),
+    twoFactorSendCodeMailRate: z.number().optional(),
+    mailConfigured: z.boolean().optional(),
     enableCreditReward: z.boolean().optional(),
     availableIntegrationProviders: z.array(z.string()).optional(),
   });

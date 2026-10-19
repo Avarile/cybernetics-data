@@ -32,7 +32,9 @@ import {
   IBatchTestLLMRo,
   testApiKeyRoSchema,
   ITestApiKeyRo,
+  SettingKey,
 } from '@teable/openapi';
+import { IMailConfig, MailConfig } from '../../../configs/mail.config';
 import { IThresholdConfig, ThresholdConfig } from '../../../configs/threshold.config';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';
 import { Permissions } from '../../auth/decorators/permissions.decorator';
@@ -45,7 +47,8 @@ export class SettingOpenApiController {
   constructor(
     private readonly settingOpenApiService: SettingOpenApiService,
     private readonly turnstileService: TurnstileService,
-    @ThresholdConfig() private readonly thresholdConfig: IThresholdConfig
+    @ThresholdConfig() private readonly thresholdConfig: IThresholdConfig,
+    @MailConfig() private readonly mailConfig: IMailConfig
   ) {}
 
   /**
@@ -64,12 +67,16 @@ export class SettingOpenApiController {
   @Get('public')
   async getPublicSetting(): Promise<IPublicSettingVo> {
     const setting = await this.settingOpenApiService.getPublicSetting();
+    const { [SettingKey.NOTIFY_MAIL_TRANSPORT_CONFIG]: notifyMailTransportConfig } =
+      await this.settingOpenApiService.getSetting([SettingKey.NOTIFY_MAIL_TRANSPORT_CONFIG]);
     return {
       ...setting,
       turnstileSiteKey: this.turnstileService.getTurnstileSiteKey(),
       changeEmailSendCodeMailRate: this.thresholdConfig.changeEmailSendCodeMailRate,
       resetPasswordSendMailRate: this.thresholdConfig.resetPasswordSendMailRate,
       signupVerificationSendCodeMailRate: this.thresholdConfig.signupVerificationSendCodeMailRate,
+      twoFactorSendCodeMailRate: this.thresholdConfig.twoFactorSendCodeMailRate,
+      mailConfigured: this.mailConfig.isConfigured || Boolean(notifyMailTransportConfig),
     };
   }
 

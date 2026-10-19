@@ -18,6 +18,7 @@ import { AddPassword } from './account/AddPassword';
 import { ChangeEmailDialog } from './account/ChangeEmailDialog';
 import { ChangePasswordDialog } from './account/ChangePasswordDialog';
 import { DeleteAccountDialog } from './account/DeleteAccountDialog';
+import { TwoFactorEmailRow } from './account/TwoFactorEmailRow';
 import { SettingTabHeader, SettingTabShell } from './SettingTabShell';
 
 export const Account: React.FC = () => {
@@ -147,6 +148,7 @@ export const Account: React.FC = () => {
                   </ChangePasswordDialog>
                 </div>
               )}
+              <TwoFactorEmailRow />
             </div>
           </div>
         </div>

@@ -321,6 +321,39 @@
           "placeholder": "DELETE"
         },
         "loading": "删除中..."
+      },
+      "twoFactor": {
+        "title": "双重验证",
+        "on": "已开启",
+        "off": "未开启",
+        "descOff": "每次使用密码登录时，需要输入发送到 {{email}} 的验证码。",
+        "descOn": "自 {{date}} 起开启。使用 Google、GitHub 或 SSO 登录不受影响。",
+        "noPassword": "设置密码后才能使用双重验证。",
+        "mailNotConfigured": "此服务器未配置邮件发送。",
+        "enable": "开启",
+        "disable": "关闭",
+        "enableTitle": "开启双重验证",
+        "disableTitle": "关闭双重验证",
+        "sendDesc": "我们会向 {{email}} 发送一个 6 位验证码。",
+        "disableWarning": "关闭后，你的账号将只受密码保护。",
+        "password": "当前密码",
+        "sendCode": "发送验证码",
+        "codeTitle": "查看你的邮箱",
+        "codeDesc": "验证码已发送到 {{email}}",
+        "resend": "重新发送",
+        "resendIn": "{{seconds}} 秒后可重新发送",
+        "confirm": "确认",
+        "back": "返回",
+        "success": {
+          "enabled": "双重验证已开启",
+          "disabled": "双重验证已关闭",
+          "codeSent": "验证码已发送，请查看邮箱"
+        },
+        "error": {
+          "invalidCode": "验证码无效或已过期",
+          "invalidPassword": "密码不正确",
+          "sendMailRateLimit": "请等待 {{seconds}} 秒后再获取验证码"
+        }
       }
     },
     "notify": {
@@ -1125,6 +1158,17 @@
           "subject": "更改电子邮件验证 - {{brandName}}",
           "title": "更改电子邮件验证",
           "message": "您的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。"
+        },
+        "twoFactorSetup": {
+          "subject": "确认双重验证 - {{brandName}}",
+          "title": "确认双重验证",
+          "enableMessage": "你正在开启双重验证。你的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。",
+          "disableMessage": "你正在关闭双重验证。你的验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。"
+        },
+        "twoFactorSignin": {
+          "subject": "你的登录验证码 - {{brandName}}",
+          "title": "登录验证码",
+          "message": "你的登录验证码是：{{code}}，请在 {{expiresIn}} 分钟内使用。如果不是你本人在登录，请立即修改密码。"
         }
       },
       "collaboratorCellTag": {
@@ -1272,6 +1316,13 @@
           "message": "恭喜！您的 <a href=\"{{spaceUrl}}\">{{spaceName}}</a> 奖励申请已通过。{{amount}} 算力已添加，有效期 {{expiredDays}} 天。",
           "buttonText": "查看空间"
         }
+      },
+      "twoFactorChanged": {
+        "enabledTitle": "双重验证已开启",
+        "enabledMessage": "你的账号已开启双重验证。今后使用密码登录时还需要输入发送到此邮箱的验证码。如果不是你本人操作，请重置密码。",
+        "disabledTitle": "双重验证已关闭",
+        "disabledMessage": "你的账号已关闭双重验证。如果不是你本人操作，请重置密码并重新开启。",
+        "buttonText": "重置密码"
       }
     }
   },

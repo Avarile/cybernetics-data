@@ -992,7 +992,12 @@
       "waitlistNotEnabled": "The waitlist feature is not enabled",
       "emailOrPasswordIncorrect": "Email or password is incorrect",
       "accountDeactivated": "This account has been deactivated by the administrator",
-      "accountLockedOut": "Your account has been locked due to too many failed login attempts. Please try again later."
+      "accountLockedOut": "Your account has been locked due to too many failed login attempts. Please try again later.",
+      "verificationCodeExpired": "The verification code has expired, please request a new one",
+      "twoFactorRequired": "Enter the code we sent to your email to finish signing in",
+      "twoFactorAlreadyEnabled": "Two-factor authentication is already turned on",
+      "twoFactorNotEnabled": "Two-factor authentication is not turned on",
+      "sendTwoFactorCodeFailed": "We couldn't send your sign-in code. Please try again later."
     },
     "automation": {
       "buttonClickTriggerDuplicated": "This button field is already bound to {{name}}[{{id}}] this automation process, please select another button field",
