@@ -217,9 +217,11 @@ export const ViewListItem: React.FC<IProps> = ({ view, removable, isActive, onEd
             role="button"
             tabIndex={0}
             className={cn(
-              'flex h-7 max-w-52 items-center overflow-hidden rounded-md p-1 text-sm hover:bg-accent',
+              'relative flex h-7 max-w-52 items-center overflow-hidden rounded-md p-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground',
               {
-                'bg-accent': isActive && !isHighlighted,
+                // Twenty-style tab: active view is marked by an underline, not a fill
+                'text-foreground after:absolute after:inset-x-1.5 after:bottom-0 after:h-px after:bg-foreground':
+                  isActive && !isHighlighted,
                 'bg-orange-300/40 hover:bg-orange-300/40': isHighlighted,
               }
             )}
@@ -248,7 +250,6 @@ export const ViewListItem: React.FC<IProps> = ({ view, removable, isActive, onEd
               variant="ghost"
               size="xs"
               className={cn('m-0 flex w-full rounded-sm hover:bg-transparent p-0', {
-                'bg-secondary': isActive && !isHighlighted,
                 'bg-orange-300/40': isHighlighted,
               })}
             >

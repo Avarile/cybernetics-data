@@ -1,625 +1,308 @@
-# Base Graph — Implementation Plan
+# Frontend Redesign — Implementation Plan (rev. 2: UI only)
 
-Companion to `current-design.md` (the *what* and *why*). This file is the *order*, the *files*, and
-the *proof* for each step.
+Companion to `current-design.md` (the *what* and *why*; §-numbers and D-numbers point there).
+This file is the *order*, the *files*, and the *proof* for each step.
 
-Branch: `feat-update-knowledge-graph` · Base: `feat-db-setup`
+Branch: `feat/updated-design` (cut from `feat/updated-graphy` at `d9cb232`) · Base: `feat-db-setup`
+Demo to match: https://claude.ai/artifact/8hD9igtVKiPGXAgj8HGnHS
+
+> The previous content of this file (Base Graph plan) is in git history:
+> `git show HEAD:scripts/customized/developments/current-implementation-plan.md`.
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · **GATE** = stop until cleared.
+Size: S ≈ under a day, M ≈ 1–3 days, L ≈ 3–5 days.
 
-## Status — 2026-09-26: implemented, all phases
+**Rule for every phase (design §0):** only styling and draw code change. No new or removed
+controls, no changed handlers, props that carry behaviour, menu items, labels, routes, API calls
+or i18n keys. Each phase ends with a **parity gate** that walks the matching part of design §3.
+A diff that touches an `on*` handler, a `RegionType`, a menu item list or a `useHotkeys` call
+needs a written reason in the PR, or it is reverted.
 
-| Phase | State | Evidence |
-|---|---|---|
-| 0 Quick fixes | ✅ | Superseded by Phase 4 (old page deleted); store isolation now by construction |
-| 1 Engine | ✅ GATE P1 cleared | Unit: resolver 15, assembler 19, helpers 7, knowledge-preset snapshots 7. E2E `base-graph.e2e-spec.ts` 17/17. **Parity** with the v3 assembler held over 7 fixtures + a 300-case seeded fuzz, and end-to-end against a real DB, before v3 was deleted |
-| 2 Generic UI | ✅ (manual GATE P2 not run — see below) | Frontend unit 119/119 incl. 29 new; tsc + lint clean |
-| 3 Scale & freshness | ✅ | Expand endpoint, pre-read ETag + cache (304 path e2e-tested), realtime invalidation, 2D renderer |
-| 4 Integration & retirement | ✅ | Saved presets, table-header deep link, MCP `get_graph` / `get_record_neighbors` (e2e-tested with a PAT), v3 removed, old URL redirects |
+## Status — 2026-10-22: planned, nothing started
 
-Deviations from the plan, decided during implementation:
-
-- **Visual tiers** (`blocks/base-graph/utils/visualTier.ts`): instead of re-tuning physics for v4
-  kinds, each node/link is mapped onto the knowledge-graph tier it plays, so the heavily tuned
-  layout constants in `graphTheme.ts` carry over unchanged.
-- **Degree**: v4 counts a nested *type*'s edge to its parent, as for every other node; v3 omitted it
-  for types only. Asserted, not hidden, in the parity work.
-- **ETag probe** steps aside (full-payload ETag, no cache) whenever a used or filtered field is
-  computed — a formula/lookup can change without its row being written. The feared "symmetric link"
-  gap turned out not to exist: a drawn link always has both tables probed.
-- **Node breadcrumb** walks the hierarchy per level (depth cap 32) rather than reading from the
-  cached graph; in a cyclic hierarchy it can disagree with the graph about which edge was cut.
-- **Record-level deep link** from the SDK expand-record menu was not added (needs an SDK slot);
-  the graph accepts `?focus=rec:…`, and the table header links to the graph.
-- MCP graph tools are grouped under `discovery` in the manifest (no new group, no UI change).
-
-Not done / needs a human:
-
-- GATE P2/P3 manual checks in a browser on `data-centre` (3D/2D rendering, record editor opened
-  from the graph, live refresh). Everything around the canvas is covered by a component test; the
-  WebGL canvas itself cannot run in happy-dom.
-- Pre-existing failures, unchanged on clean HEAD: `table-open-api.service.spec.ts`
-  (`cleanTablesRelatedData`) and `mcp.e2e-spec.ts` "deletes records and leaves them restorable" —
-  the latter reads a record *after* deleting it and JSON-parses the error text.
-
-
----
-
-## 0. Ground rules
-
-- Every phase ends green: `pnpm -F @teable/backend test-unit`, `pnpm -F @teable/app test-unit`,
-  type-check, lint. E2E suites named per phase must pass before the phase is marked done.
-- Files stay under 500 lines. The assembler is split by concern from the start (see 1.6).
-- The old `/knowledge-graph` page and API keep working until Phase 4 removes them. No phase
-  breaks the current page.
-- No raw SQL against data tables except the aggregate ETag probe in 3.2, and that goes through
-  `RecordService.buildFilterSortQuery` so it uses the same filter compilation as the reads.
-- Contract changes go into `packages/openapi` first; backend and frontend import from there only.
-
-### 0.1 Decisions taken for the open questions in the design
-
-| # | Question | Decision for v1 | Revisit |
+| Phase | Size | Depends on | State |
 |---|---|---|---|
-| Q1 | Where presets live | `localStorage`, keyed by `baseId`, plus built-in code presets (knowledge). A `graph_presets` table is Phase 4, optional | After Phase 2 usage |
-| Q2 | One-way links | Included by default. They are real links; with no symmetric field there is nothing to dedupe | — |
-| Q3 | Lookup/rollup as edges | No. Link fields only | v5 |
-| Q4 | Record-level permissions | Not planned. **GATE P3-A** re-checks before the ETag probe ships | Phase 3 |
+| 0 Baseline | S | — | [ ] |
+| 1 Token foundation | M | 0 | [ ] |
+| 2 Grid theme bridge | M | 1 | [ ] |
+| 3 Grid drawing | L | 2 | [ ] |
+| 4 Shell and sidebar | S | 1 | [ ] |
+| 5 Table header, view tabs, tool bar | M | 1 | [ ] |
+| 6 Menus, popovers, dialogs, record modal | M | 1 | [ ] |
+| 7 Other views and pages | L | 1–3 | [ ] |
+| 8 Parity QA and cleanup | M | all | [ ] |
+
+```mermaid
+graph LR
+  P0[0 Baseline] --> P1[1 Tokens]
+  P1 --> P2[2 Grid bridge] --> P3[3 Grid drawing] --> P7[7 Other views]
+  P1 --> P4[4 Shell]
+  P1 --> P5[5 Header + tool bar]
+  P1 --> P6[6 Menus + modal]
+  P3 --> P8[8 Parity QA]
+  P4 --> P8
+  P5 --> P8
+  P6 --> P8
+  P7 --> P8
+```
+
+Phases 2–3, 4, 5 and 6 can run in parallel once Phase 1 is merged.
+
+## Step tracker
+
+One line per step; a step is `[x]` only with evidence (commit, test output) in the Evidence column.
+Phase details, files and proof are in the phase sections below.
+
+| # | Phase | Step | State | Evidence |
+|---|---|---|---|---|
+| 01 | P0 | Work on branch `feat/updated-design` | [x] | branch exists at `d9cb232`, 2026-10-22 |
+| 02 | P0 | Write the parity suite (design §3) | [~] | `apps/nextjs-app/e2e/parity/`: grid page done, 11 tests / 17 recorded checks, green 3× in compare mode on `d9cb232` (2026-10-22). Sidebar, header tabs, kanban and modal checks are added in the phase that touches each area |
+| 03 | P0 | Capture before-screenshots | [x] | `redesign-baseline/before-*` (git-ignored locally): data-centre grids + space, light and dark; fixture grid, grouped grid, kanban, field menu, record menu, filter, record modal, space, light and dark (`E2E_SHOTS=before`) |
+| 04 | P0 | Record the grid FPS baseline | [x] | `fps.parity.ts`, 10k rows, 10 s scroll: run 1 p50 16.7 ms / p95 16.8 ms, run 2 p50 16.7 ms / p95 33.4 ms (≈55 fps), headless Chrome |
+| 05 | P1 | Replace tokens in `global.shadcn.css`, delete amber | [x] | Twenty light under `:root`, dark under `.dark`, amber blocks deleted; body font Inter Variable; `themeColor` dark `#171717`. Parity 11/11 after the change |
+| 06 | P1 | Expose the new tokens in Tailwind; font sizes | [x] | `packages/ui-lib/tailwind.config.cjs`: `background-secondary`, `foreground-tertiary`, `foreground-light`, `border-light`, `selection`, `hue.*`, `shadow-1/2`, `text-2xs/xs/sm` = 11/12/13px. (`themes/tailwind/tailwind.theme.js` is not loaded by any config, so it was left alone) |
+| 07 | P1 | Add the contrast-check script | [x] | `check-contrast.mjs`: 20/20 pairs pass (light text 12.6:1, muted 5.7:1, dark text 15.1:1) |
+| 08 | P1 | Sweep "dark under light" classes | [x] | grep for literal hex / black-white classes: only image overlays, brand logos and `dark:`-only overrides remain; the fork's dark commit `dfe47e2` touched 4 files, so upstream light/dark classes are intact. Toolbar active fills move in step 20 |
+| 09 | P2 | Add colour and tag-style utils with specs | [x] | `grid/utils/color.ts`, `tag-style.ts`; 13/13 specs pass (`vitest run src/components/grid/utils`) |
+| 10 | P2 | Rewrite `useGridTheme` from CSS variables | [x] | `buildGridTheme` + MutationObserver on the root class; `gridTheme.ts` defaults are light hex; 5 new specs, grid specs 37/37; sdk typecheck clean apart from 3 pre-existing spec errors (`record.spec.ts`, openapi stream specs); screenshots `p2-*` |
+| 11 | P2 | Key the sprite cache on `themeKey` | [x] | no change needed: `SpriteManager` keys on `${bgColor}_${fgColor}_${size}_${sprite}`, so new theme colours make new sprites (verified visually in `p2-*` dark/light) |
+| 12 | P3 | Grid geometry and row head | [x] | `columnStatisticHeight` 40→32; row-head checkbox 14px / radius 3 in the same 16px slot. **Deviation:** `groupHeaderHeight` stays 48 (a one-line 36px header would clip the group value in narrow first columns). Coordinate spec 15/15, parity 11/11 |
+| 13 | P3 | Header and frozen divider | [x] | menu triangle → 12px chevron in the same `columnHeadMenuSize` box; lock/description sprites unchanged; header text keeps its weight (the text drawer has no weight option, so measuring is unchanged). Divider already 1px + shadow on scroll; recoloured by tokens |
+| 14 | P3 | Tags, chips, checkbox, numbers | [x] | `displayChoiceMap` carries `colorName`; select renderer draws `getTagStyle` (outline / soft / strong) with radius 4, padding kept at 8 so the tag × region is unchanged. Checkbox cell 16px box in the unchanged 20px target. Relation chips already neutral via `cellOptionBg`. Row counter and draft-row accents on tokens |
+| 15 | P3 | Group, append and statistic rows | [x] | group rows recoloured by tokens and tag styles via the shared choice map; statistic row 32px; append row unchanged geometry. Filter/sort/group column tints left as upstream light/dark values |
+| 16 | P3 | Primary-cell avatar | [x] | `ITextCell.avatar` (set for primary single-line text); 14px hashed-hue square + initial, text shifted 20px, measure uses the same width. No new region. Known: the text editor opens at the old 8px inset (text moves 20px left while editing) |
+| 17 | P3 | Active cell, selection, editors | [x] | no canvas change needed: active cell already 1px `cellLineColorActived` radius 2, selection uses `--selection`; editor popups follow the ui-lib restyle (step 21) |
+| 18 | P4 | Shell and sidebar | [x] | sidebar on `bg-background-secondary`, no divider line; base content wrapped in one `rounded-lg border` card on the page ground (`BaseLayout`). Other layouts (space, settings, share) still flush — see 25 |
+| 19 | P5 | Table header and view tabs | [x] | view tabs: muted text, active view underlined instead of filled (classes only; DnD, menus, rename unchanged) |
+| 20 | P5 | Tool bar and active fills | [x] | filter / sort / group active fills → `bg-hue-{purple,orange,green}/15` in grid, kanban, calendar, gallery bars (fixes the unreadable dark "Group by" button) |
+| 21 | P6 | ui-lib menus, popovers, dialogs | [x] | popover, hover-card, context-menu, dropdown, select: `rounded-lg border-border shadow-2`; separators `bg-border`; dialog `shadow-2`. ui-lib lint 0 errors |
+| 22 | P6 | Record modal and add-record modal | [x] | DOM tags (`getTagCss`, `color-mix` on theme vars) in `CellSelect`/`SelectTag`, grid select editor and filter tags; modal itself already two-column, restyled by tokens |
+| 23 | P7 | Kanban | [x] | stack headers and card tags use the DOM tag styles; cards follow tokens (`p5-*`) |
+| 24 | P7 | Gallery, calendar, form, list | [~] | tokens + tool bar fills only; calendar events get CSS tag colours via `getColorPairs`. No view-specific screenshots yet |
+| 25 | P7 | Space, settings, admin, share pages | [~] | tokens only; the bordered-card shell is not yet applied to Space/Setting/Share layouts |
+| 26 | P8 | Full parity suite and manual §3 walk | [ ] | |
+| 27 | P8 | Colour sweep, accessibility, FPS | [~] | amber grep empty (outside a negative spec); FPS after: p50 16.7 / p95 16.8 ms ×2 = baseline. axe run not done |
+| 28 | P8 | Diff audit for behaviour changes | [x] | `git diff -U0` on ts/tsx: no added `on*=` handlers, `useHotkeys`, `RegionType`, or menu items. Behavioural surface unchanged; parity 11/11 ×2 at the end |
+| 29 | P8 | Architecture doc and status update | [ ] | |
+
+Commands used for proof throughout:
+
+```bash
+pnpm -F @teable/sdk typecheck && pnpm -F @teable/sdk lint && pnpm -F @teable/sdk test-unit
+pnpm -F @teable/app typecheck && pnpm -F @teable/app lint && pnpm -F @teable/app test-unit
+pnpm -F @teable/ui-lib typecheck && pnpm -F @teable/ui-lib lint
+```
 
 ---
 
-## 1. File map
+## Phase 0 — Baseline (S)
 
-### New — contract (`packages/openapi/src/base-graph/`)
+- [ ] 0.1 Cut `feat-twenty-ui` from `feat-db-setup`.
+- [ ] 0.2 **Behaviour baseline.** Write a Playwright parity suite in
+  `apps/nextjs-app/e2e/parity/` (existing `playwright.config.ts`) that drives every row of design §3
+  against `data-centre › tasks` and asserts the outcome (menu item lists and order, which dialog
+  opens, record count after insert / delete, sort order, filter results, undo / redo, keyboard
+  edits). It runs green on the **unchanged** app first. This suite is the contract.
+  Use system Chrome at `/usr/bin/google-chrome`, because Playwright's bundled browsers are not installed.
+- [ ] 0.3 Before-screenshots of space home, grid (flat, grouped by `progress`), record modal,
+  kanban and settings.
+- [ ] 0.4 Grid FPS baseline: 10k rows, scroll for 10s with `performance-tracker`, p50 / p95.
+- [x] 0.5 **GATE** cleared 2026-10-22 (design §10): the amber palette is removed, and primary-cell avatars are kept.
 
-| File | Contents |
-|---|---|
-| `types.ts` | `BASE_GRAPH_VERSION = 4`, id prefixes, node/link kind enums, node/link/stats zod schemas |
-| `schema.ts` | `GET /base/{baseId}/graph/schema` route, `IBaseGraphSchemaVo`, `getBaseGraphSchema()` |
-| `query.ts` | `POST /base/{baseId}/graph/query` route, `baseGraphQueryRoSchema`, `IBaseGraphVo`, `queryBaseGraph()` |
-| `node.ts` | `GET /base/{baseId}/graph/node/{recordId}` route, `IBaseGraphNodeVo`, `getBaseGraphNode()` |
-| `expand.ts` | (Phase 3) `POST /base/{baseId}/graph/expand` route, `expandBaseGraph()` |
-| `index.ts` | re-exports; add `export * from './base-graph'` to `packages/openapi/src/index.ts` |
-
-### New — backend (`apps/nestjs-backend/src/features/base-graph/`)
-
-| File | Contents |
-|---|---|
-| `base-graph.module.ts` | imports `RecordModule`; registered in `app.module.ts` next to `KnowledgeGraphModule` |
-| `base-graph.controller.ts` | four routes, `@Permissions('record\|read')`, mounted at `api/base/:baseId/graph` |
-| `base-graph.service.ts` | orchestration: plan → read → assemble → etag |
-| `graph-plan.resolver.ts` | validates the query DTO against base metadata, produces `IGraphPlan` |
-| `graph-row.reader.ts` | per-table `getRecordsFields` → `IGraphRow[]` |
-| `assembler/assemble-base-graph.ts` | pure entry point |
-| `assembler/structure.ts` | hierarchy + group + hub parent resolution (uses `knowledge-type-tree.ts`) |
-| `assembler/edges.ts` | link-edge extraction, symmetric dedupe, budget |
-| `assembler/budget.ts` | per-table + global node budget allocation |
-| `assembler/*.spec.ts` | unit specs per file |
-| `graph-etag.service.ts` | (Phase 3) aggregate probe + cache |
-| `presets/knowledge.preset.ts` | knowledge preset as data, used by specs and the adapter |
-| `base-graph.config.ts` → in `src/configs/` | `BASE_GRAPH_MAX_NODES`, `BASE_GRAPH_MAX_LINKS`, `BASE_GRAPH_DEFAULT_TABLE_LIMIT`, `BASE_GRAPH_CACHE_TTL` |
-
-`knowledge-type-tree.ts` moves to `features/base-graph/hierarchy.ts` (pure move; the old module
-re-imports it from there until deleted).
-
-### New — frontend (`apps/nextjs-app/src/features/app/blocks/base-graph/`)
-
-| File | Contents |
-|---|---|
-| `DynamicBaseGraph.tsx` | `next/dynamic`, `ssr: false` (same reason as today) |
-| `BaseGraph.tsx` | container: data hooks, derived graph, layout of panels |
-| `BaseGraphCanvas.tsx` | generalised from `KnowledgeGraphCanvas.tsx`, kind-keyed |
-| `panels/GraphQueryPanel.tsx` | table checklist, view picker, filter, hierarchy/group, link fields |
-| `panels/TableFilterDialog.tsx` | wraps SDK `FilterWithTable` |
-| `panels/GraphLegend.tsx` | grouped by table → root |
-| `panels/NodeDetailPanel.tsx` | generic fields + neighbour counts + open record |
-| `panels/NodeSearch.tsx` | ported from `KnowledgeNodeSearch.tsx` |
-| `GraphToolbar.tsx` | ported from `KnowledgeGraphToolbar.tsx` |
-| `hooks/useGraphSchema.ts`, `useBaseGraph.ts`, `useGraphNode.ts`, `useGraphQueryParam.ts`, `useGraphLiveInvalidation.ts` | data + URL + realtime |
-| `store/createGraphStore.ts`, `store/GraphStoreProvider.tsx` | per-base zustand store |
-| `utils/queryCodec.ts` | query DTO ⇄ URL param |
-| `utils/buildSimulationGraph.ts`, `utils/graphTheme.ts` | generalised copies; `hooks/useFullscreen.ts`, `hooks/useResizeObserver.ts` moved as-is |
-| `presets.ts` | built-in presets + localStorage presets |
-| page: `apps/nextjs-app/src/pages/base/[baseId]/graph.tsx` | same SSR shape as `knowledge-graph.tsx` |
-
-### Changed
-
-| File | Change |
-|---|---|
-| `apps/nestjs-backend/src/app.module.ts` | add `BaseGraphModule` |
-| `apps/nestjs-backend/src/configs/config.module.ts`, `env.validation.schema.ts` | add base-graph config and Joi keys |
-| `packages/sdk/src/config/react-query-keys.ts` | `baseGraphSchema`, `baseGraph`, `baseGraphNode` keys |
-| `packages/common-i18n/src/locales/{en,…}/baseGraph.json`, `I18nNamespaces.ts` | new `baseGraph` namespace |
-| `apps/nextjs-app/src/features/i18n/base-all.config.ts` | add `baseGraph` |
-| `apps/nextjs-app/src/features/app/blocks/base/base-side-bar/BasePageRouter.tsx` | link → `/graph` |
-| `apps/nestjs-backend/src/cache/types.ts` | Phase 3: `base-graph:*` keys in `ICacheStore` |
-| `apps/nestjs-backend/src/features/mcp/tools/` | Phase 4: `graph.tools.ts` |
-
-### Deleted (Phase 4)
-
-`features/knowledge-graph/` (backend), `blocks/knowledge-graph/` (frontend),
-`packages/openapi/src/knowledge-graph/`, `knowledge.config.ts`, the `KNOWLEDGE_*` Joi keys,
-`knowledgeGraph` i18n namespace and query keys, `test/knowledge-graph.e2e-spec.ts` (after its cases
-are ported), `src/types.d/d3-force-3d.d.ts` stays (still used).
+Proof: the parity suite is green on the base branch; screenshots and FPS numbers are recorded here.
 
 ---
 
-## Phase 0 — Quick fixes on the current page (independent, ~0.5 day)
+## Phase 1 — Token foundation (M)
 
-Ship these first; they are useful even if the rest slips.
-
-- [ ] **0.1 Reset view state on base change.** In `KnowledgeGraph.tsx`, `useEffect(() => reset(), [baseId])`.
-  Test: `KnowledgeGraph.spec.tsx` — render with base A, hide a type, rerender with base B →
-  `hiddenTypeIds` empty, `focusedNodeId` null.
-- [ ] **0.2 Remove dead `searchQuery`** from `useKnowledgeGraphStore.ts`. Verify: `grep -rn searchQuery` empty.
-- [ ] **0.3 Fix the `CANVAS_BACKGROUND` comment** in `KnowledgeGraph.tsx` to state what the value is
-  (a light canvas on purpose), not a dark-only claim.
-- [ ] **0.4 Escape pipes in `current-design.md` tables** (`record\|read`) — markdownlint MD056.
-
-Exit: unit tests green, page behaves identically apart from 0.1.
-
----
-
-## Phase 1 — Backend engine (~5–6 days)
-
-### 1.1 Contract (`packages/openapi/src/base-graph/`)
-
-- [ ] `types.ts`
-
-```ts
-export const BASE_GRAPH_VERSION = 4;
-export const RECORD_NODE_PREFIX = 'rec:';     // rec:<recordId>
-export const TABLE_NODE_PREFIX = 'tbl:';      // tbl:<tableId>
-export const GROUP_NODE_PREFIX = 'grp:';      // grp:<fieldId>:<recordId> | grp:<fieldId>:__none__
-export const BASE_NODE_ID = 'base';           // optional base hub (the old `core`)
-
-export const GraphNodeKindValues = ['base', 'table', 'group', 'record'] as const;
-export const GraphLinkKindValues = ['hub', 'group', 'hierarchy', 'link'] as const;
-
-node  = { id, kind, tableId: string|null, recordId: string|null, label,
-          parentId: string|null, colorKey: string|null, depth: int, degree: int }
-link  = { source, target, kind, fieldId: string|null }
-stats = { perTable: { tableId, emitted, truncated }[], nodeCount, linkCount,
-          truncated: { nodes, links }, cyclesDropped, danglingLinks, groupOrphans }
-```
-
-- [ ] `schema.ts` — VO per table: `id, name, icon, primaryFieldId, primaryFieldName,
-  approxRecordCount, views: {id,name}[], linkFields: {id, name, foreignTableId, relationship,
-  isOneWay, symmetricFieldId, isSelfLink, isMultipleCellValue}[], suggestedHierarchyFieldId`.
-- [ ] `query.ts` — RO:
-
-```ts
-baseGraphQueryRoSchema = z.object({
-  tables: z.array(z.object({
-    tableId: z.string().startsWith('tbl'),
-    viewId: z.string().startsWith('viw').optional(),
-    filter: filterSchema.nullable().optional(),        // from @teable/core
-    limit: z.number().int().min(1).max(20000).optional(),
-    hierarchyFieldId: z.string().startsWith('fld').optional(),
-    groupByFieldId: z.string().startsWith('fld').optional(),
-  })).min(1).max(50),
-  linkFieldIds: z.array(z.string().startsWith('fld')).optional(),  // undefined = all eligible
-  showTableHubs: z.boolean().default(false),
-  showBaseHub: z.boolean().default(false),
-  maxNodes: z.number().int().min(1).optional(),
-  maxLinks: z.number().int().min(1).optional(),
-}).refine(unique tableIds)
-```
-
-- [ ] `node.ts` — VO: `id, recordId, tableId, tableName, label, fields: {fieldId, name, type,
-  cellValue}[]` (non-hidden, max 20, primary first), `linkCounts: {fieldId, name, count,
-  foreignTableId}[]`, `ancestors: {id,label}[]`, `createdTime`, `lastModifiedTime`.
-- [ ] Register all routes with `registerRoute` so they appear in the OpenAPI doc.
-- [ ] `packages/openapi/src/index.ts`: `export * from './base-graph';`
-
-Verify: `pnpm -F @teable/openapi build` (or type-check) passes; schema snapshot test for the RO
-(valid + 6 invalid shapes).
-
-### 1.2 Config
-
-- [ ] `src/configs/base-graph.config.ts` (same style as `knowledge.config.ts`, defaults in the
-  factory, not Joi): `maxNodes 5000`, `maxLinks 15000`, `defaultTableLimit 1000`,
-  `cacheTtlSeconds 60`.
-- [ ] Joi keys `BASE_GRAPH_MAX_NODES|MAX_LINKS|DEFAULT_TABLE_LIMIT|CACHE_TTL` (integer, min 1).
-- [ ] Register in `config.module.ts`.
-
-Client-supplied `maxNodes`/`maxLinks`/`limit` are **clamped** to config, never trusted.
-
-### 1.3 Module skeleton
-
-- [ ] `BaseGraphModule` (`imports: [RecordModule]`), controller with four routes returning
-  `NotImplemented`, registered in `app.module.ts`.
-- [ ] Controller mount `@Controller('api/base/:baseId/graph')`, each route
-  `@Permissions('record|read')`, body validated with `ZodValidationPipe(baseGraphQueryRoSchema)`.
-
-Verify: e2e smoke — unauthenticated → 401; member without base access → 403; valid → 501.
-
-### 1.4 Plan resolver (`graph-plan.resolver.ts`)
-
-Input: `baseId`, RO. Output:
-
-```ts
-interface IGraphTablePlan {
-  tableId: string; tableName: string; dbTableName: string;
-  primaryField: IFieldInstance;
-  viewId?: string; filter?: IFilter; limit: number;
-  hierarchyField?: IFieldInstance;            // single-valued self-link
-  groupField?: IFieldInstance;                // single-valued link to another table
-  groupTargetIncluded: boolean;               // is the group's foreign table in the query?
-  edgeFields: { field: IFieldInstance; foreignTableId: string; readSide: boolean }[];
-}
-interface IGraphPlan { baseId; tables: IGraphTablePlan[]; maxNodes; maxLinks; showTableHubs; showBaseHub }
-```
+Files:
+- `packages/ui-lib/src/shadcn/global.shadcn.css`: delete both "Exocortex amber" blocks; `:root` =
+  Twenty light, `.dark` = Twenty dark (design §5); new tokens `--background-secondary`, `--foreground-tertiary`, `--foreground-light`,
+  `--border-light`, `--selection`, `--shadow-1`, `--shadow-2`, `--hue-*`; `--radius: 0.5rem`.
+- `packages/ui-lib/tailwind.shadcnui.config.cjs`: expose the new colors and shadows.
+- `apps/nextjs-app/src/themes/tailwind/tailwind.theme.js`: font sizes 11 / 12 / 13.
+- `apps/nextjs-app/src/styles/global.css`: FullCalendar overrides on tokens.
+- `apps/nextjs-app/src/AppProviders.tsx`: only `themeColor` (`#ffffff` / `#171717`). The provider
+  config stays the same otherwise.
 
 Steps:
+- [ ] 1.1 Write the tokens.
+- [ ] 1.2 Add `scripts/customized/developments/check-contrast.mjs`: it asserts ≥ 4.5:1 for foreground and
+  muted-foreground on background in both blocks, and ≥ 3:1 for primary.
+- [ ] 1.3 Find classes that assumed "dark under light" (`text-white`, `bg-black`, literal
+  `dark:bg-[#…]`) and move them to tokens. Class names only; no markup or logic changes.
 
-1. One `prisma.tableMeta.findMany({ where: { id: { in }, baseId, deletedTime: null } })`.
-   Any requested table missing → **404** naming the id (generalised `assertTablesInBase`, one query
-   instead of N).
-2. Fields via `recordService.getFieldsByProjection(tableId)` per table (data loader caches).
-3. `viewId` must belong to its table (`prisma.view.findFirst({ id, tableId, deletedTime: null })`) → else 400.
-4. `hierarchyFieldId`: must be on that table, `type === Link`, `options.foreignTableId === tableId`,
-   `!isMultipleCellValue` → else 400 with the reason (same messages style as `resolveFields` today).
-5. `groupByFieldId`: on that table, Link, single-valued, `foreignTableId !== tableId`.
-6. Edge fields: every Link field on an included table whose `foreignTableId` is also included,
-   minus hierarchy/group fields (those are structural), intersected with `linkFieldIds` if given.
-   Unknown id in `linkFieldIds` → 400. Links with `options.baseId` set to another base are skipped
-   (cross-base, design §C.6).
-7. **Read side** for symmetric dedupe: for a field with `symmetricFieldId` whose symmetric field is
-   also an edge field, `readSide = field.id < symmetricFieldId`. Otherwise `readSide = true`.
-8. Budget: `limit = min(t.limit ?? defaultTableLimit, config cap)`.
-
-Spec (`graph-plan.resolver.spec.ts`, mocked prisma + record service): 12 cases — foreign table,
-missing table, wrong-base table, view on wrong table, multi-valued hierarchy, hierarchy pointing
-elsewhere, group = self-link, cross-base link skipped, symmetric pair picks one side, symmetric
-with only one side included, `linkFieldIds` narrowing, clamping.
-
-### 1.5 Row reader (`graph-row.reader.ts`)
-
-```ts
-interface IGraphRow {
-  tableId: string; recordId: string; label: string;
-  parentRecordId: string | null;           // hierarchy
-  group: { recordId: string; title: string } | null;
-  links: { fieldId: string; targetRecordIds: string[] }[];  // only readSide fields
-}
-```
-
-- One `recordService.getRecordsFields(tableId, { fieldKeyType: Id, projection, viewId,
-  ignoreViewQuery: !viewId, filter, take: limit + 1 }, true)` per table. `filter` is ANDed with the
-  view's filter by the existing record query layer when both are given — **verify** in the e2e;
-  if not, AND them in the resolver.
-- Label: `primaryField.cellValue2String(cell)`, empty → `''`. Works for formula, number, link,
-  user primaries.
-- Link cells: reuse `extractLinkRecordId` / `extractRelatedRecordIds` — move them into
-  `features/base-graph/link-cells.ts` and import from the old service.
-- Group title comes from the link cell's `title` (`ILinkCellValue.title`), so a group target table
-  that is *not* included still gets labelled synthetic group nodes with no extra read.
-- Tables are read with `Promise.all` over a concurrency limit of 4 (not unbounded: one connection
-  pool).
-- Returns `{ rows, truncated }` per table (`rows.length > limit` → slice, truncated = true).
-  Sorting for determinism happens in the assembler, not here.
-
-Spec: label conversion for 4 primary types; missing cells (key absent) → nulls; truncation flag.
-
-### 1.6 Pure assembler (`assembler/`)
-
-`assembleBaseGraph(plan: IAssemblerPlan, rowsByTable: Map<tableId, IGraphRow[]>): IAssembledGraph`
-— no Nest, no I/O. `IAssemblerPlan` is the serialisable subset of `IGraphPlan` (ids, flags,
-budgets), so specs build it by hand.
-
-**budget.ts**
-1. Per table: sort rows `byTitleThenId` (label, recordId) — reuse the existing comparator.
-2. If `Σ rows > maxNodes`: allocate `share_t = floor(maxNodes × n_t / Σ n)`, hand leftover slots to
-   tables in `tableId` order, slice each table. Deterministic → stable ETag.
-3. Mark `perTable[t].truncated` if the reader or the budget cut anything.
-
-**structure.ts** — exactly one structural parent per record node:
-1. Hierarchy: `breakCycles(sortedRows)` → `resolveHierarchy` → `orderDepthFirst` on the emitted set
-   (same post-truncation rule as today: a parent cut by the budget ⇒ the child becomes a root).
-2. For a root record (no hierarchy parent):
-   - group field set and target table included and target emitted → parent = `rec:<groupRecordId>`,
-     link kind `group`;
-   - group field set but target table not included → parent = `grp:<fieldId>:<groupRecordId>`
-     (synthetic node, label = link title), link kind `group`;
-   - group field set but cell empty / target not emitted → `grp:<fieldId>:__none__`
-     ("Unclassified"), counted in `stats.groupOrphans`;
-   - else `showTableHubs` → `tbl:<tableId>`, link kind `hub`;
-   - else no parent.
-3. Table hubs and synthetic groups attach to `base` when `showBaseHub`, kind `hub`.
-4. `depth`: hierarchy depth + depth of the structural parent + 1 (hub/base = 0).
-5. `colorKey`: the id of the top-most **non-hub** ancestor (group root or hierarchy root);
-   falls back to `tbl:<tableId>`. This reproduces today's `rootTypeId` for the knowledge preset.
-6. Node order: base, hubs, then per table in plan order, each depth-first — parents before
-   children, as the client's `hiddenClosure` assumes.
-
-**edges.ts**
-1. For each row, for each `links[]` entry, for each target: drop self-links; drop if target not
-   emitted → `danglingLinks++`; key `pairKey(fieldPairId, a, b)` where `fieldPairId` is the smaller
-   of `{fieldId, symmetricFieldId}` — safety-net dedupe on top of read-side selection.
-2. Sort pairs `(source, target, fieldId)`; structural links first, never dropped; `link` edges cut
-   to `maxLinks - structural`. `truncated.links` accordingly.
-3. `degree` = structural (1 if it has a parent) + children + **all** link pairs (before budget),
-   same rationale as today (hubs don't visually shrink when edges are hidden).
-
-**assemble-base-graph.ts** ties them together and fills `stats`.
-
-Specs (target ≥ 40 cases, grouped):
-- *Parity* (the key suite): port every case in `knowledge-graph.assembler.spec.ts` by running the
-  knowledge preset through the new assembler and mapping ids (`type:x→rec:x`, `kn:x→rec:x`,
-  `core→base`, `type:__unclassified__→grp:<knowledge_type fld>:__none__`, link tiers
-  `core-type→hub`, `type-parent→hierarchy`, `type-knowledge→group`, `knowledge-parent→hierarchy`,
-  `knowledge-knowledge→link`). Node set, parent ids, depths, degrees, colour keys and stats must
-  match.
-- Multi-table: goals←projects←tasks chain, contacts↔companies many-many, one-way link, symmetric
-  link with both sides included (one edge), filtered-out targets become dangling, hub mode.
-- Budget: proportional split, leftover distribution, determinism under shuffled input.
-- Cycles in two tables at once; hierarchy parent truncated away.
-
-### 1.7 Service + controller
-
-- [ ] `BaseGraphService.getSchema(baseId)` — table meta + link fields; `approxRecordCount` via
-  `pg_class.reltuples` for the table's `dbTableName` (cheap, may be −1 → report `null`); views list.
-  Reuse the field/table loading pattern from `GraphService.getBaseErdContext` but do **not** call
-  the `/erd` route (it needs `base|update`).
-- [ ] `BaseGraphService.query(baseId, ro)` — resolver → reader → assembler →
-  `etag = "bg4-" + sha1(JSON(graph)).slice(0,16)` (Phase 3 replaces with the probe ETag).
-- [ ] `BaseGraphService.getNode(baseId, recordId, tableId)` — assert table in base; `getRecord`
-  with `fieldKeyType: Id`, projection = primary + first 20 visible fields of the table's default
-  view (via `viewService`/field order); `linkCounts` from link cells lengths; ancestors: walk
-  hierarchy field with one `getRecord` per level, **depth cap 32**, `seen` guard. (Phase 3 serves
-  ancestors from the cached assembled graph when present so breadcrumbs agree with cycle cuts.)
-- [ ] Controller sets `ETag`, `Cache-Control: private, no-cache`, `Vary: Cookie, Authorization`,
-  honours `If-None-Match` (same as today).
-
-### 1.8 E2E (`apps/nestjs-backend/test/base-graph.e2e-spec.ts`)
-
-Harness exactly like `knowledge-graph.e2e-spec.ts` (`initApp`, `createTable` with `records: []`,
-`createField`). Fixtures: `goals`, `projects` (link → goals), `tasks` (link → projects, self-link
-`parent_task`), `tags` (many-many ↔ tasks).
-
-Cases:
-1. Schema lists all four tables with correct link metadata.
-2. Query with all tables → expected nodes/edges; symmetric many-many edge appears once.
-3. Per-table `filter` narrows rows; edges into filtered rows become `danglingLinks`.
-4. `viewId` with a view filter narrows rows; `viewId` + `filter` are ANDed.
-5. Hierarchy field on `tasks` produces `hierarchy` links, cycle is cut and counted.
-6. Group by `projects` on `tasks` with projects excluded → synthetic `grp:` nodes labelled with titles.
-7. Budget: `limit: 2` sets `perTable.truncated`.
-8. Validation: foreign-base table 404; multi-valued hierarchy 400; unknown linkFieldId 400.
-9. Knowledge preset against knowledge-shaped fixtures returns the same graph as
-   `GET /knowledge-graph` after id mapping (**parity gate**).
-10. Node detail: fields, link counts, ancestors.
-11. `If-None-Match` → 304.
-
-**GATE P1** — all unit + e2e green, parity case 9 passes. Only then start Phase 2.
+Proof: the contrast script passes; three typechecks and lints are clean; the parity suite is green;
+after-screenshots in light and dark.
 
 ---
 
-## Phase 2 — Generic frontend (~5–6 days)
+## Phase 2 — Grid theme bridge (M)
 
-### 2.1 Plumbing
+Files:
+- `packages/sdk/src/components/grid/utils/color.ts` *(new)*: `parseHsl`, `toRgb`, `mixColor`,
+  `withAlpha`.
+- `packages/sdk/src/components/grid/utils/tag-style.ts` *(new)*: `getTagStyle(color, palette)` per
+  D4.
+- `packages/sdk/src/components/grid-enhancements/hooks/use-grid-theme.ts`: build `IGridTheme`
+  from CSS variables on theme change; SSR fallback = light defaults.
+- `packages/sdk/src/components/grid/configs/gridTheme.ts`: light defaults; all amber / cyan hex
+  removed. `IGridTheme` gains `tagPalette`, `selectionBg`, `columnHeaderIconColor`,
+  `shadowColor`. These are drawing inputs only.
+- `packages/sdk/src/components/grid/managers/sprite-manager/SpriteManager.ts`: key the sprite cache
+  on `themeKey` so that icons recolor when the theme switches.
 
-- [ ] Query keys in `react-query-keys.ts`:
-  `baseGraphSchema(baseId)`, `baseGraph(baseId, queryHash)`, `baseGraphNode(baseId, recordId)`.
-- [ ] i18n namespace `baseGraph` (en + zh, copy + adapt `knowledgeGraph.json`), register in
-  `I18nNamespaces.ts` and `base-all.config.ts`.
-- [ ] Page `pages/base/[baseId]/graph.tsx` — copy of `knowledge-graph.tsx` SSR (base + permission
-  prefetch only), renders `DynamicBaseGraph`.
+Key mapping: `cellBg`→`--background`, `cellBgHovered`→`--background-secondary`,
+`cellBgSelected`→`--selection`, `cellLineColor`→`--border-light`, `cellLineColorActived`→`--primary`,
+`cellTextColor`→`--foreground`, `columnHeaderBg`→`--background`, `columnHeaderBgHovered`→`--accent`,
+`columnHeaderBgSelected`→`--selection`, `columnHeaderNameColor`, `iconFgCommon` and
+`rowHeaderTextColor`→`--foreground-tertiary`, `iconBgSelected`→`--primary`,
+`groupHeaderBg*`→`--background-secondary` / `--accent`, `columnStatisticBgHovered*`→`--accent`,
+`scrollBarBg` and `interactionLineColorCommon`→`--border-high`,
+`interactionLineColorHighlight` and `columnResizeHandlerBg`→`--primary`,
+`columnDraggingPlaceholderBg`→primary 10%, `commentCountBg`→`--destructive`,
+`searchCursorBg` / `searchTargetIndexBg`→yellow hue 35% / 18%.
 
-### 2.2 URL state (`utils/queryCodec.ts`, `hooks/useGraphQueryParam.ts`)
+Steps:
+- [ ] 2.1 `color.ts` + spec.
+- [ ] 2.2 `tag-style.ts` + spec: all 50 `Colors` map; the D4 table; the user's pairs
+  (`redDark1`/`redBright`, `greenLight1`/`green`) stay distinct.
+- [ ] 2.3 Rewrite `useGridTheme`; delete the duplicated dark object.
+- [ ] 2.4 Switch the theme at runtime and confirm a full repaint with no stale sprites.
 
-- URL params: `preset` (built-in or saved id), `q` (encoded RO), `focus` (`rec:…`).
-- `q` = base64url(JSON) of the RO with defaults stripped. No new dependency (no lz-string in the
-  repo). Hard cap 6 KB encoded; above it, the UI saves a local preset and writes `preset=` instead.
-- Decode → validate with `baseGraphQueryRoSchema.safeParse`; invalid → fall back to default preset
-  and show a toast. Never send an unvalidated URL payload.
-- Writes use `router.replace(..., { shallow: true })` for panel edits and `router.push` for preset
-  switches (so Back undoes a preset change, not every checkbox).
-- `queryHash` = stable stringify (sorted keys) of the normalised RO, used in the query key.
-
-Spec: round-trip, default stripping, invalid input fallback, size cap.
-
-### 2.3 Per-base store (`store/`)
-
-- `createGraphStore()` via `zustand/vanilla` `createStore`; `GraphStoreProvider` keyed by `baseId`
-  (`<GraphStoreProvider key={baseId}>`) — a new base gets a new store by construction (supersedes 0.1).
-- State: `focusedNodeId`, `hiddenNodeIds` (exclusions; subtree semantics via `hiddenClosure`),
-  `hiddenTableIds`, `autoRotate`, `showLegend`, `showQueryPanel`, `expanded: IBaseGraphVo[]` (Phase 3).
-- `focus` from the URL seeds `focusedNodeId` once on mount.
-
-### 2.4 Data hooks
-
-- `useGraphSchema()` — `staleTime 5m`.
-- `useBaseGraph(ro)` — `useQuery({ queryKey: baseGraph(baseId, hash), queryFn: queryBaseGraph,
-  placeholderData: keepPreviousData, staleTime 60s })`. Error UI stays in the component (shared
-  QueryCache swallows 4xx, as noted in the current hook).
-- `useGraphNode(recordId, tableId)`.
-
-### 2.5 Derived graph (`utils/buildSimulationGraph.ts`)
-
-Generalise the current file: `hiddenClosure(nodes, hiddenNodeIds)` unchanged in logic; add table
-filter (`node.tableId in hiddenTableIds` → hidden, cascades through the closure); visibility:
-`base` node and `hub` links invisible (same trick as `core` today, keeps the layout connected).
-Keep the clone-before-render rule. Port `buildSimulationGraph.spec.ts` (640 lines of cases) and add
-table-hiding cases.
-
-### 2.6 Theme + canvas
-
-- `graphTheme.ts`: lookups keyed by `node.kind` / `link.kind` (base/table/group/record;
-  hub/group/hierarchy/link). Colour: hue from `hash(colorKey)`, lightness by `depth` — same
-  function as today's `colorForNode` with `colorKey` in place of `rootTypeId`. Per-table palette
-  override map for stable, distinguishable table colours.
-- `BaseGraphCanvas.tsx`: port `KnowledgeGraphCanvas.tsx`; replace tier lookups with kind lookups;
-  label sprites for `table`, `group`, focused node, and top-N by degree (N = 150) to bound sprite
-  count. Keep sprite disposal, time-based rotation, gated mount on non-zero size.
-- Port `graphTheme` specs; add a spec that every kind has an entry (total lookups).
-
-### 2.7 Panels
-
-- [ ] `GraphQueryPanel` (collapsible, left): from schema — table rows (checkbox, colour swatch,
-  name, approx count), expand a row for: view `Select`, "Filter…" (opens `TableFilterDialog`),
-  hierarchy field `Select` (self-link fields only, pre-filled with `suggestedHierarchyFieldId`),
-  group-by `Select` (single-valued links to other tables). Relationships section: link fields
-  between checked tables. `auditlog`, `system_*`, `template_table` unchecked by default (name list
-  in `presets.ts`, UI default only). All edits write the URL (2.2), never the store.
-- [ ] `TableFilterDialog`: `FilterWithTable` needs `fields: IFieldInstance[]` and a link context —
-  load the table's fields with the SDK field fetch used by `LookupFilterOptions.tsx` and mirror its
-  props (it is the closest existing usage).
-- [ ] `GraphLegend`: sections per table, rows per root (group/hierarchy root), toggles
-  `hiddenNodeIds`; table header toggles `hiddenTableIds`; "show all".
-- [ ] `NodeDetailPanel`: label, table name, breadcrumb (same rtl-truncation trick as today),
-  fields rendered with SDK `CellValue`, link counts per field, **Open record** →
-  `<ExpandRecorder tableId recordId recordIds={[recordId]} onClose>` (same usage as
-  `CalendarProvider.tsx:101`); on close, invalidate `baseGraph` and `baseGraphNode`.
-- [ ] `NodeSearch`, `GraphToolbar`: ports; toolbar shows per-table truncation in a popover instead
-  of the single banner.
-
-### 2.8 Built-in presets (`presets.ts`)
-
-- `knowledge`: resolved from schema **by table and field name once** (`knowledges`,
-  `knowledge_type`, `knowledge_parent`, `parent_type`, `knowledge_type`, `related_knowledge`,
-  `deleted_at is empty` filter) and then kept as ids. If a name is missing, the preset is shown
-  disabled with the reason — never a 404 page.
-- `work`: goals ← projects ← tasks.
-- `people`: contacts ↔ companies + contact_type/profession groups.
-- `finance` (filtered: last 90 days of `finance_Transactions`).
-- Default for a base with none of these: all tables except system ones, hubs on.
-
-### 2.9 Navigation
-
-- `BasePageRouter.tsx`: entry points to `/base/:id/graph`, label "Graph".
-- `knowledge-graph.tsx`: keep, but add a visible "Open in new graph" link during the transition.
-  (Redirect happens in Phase 4.)
-
-### 2.10 Frontend tests
-
-Unit (vitest): codec, store provider isolation per base, `buildSimulationGraph`, theme totality,
-`GraphQueryPanel` (checking a table updates the URL RO), `NodeDetailPanel` (opens ExpandRecorder),
-presets resolution incl. missing field.
-
-**GATE P2** — manual pass on `data-centre` in the dev stack (`apps/nextjs-app/.env.development.local`,
-Postgres `30898`): knowledge preset looks and behaves like the old page; `work` and `people`
-presets render cross-table edges; a filter change keeps the old graph on screen until the new one
-arrives; opening and editing a record updates the graph on close.
+Proof: specs pass; `grep -rn "FFB547\|4DE8FF\|0E0C08" packages apps --include=*.ts*` is empty;
+the parity suite is green.
 
 ---
 
-## Phase 3 — Scale & freshness (~4 days)
+## Phase 3 — Grid drawing (L)
 
-### 3.1 Expand endpoint
+Only `draw*` functions and cell renderers' `draw` paths change. `checkRegion`, `onClick`,
+`RegionType`, `coordinate-manager` and `InteractionLayer` handlers are **not edited**.
 
-- [ ] Contract `expand.ts`: RO `{ tableId, recordId, linkFieldIds?, limit (≤ 500), exclude?:
-  string[] (node ids the client has) }` → VO `{ nodes, links, truncated }` in the v4 shapes.
-- [ ] Service: `getRecord` for the link cells of the seed record, group target ids by foreign
-  table, one `getRecordsById`-style read per foreign table (projection primary only), build nodes
-  with `parentId: null`, `colorKey: tbl:<tableId>`, links kind `link`. Permission: base
-  `record|read`; foreign tables must be in the same base (same resolver check).
-- [ ] Frontend: store keeps `expanded[]`; `buildSimulationGraph` merges base graph + expansions
-  (dedupe by id; base graph wins). Detail panel "Expand" per link field. Expansions are cleared when
-  the query hash changes.
-- Specs + e2e: expand returns neighbours, respects `exclude`, rejects foreign-base.
+Files (under `packages/sdk/src/components/grid/`):
+- `configs/grid.ts`: design §7 (statistic 32, group header 36). Nothing else.
+- `renderers/layout-renderer/layoutRenderer.ts`:
+  - `drawRowHeader`: same three controls in the same slots; new colors, 14px checkbox, radius 3.
+  - `drawColumnHeader`: tertiary icon / name (500); the triangle becomes a 12px chevron drawn in the
+    same `columnHeadMenuSize` box; lock and description sprites stay where they are.
+  - `drawCells` / `drawActiveCell` / `drawFillHandler`: new fills, 1px active border.
+  - `drawGroupRow` / `drawGroupRowHeader`: 36px, chevron, tag via `getTagStyle`, count.
+  - `drawAppendRow` / `drawAppendColumn`: centred "+" in tertiary; same widths.
+  - `drawColumnStatistics` / `drawStatisticCell`: 32px, tertiary label + 500 value; the "Summary"
+    hover text and its trigger stay the same.
+  - `drawFreezeRegionDivider`: 1px border + soft shadow while scrolled; handler box unchanged.
+- `renderers/cell-renderer/selectCellRenderer.ts`: D4 colors, radius 4, padding 6. Re-run its
+  hit-test spec cases for the delete "×" on multi-select tags.
+- `renderers/cell-renderer/linkCellRenderer.ts`, `userCellRenderer.ts`: chip fill and avatar.
+- `renderers/cell-renderer/textCellRenderer.ts`: avatar before the primary text (drawing only;
+  the text start offset moves, so the editor's text alignment is checked in 3.5).
+- `renderers/cell-renderer/booleanCellRenderer.ts`: 14px box, `--primary` fill.
+- `components/editor/EditorContainer.tsx`: border / radius / shadow classes only.
 
-### 3.2 Pre-read ETag + cache
+Steps:
+- [ ] 3.1 Geometry (§7) + row head colors.
+- [ ] 3.2 Header + frozen divider.
+- [ ] 3.3 Tags, chips, checkbox, numbers.
+- [ ] 3.4 Group rows, append row / column, statistic row.
+- [ ] 3.5 Primary avatar (kept, design §10.2): drawn only, no new region; check that the editor text lines up with the text after the avatar.
+- [ ] 3.6 Active cell, selection, fill handle, editors.
 
-- **GATE P3-A**: confirm no record-level permission plan (design Q4). If there is one, the probe
-  must be built on `RecordPermissionService.getReadQuerySource` first.
-- [ ] `graph-etag.service.ts`: per plan table, build the filtered query with
-  `recordService.buildFilterSortQuery(tableId, { viewId, ignoreViewQuery, filter })` (public), then
-  `select count(*) as n, max(coalesce(__last_modified_time, __created_time)) as m`. Also include
-  field meta `lastModifiedTime` for the plan's fields (renames/type changes) and `queryHash`.
-  `etag = "bg4-" + sha1(all of that)`.
-- [ ] Cache: `CacheService` with a new typed key
-  `` [key: `base-graph:${string}`]: IBaseGraphVo `` in `cache/types.ts`; key
-  `base-graph:<baseId>:<queryHash>:<etag>`, TTL `BASE_GRAPH_CACHE_TTL`.
-- [ ] `query()` flow: probe → `If-None-Match` hit → 304 without reading rows; cache hit → return
-  cached; else read + assemble + store.
-- [ ] Node detail ancestors: look up the latest cached graph for any query containing the table
-  (store a small `base-graph-ancestors:<baseId>:<tableId>` map when assembling) — fall back to the
-  walk.
-- Verify in e2e: unchanged data → 304; edit a record → new ETag; delete a record → new ETag; toggle
-  a link on record A (symmetric field on B changes) → new ETag; rename the primary field → new ETag.
-  **If any of these fail, the probe is incomplete — do not ship it; keep full-read ETag.**
-
-### 3.3 Freshness on the client
-
-- [ ] `refetchOnWindowFocus: true` for `useBaseGraph` (cheap now).
-- [ ] `useGraphLiveInvalidation(tableIds)`: renders one `<TableListener tableId>` per included table
-  using SDK `useTableListener(tableId, ['addRecord','setRecord','deleteRecord'], cb)`; `cb`
-  debounced 2s → `invalidateQueries(baseGraph(baseId))`. Hard cap: listeners only when ≤ 20 tables.
-
-### 3.4 Large-graph rendering
-
-- [ ] Add `react-force-graph-2d` (new dependency — same author/version line as the 3D package,
-  confirm version pin matches `1.29.x` family) and a toolbar toggle `3D / 2D`; auto-suggest 2D above
-  3000 visible nodes. Loaded via `next/dynamic` like the 3D canvas.
-- [ ] Check `.size-limit.js` still passes (graph code must stay out of the initial chunk).
-
-**GATE P3** — a filtered `finance_Transactions` graph (≥ 5k rows in the table) loads in < 2s on the
-dev stack, a repeat load is a 304, and edits in the grid show up within ~3s without a manual refresh.
+Proof: unit tests green including `Coordinate-manager.spec.ts`; the parity suite's grid section is green
+(column select, header menu, double-click settings, drag, resize, freeze, fill, range, context
+menus, statistics, group collapse, append row / column); Playwright screenshots match the demo;
+FPS within 10% of the baseline at p95.
 
 ---
 
-## Phase 4 — Integration & retirement (~3 days)
+## Phase 4 — Shell and sidebar (S)
 
-- [ ] **Saved presets**: save / rename / delete current query as a preset in `localStorage`
-  (`base-graph:presets:<baseId>`, try/catch around every access). Optional: "Share to base" writes a
-  row to a `graph_presets` table (name, JSON) if the user creates it — read it through the normal
-  record API; no schema created automatically.
-- [ ] **Deep links**: "Show in graph" in the table view header menu (`q` = that table + current
-  view) and in the expand-record menu (`focus=rec:…`, table + its linked tables).
-- [ ] **MCP tools** (`features/mcp/tools/graph.tools.ts`, registered in `tool-registry.ts`):
-  `get_graph` (RO as input, trimmed output: nodes `{id,label,tableId}`, links, stats) and
-  `get_record_neighbors` (expand). Both call `BaseGraphService` in-process, so PAT scoping and
-  permissions are the existing path. Add to the tool-registry spec and manifest test.
-- [ ] **Retire the old feature**:
-  1. `knowledge-graph.tsx` → `getServerSideProps` returns `redirect` to `/base/:id/graph?preset=knowledge`
-     (pattern: `pages/base/[baseId]/[[...slug]].tsx:59`).
-  2. Delete the files listed in §1 "Deleted"; move remaining shared helpers first.
-  3. Remove `KNOWLEDGE_*` env keys from Joi and any `.env*` examples.
-  4. `grep -rn "knowledge-graph\|knowledgeGraph\|KNOWLEDGE_" apps packages` → only the redirect.
+Files: `layouts/BaseLayout.tsx`, `SpaceLayout.tsx`, `SpaceInnerLayout.tsx`, `SettingLayout.tsx`
+(wrapper classes: page ground + bordered card); `components/sidebar/Sidebar.tsx`,
+`SidebarHeader.tsx`; `blocks/base/base-side-bar/BaseSidebarHeaderLeft.tsx`, `QuickAction.tsx`
+(trigger style only), `BasePageRouter.tsx`, `BaseNodeTree.tsx` (row classes, guide line);
+`components/SideBarFooter.tsx`.
 
-**GATE P4** — full `npm run build && npm test` green; old URL redirects; MCP `get_graph` works from
-Claude Code against the dev instance.
+Proof: parity §3.1 (switch base, ⌘K groups and theme items, ⌘B, resize, tree drag / rename /
+star / add / create, Trash and Design permissions, footer menus, mobile sheet); screenshots at
+1440 / 1024 / 400.
 
 ---
 
-## 5. Test matrix
+## Phase 5 — Table header, view tabs, tool bar (M)
 
-| Layer | Suite | Phase |
+Files: `blocks/table/table-header/TableHeader.tsx`, `TableInfo.tsx`, `AddView.tsx`,
+`Collaborators.tsx` (classes); `blocks/view/list/ViewList.tsx`, `ViewListItem.tsx`,
+`PinViewItem.tsx`, `ExpandViewList.tsx` (tab styling, same DnD and menus);
+`blocks/view/tool-bar/GridToolBar.tsx`, `ToolBarButton.tsx`, `components/GridViewOperators.tsx`
+(the active fill classes move to tokens per D5), `Others.tsx` (the gradient becomes a token),
+`components/UndoRedoButtons.tsx`, `PersonalViewSwitch.tsx`, `SharePopover.tsx`, and the Kanban /
+Gallery / Calendar / Form tool bars (classes only); `blocks/view/search/SearchButton.tsx` (classes).
+
+Proof: parity §3.2–3.3: every tool bar popover opens with the same content; the filter builder
+supports conditions, groups, the nesting limit and the warning icon; sort supports auto-sort;
+group supports subgroups; row height has all four levels plus display lines; search pagination
+works; undo / redo works; share and personal view work; the `@md` / `@2xl` toolbar folding
+happens at the same widths.
+
+---
+
+## Phase 6 — Menus, popovers, dialogs, record modal (M)
+
+Files:
+- `packages/ui-lib/src/shadcn/ui/dropdown-menu.tsx`, `popover.tsx`, `command.tsx`,
+  `context-menu.tsx`, `select.tsx`, `dialog.tsx`, `sheet.tsx`, `button.tsx`, `input.tsx`,
+  `switch.tsx`, `tabs.tsx`, `tooltip.tsx`: design §6.6 (class strings only).
+- `apps/nextjs-app/src/features/app/blocks/view/grid/components/FieldMenu.tsx`, `RecordMenu.tsx`,
+  `GroupHeaderMenu.tsx`, `StatisticMenu.tsx`: classes only; item arrays untouched.
+- `packages/sdk/src/components/expand-record/Modal.tsx`, `ExpandRecordHeader.tsx`,
+  `RecordEditor.tsx`, `RecordEditorItem.tsx`, `RecordHistory.tsx`: design §6.5 layout classes.
+  `ExpandRecord.tsx` model selection is **not** changed.
+- `packages/sdk/src/components/create-record/*`: the same modal styling.
+- Grid editors in `packages/sdk/src/components/grid-enhancements/editor/*` and
+  `packages/sdk/src/components/editor/*`: classes only.
+
+Proof: parity §3.4 menus and §3.5 record modal (↑ ↓, copy URL, history, comments, duplicate,
+delete, hidden fields toggle, Drawer on touch).
+
+---
+
+## Phase 7 — Other views and pages (L)
+
+- [ ] 7.1 Kanban: `blocks/view/kanban/components/*` (stack, header, card classes).
+- [ ] 7.2 Gallery, Calendar, Form, List: tokens and card classes.
+- [ ] 7.3 Space pages (`blocks/space/*` including `schema-onboarding/*`), settings
+  (`blocks/setting/*`), admin (`blocks/admin/*`), trash, design, base graph and dashboard chrome,
+  share / template layouts.
+
+Proof: the parity suite's view sections (kanban drag between stacks, calendar drag, form submit,
+gallery cover) are green; screenshots in both themes.
+
+---
+
+## Phase 8 — Parity QA and cleanup (M)
+
+- [ ] 8.1 Full parity suite green, plus the existing unit suites for `@teable/sdk` and `@teable/app`.
+- [ ] 8.2 A manual walk of design §3 on desktop and a touch device, ticking every row.
+- [ ] 8.3 Literal-color sweep (design §8).
+- [ ] 8.4 axe run on the grid page, the record modal and the menus; reduced-motion check.
+- [ ] 8.5 FPS against the baseline.
+- [ ] 8.6 Diff audit: `git diff feat-db-setup --stat` reviewed for any file that changes behaviour;
+  `git diff feat-db-setup -- '*.ts' '*.tsx' | grep -E "^\+.*(on[A-Z]\w*=|useHotkeys|RegionType\.)"`
+  returns only lines that moved, not new ones.
+- [ ] 8.7 Confirm the amber palette is gone: `grep -rniE "exocortex|FFB547|FFD08A|4DE8FF|0E0C08|E8DFCB|948D7B" apps packages plugins --include=*.ts* --include=*.css --include=*.js --include=*.cjs | grep -v node_modules` returns nothing, and the duplicated dark object in `use-grid-theme.ts` is deleted.
+- [ ] 8.8 Update `scripts/customized/system-structure/system-architecture.md` (UI layer section)
+  and the status table above.
+
+Rollout: one PR per phase into `feat-twenty-ui`, then `feat-twenty-ui` → `feat-db-setup` after
+Phase 8. The parity suite runs on every PR.
+
+## Risks
+
+| Risk | Phase | Mitigation |
 |---|---|---|
-| Contract | RO/VO zod snapshots | 1 |
-| Backend unit | resolver, reader, budget, structure, edges, assembler parity | 1 |
-| Backend unit | etag service (probe composition), expand | 3 |
-| Backend e2e | `base-graph.e2e-spec.ts` cases 1–11, + etag + expand | 1, 3 |
-| Frontend unit | codec, store isolation, simulation graph, theme, panels, presets | 2 |
-| Manual | GATE P2 / P3 checklists on `data-centre` | 2, 3 |
-| MCP | tool-registry spec, manifest, live call | 4 |
-
-## 6. Risks
-
-| Risk | Mitigation |
-|---|---|
-| View filter + ad-hoc filter not ANDed by the record layer | e2e case 4 decides; AND in resolver if needed |
-| `__last_modified_time` not bumped on symmetric link changes or deletes | GATE in 3.2: ship the probe only if every e2e freshness case passes |
-| `cellValue2String` slow for large formula/lookup primaries | label read is one projection; measure in GATE P3, fall back to `cellFormat: Text` for the primary via a second lightweight read if needed |
-| Graph for all 21 tables exceeds render budget | defaults exclude system tables, per-table limits, 2D mode, expand-on-demand |
-| URL too long with complex filters | 6 KB cap → local preset |
-| Parity drift between old and new knowledge graph during Phase 2–3 | parity spec + e2e case 9 run in CI until Phase 4 deletes the old path |
-| Permission bypass via new endpoints | every table/field/view id checked against `:baseId` in one resolver; all reads via `RecordService`; cross-base links skipped |
-
-## 7. Rollback
-
-Phases 1–3 are additive: new module, new routes, new page. Reverting is removing
-`BaseGraphModule` from `app.module.ts` and the sidebar link. Phase 4 is the only destructive step
-and happens last, in its own commit, so it can be reverted alone.
-
-## 8. Estimate
-
-| Phase | Days |
-|---|---|
-| 0 | 0.5 |
-| 1 | 5–6 |
-| 2 | 5–6 |
-| 3 | 4 |
-| 4 | 3 |
-| **Total** | **~18–20** |
+| A draw change shifts a hit region (tag "×", menu marker, avatar offset) | 3 | Hit-test code is untouched; marker drawn inside the existing box; parity suite clicks each region |
+| Components that assumed dark under the `light` class look wrong in real light | 1 | 1.3 sweep + screenshots of every page |
+| Theme switch leaves stale canvas sprites | 2 | Sprite cache keyed by `themeKey`; 2.4 |
+| Styling PRs quietly change behaviour | all | Rule at the top of this file; 8.6 diff audit; the parity suite on every PR |
+| Bold header text measures wider and truncates names earlier | 3 | Re-measure in `drawColumnHeader`; screenshot check with long names |

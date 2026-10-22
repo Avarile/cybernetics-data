@@ -50,7 +50,7 @@ export const Sidebar: FC<PropsWithChildren<ISidebarProps>> = (props) => {
   useHotkeys(`mod+b`, toggleSidebar);
 
   const sidebarClassName = cn(
-    'group/sidebar flex size-full flex-col overflow-hidden bg-background',
+    'group/sidebar flex size-full flex-col overflow-hidden bg-background-secondary',
     className
   );
 
@@ -68,7 +68,7 @@ export const Sidebar: FC<PropsWithChildren<ISidebarProps>> = (props) => {
   if (!isHydrated) {
     return (
       <div
-        className="h-full shrink-0 border-r"
+        className="h-full shrink-0"
         style={{ width: `var(--sidebar-width` }}
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -116,7 +116,7 @@ export const Sidebar: FC<PropsWithChildren<ISidebarProps>> = (props) => {
 
   return (
     <Resizable
-      className="h-full shrink-0 border-r"
+      className="h-full shrink-0"
       size={{ width, height: '100%' }}
       defaultSize={{ width, height: '100%' }}
       minWidth={MIN_SIDE_BAR_WIDTH}

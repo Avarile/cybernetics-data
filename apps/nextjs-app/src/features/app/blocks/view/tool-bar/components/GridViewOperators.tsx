@@ -110,8 +110,7 @@ export const GridViewOperators: React.FC<{ disabled?: boolean }> = (props) => {
             ref={filterRef}
             className={cn(
               'max-w-[200px]',
-              isActive &&
-                'bg-violet-100 dark:bg-[#241A31] hover:bg-violet-200 dark:hover:bg-[#322245]',
+              isActive && 'bg-hue-purple/15 hover:bg-hue-purple/25',
               hasWarning && 'border-yellow-500'
             )}
             textClassName="@2xl/toolbar:inline"
@@ -130,11 +129,7 @@ export const GridViewOperators: React.FC<{ disabled?: boolean }> = (props) => {
             isActive={isActive}
             text={text}
             ref={sortRef}
-            className={cn(
-              'max-w-[200px]',
-              isActive &&
-                'bg-orange-100 dark:bg-[#2F2518] hover:bg-orange-200 dark:hover:bg-[#392C1B]'
-            )}
+            className={cn('max-w-[200px]', isActive && 'bg-hue-orange/15 hover:bg-hue-orange/25')}
             textClassName="@2xl/toolbar:inline"
           >
             <ArrowUpDown className="size-4 shrink-0 text-sm" />
@@ -148,11 +143,7 @@ export const GridViewOperators: React.FC<{ disabled?: boolean }> = (props) => {
             isActive={isActive}
             text={text}
             ref={groupRef}
-            className={cn(
-              'max-w-[200px]',
-              isActive &&
-                'bg-emerald-100 dark:bg-[#0C3026] hover:bg-emerald-200 dark:hover:bg-[#0D3A2D]'
-            )}
+            className={cn('max-w-[200px]', isActive && 'bg-hue-green/15 hover:bg-hue-green/25')}
             textClassName="@2xl/toolbar:inline"
           >
             <LayoutList className="size-4 shrink-0 text-sm" />

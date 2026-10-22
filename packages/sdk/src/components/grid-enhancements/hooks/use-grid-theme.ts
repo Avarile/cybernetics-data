@@ -1,75 +1,117 @@
 import { useTheme } from '@teable/next-themes';
+import { useEffect, useState } from 'react';
 import type { IGridTheme } from '../../grid/configs';
-import { hexToRGBA } from '../../grid/utils';
+import { gridTheme } from '../../grid/configs';
+import { mixColor, TAG_HUES, toHex, withAlpha } from '../../grid/utils';
 
-const lightTheme = {} as IGridTheme;
+type IReadVar = (name: string) => string | undefined;
+type IThemeKey = 'light' | 'dark';
 
-const darkTheme = {
-  // Common
-  iconFgCommon: '#948D7B',
+/**
+ * Builds the canvas theme from the CSS variables in global.shadcn.css (design D2), so the grid
+ * and the DOM share one colour source. Every value falls back to the light default.
+ */
+export const buildGridTheme = (read: IReadVar, themeKey: IThemeKey): IGridTheme => {
+  const color = (name: string, fallback: string) => {
+    const raw = read(name);
+    return raw ? toHex(raw) : fallback;
+  };
+  const d = gridTheme;
+  const background = color('background', d.cellBg);
+  const foreground = color('foreground', d.cellTextColor);
+  const primary = color('primary', d.cellLineColorActived);
+  const tertiary = color('foreground-tertiary', d.iconFgCommon);
+  const accent = color('accent', d.columnHeaderBgHovered);
+  const secondary = color('secondary', d.groupHeaderBgTertiary);
+  const backgroundSecondary = color('background-secondary', d.cellBgHovered);
+  const borderHigh = color('border-high', d.scrollBarBg);
+  const selection = color('selection', d.cellBgSelected);
 
-  // Cell
-  cellBg: '#0E0C08',
-  cellBgHovered: '#15120C',
-  cellBgSelected: '#1C170F',
-  cellBgLoading: hexToRGBA('#FFB547', 0.06),
-  cellLineColor: '#231E15',
-  cellLineColorActived: '#FFB547',
-  cellTextColor: '#E8DFCB',
-  cellOptionBg: '#2A2316',
-  cellOptionTextColor: '#FFD08A',
+  return {
+    ...d,
+    themeKey,
+    iconFgCommon: tertiary,
+    iconFgHighlight: primary,
+    iconBgHighlight: primary,
+    iconFgSelected: color('primary-foreground', d.iconFgSelected),
+    iconBgSelected: primary,
 
-  // Group Header
-  groupHeaderBgPrimary: '#070605',
-  groupHeaderBgSecondary: '#0E0C08',
-  groupHeaderBgTertiary: '#15120C',
+    cellBg: background,
+    cellBgHovered: backgroundSecondary,
+    cellBgSelected: selection,
+    cellBgLoading: withAlpha(primary, 0.06),
+    cellLineColor: color('border-light', d.cellLineColor),
+    cellLineColorActived: primary,
+    cellTextColor: foreground,
+    cellTextColorHighlight: primary,
+    cellOptionBg: secondary,
+    cellOptionBgHighlight: borderHigh,
+    cellOptionTextColor: foreground,
 
-  // Column Header
-  columnHeaderBg: '#070605',
-  columnHeaderBgHovered: '#0E0C08',
-  columnHeaderBgSelected: '#1C170F',
-  columnHeaderNameColor: '#E8DFCB',
-  columnResizeHandlerBg: '#4DE8FF',
-  columnDraggingPlaceholderBg: hexToRGBA('#FFB547', 0.15),
+    groupHeaderBgPrimary: backgroundSecondary,
+    groupHeaderBgSecondary: accent,
+    groupHeaderBgTertiary: secondary,
 
-  // Column Statistic
-  columnStatisticBgHoveredPrimary: '#0E0C08',
-  columnStatisticBgHoveredSecondary: '#15120C',
-  columnStatisticBgHoveredTertiary: '#1C170F',
+    columnStatisticBgHoveredPrimary: accent,
+    columnStatisticBgHoveredSecondary: accent,
+    columnStatisticBgHoveredTertiary: secondary,
 
-  // Row Header
-  rowHeaderTextColor: '#948D7B',
+    columnHeaderBg: background,
+    columnHeaderBgHovered: accent,
+    columnHeaderBgSelected: selection,
+    columnHeaderNameColor: color('muted-foreground', d.columnHeaderNameColor),
+    columnResizeHandlerBg: primary,
+    columnDraggingPlaceholderBg: withAlpha(primary, 0.1),
 
-  // Append Row
-  appendRowBg: '#070605',
-  appendRowBgHovered: '#0E0C08',
+    rowHeaderTextColor: tertiary,
 
-  // Avatar
-  avatarBg: '#2A2316',
-  avatarTextColor: '#FFD08A',
-  avatarSizeXS: 16,
-  avatarSizeSM: 20,
-  avatarSizeMD: 24,
+    appendRowBg: background,
+    appendRowBgHovered: backgroundSecondary,
 
-  themeKey: 'dark',
+    avatarBg: accent,
+    avatarTextColor: color('muted-foreground', d.avatarTextColor),
 
-  // ScrollBar
-  scrollBarBg: '#3A3223',
+    scrollBarBg: borderHigh,
 
-  // interaction
-  interactionLineColorCommon: '#3A3223',
-  interactionLineColorHighlight: '#4DE8FF',
+    interactionLineColorCommon: borderHigh,
+    interactionLineColorHighlight: primary,
 
-  // search cursor
-  searchCursorBg: '#3A2A10',
-  searchTargetIndexBg: '#221A0C',
+    searchCursorBg: mixColor(TAG_HUES.yellow, background, 0.45),
+    searchTargetIndexBg: mixColor(TAG_HUES.yellow, background, 0.22),
 
-  // comment
-  commentCountBg: '#FF4F8B',
-  commentCountTextColor: '#070605',
-} as IGridTheme;
+    commentCountBg: color('destructive', d.commentCountBg),
+    commentCountTextColor: color('destructive-foreground', d.commentCountTextColor),
+  };
+};
+
+const readRootVars = (): IReadVar => {
+  const styles = getComputedStyle(document.documentElement);
+  return (name) => styles.getPropertyValue(`--${name}`).trim() || undefined;
+};
+
+const currentThemeKey = (): IThemeKey =>
+  document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
+const computeTheme = () =>
+  typeof window === 'undefined' ? gridTheme : buildGridTheme(readRootVars(), currentThemeKey());
 
 export function useGridTheme(): IGridTheme {
   const { resolvedTheme } = useTheme();
-  return resolvedTheme === 'dark' ? darkTheme : lightTheme;
+  const [theme, setTheme] = useState<IGridTheme>(computeTheme);
+
+  useEffect(() => {
+    // next-themes swaps the root class in its own effect; watch the class so the variables are
+    // read after the swap rather than racing it
+    const update = () =>
+      setTheme((prev) => {
+        const next = computeTheme();
+        return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+      });
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, [resolvedTheme]);
+
+  return theme;
 }

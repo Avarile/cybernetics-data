@@ -19,7 +19,6 @@ import {
   drawLine,
   drawMultiLineText,
   drawRect,
-  drawRoundPoly,
   drawSingleLineText,
 } from '../base-renderer';
 import { getCellRenderer, getCellScrollState } from '../cell-renderer';
@@ -1220,6 +1219,7 @@ export const drawRowHeader = (ctx: CanvasRenderingContext2D, props: IRowHeaderDr
     iconSizeXS,
     staticWhite,
     iconBgSelected,
+    interactionLineColorCommon,
   } = theme;
   let fill = cellBg;
 
@@ -1264,12 +1264,14 @@ export const drawRowHeader = (ctx: CanvasRenderingContext2D, props: IRowHeaderDr
       const offsetX = controlSize * (i + 0.5);
 
       if (type === RowControlType.Checkbox) {
+        // 14px box with 3px corners, centred in the same 16px slot (hit region unchanged)
         drawCheckbox(ctx, {
-          x: x + offsetX - halfSize,
-          y: y + rowHeadIconPaddingTop,
-          size: iconSizeXS,
-          stroke: isChecked ? staticWhite : rowHeaderTextColor,
-          fill: isChecked ? iconBgSelected : undefined,
+          x: x + offsetX - halfSize + 1,
+          y: y + rowHeadIconPaddingTop + 1,
+          size: iconSizeXS - 2,
+          radius: 3,
+          stroke: isChecked ? staticWhite : interactionLineColorCommon,
+          fill: isChecked ? iconBgSelected : cellBg,
           isChecked,
         });
       } else {
@@ -1386,24 +1388,21 @@ export const drawColumnHeader = (ctx: CanvasRenderingContext2D, props: IFieldHea
 
   if (hasMenuInner) {
     maxTextWidth = maxTextWidth - columnHeadMenuSize - columnHeadPadding;
-    drawRoundPoly(ctx, {
-      points: [
-        {
-          x: x + width - columnHeadPadding - columnHeadMenuSize,
-          y: y + columnHeadHeight / 2 - columnHeadMenuSize / 4,
-        },
-        {
-          x: x + width - columnHeadPadding,
-          y: y + columnHeadHeight / 2 - columnHeadMenuSize / 4,
-        },
-        {
-          x: x + width - columnHeadPadding - columnHeadMenuSize / 2,
-          y: y + columnHeadHeight / 2 + columnHeadMenuSize / 4,
-        },
-      ],
-      radiusAll: 1,
-      fill: iconFgCommon,
+    // chevron drawn inside the same columnHeadMenuSize box as the old triangle (region unchanged)
+    const chevronLeft = x + width - columnHeadPadding - columnHeadMenuSize + 2;
+    const chevronTop = y + columnHeadHeight / 2 - columnHeadMenuSize / 6;
+    const chevronWidth = columnHeadMenuSize - 4;
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    drawLine(ctx, {
+      x: chevronLeft,
+      y: chevronTop,
+      points: [0, 0, chevronWidth / 2, chevronWidth / 2, chevronWidth, 0],
+      stroke: iconFgCommon,
     });
+    ctx.restore();
   }
 
   if (description) {

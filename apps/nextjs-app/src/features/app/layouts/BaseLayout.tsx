@@ -58,7 +58,7 @@ const BaseLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children }) 
         className="relative flex h-screen w-full items-start"
         onContextMenu={(e) => e.preventDefault()}
       >
-        <div className="flex h-screen w-full">
+        <div className="flex h-screen w-full bg-background-secondary">
           <Sidebar headerLeft={<BaseSidebarHeaderLeft />} headerRight={<QuickAction />}>
             <Fragment>
               <div className="flex h-full flex-col gap-2 divide-y divide-solid overflow-auto py-2">
@@ -68,7 +68,12 @@ const BaseLayoutInner: React.FC<{ children: React.ReactNode }> = ({ children }) 
               <SideBarFooter />
             </Fragment>
           </Sidebar>
-          <div className="min-w-80 flex-1">{children}</div>
+          {/* one bordered work panel on the page ground (design §6.1) */}
+          <div className="min-w-80 flex-1 py-2 pr-2">
+            <div className="size-full overflow-hidden rounded-lg border bg-background">
+              {children}
+            </div>
+          </div>
         </div>
         <UploadProgressPanel />
       </div>

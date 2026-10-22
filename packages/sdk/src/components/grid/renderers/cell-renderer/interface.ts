@@ -56,6 +56,8 @@ export interface ITextCell extends IEditableCell {
   data: string;
   displayData: string;
   isWrap?: boolean;
+  /** Draw a record avatar before the text (primary field, design §6.4). Drawing only. */
+  avatar?: boolean;
 }
 
 export interface ILinkCell extends IEditableCell {
@@ -116,6 +118,8 @@ export interface ISelectChoice {
   name: string;
   color?: string;
   backgroundColor?: string;
+  /** Stored `Colors` value; when present the tag is drawn with `getTagStyle` for the theme. */
+  colorName?: string;
 }
 
 export interface ISelectChoiceSorted {

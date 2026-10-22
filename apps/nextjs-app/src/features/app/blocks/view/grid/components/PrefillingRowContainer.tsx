@@ -32,10 +32,10 @@ export const PrefillingRowContainer = (props: IPrefillingRowContainerProps) => {
   return (
     <div
       ref={prefillingGridContainerRef}
-      className="absolute left-0 w-full border-y-2 border-violet-500 dark:border-violet-700"
+      className="absolute left-0 w-full border-y-2 border-primary"
       style={style}
     >
-      <div className="absolute left-0 top-[-32px] flex h-8 items-center rounded-ss-lg bg-violet-500 px-2 py-1 text-background dark:border-violet-700">
+      <div className="absolute left-0 top-[-32px] flex h-8 items-center rounded-ss-md bg-primary px-2 py-1 text-primary-foreground">
         {isLoading ? <Spin className="mr-1 size-4" /> : <Plus className="mr-1" />}
         <span className="text-[13px]">{t('table:grid.prefillingRowTitle')}</span>
         <TooltipProvider>

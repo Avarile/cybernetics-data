@@ -286,6 +286,7 @@ export const useCreateCellValue2GridDisplay = (
               type: CellType.Text,
               data: (cellValue as string) || '',
               displayData: field.cellValue2String(cellValue),
+              avatar: Boolean(field.isPrimary),
             };
           }
           case FieldType.LongText: {

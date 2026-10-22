@@ -78,8 +78,7 @@ export const CalendarViewOperators: React.FC<{ disabled?: boolean }> = (props) =
             text={text}
             className={cn(
               'max-w-[200px]',
-              isActive &&
-                'bg-violet-100 dark:bg-violet-600/30 hover:bg-violet-200 dark:hover:bg-violet-500/30',
+              isActive && 'bg-hue-purple/15 hover:bg-hue-purple/25',
               hasWarning && 'border-yellow-500'
             )}
             textClassName="@2xl/toolbar:inline"
