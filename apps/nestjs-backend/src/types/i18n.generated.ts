@@ -1463,6 +1463,8 @@ export type I18nTranslations = {
                         "title": string;
                         "message": string;
                     };
+                    "expiresIn": string;
+                    "ignoreNotice": string;
                     "twoFactorSetup": {
                         "subject": string;
                         "title": string;
@@ -1475,8 +1477,6 @@ export type I18nTranslations = {
                         "message": string;
                         "notice": string;
                     };
-                    "expiresIn": string;
-                    "ignoreNotice": string;
                 };
                 "linkFallback": string;
                 "collaboratorCellTag": {
