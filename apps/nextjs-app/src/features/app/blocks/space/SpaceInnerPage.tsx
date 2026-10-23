@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUniqName, hasPermission, Role } from '@teable/core';
 import { Plus } from '@teable/icons';
-import { useTheme } from '@teable/next-themes';
 import {
   createBase,
   PinType,
@@ -12,7 +11,7 @@ import {
   updateSpace,
 } from '@teable/openapi';
 import { ReactQueryKeys } from '@teable/sdk/config';
-import { useIsMobile } from '@teable/sdk/hooks';
+import { useIsMobile, useThemeMode } from '@teable/sdk/hooks';
 import { cn, ScrollArea } from '@teable/ui-lib/shadcn';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import { LayoutTemplate } from 'lucide-react';
@@ -43,8 +42,8 @@ export const SpaceInnerPage: React.FC<{ showOnboarding?: boolean }> = ({ showOnb
   const spaceId = router.query.spaceId as string;
   const { t } = useTranslation(spaceConfig.i18nNamespaces);
   const isMobile = useIsMobile();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
 
   const [renaming, setRenaming] = useState<boolean>(false);
   const [spaceName, setSpaceName] = useState<string>();

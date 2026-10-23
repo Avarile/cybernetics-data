@@ -14,11 +14,10 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import type { IAttachmentItem, IAttachmentCellValue } from '@teable/core';
-import { useTheme } from '@teable/next-themes';
 import { Button, FilePreviewProvider, ScrollArea, cn } from '@teable/ui-lib';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useTranslation } from '../../../../context/app/i18n';
-import { useIsMobile } from '../../../../hooks';
+import { useIsMobile, useThemeMode } from '../../../../hooks';
 import { useDownloadAttachmentsStore } from '../../../../store';
 import { useAttachmentPreviewI18Map } from '../../../hooks';
 import { FileZone } from '../../../upload/FileZone';
@@ -41,7 +40,7 @@ export const UploadAttachmentView = forwardRef<UploadAttachmentViewRef, UploadAt
       onCancelUpload,
     } = props;
     const triggerCellDownload = useDownloadAttachmentsStore((state) => state.triggerCellDownload);
-    const { resolvedTheme } = useTheme();
+    const themeMode = useThemeMode();
     const [sortData, setSortData] = useState<IAttachmentCellValue>(attachments);
     const listRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
@@ -126,11 +125,9 @@ export const UploadAttachmentView = forwardRef<UploadAttachmentViewRef, UploadAt
         lgThumbnailUrl,
       }: Pick<IAttachmentItem, 'mimetype' | 'presignedUrl' | 'lgThumbnailUrl'>) => {
         if (!presignedUrl) return '';
-        return (
-          lgThumbnailUrl ?? getFileCover(mimetype, presignedUrl, resolvedTheme as 'light' | 'dark')
-        );
+        return lgThumbnailUrl ?? getFileCover(mimetype, presignedUrl, themeMode);
       },
-      [resolvedTheme]
+      [themeMode]
     );
 
     const handleDragEnd = useCallback(

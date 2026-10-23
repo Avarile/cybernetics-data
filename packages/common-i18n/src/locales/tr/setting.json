@@ -1,5 +1,7 @@
 {
   "personalAccessToken": "Kişisel erişim tokenleri",
   "oauthApps": "OAuth Uygulamaları",
-  "plugins": "Eklentiler"
+  "plugins": "Eklentiler",
+  "license": "Lisans",
+  "licenseDescription": "Cybernetics, Teable tabanlı açık kaynaklı bir yazılımdır. Çekirdek uygulamalar AGPL-3.0, paketler ise MIT lisansı altındadır."
 }

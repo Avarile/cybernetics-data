@@ -10,7 +10,7 @@ const dataDatabaseEnvKeys = [
 
 export const getDatabaseUrl = (
   target: IDatabaseTarget,
-  env: NodeJS.ProcessEnv = process.env
+  env: Record<string, string | undefined> = process.env
 ): string => {
   const keys = target === 'data' ? dataDatabaseEnvKeys : metaDatabaseEnvKeys;
   for (const key of keys) {

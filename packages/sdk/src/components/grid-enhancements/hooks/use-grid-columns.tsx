@@ -12,7 +12,6 @@ import {
   FieldType,
   checkButtonClickable,
 } from '@teable/core';
-import { useTheme } from '@teable/next-themes';
 import { keyBy } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { useCallback, useMemo } from 'react';
@@ -21,7 +20,7 @@ import type { ChartType, ICell, IGridColumn, INumberShowAs as IGridNumberShowAs 
 import { CellType, hexToRGBA, getFileCover, onMixedTextClick } from '../..';
 import { useTranslation } from '../../../context/app/i18n/useTranslation';
 import type { IButtonClickStatusHook } from '../../../hooks';
-import { useFields, useTablePermission, useView } from '../../../hooks';
+import { useFields, useTablePermission, useThemeMode, useView } from '../../../hooks';
 import type { IFieldInstance, NumberField, Record } from '../../../model';
 import type { GridView } from '../../../model/view';
 import { isMarkdownShowAs, stripMarkdown } from '../../editor/long-text/utils';
@@ -222,7 +221,7 @@ export const useCreateCellValue2GridDisplay = (
   recordEditable?: boolean
 ) => {
   const { t } = useTranslation();
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
   const i18nMap = useAttachmentPreviewI18Map();
 
   return useCallback(
@@ -479,7 +478,7 @@ export const useCreateCellValue2GridDisplay = (
             const cv = (cellValue ?? []) as IAttachmentCellValue;
             const data = cv.map(
               ({ id, mimetype, presignedUrl, smThumbnailUrl, lgThumbnailUrl, width, height }) => {
-                const url = getFileCover(mimetype, presignedUrl, resolvedTheme as 'light' | 'dark');
+                const url = getFileCover(mimetype, presignedUrl, themeMode);
                 const thumbnailUrl =
                   !rowHeight || rowHeight === RowHeightLevel.Short
                     ? smThumbnailUrl
@@ -588,7 +587,7 @@ export const useCreateCellValue2GridDisplay = (
           }
         }
       },
-    [i18nMap, recordEditable, resolvedTheme, rowHeight, t]
+    [i18nMap, recordEditable, themeMode, rowHeight, t]
   );
 };
 
@@ -600,7 +599,7 @@ export function useGridColumns(
   const view = useView() as GridView | undefined;
   const originFields = useFields();
   const totalFields = useFields({ withHidden: true, withDenied: true });
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
   const sort = view?.sort;
   const group = view?.group;
   const filter = view?.filter;
@@ -645,7 +644,7 @@ export function useGridColumns(
       columns: generateColumns({
         fields,
         view,
-        theme: resolvedTheme,
+        theme: themeMode,
         hasMenu,
         sortFieldIds,
         groupFieldIds,
@@ -658,7 +657,7 @@ export function useGridColumns(
       generateColumns,
       fields,
       view,
-      resolvedTheme,
+      themeMode,
       hasMenu,
       sortFieldIds,
       groupFieldIds,

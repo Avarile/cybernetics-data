@@ -252,6 +252,7 @@
       "theme": "Tema de interfaz",
       "themeDesc": "Selecciona tu esquema de colores de interfaz",
       "dark": "Oscuro",
+      "cyberpunk": "Cyberpunk",
       "light": "Claro",
       "system": "Sistema",
       "version": "Versión de la aplicación",
@@ -451,6 +452,7 @@
   },
   "token": "Simbólico",
   "poweredBy": "Alimentado por <0> </0>",
+  "sourceCode": "Código fuente",
   "invite": {
     "dialog": {
       "title": "Compartir espacio {{spaceName}}",

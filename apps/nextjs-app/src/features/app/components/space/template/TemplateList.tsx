@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useTheme } from '@teable/next-themes';
 import { getPublishedTemplateList } from '@teable/openapi';
 import { ReactQueryKeys } from '@teable/sdk/config';
+import { useThemeMode } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Button, cn, Skeleton } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
@@ -35,8 +35,8 @@ const PAGE_SIZE = 2 * 3 * 2;
 export const TemplateList = (props: ITemplateListProps) => {
   const { currentCategoryId, search, onClickTemplateCardHandler, className, isFeatured } = props;
   const { t } = useTranslation(['common', 'space']);
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
     queryKey: ReactQueryKeys.publishedTemplateList(currentCategoryId, search, isFeatured),
     queryFn: ({ pageParam }) =>

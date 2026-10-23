@@ -3,6 +3,7 @@ import { ThemeProvider } from '@teable/next-themes';
 import type { IGetBaseVo } from '@teable/openapi';
 import { isObject, merge } from 'lodash';
 import { useMemo } from 'react';
+import { APP_THEMES } from '../../hooks/use-theme-mode';
 import { AppContext } from '../app/AppContext';
 import { ConnectionProvider } from './ConnectionProvider';
 import type { ILocalePartial } from './i18n';
@@ -48,7 +49,7 @@ export const AppProvider = (props: IAppProviderProps) => {
 
   if (disabledWs) {
     return (
-      <ThemeProvider attribute="class" forcedTheme={forcedTheme}>
+      <ThemeProvider attribute="class" themes={APP_THEMES} forcedTheme={forcedTheme}>
         <AppContext.Provider value={value}>
           <QueryClientProvider dehydratedState={dehydratedState}>{children}</QueryClientProvider>
         </AppContext.Provider>
@@ -58,7 +59,7 @@ export const AppProvider = (props: IAppProviderProps) => {
 
   // forcedTheme is not work as expected https://github.com/pacocoursey/next-themes/issues/252
   return (
-    <ThemeProvider attribute="class" forcedTheme={forcedTheme}>
+    <ThemeProvider attribute="class" themes={APP_THEMES} forcedTheme={forcedTheme}>
       <AppContext.Provider value={value}>
         <ConnectionProvider wsPath={wsPath}>
           <QueryClientProvider dehydratedState={dehydratedState}>{children}</QueryClientProvider>

@@ -254,6 +254,7 @@
       "theme": "Thème",
       "themeDesc": "Sélectionnez le thème pour l'application.",
       "dark": "Sombre",
+      "cyberpunk": "Cyberpunk",
       "light": "Clair",
       "system": "Système",
       "version": "Version de l'application",
@@ -453,6 +454,7 @@
   },
   "token": "Jeton",
   "poweredBy": "Propulsé par <0></0>",
+  "sourceCode": "Code source",
   "invite": {
     "dialog": {
       "title": "Partager l'espace {{spaceName}}",

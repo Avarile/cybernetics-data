@@ -1,4 +1,4 @@
-import { useTheme } from '@teable/next-themes';
+import { useThemeMode } from '@teable/sdk/hooks';
 import Image from 'next/image';
 import { Trans, useTranslation } from 'next-i18next';
 import { useHelpStore } from '@/features/help';
@@ -6,8 +6,8 @@ import { tableConfig } from '@/features/i18n/table.config';
 
 export const CommunityPage = () => {
   const { t } = useTranslation(tableConfig.i18nNamespaces);
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
   const { setOpen: openHelp } = useHelpStore();
   return (
     <div className="h-full flex-col md:flex">

@@ -1,5 +1,5 @@
 import { LaptopIcon } from '@radix-ui/react-icons';
-import { Moon, Search, Settings, Sun } from '@teable/icons';
+import { Moon, Search, Settings, Sun, Zap } from '@teable/icons';
 import { useTheme } from '@teable/next-themes';
 import { BaseNodeResourceType } from '@teable/openapi';
 import { useBaseId, useIsAnonymous, useIsReadOnlyPreview } from '@teable/sdk/hooks';
@@ -175,6 +175,20 @@ export const QuickAction = () => {
                 <Moon className="size-full" />
               </div>
               <span>{t('common:settings.setting.dark')}</span>
+            </CommandItem>
+            <CommandItem
+              className="flex h-8 gap-2"
+              onSelect={() => {
+                setOpen(false);
+                theme.setTheme('cyberpunk');
+              }}
+              value={t('common:settings.setting.cyberpunk')}
+              keywords={[t('common:settings.setting.cyberpunk')]}
+            >
+              <div className="flex size-4 shrink-0 items-center justify-center text-muted-foreground">
+                <Zap className="size-full" />
+              </div>
+              <span>{t('common:settings.setting.cyberpunk')}</span>
             </CommandItem>
             <CommandItem
               className="flex h-8 gap-2"

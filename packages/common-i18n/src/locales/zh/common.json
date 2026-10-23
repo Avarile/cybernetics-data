@@ -366,6 +366,7 @@
       "theme": "主题",
       "themeDesc": "选择应用主题。",
       "dark": "深色",
+      "cyberpunk": "赛博朋克",
       "light": "浅色",
       "version": "应用版本",
       "system": "系统",
@@ -496,6 +497,7 @@
   },
   "token": "令牌",
   "poweredBy": "<0></0> 提供技术支持",
+  "sourceCode": "源代码",
   "invite": {
     "dialog": {
       "title": "{{spaceName}} 空间分享",

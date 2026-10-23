@@ -1,7 +1,7 @@
 import type { IAttachmentCellValue } from '@teable/core';
-import { useTheme } from '@teable/next-themes';
 import { isSystemFileIcon, getFileCover } from '@teable/sdk/components';
 import { useAttachmentPreviewI18Map } from '@teable/sdk/components/hooks';
+import { useThemeMode } from '@teable/sdk/hooks';
 import { FilePreviewProvider, FilePreviewItem } from '@teable/ui-lib/base';
 import {
   Carousel,
@@ -21,7 +21,7 @@ interface ICardCarouselProps {
 export const CardCarousel = (props: ICardCarouselProps) => {
   const { value, isCoverFit } = props;
   const i18nMap = useAttachmentPreviewI18Map();
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
   return (
     <FilePreviewProvider i18nMap={i18nMap}>
       <Carousel
@@ -35,9 +35,7 @@ export const CardCarousel = (props: ICardCarouselProps) => {
         <CarouselContent className="ml-0">
           {value.map(({ id, name, size, mimetype, presignedUrl, lgThumbnailUrl }) => {
             const isSystemFile = isSystemFileIcon(mimetype);
-            const url =
-              lgThumbnailUrl ??
-              getFileCover(mimetype, presignedUrl, resolvedTheme as 'light' | 'dark');
+            const url = lgThumbnailUrl ?? getFileCover(mimetype, presignedUrl, themeMode);
             return (
               <CarouselItem
                 key={id}

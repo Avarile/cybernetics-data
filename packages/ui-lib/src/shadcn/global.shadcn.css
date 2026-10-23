@@ -114,6 +114,63 @@
     --shadow-1: 0 0 4px rgb(0 0 0 / 0.4), 0 2px 4px rgb(0 0 0 / 0.3);
     --shadow-2: 0 0 4px rgb(0 0 0 / 0.5), 0 8px 24px rgb(0 0 0 / 0.5);
   }
+
+  /*
+   * Cyberpunk: a dark theme built on #00060e (night), #fee801 (yellow), #54c1e6 (cyan),
+   * #39c4b6 (teal) and #9a9f17 (olive). JS treats it as dark via useThemeMode.
+   */
+  .cyberpunk {
+    color-scheme: dark;
+
+    --background: 214 100% 2.7%;
+    --background-secondary: 214 100% 1.6%;
+    --foreground: 190 45% 88%;
+    --foreground-tertiary: 195 25% 52%;
+    --foreground-light: 195 20% 36%;
+
+    --card: 214 70% 5%;
+    --card-foreground: 190 45% 88%;
+
+    --popover: 214 70% 6%;
+    --popover-foreground: 190 45% 88%;
+
+    --primary: 55 99.2% 50%;
+    --primary-foreground: 214 100% 2.7%;
+
+    --secondary: 214 50% 11%;
+    --secondary-foreground: 190 45% 88%;
+
+    --muted: 214 80% 4%;
+    --muted-foreground: 195 35% 68%;
+
+    --accent: 195 60% 9%;
+    --accent-foreground: 195 74.5% 61.6%;
+
+    --destructive: 350 100% 60%;
+    --destructive-foreground: 214 100% 2.7%;
+
+    --border: 185 45% 13%;
+    --border-light: 195 50% 9%;
+    --border-high: 174 45% 22%;
+    --input: 185 45% 13%;
+
+    --ring: 55 99.2% 50%;
+    --selection: 62 74.7% 10%;
+
+    --warning: 62 74.7% 35.7%;
+    --warning-foreground: 214 100% 2.7%;
+
+    --success: 174 54.9% 49.6%;
+    --success-foreground: 214 100% 2.7%;
+    --surface: 214 100% 1.6%;
+
+    --hue-blue: 195 74.5% 61.6%;
+    --hue-teal: 174 54.9% 49.6%;
+    --hue-yellow: 55 99.2% 50%;
+
+    --shadow-1: 0 0 4px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.4);
+    --shadow-2: 0 0 6px rgb(84 193 230 / 0.12), 0 8px 24px rgb(0 0 0 / 0.6);
+  }
 }
 
 @layer base {

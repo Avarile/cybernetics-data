@@ -1,6 +1,6 @@
-import { useTheme } from '@teable/next-themes';
 import { getFileIcon, isImage } from '@teable/ui-lib';
 import { useMemo } from 'react';
+import { useThemeMode } from '../../hooks';
 
 interface IFileCoverProps {
   className?: string;
@@ -11,11 +11,8 @@ interface IFileCoverProps {
 
 export const FileCover = (props: IFileCoverProps) => {
   const { className, mimetype, url, name } = props;
-  const { resolvedTheme } = useTheme();
-  const FileIcon = useMemo(
-    () => getFileIcon(mimetype, resolvedTheme as 'light' | 'dark'),
-    [mimetype, resolvedTheme]
-  );
+  const themeMode = useThemeMode();
+  const FileIcon = useMemo(() => getFileIcon(mimetype, themeMode), [mimetype, themeMode]);
 
   if (isImage(mimetype)) {
     return <img className={className} src={url} alt={name} />;

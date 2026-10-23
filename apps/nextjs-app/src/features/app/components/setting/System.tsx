@@ -74,6 +74,39 @@ export const System: React.FC = () => {
               </span>
             </div>
             <div className="max-w-[256px]">
+              <RadioGroupItem value="cyberpunk" id="cyberpunk" className="peer sr-only" />
+              <Label
+                htmlFor="cyberpunk"
+                className="flex cursor-pointer flex-col rounded-lg border-2 border-transparent bg-popover p-1 peer-data-[state=checked]:border-primary peer-data-[state=checked]:shadow-[0_4px_12px_rgba(0,0,0,0.08),0_2px_2px_rgba(0,0,0,0.06)] hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
+              >
+                {/* no screenshot for this theme yet, so draw a miniature of the layout in its palette */}
+                <div className="flex aspect-[3/2] w-[198px] max-w-full overflow-hidden rounded-md border bg-[#00060e]">
+                  <div className="flex w-1/4 flex-col gap-1.5 border-r border-[#39c4b6]/30 p-2">
+                    <div className="h-1.5 w-3/4 rounded-sm bg-[#fee801]" />
+                    <div className="h-1 w-full rounded-sm bg-[#54c1e6]/60" />
+                    <div className="h-1 w-2/3 rounded-sm bg-[#54c1e6]/40" />
+                    <div className="h-1 w-3/4 rounded-sm bg-[#54c1e6]/40" />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1.5 p-2">
+                    <div className="flex gap-1">
+                      <div className="h-2 w-6 rounded-sm bg-[#fee801]" />
+                      <div className="h-2 w-6 rounded-sm bg-[#9a9f17]" />
+                    </div>
+                    {[0, 1, 2, 3, 4].map((row) => (
+                      <div key={row} className="flex gap-1 border-b border-[#39c4b6]/20 pb-1">
+                        <div className="h-1 flex-1 rounded-sm bg-[#54c1e6]/50" />
+                        <div className="h-1 flex-1 rounded-sm bg-[#39c4b6]/50" />
+                        <div className="h-1 flex-1 rounded-sm bg-[#54c1e6]/30" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Label>
+              <span className="mt-2 block w-full text-center text-sm font-normal">
+                {t('settings.setting.cyberpunk')}
+              </span>
+            </div>
+            <div className="max-w-[256px]">
               <RadioGroupItem value="system" id="system" className="peer sr-only" />
               <Label
                 htmlFor="system"

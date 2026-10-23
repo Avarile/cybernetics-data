@@ -2,5 +2,7 @@
   "personalAccessToken": "Personal access tokens",
   "oauthApps": "OAuth Apps",
   "plugins": "Plugins",
-  "mcp": "MCP Server"
+  "mcp": "MCP Server",
+  "license": "License",
+  "licenseDescription": "Cybernetics is open-source software based on Teable. The core apps are licensed under AGPL-3.0 and the packages under MIT."
 }

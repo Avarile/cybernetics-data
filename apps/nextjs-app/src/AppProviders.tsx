@@ -1,4 +1,5 @@
 import { ThemeProvider } from '@teable/next-themes';
+import { APP_THEMES } from '@teable/sdk/hooks';
 import { ConfirmModalProvider } from '@teable/ui-lib';
 import { Toaster as SoonerToaster } from '@teable/ui-lib/shadcn/ui/sonner';
 import { Toaster } from '@teable/ui-lib/shadcn/ui/toaster';
@@ -17,9 +18,11 @@ export const AppProviders: FC<Props & { env: IServerEnv }> = (props) => {
   return (
     <ThemeProvider
       attribute="class"
+      themes={APP_THEMES}
       themeColor={{
         light: '#ffffff',
         dark: '#171717',
+        cyberpunk: '#00060e',
       }}
       forcedTheme={theme}
     >

@@ -1,5 +1,6 @@
 import { useTheme } from '@teable/next-themes';
 import { useEffect, useState } from 'react';
+import { DARK_THEMES } from '../../../hooks/use-theme-mode';
 import type { IGridTheme } from '../../grid/configs';
 import { gridTheme } from '../../grid/configs';
 import { mixColor, TAG_HUES, toHex, withAlpha } from '../../grid/utils';
@@ -90,7 +91,7 @@ const readRootVars = (): IReadVar => {
 };
 
 const currentThemeKey = (): IThemeKey =>
-  document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  DARK_THEMES.some((name) => document.documentElement.classList.contains(name)) ? 'dark' : 'light';
 
 const computeTheme = () =>
   typeof window === 'undefined' ? gridTheme : buildGridTheme(readRootVars(), currentThemeKey());

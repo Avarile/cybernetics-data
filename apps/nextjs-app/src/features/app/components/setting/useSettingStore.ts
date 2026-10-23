@@ -7,6 +7,7 @@ export enum SettingTab {
   Integration = 'integration',
   PersonalAccessToken = 'personal-access-token',
   OAuthApp = 'oauth-app',
+  OpenSourceLicense = 'open-source-license',
   License = 'license',
   LicensePlan = 'license-plan',
 }

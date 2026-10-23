@@ -1,5 +1,7 @@
 {
   "personalAccessToken": "Persönliche Zugangstoken",
   "oauthApps": "OAuth Apps",
-  "plugins": "Plugins"
+  "plugins": "Plugins",
+  "license": "Lizenz",
+  "licenseDescription": "Cybernetics ist Open-Source-Software auf Basis von Teable. Die Kern-Apps stehen unter AGPL-3.0, die Pakete unter MIT."
 }

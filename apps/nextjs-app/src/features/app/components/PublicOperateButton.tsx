@@ -1,5 +1,10 @@
-import { useTheme } from '@teable/next-themes';
-import { useIsAnonymous, useIsHydrated, useShareId, useTemplate } from '@teable/sdk/hooks';
+import {
+  useIsAnonymous,
+  useIsHydrated,
+  useShareId,
+  useTemplate,
+  useThemeMode,
+} from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -27,8 +32,8 @@ export const PublicOperateButton = () => {
   const shareRef = useRef<IShareSelectSpaceDialogRef>(null);
   const isHydrated = useIsHydrated();
 
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
 
   if (isInIframe || !isHydrated) {
     return <></>;

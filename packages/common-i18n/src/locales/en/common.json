@@ -362,6 +362,7 @@
       "theme": "Intertace theme",
       "themeDesc": "Select your interface color scheme",
       "dark": "Dark",
+      "cyberpunk": "Cyberpunk",
       "light": "Light",
       "system": "System",
       "version": "App version",
@@ -493,6 +494,7 @@
   },
   "token": "Token",
   "poweredBy": "Powered by <0></0>",
+  "sourceCode": "Source code",
   "invite": {
     "dialog": {
       "title": "{{spaceName}} space sharing",

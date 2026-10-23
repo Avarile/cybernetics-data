@@ -294,7 +294,8 @@ export class TwoFactorService {
       await this.verificationCodeService.verify('2fa-signin', challengeId, code);
     } catch (error) {
       if (error instanceof CustomHttpException) {
-        await this.signinLockoutService.recordFailure(data.email, () => error);
+        const failure = error;
+        await this.signinLockoutService.recordFailure(data.email, () => failure);
       }
       throw error;
     }
