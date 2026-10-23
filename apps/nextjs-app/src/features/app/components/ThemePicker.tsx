@@ -1,4 +1,5 @@
 import { useTheme } from '@teable/next-themes';
+import { APP_THEMES } from '@teable/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import {
@@ -24,7 +25,7 @@ export const ThemePicker: React.FC<{ className?: string }> = ({ className }) => 
             setTheme(value);
           }}
         >
-          {['light', 'dark', 'system'].map((item) => {
+          {[...APP_THEMES, 'system'].map((item) => {
             return (
               <DropdownMenuRadioItem
                 className="capitalize"

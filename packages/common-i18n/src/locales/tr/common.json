@@ -325,6 +325,7 @@
       "theme": "Tema",
       "themeDesc": "Uygulama temasını seçin.",
       "dark": "Koyu",
+      "cyberpunk": "Siberpunk",
       "light": "Açık",
       "system": "Sistem",
       "version": "Uygulama sürümü",
@@ -425,6 +426,7 @@
   },
   "token": "Token",
   "poweredBy": "<0></0> tarafından desteklenmektedir",
+  "sourceCode": "Kaynak kodu",
   "invite": {
     "dialog": {
       "title": "{{spaceName}} alanı paylaşımı",

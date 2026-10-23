@@ -1,5 +1,4 @@
-import { useTheme } from '@teable/next-themes';
-import { useSession } from '@teable/sdk/hooks';
+import { useSession, useThemeMode } from '@teable/sdk/hooks';
 import { Button, Dialog, DialogContent } from '@teable/ui-lib/shadcn';
 import dayjs from 'dayjs';
 import Image from 'next/image';
@@ -31,8 +30,8 @@ export const FreshSettingGuideDialog = () => {
   const router = useRouter();
   const { brandName } = useBrand();
 
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
 
   if (!showGuideModal) return null;
 

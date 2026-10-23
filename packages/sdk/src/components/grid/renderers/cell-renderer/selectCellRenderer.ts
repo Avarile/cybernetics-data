@@ -5,7 +5,8 @@ import { GRID_DEFAULT } from '../../configs';
 import type { IRectangle } from '../../interface';
 import type { SpriteManager } from '../../managers';
 import { GridInnerIcon } from '../../managers';
-import { isPointInsideRectangle } from '../../utils';
+import { getTagStyle, isPointInsideRectangle } from '../../utils';
+import type { ITagStyle } from '../../utils';
 import { drawRect, drawSingleLineText } from '../base-renderer/baseRenderer';
 import { CellRegionType, CellType } from './interface';
 import type {
@@ -31,12 +32,23 @@ const positionCache: LRUCache<string, ISelectRegion[]> = new LRUCache({
   max: 10,
 });
 
-const OPTION_RADIUS = 6;
+const OPTION_RADIUS = 4;
 const OPTION_GAP_SIZE = 6;
 const OPTION_PADDING_HORIZONTAL = 8;
 const SELECT_CELL_PADDING_TOP = 6;
 
 const { cellHorizontalPadding, maxRowCount } = GRID_DEFAULT;
+
+const tagStyleCache = new Map<string, ITagStyle>();
+const tagStyleFor = (colorName: string, theme: IGridTheme) => {
+  const key = `${colorName}|${theme.cellBg}|${theme.cellTextColor}`;
+  let style = tagStyleCache.get(key);
+  if (!style) {
+    style = getTagStyle(colorName, { surface: theme.cellBg, foreground: theme.cellTextColor });
+    tagStyleCache.set(key, style);
+  }
+  return style;
+};
 
 const drawLabel = (
   ctx: CanvasRenderingContext2D,
@@ -48,13 +60,25 @@ const drawLabel = (
     maxTextWidth: number;
     textColor: string;
     bgColor: string;
+    borderColor?: string | null;
     editable?: boolean;
     theme: IGridTheme;
     spriteManager: SpriteManager;
   }
 ) => {
-  const { x, y, width, text, maxTextWidth, textColor, bgColor, editable, theme, spriteManager } =
-    props;
+  const {
+    x,
+    y,
+    width,
+    text,
+    maxTextWidth,
+    textColor,
+    bgColor,
+    borderColor,
+    editable,
+    theme,
+    spriteManager,
+  } = props;
   const { fontSizeXS, iconSizeSM } = theme;
 
   drawRect(ctx, {
@@ -65,6 +89,16 @@ const drawLabel = (
     radius: OPTION_RADIUS,
     fill: bgColor,
   });
+  if (borderColor) {
+    drawRect(ctx, {
+      x: x + 0.5,
+      y: y + 0.5,
+      width: width - 1,
+      height: iconSizeSM - 1,
+      radius: OPTION_RADIUS,
+      stroke: borderColor,
+    });
+  }
   drawSingleLineText(ctx, {
     text,
     x: x + OPTION_PADDING_HORIZONTAL,
@@ -242,8 +276,9 @@ export const selectCellRenderer: IInternalCellRenderer<ISelectCell> = {
 
     for (const text of displayData) {
       const choice = choiceMap?.[text];
-      const bgColor = choice?.backgroundColor || cellOptionBg;
-      const textColor = choice?.color || cellOptionTextColor;
+      const tagStyle = choice?.colorName ? tagStyleFor(choice.colorName, theme) : null;
+      const bgColor = tagStyle?.bg ?? (choice?.backgroundColor || cellOptionBg);
+      const textColor = tagStyle?.fg ?? (choice?.color || cellOptionTextColor);
 
       // Use different max width for first row
       const currentMaxTextWidth = row === 1 ? firstRowMaxTextWidth : maxTextWidth;
@@ -279,6 +314,7 @@ export const selectCellRenderer: IInternalCellRenderer<ISelectCell> = {
         maxTextWidth: actualMaxTextWidth,
         textColor,
         bgColor,
+        borderColor: tagStyle?.border,
         editable,
         theme,
         spriteManager,

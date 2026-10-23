@@ -1,5 +1,7 @@
 {
   "personalAccessToken": "Персональні токени доступу",
   "oauthApps": "OAuth Додатки",
-  "plugins": "Плагіни"
+  "plugins": "Плагіни",
+  "license": "Ліцензія",
+  "licenseDescription": "Cybernetics — програмне забезпечення з відкритим кодом на основі Teable. Основні застосунки поширюються за ліцензією AGPL-3.0, пакети — за MIT."
 }

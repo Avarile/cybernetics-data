@@ -1,5 +1,5 @@
-import { useTheme } from '@teable/next-themes';
 import { PluginPosition } from '@teable/openapi';
+import { useThemeMode } from '@teable/sdk/hooks';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useRef } from 'react';
 import { useEnv } from '@/features/app/hooks/useEnv';
@@ -16,8 +16,8 @@ const componentPluginIds = ['plgchart'];
 
 export const useIframeUrl = (params: IPluginParams) => {
   const { pluginUrl } = params;
-  const { resolvedTheme } = useTheme();
-  const defaultTheme = useRef(resolvedTheme);
+  const themeMode = useThemeMode();
+  const defaultTheme = useRef(themeMode);
   const {
     i18n: { resolvedLanguage },
   } = useTranslation(['common']);

@@ -1,10 +1,9 @@
 import type { IAttachmentCellValue, INumberShowAs, ISingleLineTextShowAs } from '@teable/core';
 import { CellValueType, ColorUtils, FieldType, validateDateFieldValueLoose } from '@teable/core';
-import { useTheme } from '@teable/next-themes';
 import { LRUCache } from 'lru-cache';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from '../../../context/app/i18n/useTranslation';
-import { useFields, useView } from '../../../hooks';
+import { useFields, useThemeMode, useView } from '../../../hooks';
 import type { IFieldInstance } from '../../../model';
 import { getFileCover, isSystemFileIcon } from '../../editor';
 import { GRID_DEFAULT } from '../../grid/configs';
@@ -48,7 +47,7 @@ const generateGroupColumns = (fields: IFieldInstance[]): IGridColumn[] => {
 
 const useGenerateGroupCellFn = () => {
   const { t } = useTranslation();
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
   return useCallback(
     (fields: IFieldInstance[]) =>
       // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -228,7 +227,7 @@ const useGenerateGroupCellFn = () => {
           case FieldType.Attachment: {
             const cv = (cellValue ?? []) as IAttachmentCellValue;
             const data = cv.map(({ id, mimetype, presignedUrl, smThumbnailUrl, width, height }) => {
-              const url = getFileCover(mimetype, presignedUrl, resolvedTheme as 'light' | 'dark');
+              const url = getFileCover(mimetype, presignedUrl, themeMode);
               return {
                 id,
                 url: isSystemFileIcon(mimetype) ? url : smThumbnailUrl ?? url,
@@ -294,7 +293,7 @@ const useGenerateGroupCellFn = () => {
           }
         }
       },
-    [resolvedTheme, t]
+    [themeMode, t]
   );
 };
 

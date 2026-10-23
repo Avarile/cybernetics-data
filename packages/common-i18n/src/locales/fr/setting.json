@@ -1,4 +1,6 @@
 {
   "personalAccessToken": "Jetons d'accès personnel",
-  "oauthApps": "Applications OAuth"
+  "oauthApps": "Applications OAuth",
+  "license": "Licence",
+  "licenseDescription": "Cybernetics est un logiciel open source basé sur Teable. Les applications principales sont sous licence AGPL-3.0 et les paquets sous MIT."
 }

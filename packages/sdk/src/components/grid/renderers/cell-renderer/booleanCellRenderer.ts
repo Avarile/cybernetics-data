@@ -20,7 +20,7 @@ export const booleanCellRenderer: IInternalCellRenderer<IBooleanCell> = {
     const { data, isMultiple, contentAlign = 'center' } = cell;
     const { ctx, rect, theme } = props;
     const { x, y, width, height } = rect;
-    const { iconSizeSM, staticWhite, iconBgSelected, rowHeaderTextColor } = theme;
+    const { iconSizeSM, staticWhite, iconBgSelected, interactionLineColorCommon } = theme;
     const halfIconSize = iconSizeSM / 2;
 
     if (!isMultiple) {
@@ -32,11 +32,13 @@ export const booleanCellRenderer: IInternalCellRenderer<IBooleanCell> = {
         textOffsetX = width - cellHorizontalPadding - iconSizeSM;
       }
 
+      // 16px box with 3px corners drawn inside the unchanged 20px click target
       return drawCheckbox(ctx, {
-        x: x + textOffsetX,
-        y: y + height / 2 - halfIconSize,
-        size: iconSizeSM,
-        stroke: data ? staticWhite : rowHeaderTextColor,
+        x: x + textOffsetX + 2,
+        y: y + height / 2 - halfIconSize + 2,
+        size: iconSizeSM - 4,
+        radius: 3,
+        stroke: data ? staticWhite : interactionLineColorCommon,
         fill: data ? iconBgSelected : undefined,
         isChecked: data,
       });

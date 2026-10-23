@@ -323,6 +323,7 @@
       "theme": "Tema interfaccia",
       "themeDesc": "Seleziona lo schema di colori dell'interfaccia",
       "dark": "Scuro",
+      "cyberpunk": "Cyberpunk",
       "light": "Chiaro",
       "system": "Sistema",
       "version": "Versione dell'app",
@@ -453,6 +454,7 @@
   },
   "token": "Token",
   "poweredBy": "Offerto da <0></0>",
+  "sourceCode": "Codice sorgente",
   "invite": {
     "dialog": {
       "title": "Condivisione dello spazio {{spaceName}}",

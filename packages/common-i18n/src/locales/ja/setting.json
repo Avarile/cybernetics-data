@@ -1,4 +1,6 @@
 {
   "personalAccessToken": "個人アクセストークン",
-  "oauthApps": "OAuthアプリ"
+  "oauthApps": "OAuthアプリ",
+  "license": "ライセンス",
+  "licenseDescription": "Cybernetics は Teable をベースにしたオープンソースソフトウェアです。コアアプリは AGPL-3.0、パッケージは MIT ライセンスです。"
 }

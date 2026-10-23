@@ -1,551 +1,315 @@
-# Schema Onboarding — choose your starter data model on first login
+# Frontend Redesign: Twenty-style look, same functionality
 
-Status: **implemented 2026-10-19** (tracked as CYBERDATA-29…40 in the cybernetics workspace)
-Branch: `feat-dataschema-onboarding` · Base: `feat-db-setup`
-Scope: `/space/[spaceId]` first visit, a new `schema-pack` backend feature, a dev-time extractor.
+Status: **designed 2026-10-22 (rev. 2), not started**. Order, files and proof per step are in
+`current-implementation-plan.md`.
+Branch: cut `feat-twenty-ui` from `feat-db-setup`.
+Demo (clickable prototype, light + dark + phone): https://claude.ai/artifact/8hD9igtVKiPGXAgj8HGnHS
 
-> **Deviations decided during implementation** (the sections below are the original design):
->
-> - **Not one transaction.** Base and table DDL run on the data-DB connection, outside the meta
->   transaction, so §5.5's single `$tx` is impossible. The installer logs everything it creates and
->   undoes it on failure (deletes the new base, or the new tables/fields of an existing base).
-> - **Routes.** Install is `POST /api/schema-pack/install` with `spaceId` in the body
->   (`base|create` via `@ResourceMeta`, like create-from-template), not under `/api/space/:id`.
-> - **No standalone extractor script.** The source schema is captured through the
->   cybernetics-data MCP (no local server/PAT) into
->   `features/schema-pack/extract/__fixtures__/data-centre.schema.json`, with manual checks noted
->   in the fixture. `pack-map.ts` + `build-packs.ts` live in the backend so the transform is
->   unit-tested, and `UPDATE_PACKS=1 vitest run src/features/schema-pack/extract` regenerates
->   `packs/*.json`.
-> - **Seeds.** Finance categories ship flat (the source has no parents). auditlog is optional, off.
-> - **Onboarding columns** are `onboarding_status` / `onboarding_time`; existing users are
->   backfilled `legacy`. The space page latches the wizard for the visit so the base created
->   mid-install does not unmount it.
-> - **Theme.** This fork's default theme is dark-styled under the `light` class, so pack accents are
->   translucent (`bg-sky-500/10`) instead of light/dark tint pairs.
-> - **Re-entry** is also offered per base ("Add schema packs" in the base card menu).
-
-> The previous content of this file (Base Graph design) is in git history:
+> The previous content of this file (Schema Onboarding design) is in git history:
 > `git show HEAD:scripts/customized/developments/current-design.md`.
 
-Every schema fact below was read live from base `data-centre` (`bseJEuE54y5caWO0Xc8`) on
-2026-10-18 via the `cybernetics-data` MCP server. Every code path was read from the working tree.
+The demo uses the real `data-centre` field names and types (read on 2026-10-22 through the
+`cybernetics-data` MCP). Every record in it is invented. Every code path below was read from the
+working tree on `feat/updated-graphy`.
+
+---
+
+## 0. The contract: only the UI changes
+
+This is a **visual redesign**. It is done when the app looks like Twenty CRM's tables and
+**behaves exactly as it does today**:
+
+1. **Nothing is added.** No new buttons, menus, shortcuts, panels, settings or features.
+2. **Nothing is removed.** Every control in §3 still exists, is reachable the same way, and
+   does the same thing.
+3. **Interaction does not change.** The same click, double-click, right-click, drag, keyboard
+   shortcut and touch gesture produce the same result in the same place. Menus keep their items,
+   their order and their labels. Containers stay the same kind (a modal stays a modal, a popover
+   stays a popover, a tab strip stays a tab strip).
+4. **Geometry that controls hit-testing stays put** unless only drawing changes: the row head
+   width, the column append width and the frozen-column handle keep their sizes.
+5. **No data, API, permission, i18n-key or URL changes.** New i18n strings are not needed,
+   because every label already exists.
+
+Anything that would break one of these rules is out of scope, even if Twenty does it. These are
+listed in §9 so they are not reopened by accident.
 
 ---
 
 ## 1. Goal in one paragraph
 
-A brand-new user who opens their space for the first time is not dropped into an empty base.
-Instead they see a full-screen, friendly wizard that offers four **schema packs** —
-**Progress**, **People**, **Knowledge**, **Finance** — each one a proven slice of the
-`data-centre` base. They pick any combination, tweak a couple of options (currency, timezone,
-starter rows), preview exactly what will be built, and get a ready-to-use, fully linked base in a
-few seconds. When two packs that belong together are picked (e.g. Progress + People), the
-cross-links between them (task → assignee) are built too.
+Every surface of the app takes on Twenty CRM's visual language: quiet neutral chrome, 13px
+Inter, 32px rows, hairline grid lines, type icons in tertiary grey, colored tint tags, relation
+chips with avatars, soft hover and selection fills, 8px-radius menus with 32px items, and one
+bordered work panel on a light page ground. A real light theme returns (today "light" and
+"dark" are the same amber palette), and a matching dark theme is designed with it. The canvas
+grid, every toolbar control, every menu and the record modal keep their behaviour. Only how they
+are drawn changes.
 
 ---
 
-## 2. What the source base contains, and how it splits into packs
+## 2. Visual audit (what changes on screen)
 
-### 2.1 Inventory (21 tables)
-
-| Pack | Tables | Internal relationships |
+| Area | Today | After |
 |---|---|---|
-| **Progress** | `goals`, `projects`, `tasks`, *opt.* `project_frameworks` | goal 1─N project (`projects`/`belong_goals`), project 1─N task (`tasks`/`belong_project`) |
-| **People** | `contacts`, `companies`, `contact_type`, `contact_profession`, *opt.* `auditlog` | contact N─1 company / type / profession; auditlog N─1 contact (`generated_by_contact`) |
-| **Knowledge** | `knowledges`, `knowledge_type` | knowledge N─1 type; knowledge self-tree (`knowledge_parent`/`knowledges`); knowledge N─N `related_knowledge`; type self-tree (`parent_type`/`child_types`) |
-| **Finance** | `finance_Accounts`, `finance_Categories`, `finance_Payees`, `finance_Tags`, `finance_Budgets`, `finance_Transactions` | transaction N─1 account, transfer account, category, payee, budget; N─N tags; category self-tree; payee → default category; budget N─1 category |
-| *excluded* | `template_table`, `system_info`, `system_status`, `table_references` | internal / instance-specific — never shipped |
+| Theme tokens | "Exocortex amber". `:root` and `.dark` hold **identical** dark values; `--radius: 0.125rem` (Tailwind `rounded-md` is 0) | Twenty light under `:root`, Twenty dark under `.dark`; `--radius: 0.5rem` |
+| Grid colors | Hard-coded hex in `gridTheme.ts` **and** `use-grid-theme.ts` (amber `#FFB547`, cyan `#4DE8FF`) | Read from the same CSS variables as the DOM (D2) |
+| Select tags | 6px radius, solid colors | 4px radius, tint palette (D4) |
+| Relation / user cells | Plain pills | Chips with a 14px avatar |
+| Primary column | Text | Avatar + text (drawn only; no new click target) |
+| Headers | Amber text, triangle menu marker | Tertiary grey icon + name, chevron menu marker in the **same hit region** |
+| Toolbar buttons | Ghost buttons; active filter/sort/group use violet/orange/emerald fills | Same buttons, Twenty ghost style; active states keep their own hue (purple/orange/green tints) so they stay distinguishable |
+| View tabs | Boxed tabs | Twenty tab style: text tabs with an underline on the active view |
+| Record modal | Dense single column | Same modal, same header actions, two-column label/value rows, 8px radius |
+| Menus | 2px radius, amber accents | 8px radius, 32px items, neutral hover, blue check |
+| Shell | Sidebar flush against content | Sidebar on the page ground; content in one bordered `rounded-lg` card |
 
-`template_table` is not shipped, but it **is** the definition of the *standard field mixin* every
-non-finance table carries: `title` (primary), `context` (long text, markdown), `created_at`,
-`updated_at`, `deleted_at`, `is_active` (default ✓), `id` (auto number).
+---
 
-### 2.2 Bridges — links that cross packs
+## 3. Parity inventory (the acceptance checklist)
 
-Built **only when both packs are selected** (and added later if the missing pack is installed
-into the same base — see §5.6).
+Each row must behave identically after the redesign. The plan's QA phase walks this list.
 
-| Bridge | Field(s) | Kind |
-|---|---|---|
-| Progress × People | `projects.lead_by` → `contacts` · `tasks.assigned_to` → `contacts` (symmetric `contacts.projects`, `contacts.tasks`) | many-one, two-way |
-| Progress × Knowledge | `goals.refer_knowledge`, `projects.refer_knowledge`, `tasks.refer_knowledge` → `knowledges` | many-many, one-way |
-| People × Finance | none today | — |
-| Knowledge × Finance | none today | — |
+### 3.1 Sidebar (`BaseLayout` → `Sidebar`)
+| Control | Behaviour kept |
+|---|---|
+| Base switcher (`BaseSidebarHeaderLeft`) | Dropdown: back to space, switch base ▸ (submenu of bases), version badge |
+| Quick action (`QuickAction`, search icon, ⌘K) | Command dialog: resources grouped by Table / Dashboard / App / Automation, then Theme (Light / Dark / System). It does not search records, and it still won't |
+| Collapse (`ChevronsLeft`, ⌘B), resize handle | Same widths (min/max from `toggle-side-bar/constant`) |
+| Page router (`BasePageRouter`) | "Graph" link; "More" menu with Trash (needs `base|delete`) and Design (needs `base|update`) |
+| Node tree (`BaseNodeTree`) | Folders expand/collapse, drag to reorder and nest, rename, per-node ⋯ menu, star (pin) button on hover (shown always when pinned), add-resource "+" on folders, "Create" at the bottom |
+| Footer (`SideBarFooter`) | User menu, Settings dialog, Notifications |
+| Mobile | `SheetWrapper` / `HoverWrapper` behaviour unchanged |
 
-### 2.3 Computed fields the installer must rebuild in order
+### 3.2 Table header (`TableHeader`)
+| Control | Behaviour kept |
+|---|---|
+| `TableInfo` | Table icon + name, double-click rename, emoji icon picker |
+| `ExpandViewList`, `ViewList` tabs | Click switches view; drag reorders; active tab's menu: Rename, Duplicate, Delete, Lock / Unlock view; pinned views |
+| `AddView` | Menu: Grid, Form, Kanban, Gallery, Calendar, Add plugin view |
+| Right actions | Collaborators avatars, Invite (primary button → `ShareBasePopover`), AI chat toggle, Help, Show in graph, ⋯ (`BaseNodeMore`). On touch these collapse into the ⋯ sheet, as now |
+| Locked view tip | Same banner |
+| Template mode | Copy link + `PublicOperateButton` |
 
-| Table | Field | Kind | Depends on |
+### 3.3 Grid tool bar (`GridToolBar`)
+| Control | Behaviour kept |
+|---|---|
+| "+ Add record" | Opens `CreateRecordModal` (a form modal, then Create) |
+| Hide fields (`HideFields`) | Popover with search, per-field toggles, Show all / Hide all; clicking a field scrolls to it and highlights it; label "N hidden fields" when active |
+| Filter (`ViewFilter`) | Condition builder: Add condition, Add condition group (nesting limit), per-row field / operator / value, and/or; label "Filter by …" when active; warning icon for invalid conditions; share-view notice |
+| Sort (`Sort`) | Rows of field + direction ("first → last" / "last → first"), Add another sort, "Automatically sort records" switch; label "Sort by N fields" |
+| Group (`Group`) | Rows of field + order, Add subgroup; label "Group by N fields" |
+| Row height (`RowHeight`) | Short / Medium / Tall / Extra tall, field-name display lines |
+| Search (`SearchButton`) | Expanding input, field scope, match count with ↑ ↓ pagination, highlights |
+| Undo / Redo | Same buttons, ⌘Z / ⇧⌘Z / ⌘Y |
+| Share (`SharePopover`), Personal view (`PersonalViewSwitch`) | Same popovers and toggle; fold into ⋯ under `@md/toolbar` as now |
+| Other view types | Kanban / Gallery / Calendar / Form tool bars keep their own controls |
+
+### 3.4 Grid (canvas, `GridViewBaseInner` + `packages/sdk/src/components/grid`)
+| Interaction | Behaviour kept |
+|---|---|
+| Row head (70px) | Drag handle (needs `view|update`), checkbox, expand icon (opens record modal), comment count badge. All drawn at all times (`rowIndexVisible={false}`) |
+| All-checkbox | Top-left; selects all |
+| Column header click | Desktop: selects the column. Touch: opens the header menu |
+| Header menu marker | Opens `FieldMenu` (Edit field, Duplicate, Generate, Download all files, Insert left / right, Filter / Sort / Group by this field, Freeze up to this field, Hide, Delete) |
+| Header double-click | Opens field settings |
+| Primary lock icon, description icon | Same click regions and tooltips |
+| Column drag, resize, freeze handle | Unchanged |
+| Cell click / double-click / typing / Enter | Select / edit / edit with that character / edit |
+| Range selection | Drag, Shift+click, copy, paste, fill handle, delete |
+| Right-click | `RecordMenu` on cells/rows (Insert N above / below, Copy cells, Copy record URL, View record history, Add comment, Add to Chat, Duplicate selected, Delete record(s)); `FieldMenu` on headers; `GroupHeaderMenu` on group rows (expand / collapse this group, all groups) |
+| Group rows | Click toggles collapse |
+| Append row ("+") | Adds a record (with prefill from filters, as today); per group when grouped |
+| Append column ("+") | Opens create-field |
+| Statistic row | Shows "Summary" on hover when unset; click opens `StatisticMenu` with the same functions (Count, Empty, Filled, Unique, Max, Min, Sum, Average, Checked, Unchecked, Percent …, Earliest / Latest date, Date range, Total attachment size) |
+| Collaborator cursors, search highlights, comment counts, loading cells | Same behaviour, new colors |
+
+### 3.5 Record modal (`ExpandRecord`, `ExpandRecordHeader`, `RecordEditor`)
+| Control | Behaviour kept |
+|---|---|
+| Container | `Modal` on desktop, `Drawer` on touch (the unused `Panel.tsx` stays unused) |
+| Header | ↑ ↓ previous / next record, title, "Record from {table}", Copy record URL, history toggle, comment toggle, ⋯ (Duplicate record, Delete record), close |
+| Body | Field editors in view order; "Show N hidden fields" toggle; computed fields read-only |
+| Side areas | Record history and comments open inside the modal, as now |
+
+---
+
+## 4. Decisions
+
+**D1. Keep the canvas grid and change only how it is drawn.** Every look in the demo can be
+drawn on canvas. The demo is DOM only because it is a throwaway prototype. Draw functions change;
+hit regions (`RegionType`), handlers and coordinate math do not.
+
+**D2. One token source.** CSS custom properties in `global.shadcn.css` are the only place a color
+is defined. `useGridTheme` builds `IGridTheme` from them at runtime (`getComputedStyle` when the
+resolved theme changes) instead of holding hex. Canvas cannot evaluate `color-mix`, so tag tints
+and fills are computed by a small pure util `mixColor(a, b, t)`, which is unit-tested.
+
+**D3. Light becomes light; amber is deleted** (§10.1). `:root` gets Twenty light and `.dark` gets Twenty dark. The
+`ThemeProvider` config, the `?theme=` override and the theme items in Quick action are untouched.
+Only the colors behind them change, plus the `themeColor` meta (`#ffffff` / `#171717`).
+
+**D4. Tag palette: 10 hues × 3 intensities.** Stored colors (50 `Colors` values) do not change.
+They map at draw time:
+
+| Stored shade | Intensity | Background | Text |
 |---|---|---|---|
-| `finance_Transactions` | `Signed Amount` | formula `IF(OR(Type="Expense",Type="Transfer"), -Amount, Amount)` | `Type`, `Amount` |
-| `finance_Transactions` | `Scope` | lookup (single select) | `Account` → `finance_Accounts.Scope` |
-| `finance_Accounts` | `Own Txn Total`, `Incoming Transfer Total` | rollup `sum` | the two transaction links |
-| `finance_Accounts` | `Net Activity` → `Current Balance` | formulas | rollups, `Opening Balance` |
-| `finance_Categories` | `Parent Name` → `Full Path` | lookup → formula | `Parent Category` |
-| `finance_Budgets` | `Scope`, `Actual Spent` → `Variance`, `% Used` | lookup, rollup → formulas | `Category`, transactions |
+| `Light2`, `Light1` | outline | transparent, 1px border = hue 42% over surface | hue 62% over foreground |
+| `Bright`, base | soft | hue 13% over surface | hue 62% over foreground |
+| `Dark1` | strong | hue 30% over surface | hue 42% over foreground, weight 500 |
 
-The MCP schema view does not expose lookup/rollup sources; the extractor (§5.2) reads them from
-the full field VO (`lookupOptions`), so they are copied exactly rather than guessed here.
+This keeps the user's distinct pairs distinct: `urgent = redDark1` vs `important = redBright`,
+and `finished_reviewing = greenLight1` vs `finished_validating = green`. Hue bases (same in both
+themes): blue `#0090ff`, cyan `#00a2c7`, gray `#8d8d8d`, green `#30a46c`, orange `#f76b15`,
+pink `#d6409f`, purple `#8e4ec6`, red `#e5484d`, teal `#12a594`, yellow `#e2a336`. The color
+picker in field settings shows the same 50 swatches drawn through this mapping.
 
-### 2.4 Things found in the source that must **not** be copied as-is
+**D5. Toolbar active colors keep their meaning.** Filter, Sort and Group each have a distinct
+active fill today. They keep distinct fills from the hue set (purple, orange, green tints) and
+keep the "Filter by …" / "Sort by N fields" text.
 
-| Finding | Why it matters | Proposed handling |
-|---|---|---|
-| `knowledge_type.credentials` is a plain-text field | Invites storing secrets in clear text in every new user's base | **Drop** from the pack |
-| Records in `knowledge_type` (and `contact_type`) include personal and sensitive categories | Seed rows would leak the owner's private data to every new user | **Never** copy records automatically; seed rows are hand-written (§5.3) |
-| All date fields hard-code `timeZone: Australia/Melbourne` | Wrong for most users | Installer substitutes the timezone chosen in the wizard |
-| All currency fields hard-code `symbol: "$"` | Wrong outside AUD/USD | Installer substitutes the chosen currency |
-| `knowledge_type.parent_type` is one-way, and `child_types` points at a symmetric field not present in the table | Broken / orphaned hierarchy pair | Emit one clean two-way `parent_type` ⇄ `child_types` pair |
-| `finance_Tags.Color` choice "Organge" | Typo | Fix to "Orange" |
-| `projects.progress` uses `finished-reviewing`; `tasks.progress` uses `finished_reviewing` | Inconsistent vocabulary | **Keep as-is** (recommended): the AI chat, MCP tools and the `project-management` skill address these by name — new bases must behave the same as the source |
+**D6. Field names are shown as stored** (`assigned_to` stays `assigned_to`).
 
-Table and field **names are kept exactly** (including the capitalised `finance_*` naming) for the
-same reason: the AI chat and MCP tooling are written against these names, so a new user's base
-works with them out of the box.
+**D7. Icons stay `@teable/icons`**, 16px, in `--foreground-tertiary` for headers and
+`--muted-foreground` elsewhere.
 
 ---
 
-## 3. User experience
+## 5. Tokens
 
-### 3.1 Who sees it, and when
+Values are HSL triplets (shadcn convention: `hsl(var(--x))`). Hex is shown for reading.
 
-- Shown when **all** are true: the user has never completed or skipped onboarding, the user is
-  **owner** of the space, and the space has **no bases**.
-- Invited collaborators never see it (they are joining someone else's data).
-- Always re-openable later: the space page's **+ Create base** button becomes a split button with
-  **"Start from schema packs…"**, which opens the same wizard (steps 2–5) in a large dialog.
+| Token | Light | Dark | Used for |
+|---|---|---|---|
+| `--background` | `#ffffff` | `#171717` | work panel, cells, popovers, modal |
+| `--background-secondary` *(new)* | `#fafafa` | `#121212` | page ground, sidebar, group rows, row hover |
+| `--accent` | `#f1f1f1` | `#222222` | hover fills, header hover, active tab bg on touch |
+| `--secondary` | `#ebebeb` | `#2a2a2a` | pressed, `ToolBarButton` active |
+| `--foreground` | `#333333` | `#ebebeb` | primary text |
+| `--muted-foreground` | `#666666` | `#b3b3b3` | secondary text, sidebar items |
+| `--foreground-tertiary` *(new)* | `#999999` | `#818181` | header labels, placeholders, counts, "Summary" |
+| `--foreground-light` *(new)* | `#b3b3b3` | `#5e5e5e` | drag grips, disabled |
+| `--border` | `#ebebeb` | `#262626` | panel border, header bottom, menus |
+| `--border-light` *(new)* | `#f1f1f1` | `#1f1f1f` | grid lines |
+| `--border-high` | `#d6d6d6` | `#333333` | checkboxes, scrollbars |
+| `--primary` / `--ring` | `#1961ed` | `#4a86f7` | active cell, selection, focus, Invite button |
+| `--selection` *(new)* | primary 7% over bg | same rule | selected rows / ranges |
+| `--destructive` | `#e5484d` | `#e5484d` | delete items, comment badge |
+| `--success` / `--warning` | `#30a46c` / `#f76b15` | `#3dd68c` / `#f76b15` | status only |
+| `--radius` | `0.5rem` | | Tailwind `lg` 8px, `md` 6px, `sm` 4px |
 
-### 3.2 Flow
-
-```
- ① Welcome ──► ② Choose packs ──► ③ Personalise ──► ④ Review ──► ⑤ Building ──► ⑥ Ready
-                    │                                              │ error
-                    └─ "Skip, start empty" ─► empty base           └─► retry (nothing half-built)
-```
-
-Steps ②–④ form a 3-dot stepper ("Choose · Personalise · Review"). Back is always allowed and
-never loses choices.
-
-### 3.3 Visual language
-
-- **Full-screen takeover** on first login (not a small modal): the moment deserves room. A soft
-  radial gradient background built from the four pack accents at ~6 % opacity; a quiet top bar with
-  the brand mark (left) and "Skip for now" (right).
-- **One accent per pack**, used consistently on the card, the preview cluster, the review tab and
-  the final "open" card:
-
-  | Pack | Accent (Tailwind) | Icon (`lucide-react`, already a dependency) | Title | One-line promise |
-  |---|---|---|---|---|
-  | Progress | `sky` | `Target` | Goals, projects & tasks | Turn big goals into projects and daily tasks, and see what's moving. |
-  | People | `violet` | `Users` | Contacts & companies | Remember who's who, how you know them, and who's leading what. |
-  | Knowledge | `emerald` | `BookOpen` | Notes & know-how | A tree of everything you've learned, linked to the work it supports. |
-  | Finance | `amber` | `Wallet` | Accounts, budgets & spending | Track every dollar across accounts, with budgets that check themselves. |
-
-- Components only from `@teable/ui-lib/shadcn` (Button, Card, Checkbox, Switch, Select, Tabs,
-  Tooltip, ScrollArea, Progress, Dialog, Sheet) — no new UI dependency.
-- Motion with `tailwindcss-animate` (already in ui-lib): cards fade-and-rise in 40 ms stagger,
-  selection is a 150 ms ring + tint, preview edges draw in. Everything collapses to opacity-only
-  under `prefers-reduced-motion`.
-- Light and dark: tints use `{accent}-50` / `dark:{accent}-950/40`, rings `{accent}-500`; all text
-  stays on `foreground` / `muted-foreground` tokens so contrast holds in both themes.
-
-### 3.4 ① Welcome
-
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ ◆ cybernetics                                                  Skip for now  │
-│                                                                              │
-│                         👋  Welcome, {name}                                  │
-│               Let's shape your data centre in under a minute.                │
-│                                                                              │
-│      Pick the areas of life and work you want to organise — we'll build      │
-│      the tables, links and formulas for you. You can add more any time.      │
-│                                                                              │
-│                           [  Get started  → ]                                │
-│                                                                              │
-│              ● sky   ● violet   ● emerald   ● amber   (pack dots drift in)   │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 3.5 ② Choose packs — the heart of the flow
-
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│ ◆ cybernetics            ● Choose ─ ○ Personalise ─ ○ Review     Skip for now │
-│                                                                              │
-│  What do you want to organise?                       ┌─ Your base ─────────┐ │
-│  Choose one or more. Recommended: Progress + Knowledge│                     │ │
-│                                                       │   (goals)           │ │
-│  ┌──────────────────────────┐ ┌──────────────────────┐│     │               │ │
-│  │ ◎ Target            [✓] │ │ ◎ Users          [ ] ││  (projects)╌╌╌╌┐   │ │
-│  │ Goals, projects & tasks  │ │ Contacts & companies ││     │          ╎   │ │
-│  │ Turn big goals into …    │ │ Remember who's who … ││  (tasks)╌╌╌(contacts)│
-│  │                          │ │                      ││     ╎      faded    │ │
-│  │ goals · projects · tasks │ │ contacts · companies ││  (knowledges)       │ │
-│  │ ✓ 10-stage progress      │ │ ✓ types & professions││     │              │ │
-│  │ ✓ priorities & deadlines │ │ ✓ who leads what     ││  (knowledge_type)   │ │
-│  └──────────────────────────┘ └──────────────────────┘│                     │ │
-│  ┌──────────────────────────┐ ┌──────────────────────┐│ 6 tables · 2 packs  │ │
-│  │ ◎ BookOpen          [✓] │ │ ◎ Wallet         [ ] ││ + Add People to     │ │
-│  │ Notes & know-how         │ │ Accounts, budgets …  ││   assign tasks  [+] │ │
-│  │ …                        │ │ …                    │└─────────────────────┘ │
-│  └──────────────────────────┘ └──────────────────────┘                       │
-│                                                                              │
-│  Select all                                               [ Continue → ]     │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
-
-**Pack card** (`PackCard`)
-- Large tap target, whole card toggles. `role="checkbox"`, `aria-checked`, focus ring; keys
-  `1`–`4` toggle cards, `Enter` continues.
-- Content: icon in an accent-tinted circle, title, promise, table chips, three "what you get"
-  bullets (from the pack catalog, §5.4), and a **"Peek inside"** link that opens a side sheet with
-  the field list for each table.
-- Selected: accent ring, tinted background, filled check badge; unselected cards keep full colour
-  (no greying out — every choice should feel inviting).
-
-**Live preview** (`SchemaPreview`, right column; bottom sheet on mobile)
-- A small hand-laid SVG relation map: one cluster per pack in its accent colour, nodes = tables,
-  solid edges = internal links.
-- **Bridges are the "aha" moment**: when only one side is selected, the bridge is drawn dashed
-  and faded, with the missing pack's node as a ghost; selecting the other pack animates the edge
-  solid. Under the map, a nudge: *"Add People to assign tasks to contacts [+]"* — one click adds it.
-- Footer counter: `N tables · M links · K packs`, computed from the catalog.
-
-`Continue` is disabled with a hint ("Pick at least one") until one pack is selected.
-**Default selection: none** — the recommendation is shown as text and one-click chip, not
-pre-ticked, so the user makes the choice consciously.
-
-### 3.6 ③ Personalise
-
-```
-  Make it yours
-  ┌ General ───────────────────────────────────────────────────────────────┐
-  │ Base name         [ My data centre                    ]  🧭 icon picker │
-  │ Timezone          [ Australia/Melbourne ▾ ]  (detected from browser)    │
-  │ Starter rows      (●) Include examples so it doesn't feel empty         │
-  └────────────────────────────────────────────────────────────────────────┘
-  ┌ ● Progress ────────────────────────┐ ┌ ● Finance ──────────────────────┐
-  │ [✓] Project frameworks library     │ │ Currency  [ AUD $ ▾ ]           │
-  │     (OKR, PDCA, meeting strategies)│ │ [✓] Budgets  [✓] Tags           │
-  └────────────────────────────────────┘ └─────────────────────────────────┘
-  ┌ ● People ──────────────────────────┐
-  │ [ ] Interaction log (auditlog)     │
-  └────────────────────────────────────┘
-```
-
-- Only sections for selected packs are shown.
-- Optional tables are switches; turning one off also removes fields that depend on it (e.g.
-  Budgets off → `finance_Transactions.Budget` and the budget rollups go). The preview updates.
-- Core tables of a pack cannot be switched off (keeps the pack coherent and the formulas valid).
-- Timezone defaults to `Intl.DateTimeFormat().resolvedOptions().timeZone`; currency defaults from
-  the browser locale, choices from a fixed allowlist.
-
-### 3.7 ④ Review
-
-```
-  Here's what we'll build                     {n} tables · {n} fields · {n} links
-  ┌ [● Progress] [● People] [● Knowledge] [● Finance] ─────────────────────────┐
-  │  tasks                                                    ▸ 14 fields      │
-  │    Aa title   ¶ context   ◉ progress (7)   ◉ priority (5)   📅 started_at   │
-  │    📅 finished_at   ↗ belong_project   ↗ assigned_to ⟵ People bridge        │
-  │    + 5 standard fields (created_at, updated_at, …)                          │
-  │  projects                                                 ▸ 13 fields      │
-  │  goals                                                    ▸ 10 fields      │
-  └────────────────────────────────────────────────────────────────────────────┘
-  ← Back                                                     [ Build my base ✨ ]
-```
-
-- Field rows use the same field-type icons as the grid header (`@teable/sdk` field icon map), so
-  the user meets the vocabulary they'll see in the table.
-- Bridge fields carry a small accent tag naming the other pack.
-- The counts in the header are real (from the install plan), not marketing numbers.
-
-### 3.8 ⑤ Building
-
-- The preview map from step ② moves to centre stage and plays an "assembling" loop (nodes pulse
-  in accent colour). Beside it, the plan list: *Creating tables → Linking → Formulas & rollups →
-  Starter rows*.
-- **No fake progress.** The install is one request (§5.5); steps show a running spinner, and
-  checkmarks only cascade (600 ms total) once the server confirms success.
-- Typical duration 3–10 s. After 20 s a reassurance line appears ("Still working — big packs take
-  a moment").
-- Failure: the transaction rolls back, so nothing half-built exists. Show the server's message,
-  **Try again** (same choices) and **Back to review**.
-
-### 3.9 ⑥ Ready
-
-```
-                         ✓  Your data centre is ready
-              6 tables are waiting for you. Where do you want to start?
-
-     ┌ ● Progress ──────────┐ ┌ ● Knowledge ─────────┐ ┌ ✦ See it as a graph ─┐
-     │ Open tasks →         │ │ Open knowledges →    │ │ Every record, linked │
-     └──────────────────────┘ └──────────────────────┘ └──────────────────────┘
-                 Tip: ask the AI assistant "add my first project"
-```
-
-- One card per installed pack (opens its primary table: `tasks`, `contacts`, `knowledges`,
-  `finance_Transactions`), plus **See it as a graph** (the existing base-graph page) when two or
-  more packs are installed.
-
-### 3.10 Mobile (< 768 px)
-
-Cards stack in one column; the preview becomes a sticky bottom bar ("6 tables · View map") that
-opens a `Sheet`; Personalise sections become an accordion; Review tabs become a select.
-Full-screen takeover stays full-screen.
-
-### 3.11 Copy and i18n
-
-New namespace `onboarding` in `packages/common-i18n/src/locales/{en,zh}/onboarding.json`
-(other locales fall back to `en`). Pack titles, promises and bullets come from the catalog as
-i18n keys, not from the pack JSON, so translators never touch schema files.
+- **Type:** Inter Variable (already loaded). 13px body, 12px small, 11px uppercase section labels
+  (`letter-spacing: .04em`), 18px modal title. Weights 400 / 500 / 600. Tabular figures in
+  number, currency and statistic cells.
+- **Heights:** row 32 (short row height; Medium / Tall / Extra tall unchanged), column header 32,
+  statistic row 32, group header 36, table header 44, tool bar 40, sidebar item 28, menu item 32,
+  tag / chip 20, avatar 14.
+- **Shadows:** `--shadow-1: 0 0 4px rgb(0 0 0/.08), 0 2px 4px rgb(0 0 0/.04)`;
+  `--shadow-2: 0 0 4px rgb(0 0 0/.08), 0 8px 24px rgb(0 0 0/.10)`; dark mode alpha .4 / .5.
 
 ---
 
-## 4. Architecture overview
+## 6. Component specs (visual only)
 
-```
- dev time                                   runtime
- ────────                                   ───────
- data-centre base ──► fixture ──► build-packs.ts ──►  packs/*.pack.json  (checked in, PR-reviewed)
- (bseJEuE54y5caWO0Xc8)  (via MCP)  + pack-map.ts          seeds/*.json   (hand-written)
-                                                   │
-                       GET  /api/schema-pack ◄─────┤  catalog: packs, tables, field summaries, bridges
- Wizard (Next.js) ───► POST /api/space/:spaceId/schema-pack/install
-                                                   │  plan (pure) ─► SchemaPackInstaller (one $tx)
-                                                   ▼
-                                        new base: tables, links, computed fields, views, seed rows
-                       PATCH /api/user/onboarding  (completed | skipped)
-```
+### 6.1 Shell
+Grid `sidebar | 1fr`, gap 8, outer padding 10/16. The sidebar is transparent on
+`--background-secondary`. Content sits in one card: `bg-background border rounded-lg
+overflow-hidden`. Sidebar rows are 28px, radius 4, `--muted-foreground` icon + text; the active
+row uses `bg-accent text-foreground font-medium`. Folders get a 1px guide line for children. The
+star and "+" buttons keep their hover-reveal behaviour.
 
-Why a declarative pack spec instead of "duplicate the source base" (what
-`BaseService.createBaseFromTemplate` does today):
+### 6.2 Table header and view tabs
+44px. `TableInfo` in `--foreground` 500. View tabs become text tabs: icon + name in
+`--muted-foreground`, active tab in `--foreground` with a 1px underline, hover `bg-accent`. The
+right actions are 24px ghost icon buttons, and Invite is the one solid `--primary` button.
 
-1. Users pick a **subset**; duplicating copies all 21 tables and would need surgical deletes.
-2. Bridges must appear only when both ends exist — a duplicate can't express that.
-3. Timezone/currency substitution and the cleanups in §2.4 need a transform step anyway.
-4. The source is a **personal, private base**; runtime must not read it on behalf of other users.
+### 6.3 Tool bar
+40px with a top border. "+ Add record" is an outline button. The other controls are 24px ghost
+buttons (icon + label at `@2xl/toolbar`); the separators are 1px × 16px `--border`. The filter,
+sort and group active fills follow D5. Popovers (hide fields, filter builder, sort, group, row height,
+share) use the menu style in §6.6; the filter builder's rows are 32px inputs with radius 4.
 
----
-
-## 5. Backend design
-
-### 5.1 Pack spec (shared types in `packages/openapi/src/schema-pack/`)
-
-```ts
-export type SchemaPackId = 'progress' | 'people' | 'knowledge' | 'finance';
-
-export interface ISchemaPack {
-  id: SchemaPackId;
-  version: number;                 // bump on any schema change
-  tables: ISchemaPackTable[];
-}
-
-export interface ISchemaPackTable {
-  key: string;                     // stable symbolic id, e.g. 'tasks'
-  name: string;                    // exact source name
-  icon?: string;
-  optional?: boolean;              // switchable in Personalise
-  fields: ISchemaPackField[];
-  views?: ISchemaPackView[];       // copied from the source table's views
-}
-
-export interface ISchemaPackField {
-  key: string;                     // e.g. 'tasks.assigned_to'
-  name: string;
-  type: FieldType;
-  isPrimary?: boolean;
-  options: unknown;                // field options with every id replaced by a {key} placeholder
-  lookup?: { linkField: string; target: string }; // for lookups / rollups
-  requiresTables?: string[];       // dropped when any listed table is not installed
-}
-
-export interface ISchemaPackBridge {
-  packs: [SchemaPackId, SchemaPackId];
-  fields: ISchemaPackField[];      // link fields; symmetric side generated by the link type
-}
-```
-
-- Formula expressions are stored with placeholders: `{finance_Transactions.Amount}` instead of
-  `{flde1ox2n7Q30UUP938}`. The installer rewrites them to real field ids.
-- `{{timezone}}` and `{{currencySymbol}}` placeholders replace the hard-coded values (§2.4).
-- Validated with zod at load time (backend boot) — a bad pack file fails fast in CI, not at a
-  user's first login.
-
-### 5.2 Extractor (dev-time) — `apps/nestjs-backend/src/features/schema-pack/extract/`
-
-"Generate the schema from my existing base" happens here, once per change, by a developer:
-
-1. Capture the tables/fields of `bseJEuE54y5caWO0Xc8` through the cybernetics-data MCP into
-   `extract/__fixtures__/data-centre.schema.json`. **Schema only — never records.** Note any
-   manual checks or inferred values in the fixture's `note`.
-2. `build-packs.ts` applies `pack-map.ts`: table → pack, optional tables, excluded fields
-   (`credentials`), unmapped tables never shipped (`system_*`, `table_references`,
-   `template_table`), fixes from §2.4, and the bridges.
-3. It rewrites all ids to keys and emits
-   `apps/nestjs-backend/src/features/schema-pack/packs/{progress,people,knowledge,finance}.pack.json`
-   plus `bridges.json`; every change it makes is listed in its `report`.
-4. `build-packs.spec.ts` is a golden test: committed packs must equal the build output.
-   `UPDATE_PACKS=1 pnpm -F @teable/backend exec vitest run src/features/schema-pack/extract`
-   rewrites them; review the diff in git.
-
-### 5.3 Seed rows — `apps/nestjs-backend/src/features/schema-pack/seeds/`
-
-Hand-written, generic, small:
-
-| Table | Rows |
+### 6.4 Grid
+| Part | Spec |
 |---|---|
-| `contact_type` | family, friend, colleague, client, self |
-| `knowledge_type` | general, how-to, reference, project lessons, personal (as a tree of 2 levels) |
-| `project_frameworks` | OKR goal setting, PDCA project cycle, one-on-one meeting, decision log |
-| `finance_Categories` | the 24 generic income/expense categories from the source (Food, Transport, Utilities, Rent & Housing, Business Income, Refunds, …) with parents |
-| `finance_Accounts` | "Everyday account" (Checking, Personal), opening balance 0 |
-| `goals` → `projects` → `tasks` | one linked example: "Get organised" → "Set up my data centre" → 3 tasks |
-| `knowledges` | one "Welcome — how this knowledge base works" note |
+| Lines | Horizontal and vertical `--border-light`; header bottom and statistic top `--border` |
+| Row head (70px, unchanged) | Drag grip in `--foreground-light`, checkbox 14px radius 3 (`--border-high` stroke, `--primary` fill when checked), expand icon in `--foreground-tertiary`; hovering a control darkens it to `--foreground` |
+| Header | Primary lock sprite + type icon + name, all tertiary; name weight 500; menu marker drawn as a 12px chevron in the existing `ColumnHeaderMenu` region; hover fill `--accent`; selected column fill `--selection` |
+| Primary cell | Avatar 14 (square with initial; round with initials when the primary is a person name in a user/contact table) + name. Drawn only |
+| Select | Tags per D4, height 20, padding 6, radius 4 |
+| Relation / user | Chips: `foreground 5%` fill, radius 4, avatar + name |
+| Checkbox | 14px box, radius 3, `--primary` when checked |
+| Numbers / currency / auto number | Tabular figures; auto number tertiary |
+| Dates | Existing formatting; created / modified time in `--muted-foreground` |
+| Long text | First line, `--muted-foreground` |
+| Hover | Row fill `--background-secondary` |
+| Selection | Rows and ranges `--selection`; active cell 1px `--primary` border; fill handle 5px `--primary` square |
+| Editors | Same editors; container 1px `--primary` border, radius 4, shadow-2 |
+| Group row (36px) | Chevron, value drawn as its tag (select) or text, count tertiary; fill `--background-secondary` |
+| Append row | "+" in tertiary, row hover `--background-secondary` |
+| Append column (100px, unchanged) | "+" icon centred, tertiary |
+| Statistic row (32px) | Unset: "Summary" on hover (existing text). Set: function label tertiary + value 500 |
+| Frozen edge | 1px `--border` plus a soft 6px shadow while scrolled |
+| Collaborators / search | Collaborator colors unchanged; search hits yellow tint, current hit stronger |
 
-Installed only when "Starter rows" is on; each seed row's `context` says it's an example and can be
-deleted.
+### 6.5 Record modal
+Radius 8, `--background`, shadow-2, max width as today. Header 48px: ↑ ↓ ghost buttons, 18px
+title (600) with "Record from {table}" in tertiary underneath, the right-hand icon buttons as ghost 24px,
+close ×. Body: two-column rows (label 34% with type icon in tertiary, editor on the right); the
+"Show N hidden fields" toggle is a tertiary text button with a chevron. The history and comment
+side areas are separated by a 1px `--border`.
 
-### 5.4 Module — `apps/nestjs-backend/src/features/schema-pack/`
+### 6.6 Menus, popovers, dialogs (ui-lib)
+`DropdownMenu`, `Popover`, `Command`, `ContextMenu`, `Select`, `Dialog`, `Sheet`: radius 8, 1px
+`--border`, shadow-2, 4px inner padding; items 32px, radius 4, 16px icon, hover `--accent`,
+check at the right in `--primary`; search rows sit on top with a bottom border; group labels are
+11px uppercase tertiary; destructive items use `--destructive`. **Items, order and labels are
+untouched.**
 
-| File | Role |
-|---|---|
-| `schema-pack.module.ts` | Imports Table/Field/Record/View open-api modules |
-| `schema-pack.catalog.ts` | Loads + zod-validates pack JSON at boot; builds the catalog VO |
-| `schema-pack.planner.ts` | **Pure** `planInstall(packs, options, catalog, existingTables?) → IInstallPlan` — table list, ordered field phases, bridges, seeds, counts |
-| `schema-pack.installer.ts` | Executes a plan inside one `prismaService.$tx` |
-| `schema-pack.controller.ts` | The routes below |
-| `schema-pack.planner.spec.ts` | Unit tests (§7) |
-
-### 5.5 API
-
-| Method & path | Permission | Body / result |
-|---|---|---|
-| `GET /api/schema-pack` | logged in | catalog: packs → tables → field summaries (name, type, isComputed), bridges, counts, i18n keys |
-| `POST /api/schema-pack/plan` | logged in | `{packs, options}` → plan counts + table/field list (drives Review so the numbers match the install exactly) |
-| `POST /api/space/:spaceId/schema-pack/install` | `base\|create` on space | `{packs, options, baseId?}` → `{baseId, tables: {key, id}[]}` |
-| `PATCH /api/user/onboarding` | self | `{status: 'completed' \| 'skipped'}` |
-
-Install `options` (zod, at the controller boundary):
-`baseName` (1–100 chars), `icon` (single emoji), `timezone` (must be in
-`Intl.supportedValuesOf('timeZone')`), `currency` (allowlist), `starterRows` (bool),
-`optionalTables` (subset of the selected packs' optional keys). `packs`: non-empty, unique, known
-ids. Unknown keys rejected.
-
-Install phases (one transaction, `thresholdConfig.bigTransactionTimeout`, same as template apply):
-
-1. Create base (name, icon) — or use `baseId` when adding packs to an existing base.
-2. Create each table **with** its primary and plain fields in one call (so the default
-   Name/Count/Status fields are not created and then deleted).
-3. Create link fields — internal, then bridges whose both packs are present.
-4. Create lookups → rollups → formulas in the planner's topological order, placeholders resolved.
-5. Create views from the pack (or keep the default grid).
-6. Insert seed rows (if on), resolving links by seed key.
-7. If this was first-run onboarding, set the user's onboarding status to `completed`.
-
-Any failure rolls back everything. The response returns only after commit.
-
-### 5.6 Adding packs later
-
-The re-entry wizard calls install with `baseId`. The planner receives the base's existing tables
-(matched by **name**), skips tables already present, and adds bridges whose other end now exists
-(e.g. People added later → `tasks.assigned_to` appears). A table name that exists with a
-conflicting shape is reported in the plan and skipped, never overwritten.
-
-### 5.7 Onboarding state
-
-- Prisma: add `onboardingTime DateTime? @map("onboarding_time")` and
-  `onboardingStatus String? @map("onboarding_status")` to `User` (`packages/db-main-prisma`).
-- Migration backfills existing users with `status = 'legacy'`, so only users created after the
-  release see the wizard.
-- Exposed on `IUserMeVo` so SSR and the client can read it.
-
-### 5.8 First-visit routing — `apps/nextjs-app/src/pages/space/[spaceId].tsx`
-
-Today an owner entering an empty space gets a base auto-created and is redirected
-(`[spaceId].tsx`, "If owner enters an empty space, auto-create a base and redirect"). Change:
-
-```ts
-const me = await ssrApi.getUserMe();
-const needsOnboarding = isOwner && basesInSpace.length === 0 && !me.onboardingStatus;
-if (needsOnboarding) → render SpaceInnerPage with `showOnboarding` prop (no auto-create)
-else (existing behaviour)
-```
-
-"Skip for now" calls `PATCH /api/user/onboarding {skipped}` then the existing `createBase` path,
-so a skipper gets exactly today's experience. Self-hosted signups have no auto-created space
-(`createUserWithSettingCheck` only creates one on cloud) — they reach the wizard after creating
-their first space; no change needed there.
+### 6.7 Other views and pages
+Kanban stacks on `--background-secondary` with a tag + count header; cards are `--background`,
+1px border, radius 8, field rows following §6.4. Gallery, Calendar, Form and List take the tokens
+and the card style. Space home, base cards, settings, admin, share and template pages take the
+tokens and shell, with no layout or control changes.
 
 ---
 
-## 6. Frontend design
+## 7. `GRID_DEFAULT` changes (drawing only)
 
-```
-apps/nextjs-app/src/features/app/blocks/space/schema-onboarding/
-  SchemaOnboarding.tsx        full-screen shell (first run) — step state machine
-  SchemaPackDialog.tsx        same steps ②–⑥ in a Dialog (re-entry from + Create base)
-  steps/WelcomeStep.tsx
-  steps/ChoosePacksStep.tsx
-  steps/PersonaliseStep.tsx
-  steps/ReviewStep.tsx
-  steps/BuildingStep.tsx
-  steps/ReadyStep.tsx
-  components/PackCard.tsx
-  components/PackPeekSheet.tsx
-  components/SchemaPreview.tsx      SVG relation map; fixed cluster layout per pack
-  hooks/useSchemaPackCatalog.ts     react-query GET catalog
-  hooks/useInstallPlan.ts           react-query POST plan (debounced on choice change)
-  hooks/useInstallSchemaPacks.ts    mutation; invalidates baseAll / space queries
-  packTheme.ts                      accent classes + lucide icon per pack id
-  state.ts                          wizard state (packs, options, step) — persisted to sessionStorage
-```
+| Key | Now | New | Why it is safe |
+|---|---|---|---|
+| `columnStatisticHeight` | 40 | 32 | the region still spans the whole row |
+| `groupHeaderHeight` | 48 | 36 | collapse region is the whole row |
+| select `OPTION_RADIUS` | 6 | 4 | drawing |
+| select `OPTION_PADDING_HORIZONTAL` | 8 | 6 | drawing (editor hit areas measured from text) |
 
-- Wizard state lives in one `useReducer`; sessionStorage keeps it across an accidental refresh.
-- `SchemaPreview` layout is static per pack (no physics) — four quadrants, nodes pre-placed — so
-  it is cheap, stable and identical for every user. Bridges are paths between quadrants.
-- `SpaceInnerPage.tsx`: render `<SchemaOnboarding />` when `showOnboarding`; turn
-  "+ Create base" into a split button with "Start from schema packs…".
-- New `ReactQueryKeys.schemaPackCatalog()` and `schemaPackPlan(...)` in `@teable/sdk/config`.
+Unchanged on purpose: `rowHeadWidth` 70, `columnAppendBtnWidth` 100, `columnHeadMenuSize`
+12, `columnFreezeHandlerWidth`, `rowHeight` 32 and the row-height levels.
 
 ---
 
-## 7. Testing
+## 8. Accessibility and theming rules
+- Text contrast is at least 4.5:1 on `--background` in both themes. Tertiary (`#999`, 2.8:1) is used
+  only for labels that always sit next to an icon or a value.
+- Focus rings stay visible (2px `--ring` at 55%).
+- No component sets a literal color. A grep for `#[0-9a-fA-F]{6}` in `apps/nextjs-app/src` and
+  `packages/sdk/src/components` returns only token files, color utils and specs.
+- The hard-coded toolbar fills (`bg-violet-100 dark:bg-[#241A31]` etc.) move to tokens.
 
-| Level | What |
-|---|---|
-| Unit — planner | every one of the 15 pack subsets: table set, bridges present iff both packs, optional-table pruning removes dependent fields, computed fields topologically valid, placeholders all resolvable |
-| Unit — catalog | every pack JSON passes zod; no field id literals (`fld…`) survive in options/expressions; no `credentials` field |
-| E2E — backend | install each single pack and all four; assert counts; insert a transaction and check `Current Balance`, `Variance`, `% Used`; add People to a Progress-only base and assert bridge fields appear; forced failure leaves no base behind |
-| E2E — routing | new user + empty owned space → wizard, no base auto-created; legacy user → today's behaviour; collaborator → no wizard |
-| Frontend unit | card toggling (mouse + keys 1–4), bridge preview state, Continue disabled with none selected, error state keeps choices |
-| Extractor | snapshot test against a fixture schema JSON (no network) |
+## 9. Ruled out by the contract (do not reopen)
+These were in rev. 1 of this design and are withdrawn because they change behaviour:
+a view picker dropdown in place of tabs; one Options menu instead of separate tool bar buttons;
+a filter/sort chips row with Reset / Update view; draft (unsaved) view edits; selection actions
+in the table header; an "Open" button inside the primary cell; moving the expand control out of
+the row head; a record side panel as the default; record search in ⌘K; a Favorites section in the
+sidebar; reordering `FieldMenu` items; humanized field names.
 
----
-
-## 8. Decisions needed
-
-| # | Question | Recommendation |
-|---|---|---|
-| 1 | Keep source names exactly (`finance_*` casing, `finished-reviewing` vs `finished_reviewing`)? | **Keep** — AI chat and MCP skills depend on them |
-| 2 | Ship `auditlog` in People as optional "Interaction log"? | **Yes, optional, off by default** |
-| 3 | Show the wizard to existing users once? | **No** — backfill as `legacy`; they can use "Start from schema packs…" |
-| 4 | Starter rows on by default? | **On** — an empty base is the least friendly first impression |
-| 5 | One base for all packs, or one base per pack? | **One base** — bridges and the graph view need the tables together |
-| 6 | Locales at launch | `en` + `zh`, others fall back to `en` |
-
----
-
-## 9. Files touched (summary)
-
-| Area | Files |
-|---|---|
-| Extractor | `apps/nestjs-backend/src/features/schema-pack/extract/` (`pack-map.ts`, `build-packs.ts`, spec, fixture) |
-| Shared types | `packages/openapi/src/schema-pack/*` (types, zod, route clients) |
-| Backend | `apps/nestjs-backend/src/features/schema-pack/**` (module, catalog, planner, installer, controller, packs/, seeds/), register in app module |
-| Prisma | `packages/db-main-prisma/prisma/template.prisma` + migration (User onboarding columns) |
-| User | `user.service.ts` / user controller: `PATCH /api/user/onboarding`, `IUserMeVo` fields |
-| SSR | `apps/nextjs-app/src/pages/space/[spaceId].tsx` |
-| Frontend | `blocks/space/schema-onboarding/**`, `blocks/space/SpaceInnerPage.tsx` |
-| i18n | `packages/common-i18n/src/locales/{en,zh}/onboarding.json`, `features/i18n/space.config.ts` |
+## 10. Decisions taken (2026-10-22)
+1. **The amber palette is removed.** It is not kept as an extra theme. It lives in exactly three
+   files: `packages/ui-lib/src/shadcn/global.shadcn.css` (the "Exocortex amber" `:root` and
+   `.dark` blocks), `packages/sdk/src/components/grid/configs/gridTheme.ts` and
+   `packages/sdk/src/components/grid-enhancements/hooks/use-grid-theme.ts`. All three are
+   rewritten in Phases 1–2, and the greps in the plan's Phase 2 proof and step 8.7 must come back empty. Git history keeps it.
+2. **Primary-cell avatars are kept** (design §6.4). They are drawn only: no new hit region, the
+   click / double-click / edit behaviour of the primary cell is unchanged, and the editor text
+   aligns with the text start after the avatar.

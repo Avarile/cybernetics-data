@@ -3,14 +3,14 @@ import type {
   ISingleSelectCellValue,
   IMultipleSelectCellValue,
 } from '@teable/core';
-import { FieldType, ColorUtils } from '@teable/core';
+import { FieldType } from '@teable/core';
 import { temporaryPaste } from '@teable/openapi';
 import type { ForwardRefRenderFunction } from 'react';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
-import colors from 'tailwindcss/colors';
 import { useTranslation } from '../../../context/app/i18n';
 import { useTableId } from '../../../hooks';
 import type { MultipleSelectField, SingleSelectField } from '../../../model';
+import { getColorPairs } from '../../cell-value/cell-select/CellSelect';
 import { SelectEditorMain } from '../../editor';
 import type { IEditorRef } from '../../editor/type';
 import type { IEditorProps } from '../../grid/components';
@@ -30,7 +30,6 @@ const GridSelectEditorBase: ForwardRefRenderFunction<
     id: fieldId,
     type: fieldType,
     options,
-    displayChoiceMap,
   } = field as SingleSelectField | MultipleSelectField;
   const isMultiple = fieldType === FieldType.MultipleSelect;
   const cellValue = record.getCellValue(field.id) as
@@ -57,12 +56,9 @@ const GridSelectEditorBase: ForwardRefRenderFunction<
     return choices.map(({ name, color }) => ({
       label: name,
       value: name,
-      color:
-        displayChoiceMap[name]?.color ??
-        (ColorUtils.shouldUseLightTextOnColor(color) ? colors.white : colors.black),
-      backgroundColor: displayChoiceMap[name]?.backgroundColor ?? ColorUtils.getHexForColor(color),
+      ...getColorPairs(color),
     }));
-  }, [options, displayChoiceMap]);
+  }, [options]);
 
   const onChange = (value?: string[] | string) => {
     record.updateCell(fieldId, isMultiple && value?.length === 0 ? null : value, { t });

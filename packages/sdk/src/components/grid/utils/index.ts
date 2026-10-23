@@ -5,3 +5,5 @@ export * from './region';
 export * from './hotkey';
 export * from './measure';
 export * from './element';
+export * from './color';
+export * from './tag-style';

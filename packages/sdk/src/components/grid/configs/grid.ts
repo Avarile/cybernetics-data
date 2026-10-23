@@ -34,7 +34,7 @@ export const GRID_DEFAULT = {
   fillHandlerPadding: 8,
 
   // Statistics
-  columnStatisticHeight: 40,
+  columnStatisticHeight: 32,
   minColumnStatisticWidth: 110,
 
   // Others

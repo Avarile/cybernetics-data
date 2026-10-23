@@ -5,8 +5,7 @@ import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
 import { EditorState, StateField, StateEffect } from '@codemirror/state';
 import type { DecorationSet } from '@codemirror/view';
 import { EditorView, keymap, Decoration, placeholder as cmPlaceholder } from '@codemirror/view';
-import { useTheme } from '@teable/next-themes';
-import { useFields, useFieldStaticGetter } from '@teable/sdk/hooks';
+import { useFields, useFieldStaticGetter, useThemeMode } from '@teable/sdk/hooks';
 import type { IFieldInstance } from '@teable/sdk/model';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
@@ -53,7 +52,7 @@ export const PromptEditor = ({
   editorViewRef?: EditorViewRef;
 }) => {
   const allFields = useFields({ withHidden: true, withDenied: true });
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
   const { t } = useTranslation(tableConfig.i18nNamespaces);
   const fieldStaticGetter = useFieldStaticGetter();
 
@@ -70,7 +69,7 @@ export const PromptEditor = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const slashMenuRef = useRef<HTMLDivElement>(null);
 
-  const isLightTheme = resolvedTheme === 'light';
+  const isLightTheme = themeMode === 'light';
   const actualEditorViewRef = editorViewRef || internalEditorViewRef;
 
   // Filter fields excluding the current field

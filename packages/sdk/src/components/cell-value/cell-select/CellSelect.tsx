@@ -1,18 +1,13 @@
 import type { Colors, ISelectFieldOptions } from '@teable/core';
-import { ColorUtils } from '@teable/core';
 import { cn } from '@teable/ui-lib';
 import { keyBy } from 'lodash';
 import { useMemo } from 'react';
-import colors from 'tailwindcss/colors';
+import { getTagCss } from '../../grid/utils/tag-style';
 import type { ICellValue } from '../type';
 import { SelectTag } from './SelectTag';
 
-export const getColorPairs = (color: Colors) => {
-  return {
-    color: ColorUtils.shouldUseLightTextOnColor(color) ? colors.white : colors.black,
-    backgroundColor: ColorUtils.getHexForColor(color),
-  };
-};
+/** Theme-aware tag colours (CSS values); see `getTagCss`. */
+export const getColorPairs = (color: Colors) => getTagCss(color);
 
 export const transformSelectOptions = (choices: ISelectFieldOptions['choices']) => {
   return choices.map(({ name, color }) => ({
@@ -27,6 +22,8 @@ export interface ISelectOption {
   value: string;
   color?: string;
   backgroundColor?: string;
+  borderColor?: string;
+  fontWeight?: number;
 }
 
 interface ICellSelect extends ICellValue<string | string[]> {
@@ -59,13 +56,15 @@ export const CellSelect = (props: ICellSelect) => {
       {innerValue?.map((itemVal) => {
         const option = optionMap[itemVal];
         if (option == null) return null;
-        const { label, value, color, backgroundColor } = option;
+        const { label, value, color, backgroundColor, borderColor, fontWeight } = option;
         return (
           <SelectTag
             key={value}
             label={label || 'Untitled'}
             color={color}
             backgroundColor={backgroundColor}
+            borderColor={borderColor}
+            fontWeight={fontWeight}
             className={itemClassName}
           />
         );

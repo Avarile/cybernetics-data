@@ -1,8 +1,7 @@
 import { ColorUtils, contractColorForTheme, getCollaboratorsChannel } from '@teable/core';
-import { useTheme } from '@teable/next-themes';
 import type { ICollaboratorUser } from '@teable/sdk';
 import { useSession, CollaboratorWithHoverCard } from '@teable/sdk';
-import { useConnection, useTableId } from '@teable/sdk/hooks';
+import { useConnection, useTableId, useThemeMode } from '@teable/sdk/hooks';
 import { cn, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { chunk, isEmpty } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -17,7 +16,7 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({ className, maxAvat
   const { connection } = useConnection();
   const tableId = useTableId();
   const { user: sessionUser } = useSession();
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
 
   const [presence, setPresence] = useState<Presence>();
   const user = useMemo(
@@ -85,7 +84,7 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({ className, maxAvat
       {boardUsers?.map(({ id, name, avatar, email }) => {
         const borderColor = contractColorForTheme(
           ColorUtils.getRandomHexFromStr(`${tableId}_${id}`),
-          resolvedTheme
+          themeMode
         );
         return (
           <CollaboratorWithHoverCard
@@ -111,7 +110,7 @@ export const Collaborators: React.FC<CollaboratorsProps> = ({ className, maxAvat
             {hiddenUser.map(({ id, name, avatar, email }) => {
               const borderColor = contractColorForTheme(
                 ColorUtils.getRandomHexFromStr(`${tableId}_${id}`),
-                resolvedTheme
+                themeMode
               );
               return (
                 <div

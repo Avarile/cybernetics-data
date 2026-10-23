@@ -1,5 +1,7 @@
 {
   "personalAccessToken": "个人访问令牌",
   "oauthApps": "OAuth 应用",
-  "plugins": "插件"
+  "plugins": "插件",
+  "license": "许可证",
+  "licenseDescription": "Cybernetics 是基于 Teable 的开源软件。核心应用采用 AGPL-3.0 许可证，软件包采用 MIT 许可证。"
 }

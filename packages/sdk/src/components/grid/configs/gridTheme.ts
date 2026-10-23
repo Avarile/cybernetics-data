@@ -61,16 +61,21 @@ export interface IGridTheme {
   commentCountTextColor: string;
 }
 
+/**
+ * Light defaults, used before the CSS variables can be read (SSR, tests, previews). At runtime
+ * `useGridTheme` rebuilds the theme from the variables in global.shadcn.css, so both themes come
+ * from one source (design D2). Colours stay `#rrggbb`: grid code passes them to `hexToRGBA`.
+ */
 export const gridTheme: IGridTheme = {
   // Common
   staticWhite: '#FFFFFF',
   staticBlack: '#000000',
-  iconFgCommon: '#948D7B',
+  iconFgCommon: '#999999',
   iconBgCommon: colors.transparent,
-  iconFgHighlight: '#FFB547',
-  iconBgHighlight: '#FFB547',
-  iconFgSelected: '#070605',
-  iconBgSelected: '#FFB547',
+  iconFgHighlight: '#1961ed',
+  iconBgHighlight: '#1961ed',
+  iconFgSelected: '#ffffff',
+  iconBgSelected: '#1961ed',
   iconSizeXS: 16,
   iconSizeSM: 20,
   iconSizeMD: 24,
@@ -81,49 +86,49 @@ export const gridTheme: IGridTheme = {
   fontSizeMD: 14,
   fontSizeLG: 16,
   fontFamily:
-    'Inter, Roboto, -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, noto, arial, sans-serif',
+    "'Inter Variable', Inter, Roboto, -apple-system, BlinkMacSystemFont, avenir next, avenir, segoe ui, helvetica neue, helvetica, Ubuntu, noto, arial, sans-serif",
 
   // Cell
-  cellBg: '#0E0C08',
-  cellBgHovered: '#15120C',
-  cellBgSelected: '#1C170F',
-  cellBgLoading: hexToRGBA('#FFB547', 0.06),
-  cellLineColor: '#231E15',
-  cellLineColorActived: '#FFB547',
-  cellTextColor: '#E8DFCB',
-  cellTextColorHighlight: '#4DE8FF',
-  cellOptionBg: '#2A2316',
-  cellOptionBgHighlight: '#3A3223',
-  cellOptionTextColor: '#FFD08A',
+  cellBg: '#ffffff',
+  cellBgHovered: '#fafafa',
+  cellBgSelected: '#eff4fe',
+  cellBgLoading: hexToRGBA('#1961ed', 0.06),
+  cellLineColor: '#f1f1f1',
+  cellLineColorActived: '#1961ed',
+  cellTextColor: '#333333',
+  cellTextColorHighlight: '#1961ed',
+  cellOptionBg: '#ebebeb',
+  cellOptionBgHighlight: '#d6d6d6',
+  cellOptionTextColor: '#333333',
 
   // Group Header
-  groupHeaderBgPrimary: '#070605',
-  groupHeaderBgSecondary: '#0E0C08',
-  groupHeaderBgTertiary: '#15120C',
+  groupHeaderBgPrimary: '#fafafa',
+  groupHeaderBgSecondary: '#f1f1f1',
+  groupHeaderBgTertiary: '#ebebeb',
 
   // Column Statistic
-  columnStatisticBgHoveredPrimary: '#0E0C08',
-  columnStatisticBgHoveredSecondary: '#15120C',
-  columnStatisticBgHoveredTertiary: '#1C170F',
+  columnStatisticBgHoveredPrimary: '#f1f1f1',
+  columnStatisticBgHoveredSecondary: '#f1f1f1',
+  columnStatisticBgHoveredTertiary: '#ebebeb',
 
   // Column Header
-  columnHeaderBg: '#070605',
-  columnHeaderBgHovered: '#0E0C08',
-  columnHeaderBgSelected: '#1C170F',
-  columnHeaderNameColor: '#E8DFCB',
-  columnResizeHandlerBg: '#4DE8FF',
-  columnDraggingPlaceholderBg: hexToRGBA('#FFB547', 0.15),
+  columnHeaderBg: '#ffffff',
+  columnHeaderBgHovered: '#f1f1f1',
+  columnHeaderBgSelected: '#eff4fe',
+  columnHeaderNameColor: '#666666',
+  columnResizeHandlerBg: '#1961ed',
+  columnDraggingPlaceholderBg: hexToRGBA('#1961ed', 0.1),
 
   // Row Header
-  rowHeaderTextColor: '#948D7B',
+  rowHeaderTextColor: '#999999',
 
   // Append Row
-  appendRowBg: '#070605',
-  appendRowBgHovered: '#0E0C08',
+  appendRowBg: '#ffffff',
+  appendRowBgHovered: '#fafafa',
 
   // Avatar Theme
-  avatarBg: '#2A2316',
-  avatarTextColor: '#FFD08A',
+  avatarBg: '#f1f1f1',
+  avatarTextColor: '#666666',
   avatarSizeXS: 16,
   avatarSizeSM: 20,
   avatarSizeMD: 24,
@@ -131,17 +136,17 @@ export const gridTheme: IGridTheme = {
   themeKey: 'light',
 
   // ScrollBar
-  scrollBarBg: '#3A3223',
+  scrollBarBg: '#d6d6d6',
 
   // interaction
-  interactionLineColorCommon: '#3A3223',
-  interactionLineColorHighlight: '#4DE8FF',
+  interactionLineColorCommon: '#d6d6d6',
+  interactionLineColorHighlight: '#1961ed',
 
   // search cursor
-  searchCursorBg: '#3A2A10',
-  searchTargetIndexBg: '#221A0C',
+  searchCursorBg: '#f4d9ab',
+  searchTargetIndexBg: '#faefdc',
 
   // comment
-  commentCountBg: '#FF4F8B',
-  commentCountTextColor: '#070605',
+  commentCountBg: '#e5484d',
+  commentCountTextColor: '#ffffff',
 };

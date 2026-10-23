@@ -1,9 +1,8 @@
 import { useMutation } from '@tanstack/react-query';
 import { getUniqName, hasPermission } from '@teable/core';
-import { useTheme } from '@teable/next-themes';
 import { createBase } from '@teable/openapi';
 import type { IGetSpaceVo } from '@teable/openapi';
-import { useSession } from '@teable/sdk/hooks';
+import { useSession, useThemeMode } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
@@ -20,8 +19,8 @@ interface INoBasesPlaceholderProps {
 export const NoBasesPlaceholder: FC<INoBasesPlaceholderProps> = ({ space }) => {
   const { t } = useTranslation(spaceConfig.i18nNamespaces);
 
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
 
   const { user } = useSession();
   const router = useRouter();

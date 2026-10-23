@@ -1,10 +1,20 @@
-import { ColorUtils } from '@teable/core';
 import { cn } from '@teable/ui-lib';
 import { useMemo } from 'react';
 import type { MultipleSelectField, SingleSelectField } from '../../../../model';
+import { getTagCss } from '../../../grid/utils/tag-style';
 import type { IColorOption } from './base';
 import { BaseMultipleSelect } from './base';
 import { DefaultErrorLabel } from './DefaultErrorLabel';
+
+const tagStyle = (color: string) => {
+  const { backgroundColor, color: textColor, borderColor, fontWeight } = getTagCss(color);
+  return {
+    backgroundColor,
+    color: textColor,
+    fontWeight,
+    boxShadow: borderColor ? `inset 0 0 0 1px ${borderColor}` : undefined,
+  };
+};
 
 interface IMultipleSelect {
   onSelect: (value: string[] | null) => void;
@@ -36,10 +46,7 @@ const FilterMultipleSelect = (props: IMultipleSelect) => {
       <div
         key={value?.value}
         className="flex h-5 max-w-full shrink-0 items-center rounded-full px-2 text-xs font-normal"
-        style={{
-          backgroundColor: ColorUtils.getHexForColor(value.color),
-          color: ColorUtils.shouldUseLightTextOnColor(value.color) ? '#ffffff' : '#000000',
-        }}
+        style={tagStyle(value.color)}
         title={value.label}
       >
         <span className="truncate">{value.label}</span>
@@ -51,10 +58,7 @@ const FilterMultipleSelect = (props: IMultipleSelect) => {
       <div
         key={value?.value}
         className="flex h-5 max-w-full items-center overflow-hidden rounded-full px-2 text-xs font-normal"
-        style={{
-          backgroundColor: ColorUtils.getHexForColor(value.color),
-          color: ColorUtils.shouldUseLightTextOnColor(value.color) ? '#ffffff' : '#000000',
-        }}
+        style={tagStyle(value.color)}
         title={value.label}
       >
         <span className="truncate">{value.label}</span>

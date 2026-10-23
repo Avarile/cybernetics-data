@@ -1,4 +1,4 @@
-import { useTheme } from '@teable/next-themes';
+import { useThemeMode } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Head from 'next/head';
 import Image from 'next/image';
@@ -33,9 +33,9 @@ export const IllustrationPage: FC<IIllustrationPageProps> = ({
   description,
   button,
 }) => {
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
 
-  const imageSrc = resolvedTheme === 'dark' ? imageDarkSrc : imageLightSrc;
+  const imageSrc = themeMode === 'dark' ? imageDarkSrc : imageLightSrc;
 
   return (
     <>

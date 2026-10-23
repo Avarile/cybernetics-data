@@ -325,6 +325,7 @@
       "theme": "テーマ",
       "themeDesc": "アプリのテーマを選択します。",
       "dark": "ダーク",
+      "cyberpunk": "サイバーパンク",
       "light": "ライト",
       "system": "システム",
       "version": "アプリバージョン",
@@ -455,6 +456,7 @@
   },
   "token": "トークン",
   "poweredBy": "Powered by <0></0>",
+  "sourceCode": "ソースコード",
   "invite": {
     "dialog": {
       "title": "{{spaceName}}スペース共有",

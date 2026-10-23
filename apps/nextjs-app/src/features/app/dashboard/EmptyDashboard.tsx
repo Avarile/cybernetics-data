@@ -1,6 +1,5 @@
 import { Plus } from '@teable/icons';
-import { useTheme } from '@teable/next-themes';
-import { useBasePermission } from '@teable/sdk/hooks';
+import { useBasePermission, useThemeMode } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
@@ -12,8 +11,8 @@ export const EmptyDashboard = () => {
 
   const basePermissions = useBasePermission();
   const canManage = basePermissions?.['base|update'];
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
 
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 px-20">

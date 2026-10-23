@@ -10,7 +10,8 @@
     monospace;
 }
 
-.dark .markdown-body {
+.dark .markdown-body,
+.cyberpunk .markdown-body {
   /*dark*/
   color-scheme: dark;
   --focus-outlineColor: #1f6feb;

@@ -195,6 +195,15 @@ Giving non-techy people the ability to create their software sounds exciting. Bu
 
 In essence, Cybernetics isn't just another no-code solution, it's a comprehensive answer to the evolving demands of modern software development, ensuring that everyone, regardless of their technical proficiency, has a platform tailored to their needs.
 
+# Attribution
+
+Cybernetics is based on [Teable](https://github.com/teableio/teable), Copyright (c) 2023-2025 Teable, Inc. It has been modified by Cybernetics Group since May 2026. Teable and the Teable logo are trademarks of Teable, Inc.; this project is not affiliated with or endorsed by Teable, Inc.
+
+The complete source code of this modified version is available at https://github.com/Avarile/cybernetics-data.
+
 # License
 
 Cybernetics Community Edition (CE) is free for self-hosting under the AGPL license. See [./LICENSE](./LICENSE) for details.
+
+- `apps/nestjs-backend`, `apps/nextjs-app` and `plugins` are licensed under the [AGPL-3.0](./AGPL_LICENSE).
+- Packages under `packages/` are licensed under the MIT License (see the `LICENSE` file in each package).

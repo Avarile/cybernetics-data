@@ -7,6 +7,8 @@ export interface ISelectFieldDisplayChoice {
   name: string;
   color: string;
   backgroundColor: string;
+  /** Stored `Colors` value; the grid derives theme-aware tag colours from it (design D4). */
+  colorName: string;
 }
 
 export abstract class SelectFieldSdk extends SelectFieldCore {
@@ -23,6 +25,7 @@ export abstract class SelectFieldSdk extends SelectFieldCore {
           name,
           color: ColorUtils.shouldUseLightTextOnColor(color) ? colors.white : colors.black,
           backgroundColor: ColorUtils.getHexForColor(color),
+          colorName: color,
         };
       });
       this._choiceMap = keyBy(displayedChoices, 'name');

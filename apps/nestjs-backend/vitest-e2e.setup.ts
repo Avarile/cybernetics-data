@@ -95,7 +95,7 @@ function assertNotWorkingDatabase() {
   }
 }
 
-function tryGetDatabaseUrl(target: 'meta' | 'data', env: NodeJS.ProcessEnv) {
+function tryGetDatabaseUrl(target: 'meta' | 'data', env: Record<string, string | undefined>) {
   try {
     return getDatabaseUrl(target, env);
   } catch {

@@ -2,89 +2,174 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Twenty-style neutral palette (scripts/customized/developments/current-design.md §5).
+ * Values are HSL triplets, consumed as hsl(var(--x)). The canvas grid reads the same variables
+ * through useGridTheme, so this file is the only place a theme colour is defined.
+ */
 @layer base {
   :root {
-    /* Exocortex amber palette */
-    --background: 40 27% 4.3%;
-    --foreground: 41 39% 85.3%;
+    --background: 0 0% 100%;
+    --background-secondary: 0 0% 98%;
+    --foreground: 0 0% 20%;
+    --foreground-tertiary: 0 0% 60%;
+    --foreground-light: 0 0% 70%;
 
-    --card: 30 17% 2.4%;
-    --card-foreground: 41 39% 85.3%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
 
-    --popover: 38 29% 5.5%;
-    --popover-foreground: 41 39% 85.3%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
 
-    --primary: 36 100% 63.9%;
-    --primary-foreground: 30 17% 2.4%;
+    --primary: 220 85% 51%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 29% 6.1%;
-    --secondary-foreground: 41 39% 85.3%;
+    --secondary: 0 0% 92.2%;
+    --secondary-foreground: 0 0% 20%;
 
-    --muted: 30 25% 3.1%;
-    --muted-foreground: 43 10% 53.1%;
+    --muted: 0 0% 98%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 37 30% 8.4%;
-    --accent-foreground: 41 39% 85.3%;
+    --accent: 0 0% 94.5%;
+    --accent-foreground: 0 0% 20%;
 
-    --destructive: 340 100% 65.5%;
-    --destructive-foreground: 30 17% 2.4%;
+    --destructive: 358 75% 59%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 38 26% 14.3%;
-    --border-high: 39 25% 18.2%;
-    --input: 38 26% 14.3%;
+    --border: 0 0% 92.2%;
+    --border-light: 0 0% 94.5%;
+    --border-high: 0 0% 83.9%;
+    --input: 0 0% 92.2%;
 
-    --ring: 36 100% 63.9%;
+    --ring: 220 85% 51%;
+    --selection: 221 85% 97%;
 
-    --radius: 0.125rem;
+    --radius: 0.5rem;
 
-    --warning: 24 100% 62%;
-    --warning-foreground: 30 17% 2.4%;
+    --warning: 23 93% 53%;
+    --warning-foreground: 0 0% 100%;
 
-    --success: 111 100% 77.1%;
-    --success-foreground: 30 17% 2.4%;
-    --surface: 36 100% 63.9% / 0.06;
+    --success: 151 55% 42%;
+    --success-foreground: 0 0% 100%;
+    --surface: 0 0% 98%;
+
+    --hue-blue: 206 100% 50%;
+    --hue-cyan: 191 100% 39%;
+    --hue-gray: 0 0% 55.3%;
+    --hue-green: 151 55% 41.5%;
+    --hue-orange: 23 93% 52.5%;
+    --hue-pink: 322 65% 54.5%;
+    --hue-purple: 272 51% 54%;
+    --hue-red: 358 75% 59%;
+    --hue-teal: 173 80% 36%;
+    --hue-yellow: 38 75% 55%;
+
+    --shadow-1: 0 0 4px rgb(0 0 0 / 0.08), 0 2px 4px rgb(0 0 0 / 0.04);
+    --shadow-2: 0 0 4px rgb(0 0 0 / 0.08), 0 8px 24px rgb(0 0 0 / 0.1);
   }
 
   .dark {
-    /* Exocortex amber palette */
-    --background: 40 27% 4.3%;
-    --foreground: 41 39% 85.3%;
+    --background: 0 0% 9%;
+    --background-secondary: 0 0% 7.1%;
+    --foreground: 0 0% 92.2%;
+    --foreground-tertiary: 0 0% 50.6%;
+    --foreground-light: 0 0% 36.9%;
 
-    --card: 30 17% 2.4%;
-    --card-foreground: 41 39% 85.3%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 92.2%;
 
-    --popover: 38 29% 5.5%;
-    --popover-foreground: 41 39% 85.3%;
+    --popover: 0 0% 10.2%;
+    --popover-foreground: 0 0% 92.2%;
 
-    --primary: 36 100% 63.9%;
-    --primary-foreground: 30 17% 2.4%;
+    --primary: 219 91% 63%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 29% 6.1%;
-    --secondary-foreground: 41 39% 85.3%;
+    --secondary: 0 0% 16.5%;
+    --secondary-foreground: 0 0% 92.2%;
 
-    --muted: 30 25% 3.1%;
-    --muted-foreground: 43 10% 53.1%;
+    --muted: 0 0% 7.1%;
+    --muted-foreground: 0 0% 70.2%;
 
-    --accent: 37 30% 8.4%;
-    --accent-foreground: 41 39% 85.3%;
+    --accent: 0 0% 13.3%;
+    --accent-foreground: 0 0% 92.2%;
 
-    --destructive: 340 100% 65.5%;
-    --destructive-foreground: 30 17% 2.4%;
+    --destructive: 358 75% 59%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 38 26% 14.3%;
-    --border-high: 39 25% 18.2%;
-    --input: 38 26% 14.3%;
+    --border: 0 0% 14.9%;
+    --border-light: 0 0% 12.2%;
+    --border-high: 0 0% 20%;
+    --input: 0 0% 14.9%;
 
-    --ring: 36 100% 63.9%;
+    --ring: 219 91% 63%;
+    --selection: 220 18% 13%;
 
-    --radius: 0.125rem;
+    --warning: 23 93% 53%;
+    --warning-foreground: 0 0% 100%;
 
-    --warning: 24 100% 62%;
-    --warning-foreground: 30 17% 2.4%;
+    --success: 151 65% 54%;
+    --success-foreground: 0 0% 9%;
+    --surface: 0 0% 7.1%;
 
-    --success: 111 100% 77.1%;
-    --success-foreground: 30 17% 2.4%;
-    --surface: 36 100% 63.9% / 0.06;
+    --shadow-1: 0 0 4px rgb(0 0 0 / 0.4), 0 2px 4px rgb(0 0 0 / 0.3);
+    --shadow-2: 0 0 4px rgb(0 0 0 / 0.5), 0 8px 24px rgb(0 0 0 / 0.5);
+  }
+
+  /*
+   * Cyberpunk: a dark theme built on #00060e (night), #fee801 (yellow), #54c1e6 (cyan),
+   * #39c4b6 (teal) and #9a9f17 (olive). JS treats it as dark via useThemeMode.
+   */
+  .cyberpunk {
+    color-scheme: dark;
+
+    --background: 214 100% 2.7%;
+    --background-secondary: 214 100% 1.6%;
+    --foreground: 190 45% 88%;
+    --foreground-tertiary: 195 25% 52%;
+    --foreground-light: 195 20% 36%;
+
+    --card: 214 70% 5%;
+    --card-foreground: 190 45% 88%;
+
+    --popover: 214 70% 6%;
+    --popover-foreground: 190 45% 88%;
+
+    --primary: 55 99.2% 50%;
+    --primary-foreground: 214 100% 2.7%;
+
+    --secondary: 214 50% 11%;
+    --secondary-foreground: 190 45% 88%;
+
+    --muted: 214 80% 4%;
+    --muted-foreground: 195 35% 68%;
+
+    --accent: 195 60% 9%;
+    --accent-foreground: 195 74.5% 61.6%;
+
+    --destructive: 350 100% 60%;
+    --destructive-foreground: 214 100% 2.7%;
+
+    --border: 185 45% 13%;
+    --border-light: 195 50% 9%;
+    --border-high: 174 45% 22%;
+    --input: 185 45% 13%;
+
+    --ring: 55 99.2% 50%;
+    --selection: 62 74.7% 10%;
+
+    --warning: 62 74.7% 35.7%;
+    --warning-foreground: 214 100% 2.7%;
+
+    --success: 174 54.9% 49.6%;
+    --success-foreground: 214 100% 2.7%;
+    --surface: 214 100% 1.6%;
+
+    --hue-blue: 195 74.5% 61.6%;
+    --hue-teal: 174 54.9% 49.6%;
+    --hue-yellow: 55 99.2% 50%;
+
+    --shadow-1: 0 0 4px rgb(0 0 0 / 0.5), 0 2px 4px rgb(0 0 0 / 0.4);
+    --shadow-2: 0 0 6px rgb(84 193 230 / 0.12), 0 8px 24px rgb(0 0 0 / 0.6);
   }
 }
 
@@ -95,5 +180,16 @@
 
   body {
     @apply bg-background text-foreground;
+    font-family:
+      'Inter Variable',
+      Inter,
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }

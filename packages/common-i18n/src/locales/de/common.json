@@ -252,6 +252,7 @@
       "theme": "Benutzeroberflächen-Theme",
       "themeDesc": "Wählen Sie Ihr Farbschema für die Benutzeroberfläche",
       "dark": "Dunkel",
+      "cyberpunk": "Cyberpunk",
       "light": "Hell",
       "system": "System",
       "version": "App Version",
@@ -451,6 +452,7 @@
   },
   "token": "Token",
   "poweredBy": "Powered by <0></0>",
+  "sourceCode": "Quellcode",
   "invite": {
     "dialog": {
       "title": "{{spaceName}} Space teilen",

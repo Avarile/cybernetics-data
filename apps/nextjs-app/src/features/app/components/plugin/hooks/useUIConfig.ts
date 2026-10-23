@@ -1,5 +1,4 @@
-import { useTheme } from '@teable/next-themes';
-import { useBasePermission } from '@teable/sdk/hooks';
+import { useBasePermission, useThemeMode } from '@teable/sdk/hooks';
 import type { IUIConfig } from '@teable/sdk/plugin-bridge';
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
@@ -7,7 +6,7 @@ import type { IPluginParams } from '../types';
 
 export const useUIConfig = (pluginParams: IPluginParams) => {
   const basePermissions = useBasePermission();
-  const { resolvedTheme } = useTheme();
+  const themeMode = useThemeMode();
   const router = useRouter();
   const expandPluginId = router.query.expandPluginId as string;
   const canSetting = basePermissions?.['base|update'];
@@ -16,12 +15,12 @@ export const useUIConfig = (pluginParams: IPluginParams) => {
 
   return useMemo(() => {
     const uiConfig: IUIConfig = {
-      theme: resolvedTheme,
+      theme: themeMode,
     };
     if (pluginInstallId) {
       uiConfig.isShowingSettings = expandPluginId === pluginInstallId && canSetting;
       uiConfig.isExpand = expandPluginId === pluginInstallId;
     }
     return uiConfig;
-  }, [expandPluginId, pluginInstallId, resolvedTheme, canSetting]);
+  }, [expandPluginId, pluginInstallId, themeMode, canSetting]);
 };

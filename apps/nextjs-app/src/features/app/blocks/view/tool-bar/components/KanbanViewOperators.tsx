@@ -196,8 +196,7 @@ export const KanbanViewOperators: React.FC<{ disabled?: boolean }> = (props) => 
             text={text}
             className={cn(
               'max-w-[200px]',
-              isActive &&
-                'bg-violet-100 dark:bg-violet-600/30 hover:bg-violet-200 dark:hover:bg-violet-500/30',
+              isActive && 'bg-hue-purple/15 hover:bg-hue-purple/25',
               hasWarning && 'border-yellow-500'
             )}
             textClassName="@2xl/toolbar:inline"
@@ -215,11 +214,7 @@ export const KanbanViewOperators: React.FC<{ disabled?: boolean }> = (props) => 
             disabled={disabled}
             isActive={isActive}
             text={text}
-            className={cn(
-              'max-w-[200px]',
-              isActive &&
-                'bg-orange-100 dark:bg-orange-600/30 hover:bg-orange-200 dark:hover:bg-orange-500/30'
-            )}
+            className={cn('max-w-[200px]', isActive && 'bg-hue-orange/15 hover:bg-hue-orange/25')}
             textClassName="@2xl/toolbar:inline"
           >
             <ArrowUpDown className="size-4 shrink-0 text-sm" />

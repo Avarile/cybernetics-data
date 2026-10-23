@@ -11,10 +11,10 @@ import {
   Trash2,
   ArrowRight,
 } from '@teable/icons';
-import { useTheme } from '@teable/next-themes';
 import { exportBase, getSpaceList, moveBase } from '@teable/openapi';
 import type { IGetBaseVo } from '@teable/openapi';
 import { ReactQueryKeys } from '@teable/sdk/config';
+import { useThemeMode } from '@teable/sdk/hooks';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import {
   Button,
@@ -70,8 +70,8 @@ export const BaseActionTrigger: React.FC<React.PropsWithChildren<IBaseActionTrig
     align = 'end',
   } = props;
   const { t } = useTranslation(['common', 'space', 'onboarding']);
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === 'dark';
+  const themeMode = useThemeMode();
+  const isDark = themeMode === 'dark';
   const [deleteConfirm, setDeleteConfirm] = React.useState(false);
   const [shareOpen, setShareOpen] = React.useState(false);
   const [packsOpen, setPacksOpen] = React.useState(false);

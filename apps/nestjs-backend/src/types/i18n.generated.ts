@@ -572,6 +572,7 @@ export type I18nTranslations = {
                 "theme": string;
                 "themeDesc": string;
                 "dark": string;
+                "cyberpunk": string;
                 "light": string;
                 "system": string;
                 "version": string;
@@ -782,6 +783,7 @@ export type I18nTranslations = {
         };
         "token": string;
         "poweredBy": string;
+        "sourceCode": string;
         "invite": {
             "dialog": {
                 "title": string;
@@ -3765,6 +3767,8 @@ export type I18nTranslations = {
         "personalAccessToken": string;
         "oauthApps": string;
         "plugins": string;
+        "license": string;
+        "licenseDescription": string;
         "mcp": string;
     };
     "share": {
