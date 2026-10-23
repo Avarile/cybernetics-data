@@ -1,5 +1,5 @@
+import { createQueryClient } from '@cybernetics/sdk/context';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { createQueryClient } from '@teable/sdk/context';
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next';
 import { useState } from 'react';
 import { WaitlistPage } from '@/features/app/waitlist/WaitlistPage';

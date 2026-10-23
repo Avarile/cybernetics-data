@@ -1,5 +1,5 @@
+import { syncCopy } from '@cybernetics/sdk';
 import { Check, Copy } from '@teable/icons';
-import { syncCopy } from '@teable/sdk';
 import type { ButtonProps } from '@teable/ui-lib';
 import { Button, cn } from '@teable/ui-lib';
 import { useState } from 'react';

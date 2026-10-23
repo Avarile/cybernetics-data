@@ -1,5 +1,5 @@
+import type { IFieldStatic } from '@cybernetics/sdk';
 import { DivideCircle } from '@teable/icons';
-import type { IFieldStatic } from '@teable/sdk';
 import {
   Command,
   CommandEmpty,

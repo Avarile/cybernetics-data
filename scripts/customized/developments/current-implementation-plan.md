@@ -88,7 +88,7 @@ Phase details, files and proof are in the phase sections below.
 Commands used for proof throughout:
 
 ```bash
-pnpm -F @teable/sdk typecheck && pnpm -F @teable/sdk lint && pnpm -F @teable/sdk test-unit
+pnpm -F @cybernetics/sdk typecheck && pnpm -F @cybernetics/sdk lint && pnpm -F @cybernetics/sdk test-unit
 pnpm -F @teable/app typecheck && pnpm -F @teable/app lint && pnpm -F @teable/app test-unit
 pnpm -F @teable/ui-lib typecheck && pnpm -F @teable/ui-lib lint
 ```
@@ -282,7 +282,7 @@ gallery cover) are green; screenshots in both themes.
 
 ## Phase 8 — Parity QA and cleanup (M)
 
-- [ ] 8.1 Full parity suite green, plus the existing unit suites for `@teable/sdk` and `@teable/app`.
+- [ ] 8.1 Full parity suite green, plus the existing unit suites for `@cybernetics/sdk` and `@teable/app`.
 - [ ] 8.2 A manual walk of design §3 on desktop and a touch device, ticking every row.
 - [ ] 8.3 Literal-color sweep (design §8).
 - [ ] 8.4 axe run on the grid page, the record modal and the menus; reduced-motion check.

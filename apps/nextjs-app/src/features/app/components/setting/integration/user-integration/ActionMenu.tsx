@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil } from '@teable/icons';
 import { deleteUserIntegration } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import {
   Button,

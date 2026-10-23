@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getUserIntegrationList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useTranslation } from 'next-i18next';
 import { IntegrationContainer } from '../common/Container';
 import { List } from './List';

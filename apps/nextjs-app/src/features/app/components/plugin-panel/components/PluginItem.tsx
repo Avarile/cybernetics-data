@@ -1,5 +1,7 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useTablePermission } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   duplicatePluginPanelInstalledPlugin,
@@ -7,8 +9,6 @@ import {
   removePluginPanelPlugin,
   renamePluginPanelPlugin,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useTablePermission } from '@teable/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';

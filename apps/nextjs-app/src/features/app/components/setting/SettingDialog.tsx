@@ -1,4 +1,4 @@
-import { useIsTouchDevice } from '@teable/sdk/hooks';
+import { useIsTouchDevice } from '@cybernetics/sdk/hooks';
 import { Dialog, DialogContent, Sheet, SheetContent } from '@teable/ui-lib/shadcn';
 import { UnifiedSettingDialogContent } from './UnifiedSettingDialogContent';
 import { SettingTab, useSettingStore } from './useSettingStore';

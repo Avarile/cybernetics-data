@@ -1,7 +1,7 @@
+import { StandaloneViewProvider } from '@cybernetics/sdk/context';
+import { useBaseId, useTable, useTableId } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import { CONDITIONAL_QUERY_DEFAULT_LIMIT, type IConditionalLookupOptions } from '@teable/core';
-import { StandaloneViewProvider } from '@teable/sdk/context';
-import { useBaseId, useTable, useTableId } from '@teable/sdk/hooks';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { Trans } from 'next-i18next';
 import { useCallback } from 'react';
 import { LookupFilterOptions } from '../lookup-options/LookupFilterOptions';

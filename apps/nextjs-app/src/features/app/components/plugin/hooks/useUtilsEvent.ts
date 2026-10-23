@@ -1,3 +1,5 @@
+import { useViewId } from '@cybernetics/sdk/hooks';
+import type { IParentBridgeUtilsMethods } from '@cybernetics/sdk/plugin-bridge';
 import type { IGetTempTokenVo } from '@teable/openapi';
 import {
   getTempToken,
@@ -6,8 +8,6 @@ import {
   updateDashboardPluginStorage,
   updatePluginPanelStorage,
 } from '@teable/openapi';
-import { useViewId } from '@teable/sdk/hooks';
-import type { IParentBridgeUtilsMethods } from '@teable/sdk/plugin-bridge';
 import { useEffect, useRef } from 'react';
 import type { IPluginParams } from '../types';
 import { getSelectionRecords } from './utils/getSelectionRecords';

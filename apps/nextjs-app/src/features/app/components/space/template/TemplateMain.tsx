@@ -1,4 +1,4 @@
-import { useIsMobile } from '@teable/sdk/hooks';
+import { useIsMobile } from '@cybernetics/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useState } from 'react';
 import { CategoryMenu } from './CategoryMenu';

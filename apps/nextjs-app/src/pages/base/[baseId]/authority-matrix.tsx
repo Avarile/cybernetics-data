@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate, QueryClient } from '@tanstack/react-query';
 import { IS_TEMPLATE_HEADER, type ITableVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 import { AuthorityMatrixPage } from '@/features/app/blocks/AuthorityMatrix';

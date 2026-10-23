@@ -1,6 +1,6 @@
+import { AnchorContext, FieldProvider, TablePermissionProvider } from '@cybernetics/sdk/context';
+import { useTables } from '@cybernetics/sdk/hooks';
 import { Table2 } from '@teable/icons';
-import { AnchorContext, FieldProvider, TablePermissionProvider } from '@teable/sdk/context';
-import { useTables } from '@teable/sdk/hooks';
 import { Selector } from '@teable/ui-lib/base';
 import {
   Button,

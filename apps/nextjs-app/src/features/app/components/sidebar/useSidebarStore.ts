@@ -1,4 +1,4 @@
-import { LocalStorageKeys } from '@teable/sdk';
+import { LocalStorageKeys } from '@cybernetics/sdk';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { SIDE_BAR_WIDTH } from '../toggle-side-bar/constant';

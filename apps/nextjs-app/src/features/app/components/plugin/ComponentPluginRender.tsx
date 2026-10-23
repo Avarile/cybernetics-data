@@ -3,7 +3,7 @@ import type {
   IParentBridgeUIMethods,
   IParentBridgeMethods,
   IUIConfig,
-} from '@teable/sdk/plugin-bridge';
+} from '@cybernetics/sdk/plugin-bridge';
 import { useMemo, useRef } from 'react';
 import { Chart } from '../../blocks/chart/components/Chart';
 import type { IPageParams } from '../../blocks/chart/types';

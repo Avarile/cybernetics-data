@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getPluginContextMenu } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useEffect, useRef } from 'react';
 import { FloatPlugin } from './components/FloatPlugin';
 import { useActiveMenuPluginStore } from './useActiveMenuPlugin';

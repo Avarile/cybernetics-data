@@ -1,6 +1,6 @@
+import type { Table } from '@cybernetics/sdk/model';
 import { Table2 } from '@teable/icons';
 import { PinType } from '@teable/openapi';
-import type { Table } from '@teable/sdk/model';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 import { Input } from '@teable/ui-lib/shadcn/ui/input';
 import { useRouter } from 'next/router';
@@ -113,7 +113,7 @@ export const TableListItem: React.FC<IProps> = ({
           type="text"
           placeholder="name"
           defaultValue={table.name}
-          className="rounded-none absolute left-0 top-0 size-full cursor-text px-4"
+          className="absolute left-0 top-0 size-full cursor-text rounded-none px-4"
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               if (e.currentTarget.value && e.currentTarget.value !== table.name) {

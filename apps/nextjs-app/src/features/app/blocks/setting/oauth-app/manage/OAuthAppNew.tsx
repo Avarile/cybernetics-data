@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { oauthCreate, type OAuthCreateRo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useRef, useState } from 'react';
 import { FormPageLayout } from '../../components/FormPageLayout';
 import type { IOAuthAppFormRef } from './OAuthAppForm';

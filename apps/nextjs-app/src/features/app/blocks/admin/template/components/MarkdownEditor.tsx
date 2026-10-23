@@ -1,5 +1,5 @@
+import { MarkDownEditor as MarkdownEditorComponent, MarkdownPreview } from '@cybernetics/sdk';
 import { Edit } from '@teable/icons';
-import { MarkDownEditor as MarkdownEditorComponent, MarkdownPreview } from '@teable/sdk';
 import {
   cn,
   Dialog,

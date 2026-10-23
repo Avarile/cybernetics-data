@@ -1,6 +1,6 @@
+import { getLocalizationMessage } from '@cybernetics/sdk';
+import type { ILocaleFunction } from '@cybernetics/sdk/context/app/i18n';
 import type { ICustomHttpExceptionData, IHttpError } from '@teable/core';
-import { getLocalizationMessage } from '@teable/sdk';
-import type { ILocaleFunction } from '@teable/sdk/context/app/i18n';
 import { useTranslation } from 'next-i18next';
 import type { FC } from 'react';
 import { ForbiddenPage } from './ForbiddenPage';

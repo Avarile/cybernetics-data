@@ -1,5 +1,5 @@
+import { useBase } from '@cybernetics/sdk/hooks';
 import { UserPlus } from '@teable/icons';
-import { useBase } from '@teable/sdk/hooks';
 import { Button, Dialog, DialogContent, DialogTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useEffect, useRef, useState } from 'react';

@@ -1,9 +1,9 @@
+import type { CombinedSelection, IRecordIndexMap } from '@cybernetics/sdk/components';
+import { SelectionRegionType } from '@cybernetics/sdk/components';
+import type { Field } from '@cybernetics/sdk/model';
 import type { IAttachmentCellValue } from '@teable/core';
 import type { ICopyVo, IPasteRo } from '@teable/openapi';
 import { RangeType, UploadType } from '@teable/openapi';
-import type { CombinedSelection, IRecordIndexMap } from '@teable/sdk/components';
-import { SelectionRegionType } from '@teable/sdk/components';
-import type { Field } from '@teable/sdk/model';
 import {
   extractTableContent,
   extractHtmlHeader,

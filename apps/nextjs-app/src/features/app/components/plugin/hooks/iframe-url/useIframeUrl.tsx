@@ -1,5 +1,5 @@
+import { useThemeMode } from '@cybernetics/sdk/hooks';
 import { PluginPosition } from '@teable/openapi';
-import { useThemeMode } from '@teable/sdk/hooks';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useRef } from 'react';
 import { useEnv } from '@/features/app/hooks/useEnv';

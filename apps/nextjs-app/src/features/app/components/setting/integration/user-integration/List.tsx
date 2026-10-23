@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateUserIntegrationName, UserIntegrationProvider } from '@teable/openapi';
 import type { IUserIntegrationListVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { useState } from 'react';
 import { UserIntegrationProviderLogo } from '@/features/app/components/user-integration/ProviderLogo';
 import { openConnectIntegration } from '../../../user-integration/utils';

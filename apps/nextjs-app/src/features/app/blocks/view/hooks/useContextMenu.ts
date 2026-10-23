@@ -1,5 +1,5 @@
-import { useBaseId, useTableId } from '@teable/sdk/hooks';
-import { syncCopy } from '@teable/sdk/utils';
+import { useBaseId, useTableId } from '@cybernetics/sdk/hooks';
+import { syncCopy } from '@cybernetics/sdk/utils';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';

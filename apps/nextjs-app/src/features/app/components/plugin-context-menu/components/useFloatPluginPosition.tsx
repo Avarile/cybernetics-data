@@ -1,6 +1,6 @@
+import { LocalStorageKeys, ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getPluginContextMenu, PluginPosition } from '@teable/openapi';
-import { LocalStorageKeys, ReactQueryKeys } from '@teable/sdk/config';
 import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from 'react-use';
 import { isPercentage, pixelToPercent } from './utils/position';

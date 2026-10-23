@@ -1,4 +1,4 @@
-import type { IUrlParams } from '@teable/sdk/plugin-bridge';
+import type { IUrlParams } from '@cybernetics/sdk/plugin-bridge';
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
 

@@ -1,5 +1,5 @@
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import type { AuthorizedVo } from '@teable/openapi';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { OAuthLogo } from '../../../oauth/OAuthLogo';

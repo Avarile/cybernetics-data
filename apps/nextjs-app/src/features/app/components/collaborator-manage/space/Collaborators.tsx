@@ -1,3 +1,4 @@
+import { ReactQueryKeys, useSession } from '@cybernetics/sdk';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { IRole } from '@teable/core';
 import { canManageRole, Role } from '@teable/core';
@@ -15,7 +16,6 @@ import {
   updateBaseCollaborator,
   updateSpaceCollaborator,
 } from '@teable/openapi';
-import { ReactQueryKeys, useSession } from '@teable/sdk';
 import { Badge, Button, Input } from '@teable/ui-lib/shadcn';
 import { debounce } from 'lodash';
 import { useRouter } from 'next/router';

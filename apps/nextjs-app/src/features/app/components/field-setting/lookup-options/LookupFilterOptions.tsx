@@ -1,12 +1,12 @@
+import { FilterWithTable, useFieldFilterLinkContext } from '@cybernetics/sdk/components';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useTableId } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
+import { createFieldInstance } from '@cybernetics/sdk/model';
 import { useQuery } from '@tanstack/react-query';
 import type { IFilter } from '@teable/core';
 import { Maximize2 } from '@teable/icons';
 import { getFields } from '@teable/openapi';
-import { FilterWithTable, useFieldFilterLinkContext } from '@teable/sdk/components';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useTableId } from '@teable/sdk/hooks';
-import type { IFieldInstance } from '@teable/sdk/model';
-import { createFieldInstance } from '@teable/sdk/model';
 import { Button, Dialog, DialogContent, DialogTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useMemo } from 'react';

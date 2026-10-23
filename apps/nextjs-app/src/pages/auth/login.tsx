@@ -1,3 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { createQueryClient } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
 import {
   dehydrate,
@@ -5,8 +7,6 @@ import {
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { createQueryClient } from '@teable/sdk/context';
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { useState } from 'react';
 import { SsrApi } from '@/backend/api/rest/ssr-api';

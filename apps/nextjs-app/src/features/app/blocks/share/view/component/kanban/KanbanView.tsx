@@ -1,6 +1,6 @@
-import { RecordProvider, ShareViewContext } from '@teable/sdk/context';
-import { SearchProvider } from '@teable/sdk/context/query';
-import { useIsHydrated } from '@teable/sdk/hooks';
+import { RecordProvider, ShareViewContext } from '@cybernetics/sdk/context';
+import { SearchProvider } from '@cybernetics/sdk/context/query';
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import Link from 'next/link';
 import { useRouter } from 'next/router';

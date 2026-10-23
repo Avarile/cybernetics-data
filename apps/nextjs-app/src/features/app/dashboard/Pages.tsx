@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, X } from '@teable/icons';
 import { getDashboardList, LastVisitResourceType, updateUserLastVisit } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

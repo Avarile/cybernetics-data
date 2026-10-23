@@ -1,5 +1,5 @@
-import { useBasePermission } from '@teable/sdk/hooks';
-import type { IChildBridgeMethods } from '@teable/sdk/plugin-bridge';
+import { useBasePermission } from '@cybernetics/sdk/hooks';
+import type { IChildBridgeMethods } from '@cybernetics/sdk/plugin-bridge';
 import { useEffect } from 'react';
 
 export const useSyncBasePermissions = (bridge?: IChildBridgeMethods) => {

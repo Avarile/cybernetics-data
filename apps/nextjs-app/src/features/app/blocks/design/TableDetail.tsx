@@ -1,4 +1,4 @@
-import { useLanDayjs, useTable, useTablePermission } from '@teable/sdk/hooks';
+import { useLanDayjs, useTable, useTablePermission } from '@cybernetics/sdk/hooks';
 import {
   Button,
   Input,

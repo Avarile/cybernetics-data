@@ -1,3 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBase } from '@cybernetics/sdk/hooks';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks/use-is-readonly-preview';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { hasPermission } from '@teable/core';
 import { ChevronsLeft, ChevronDown, Database, HelpCircle, Pencil, Share2 } from '@teable/icons';
@@ -8,9 +11,6 @@ import {
   type IBaseV2StatusVo,
   updateBase,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBase } from '@teable/sdk/hooks';
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks/use-is-readonly-preview';
 import {
   Badge,
   cn,

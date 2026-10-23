@@ -6,12 +6,7 @@ import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
 import '@univerjs/sheets-data-validation/lib/index.css';
 
-import { useQuery } from '@tanstack/react-query';
-import { ANONYMOUS_USER_ID } from '@teable/core';
-
-import { ThemeProvider } from '@teable/next-themes';
-import { getShareView } from '@teable/openapi';
-import type { IUIConfig } from '@teable/sdk';
+import type { IUIConfig } from '@cybernetics/sdk';
 import {
   isIframe,
   usePluginBridge,
@@ -23,7 +18,12 @@ import {
   TablePermissionProvider,
   SessionProvider,
   ShareViewProxy,
-} from '@teable/sdk';
+} from '@cybernetics/sdk';
+import { useQuery } from '@tanstack/react-query';
+import { ANONYMOUS_USER_ID } from '@teable/core';
+
+import { ThemeProvider } from '@teable/next-themes';
+import { getShareView } from '@teable/openapi';
 
 import { Toaster } from '@teable/ui-lib';
 import { useEffect, useState, useMemo } from 'react';
@@ -108,17 +108,17 @@ const Container = (props: IPageProps & { uiConfig?: IUIConfig }) => {
   }, []);
 
   if (!baseId && !shareId) {
-    return <div className="text-muted-foreground text-center">{t('notBaseId')}</div>;
+    return <div className="text-center text-muted-foreground">{t('notBaseId')}</div>;
   }
 
   if (!pluginInstallId) {
-    return <div className="text-muted-foreground text-center">{t('notPluginInstallId')}</div>;
+    return <div className="text-center text-muted-foreground">{t('notPluginInstallId')}</div>;
   }
 
   if (!pluginBridge && isIframeMode) {
     return (
       <div className="flex flex-col items-center justify-center">
-        <p className="text-muted-foreground text-center">{t('initBridge')}</p>
+        <p className="text-center text-muted-foreground">{t('initBridge')}</p>
       </div>
     );
   }

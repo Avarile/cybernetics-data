@@ -1,4 +1,4 @@
-import type { IFieldInstance } from '@teable/sdk/model';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 
 export function computeFrozenColumnCount({
   isTouchDevice,

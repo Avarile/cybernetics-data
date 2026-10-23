@@ -1,6 +1,6 @@
+import { useViewId, useTableId, useIsMobile, useTablePermission } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { formSubmit } from '@teable/openapi';
-import { useViewId, useTableId, useIsMobile, useTablePermission } from '@teable/sdk/hooks';
 import { FormMode, useFormModeStore } from '../tool-bar/store';
 import { FormEditor, FormPreviewer } from './components';
 import { generateUniqLocalKey } from './util';

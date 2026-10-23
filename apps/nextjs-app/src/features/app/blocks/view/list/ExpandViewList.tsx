@@ -1,7 +1,7 @@
+import { useTablePermission, useViewId } from '@cybernetics/sdk/hooks';
 import { verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { DraggableHandle } from '@teable/icons';
 import { BaseNodeResourceType } from '@teable/openapi';
-import { useTablePermission, useViewId } from '@teable/sdk/hooks';
 import {
   Popover,
   PopoverTrigger,

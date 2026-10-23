@@ -1,7 +1,7 @@
+import type { GridView } from '@cybernetics/sdk';
+import { useGridColumns } from '@cybernetics/sdk';
+import { useIsHydrated, useView, useViewId } from '@cybernetics/sdk/hooks';
 import type { IGroupPointsVo } from '@teable/openapi';
-import type { GridView } from '@teable/sdk';
-import { useGridColumns } from '@teable/sdk';
-import { useIsHydrated, useView, useViewId } from '@teable/sdk/hooks';
 import { Skeleton } from '@teable/ui-lib';
 import React from 'react';
 import { GridViewBaseInner } from './GridViewBaseInner';

@@ -1,13 +1,13 @@
-import { Filter as FilterIcon, Share2, Plus, EyeOff, Settings, AlertTriangle } from '@teable/icons';
-import type { CalendarView } from '@teable/sdk';
+import type { CalendarView } from '@cybernetics/sdk';
 import {
   ViewFilter,
   VisibleFields,
   useTablePermission,
   CreateRecordModal,
   useIsReadOnlyPreview,
-} from '@teable/sdk';
-import { useView } from '@teable/sdk/hooks/use-view';
+} from '@cybernetics/sdk';
+import { useView } from '@cybernetics/sdk/hooks/use-view';
+import { Filter as FilterIcon, Share2, Plus, EyeOff, Settings, AlertTriangle } from '@teable/icons';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { tableConfig } from '@/features/i18n/table.config';

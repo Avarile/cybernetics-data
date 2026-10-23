@@ -1,9 +1,9 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import type { UniqueIdentifier } from '@dnd-kit/core';
 import { useDraggable } from '@dnd-kit/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { cn } from '@teable/ui-lib/shadcn';
 import React from 'react';
 

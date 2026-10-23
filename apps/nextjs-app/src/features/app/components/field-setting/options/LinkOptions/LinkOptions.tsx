@@ -1,10 +1,10 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useTableId } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ILinkFieldOptionsRo } from '@teable/core';
 import { Relationship } from '@teable/core';
 import { ArrowUpRight, ChevronDown } from '@teable/icons';
 import { getFields, getTablePermission } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useTableId } from '@teable/sdk/hooks';
 import { Button, Label, Switch } from '@teable/ui-lib/shadcn';
 import Link from 'next/link';
 import { Trans, useTranslation } from 'next-i18next';

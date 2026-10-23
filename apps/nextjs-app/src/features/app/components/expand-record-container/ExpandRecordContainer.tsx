@@ -1,6 +1,6 @@
+import type { IButtonClickStatusHook } from '@cybernetics/sdk/hooks';
+import { useTableId, useViewId } from '@cybernetics/sdk/hooks';
 import type { IAttachmentCellValue, IRecord } from '@teable/core';
-import type { IButtonClickStatusHook } from '@teable/sdk/hooks';
-import { useTableId, useViewId } from '@teable/sdk/hooks';
 import { useRouter } from 'next/router';
 import { forwardRef, useCallback } from 'react';
 import { useDownloadAttachmentsStore } from '../download-attachments';

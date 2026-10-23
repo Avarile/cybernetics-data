@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { UserPlus } from '@teable/icons';
 import { getSpaceById, getSpaceCollaboratorList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useIsHydrated } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { useRouter } from 'next/router';
 import { Trans, useTranslation } from 'next-i18next';

@@ -1,8 +1,8 @@
 import type { EditorView } from '@codemirror/view';
+import { FieldSelector } from '@cybernetics/sdk/components';
+import { useFields } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import { Maximize2, Plus } from '@teable/icons';
-import { FieldSelector } from '@teable/sdk/components';
-import { useFields } from '@teable/sdk/hooks';
-import type { IFieldInstance } from '@teable/sdk/model';
 import {
   Button,
   cn,

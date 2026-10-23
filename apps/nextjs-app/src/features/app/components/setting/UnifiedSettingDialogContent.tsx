@@ -1,9 +1,9 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBase, useSession } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { Role } from '@teable/core';
 import { Bell, Key, License, Link, Lock, Settings, User } from '@teable/icons';
 import { getSpaceById } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBase, useSession } from '@teable/sdk/hooks';
 import { Tabs, TabsContent, TabsList, TabsTrigger, cn } from '@teable/ui-lib/shadcn';
 import { uniq } from 'lodash';
 import { Settings2, Users } from 'lucide-react';

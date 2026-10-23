@@ -1,6 +1,6 @@
+import { useBaseId, useTable, useViews } from '@cybernetics/sdk/hooks';
 import { ViewType } from '@teable/core';
 import { BaseNodeResourceType } from '@teable/openapi';
-import { useBaseId, useTable, useViews } from '@teable/sdk/hooks';
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';
 import { useShareUrlPrefix } from '@/features/app/context/ShareContext';

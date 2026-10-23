@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useBasePermission } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IDashboardLayout } from '@teable/openapi';
 import { getDashboard, updateLayoutDashboard } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useBasePermission } from '@teable/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';

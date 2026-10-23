@@ -1,5 +1,5 @@
+import { useTableId, useFieldOperations } from '@cybernetics/sdk/hooks';
 import { DotsHorizontalIcon } from '@radix-ui/react-icons';
-import { useTableId, useFieldOperations } from '@teable/sdk/hooks';
 import {
   DropdownMenu,
   DropdownMenuTrigger,

@@ -1,5 +1,3 @@
-import { Copy, HelpCircle, MessageSquare, MoreHorizontal, UserPlus } from '@teable/icons';
-import { BaseNodeResourceType } from '@teable/openapi';
 import {
   useBase,
   useIsHydrated,
@@ -7,7 +5,9 @@ import {
   useIsTouchDevice,
   useTemplate,
   useView,
-} from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/hooks';
+import { Copy, HelpCircle, MessageSquare, MoreHorizontal, UserPlus } from '@teable/icons';
+import { BaseNodeResourceType } from '@teable/openapi';
 import {
   Button,
   cn,

@@ -1,8 +1,8 @@
+import { AttachmentManager } from '@cybernetics/sdk/components';
 import { generateAttachmentId } from '@teable/core';
 import { Plus } from '@teable/icons';
 import type { ITemplateCoverRo, ITemplateCoverVo } from '@teable/openapi';
 import { UploadType } from '@teable/openapi';
-import { AttachmentManager } from '@teable/sdk/components';
 import { cn } from '@teable/ui-lib';
 import { pick } from 'lodash';
 import { useState } from 'react';

@@ -1,3 +1,12 @@
+import { LocalStorageKeys } from '@cybernetics/sdk/config';
+import {
+  useBaseId,
+  useFields,
+  useFieldStaticGetter,
+  useTableId,
+  useTablePermission,
+  useView,
+} from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FieldType, ViewType } from '@teable/core';
 import { HelpCircle } from '@teable/icons';
@@ -9,15 +18,6 @@ import {
   repairTableIndex,
   RecommendedIndexRow,
 } from '@teable/openapi';
-import { LocalStorageKeys } from '@teable/sdk/config';
-import {
-  useBaseId,
-  useFields,
-  useFieldStaticGetter,
-  useTableId,
-  useTablePermission,
-  useView,
-} from '@teable/sdk/hooks';
 import {
   Command,
   CommandInput,

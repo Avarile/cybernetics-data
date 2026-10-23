@@ -1,5 +1,5 @@
+import { useBasePermission, useThemeMode } from '@cybernetics/sdk/hooks';
 import { Plus } from '@teable/icons';
-import { useBasePermission, useThemeMode } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';

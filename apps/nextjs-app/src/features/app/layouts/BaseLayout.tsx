@@ -1,8 +1,12 @@
+import type { IUser } from '@cybernetics/sdk';
+import {
+  ExpandRecordNavigationContext,
+  NotificationProvider,
+  SessionProvider,
+} from '@cybernetics/sdk';
+import { AnchorContext, AppProvider, BaseProvider, TableProvider } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
 import type { IGetBaseVo, ITableVo } from '@teable/openapi';
-import type { IUser } from '@teable/sdk';
-import { ExpandRecordNavigationContext, NotificationProvider, SessionProvider } from '@teable/sdk';
-import { AnchorContext, AppProvider, BaseProvider, TableProvider } from '@teable/sdk/context';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import React, { Fragment, useCallback, useMemo } from 'react';

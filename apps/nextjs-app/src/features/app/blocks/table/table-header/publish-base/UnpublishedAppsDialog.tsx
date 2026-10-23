@@ -1,6 +1,6 @@
+import { useBase } from '@cybernetics/sdk/hooks';
 import type { IBaseNodeAppResourceMeta } from '@teable/openapi';
 import { BaseNodeResourceType } from '@teable/openapi';
-import { useBase } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib';
 import {
   Button,

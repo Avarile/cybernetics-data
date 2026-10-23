@@ -1,4 +1,4 @@
-import { useThemeMode } from '@teable/sdk/hooks';
+import { useThemeMode } from '@cybernetics/sdk/hooks';
 import { cn, Skeleton } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
 export const IntegrationContainer = (props: {

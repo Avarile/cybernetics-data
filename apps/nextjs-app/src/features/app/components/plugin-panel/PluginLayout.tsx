@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useTablePermission } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IPluginPanelUpdateLayoutRo } from '@teable/openapi';
 import { getPluginPanel, updatePluginPanelLayout } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useTablePermission } from '@teable/sdk/hooks';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';

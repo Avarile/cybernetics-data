@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowUpRight, Qrcode } from '@teable/icons';
 import type {
@@ -13,7 +14,6 @@ import {
   refreshBaseShare,
   updateBaseShare,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Spin } from '@teable/ui-lib';
 import {
   Button,

@@ -1,5 +1,5 @@
+import { useSession } from '@cybernetics/sdk/hooks';
 import type { ISchemaPackInstallVo, SchemaPackId } from '@teable/openapi';
-import { useSession } from '@teable/sdk/hooks';
 import {
   Button,
   cn,

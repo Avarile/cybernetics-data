@@ -92,6 +92,6 @@ export const initializeBridge = async () => {
   const pluginBridge = new PluginBridge();
   const bridge = await pluginBridge.init();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any)._teable_plugin_bridge = bridge;
+  (window as any)._cybernetics_plugin_bridge = bridge;
   return bridge;
 };

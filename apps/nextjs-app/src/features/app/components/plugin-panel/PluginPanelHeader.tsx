@@ -1,3 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useTablePermission } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, Edit, MoreHorizontal, Plus, X } from '@teable/icons';
 import {
@@ -6,8 +8,6 @@ import {
   listPluginPanels,
   renamePluginPanel,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useTablePermission } from '@teable/sdk/hooks';
 import {
   Button,
   cn,

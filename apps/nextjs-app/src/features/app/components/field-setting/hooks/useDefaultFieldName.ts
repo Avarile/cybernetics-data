@@ -1,3 +1,4 @@
+import { useFields, useTables } from '@cybernetics/sdk/hooks';
 import type {
   IFieldRo,
   ILinkFieldOptionsRo,
@@ -8,7 +9,6 @@ import type {
 } from '@teable/core';
 import { FieldType, isConditionalLookupOptions } from '@teable/core';
 import { getField } from '@teable/openapi';
-import { useFields, useTables } from '@teable/sdk/hooks';
 import { useTranslation } from 'next-i18next';
 import { useCallback } from 'react';
 

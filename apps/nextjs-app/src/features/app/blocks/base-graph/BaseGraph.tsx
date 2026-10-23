@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import type { IBaseGraphSchemaVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId } from '@teable/sdk/hooks';
 import { Alert, AlertDescription, AlertTitle, Button, Skeleton } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import Head from 'next/head';

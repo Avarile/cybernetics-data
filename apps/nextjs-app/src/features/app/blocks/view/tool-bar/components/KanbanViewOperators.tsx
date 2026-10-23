@@ -1,14 +1,4 @@
-import type { IFieldVo } from '@teable/core';
-import {
-  ArrowUpDown,
-  Filter as FilterIcon,
-  Share2,
-  Layers,
-  Settings,
-  Plus,
-  AlertTriangle,
-} from '@teable/icons';
-import type { IFieldInstance, IFieldCreateOrSelectModalRef, KanbanView } from '@teable/sdk';
+import type { IFieldInstance, IFieldCreateOrSelectModalRef, KanbanView } from '@cybernetics/sdk';
 import {
   Sort,
   ViewFilter,
@@ -21,8 +11,18 @@ import {
   CreateRecordModal,
   useIsReadOnlyPreview,
   usePersonalView,
-} from '@teable/sdk';
-import { useView } from '@teable/sdk/hooks/use-view';
+} from '@cybernetics/sdk';
+import { useView } from '@cybernetics/sdk/hooks/use-view';
+import type { IFieldVo } from '@teable/core';
+import {
+  ArrowUpDown,
+  Filter as FilterIcon,
+  Share2,
+  Layers,
+  Settings,
+  Plus,
+  AlertTriangle,
+} from '@teable/icons';
 import { Button, Label, Switch, cn } from '@teable/ui-lib/shadcn';
 import { Trans, useTranslation } from 'next-i18next';
 import { useEffect, useMemo, useRef } from 'react';

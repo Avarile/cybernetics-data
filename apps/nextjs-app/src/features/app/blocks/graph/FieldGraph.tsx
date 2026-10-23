@@ -1,5 +1,5 @@
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import type { FieldAction, IFieldRo } from '@teable/core';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { Badge } from '@teable/ui-lib/shadcn';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';

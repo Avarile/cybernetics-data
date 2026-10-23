@@ -1,6 +1,6 @@
+import type { IBaseQueryBuilderRef } from '@cybernetics/sdk';
+import { BaseQueryBuilder } from '@cybernetics/sdk';
 import type { IBaseQuery } from '@teable/openapi';
-import type { IBaseQueryBuilderRef } from '@teable/sdk';
-import { BaseQueryBuilder } from '@teable/sdk';
 import { Button, cn } from '@teable/ui-lib';
 import { useTranslation } from 'next-i18next';
 import { useContext, useEffect, useRef, useState } from 'react';

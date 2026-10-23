@@ -20,7 +20,7 @@
     "@teable/icons": "workspace:^",
     "@teable/next-themes": "0.3.5",
     "@teable/openapi": "workspace:^",
-    "@teable/sdk": "workspace:^",
+    "@cybernetics/sdk": "workspace:^",
     "@teable/ui-lib": "workspace:^",
     "@univerjs/core": "0.3.0",
     "@univerjs/data-validation": "0.3.0",

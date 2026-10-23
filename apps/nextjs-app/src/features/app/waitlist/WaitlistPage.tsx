@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import type { IJoinWaitlistRo } from '@teable/openapi';
 import { getPublicSetting, joinWaitlist, joinWaitlistSchemaRo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Button,
   Input,

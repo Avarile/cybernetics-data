@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DraggableHandle, Pencil, Plus, Trash2, X } from '@teable/icons';
 import type {
@@ -14,7 +15,6 @@ import {
   removePluginContextMenu,
   renamePluginContextMenu,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { DragEndEvent } from '@teable/ui-lib/base';
 import { ConfirmDialog, DndKitContext, Draggable, Droppable } from '@teable/ui-lib/base';
 import {

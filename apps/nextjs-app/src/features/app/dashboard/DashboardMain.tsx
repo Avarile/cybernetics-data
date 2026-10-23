@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useBasePermission } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { Plus } from '@teable/icons';
 import { getDashboard } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useBasePermission } from '@teable/sdk/hooks';
 import { CyberneticsLoader } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import { isEmpty } from 'lodash';

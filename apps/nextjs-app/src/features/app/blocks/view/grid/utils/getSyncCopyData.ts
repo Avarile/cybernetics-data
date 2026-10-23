@@ -1,11 +1,11 @@
-import type { IFieldVo } from '@teable/core';
-import { fieldVoSchema, stringifyClipboardText } from '@teable/core';
 import {
   type IRecordIndexMap,
   type CombinedSelection,
   type Field,
   SelectionRegionType,
-} from '@teable/sdk';
+} from '@cybernetics/sdk';
+import type { IFieldVo } from '@teable/core';
+import { fieldVoSchema, stringifyClipboardText } from '@teable/core';
 
 export const getSyncCopyData = ({
   recordMap,

@@ -1,7 +1,7 @@
+import { MarkdownPreview } from '@cybernetics/sdk';
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import { ArrowLeft } from '@teable/icons';
 import type { IGetPluginCenterListVo } from '@teable/openapi';
-import { MarkdownPreview } from '@teable/sdk';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { UserAvatar } from '../user/UserAvatar';

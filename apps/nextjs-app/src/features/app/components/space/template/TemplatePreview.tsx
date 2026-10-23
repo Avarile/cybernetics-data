@@ -1,5 +1,5 @@
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import type { ITemplateVo } from '@teable/openapi';
-import { useIsHydrated } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 import { ArrowUpRight } from 'lucide-react';

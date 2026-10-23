@@ -1,5 +1,5 @@
+import { useTablePermission, useUndoRedo } from '@cybernetics/sdk/hooks';
 import { Undo2, Redo2 } from '@teable/icons';
-import { useTablePermission, useUndoRedo } from '@teable/sdk/hooks';
 import {
   Button,
   Tooltip,

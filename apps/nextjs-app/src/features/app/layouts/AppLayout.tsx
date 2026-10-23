@@ -1,5 +1,5 @@
+import { useIsTouchDevice } from '@cybernetics/sdk/hooks';
 import { ensureUndoRedoWindowIdHeader } from '@teable/openapi';
-import { useIsTouchDevice } from '@teable/sdk/hooks';
 import { useEffect, type FC, type PropsWithChildren } from 'react';
 import { useMount } from 'react-use';
 import { MainLayout } from '@/components/layout';

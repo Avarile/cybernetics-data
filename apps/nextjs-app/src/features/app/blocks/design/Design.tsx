@@ -1,4 +1,4 @@
-import { AnchorContext, TablePermissionProvider } from '@teable/sdk/context';
+import { AnchorContext, TablePermissionProvider } from '@cybernetics/sdk/context';
 import { Button, Separator } from '@teable/ui-lib/shadcn';
 import { ChevronLeft } from 'lucide-react';
 import Head from 'next/head';

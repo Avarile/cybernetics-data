@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getUserLastVisitListBase, getSpaceList, getSharedBase } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Card,
   CardContent,

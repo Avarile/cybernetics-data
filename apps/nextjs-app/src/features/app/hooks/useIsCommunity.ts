@@ -1,4 +1,4 @@
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { useEnv } from './useEnv';
 
 export const useIsCommunity = () => {

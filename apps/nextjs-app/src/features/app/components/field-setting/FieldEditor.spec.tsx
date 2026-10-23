@@ -1,5 +1,5 @@
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import { CellValueType, FieldType } from '@teable/core';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { render, TestAnchorProvider } from '@/test-utils';
 import { FieldEditor } from './FieldEditor';
 import { FieldOperator } from './type';

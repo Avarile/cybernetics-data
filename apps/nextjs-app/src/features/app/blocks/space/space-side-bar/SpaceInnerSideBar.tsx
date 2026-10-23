@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getUniqName, hasPermission } from '@teable/core';
 import { Plus, Settings, Trash2, LayoutTemplate } from '@teable/icons';
 import { createBase, getSpaceById } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { cn } from '@teable/ui-lib/shadcn';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import {

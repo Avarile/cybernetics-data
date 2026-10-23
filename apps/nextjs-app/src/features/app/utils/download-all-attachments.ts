@@ -1,4 +1,5 @@
 /* eslint-disable sonarjs/cognitive-complexity */
+import type { IFieldInstance } from '@cybernetics/sdk';
 import type { IAttachmentCellValue, IFieldVo, IFilter } from '@teable/core';
 import { FieldKeyType, FieldType, mergeFilter } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
@@ -8,7 +9,6 @@ import {
   getShareViewRecords,
   getShareViewRowCount,
 } from '@teable/openapi';
-import type { IFieldInstance } from '@teable/sdk';
 
 /**
  * Check if should disable cache for this mimetype to avoid CORS issues.

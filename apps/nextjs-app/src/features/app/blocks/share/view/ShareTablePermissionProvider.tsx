@@ -1,9 +1,9 @@
-import type { ITablePermissionVo } from '@teable/openapi';
 import {
   TablePermissionContext,
   TablePermissionContextDefaultValue,
-} from '@teable/sdk/context/table-permission';
-import { useFields } from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/context/table-permission';
+import { useFields } from '@cybernetics/sdk/hooks';
+import type { ITablePermissionVo } from '@teable/openapi';
 import { map } from 'lodash';
 import { useMemo } from 'react';
 

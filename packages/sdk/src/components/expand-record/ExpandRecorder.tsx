@@ -100,11 +100,11 @@ export const ExpandRecorder = (props: IExpandRecorderProps) => {
     if (isForeignTable && recordId) {
       onHighlightTable?.(tableId);
       window.dispatchEvent(
-        new CustomEvent('teable:highlight-table', { detail: { tableId, action: 'push' } })
+        new CustomEvent('cybernetics:highlight-table', { detail: { tableId, action: 'push' } })
       );
       return () => {
         window.dispatchEvent(
-          new CustomEvent('teable:highlight-table', { detail: { tableId, action: 'pop' } })
+          new CustomEvent('cybernetics:highlight-table', { detail: { tableId, action: 'pop' } })
         );
       };
     }

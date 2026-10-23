@@ -1,6 +1,6 @@
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import type { IDateFieldOptions, ILinkCellValue, IOperator, IUserCellValue } from '@teable/core';
 import { exactDate, FieldType, is, isEmpty, isExactly } from '@teable/core';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { UNCATEGORIZED_STACK_ID } from '../constant';
 import type { IStackData } from '../type';
 

@@ -1,3 +1,12 @@
+import {
+  useView,
+  useFieldStaticGetter,
+  useFields,
+  useIsHydrated,
+  swapReorder,
+  reorder,
+} from '@cybernetics/sdk';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import type {
   DragEndEvent,
   DragOverEvent,
@@ -13,15 +22,6 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import {
-  useView,
-  useFieldStaticGetter,
-  useFields,
-  useIsHydrated,
-  swapReorder,
-  reorder,
-} from '@teable/sdk';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { useEffect, useMemo, useState } from 'react';
 import { FieldSetting } from '../../grid/components';
 import { FORM_SIDEBAR_DROPPABLE_ID } from '../constant';

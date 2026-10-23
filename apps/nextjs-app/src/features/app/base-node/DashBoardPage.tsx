@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate } from '@tanstack/react-query';
 import { BaseNodeResourceType, LastVisitResourceType } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import dynamic from 'next/dynamic';
 import type { IBaseResourceParsed } from '@/features/app/hooks/useBaseResource';
 import { redirect } from './helper';

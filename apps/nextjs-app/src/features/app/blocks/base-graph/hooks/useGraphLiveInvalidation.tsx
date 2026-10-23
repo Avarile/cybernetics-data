@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useTableListener } from '@cybernetics/sdk/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useTableListener } from '@teable/sdk/hooks';
 import { useEffect, useMemo, useRef } from 'react';
 
 /** Realtime is per table; beyond this, window-focus refetch has to do. */

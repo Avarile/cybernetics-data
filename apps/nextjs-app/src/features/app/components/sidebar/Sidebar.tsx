@@ -1,5 +1,5 @@
+import { useIsHydrated, useIsMobile, useIsReadOnlyPreview } from '@cybernetics/sdk';
 import { ChevronsLeft } from '@teable/icons';
-import { useIsHydrated, useIsMobile, useIsReadOnlyPreview } from '@teable/sdk';
 import { Button, cn } from '@teable/ui-lib';
 import { Resizable } from 're-resizable';
 import type { FC, PropsWithChildren, ReactNode } from 'react';

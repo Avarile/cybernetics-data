@@ -1,6 +1,5 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-import { Expand, ExpandAll } from '@teable/icons';
-import type { GridView } from '@teable/sdk';
+import type { GridView } from '@cybernetics/sdk';
 import {
   generateLocalId,
   useGridCollapsedGroup,
@@ -8,7 +7,8 @@ import {
   useIsTouchDevice,
   useTableId,
   useView,
-} from '@teable/sdk';
+} from '@cybernetics/sdk';
+import { Expand, ExpandAll } from '@teable/icons';
 import {
   cn,
   Command,

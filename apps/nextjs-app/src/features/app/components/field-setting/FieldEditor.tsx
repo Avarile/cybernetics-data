@@ -1,3 +1,5 @@
+import { useFieldStaticGetter } from '@cybernetics/sdk';
+import { useFields } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import type { IFieldOptionsRo, IFieldVo } from '@teable/core';
 import {
@@ -9,8 +11,6 @@ import {
 } from '@teable/core';
 import { Plus } from '@teable/icons';
 import { getField } from '@teable/openapi';
-import { useFieldStaticGetter } from '@teable/sdk';
-import { useFields } from '@teable/sdk/hooks';
 import { Button, Textarea } from '@teable/ui-lib/shadcn';
 import { Input } from '@teable/ui-lib/shadcn/ui/input';
 import { useTranslation } from 'next-i18next';

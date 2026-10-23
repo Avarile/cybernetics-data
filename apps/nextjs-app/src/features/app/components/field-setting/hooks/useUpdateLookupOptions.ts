@@ -1,6 +1,6 @@
+import type { LinkField, IFieldInstance } from '@cybernetics/sdk/model';
 import { FieldType, type ILookupOptionsRo } from '@teable/core';
 import { safeParseOptions } from '@teable/core';
-import type { LinkField, IFieldInstance } from '@teable/sdk/model';
 import { useCallback } from 'react';
 import type { IFieldEditorRo } from '../type';
 

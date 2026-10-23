@@ -1,4 +1,4 @@
-import { useSession } from '@teable/sdk/hooks';
+import { useSession } from '@cybernetics/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import React from 'react';
 import { UserAvatar } from '@/features/app/components/user/UserAvatar';

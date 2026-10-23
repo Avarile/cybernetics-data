@@ -1,3 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBase } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RolePermission } from '@teable/core';
 import {
@@ -8,8 +10,6 @@ import {
   getUserLastVisit,
   LastVisitResourceType,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBase } from '@teable/sdk/hooks';
 import {
   Button,
   Command,

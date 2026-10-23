@@ -1,9 +1,9 @@
+import type { GridView } from '@cybernetics/sdk';
+import { useFieldOperations, useTableId, useView, useViewId } from '@cybernetics/sdk/hooks';
 import type { IGroup } from '@teable/core';
 import { StatisticsFunc } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { getAggregation } from '@teable/openapi';
-import type { GridView } from '@teable/sdk';
-import { useFieldOperations, useTableId, useView, useViewId } from '@teable/sdk/hooks';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { useTranslation } from 'next-i18next';
 import React, { forwardRef, useCallback, useImperativeHandle, useState } from 'react';

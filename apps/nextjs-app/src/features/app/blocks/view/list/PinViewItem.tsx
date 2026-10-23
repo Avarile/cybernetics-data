@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star } from '@teable/icons';
 import { addPin, deletePin, PinType } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { ContextMenuItem } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { tableConfig } from '@/features/i18n/table.config';

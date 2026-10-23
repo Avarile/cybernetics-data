@@ -1,6 +1,6 @@
+import type { IButtonClickStatusHook } from '@cybernetics/sdk';
+import { ExpandRecorder, ExpandRecordModel } from '@cybernetics/sdk';
 import type { IAttachmentCellValue, IRecord } from '@teable/core';
-import type { IButtonClickStatusHook } from '@teable/sdk';
-import { ExpandRecorder, ExpandRecordModel } from '@teable/sdk';
 import { useRouter } from 'next/router';
 import { forwardRef, useImperativeHandle, useState } from 'react';
 import type { IExpandRecordContainerRef } from './types';

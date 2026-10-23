@@ -1,6 +1,6 @@
 import type { IGetRecordsRo } from '@teable/openapi';
 // Re-export cell download store from SDK for convenience
-export { useDownloadAttachmentsStore } from '@teable/sdk';
+export { useDownloadAttachmentsStore } from '@cybernetics/sdk';
 import { create } from 'zustand';
 
 // Column download dialog state - app-specific

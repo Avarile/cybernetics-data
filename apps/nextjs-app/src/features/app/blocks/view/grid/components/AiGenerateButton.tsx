@@ -1,6 +1,3 @@
-import { useMutation } from '@tanstack/react-query';
-import { RefreshCcw } from '@teable/icons';
-import { autoFillCell } from '@teable/openapi';
 import {
   Record,
   TaskStatusCollectionContext,
@@ -8,8 +5,11 @@ import {
   useTableId,
   useTableListener,
   useTablePermission,
-} from '@teable/sdk';
-import type { IActiveCell, IGridRef, IRecordIndexMap } from '@teable/sdk';
+} from '@cybernetics/sdk';
+import type { IActiveCell, IGridRef, IRecordIndexMap } from '@cybernetics/sdk';
+import { useMutation } from '@tanstack/react-query';
+import { RefreshCcw } from '@teable/icons';
+import { autoFillCell } from '@teable/openapi';
 import { Button } from '@teable/ui-lib';
 import React, {
   useCallback,

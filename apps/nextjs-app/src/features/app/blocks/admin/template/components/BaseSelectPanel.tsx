@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Database } from '@teable/icons';
 import type { IGetBaseVo, IGetSpaceVo } from '@teable/openapi';
 import { updateTemplate } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Dialog,
   DialogContent,

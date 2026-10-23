@@ -1,4 +1,4 @@
-import { useThemeMode } from '@teable/sdk/hooks';
+import { useThemeMode } from '@cybernetics/sdk/hooks';
 import Image from 'next/image';
 import { Trans, useTranslation } from 'next-i18next';
 import { useHelpStore } from '@/features/help';

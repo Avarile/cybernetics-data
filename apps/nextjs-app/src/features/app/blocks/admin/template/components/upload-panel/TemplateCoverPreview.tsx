@@ -1,6 +1,6 @@
+import { useAttachmentPreviewI18Map } from '@cybernetics/sdk/components/hooks';
 import { X } from '@teable/icons';
 import type { ITemplateCoverVo } from '@teable/openapi';
-import { useAttachmentPreviewI18Map } from '@teable/sdk/components/hooks';
 import { cn, FilePreviewItem, FilePreviewProvider } from '@teable/ui-lib';
 
 interface ITemplatePreviewProps {

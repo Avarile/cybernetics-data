@@ -1,4 +1,4 @@
-import { useSession, useThemeMode } from '@teable/sdk/hooks';
+import { useSession, useThemeMode } from '@cybernetics/sdk/hooks';
 import { Button, Dialog, DialogContent } from '@teable/ui-lib/shadcn';
 import dayjs from 'dayjs';
 import Image from 'next/image';

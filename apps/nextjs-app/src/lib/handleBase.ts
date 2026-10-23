@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import type { QueryClient } from '@tanstack/react-query';
 import type { IGetBaseVo } from '@teable/openapi';
 import { IS_TEMPLATE_HEADER } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { SsrApi } from '@/backend/api/rest/ssr-api';
 
 export default async function handleBase<T extends SsrApi = SsrApi>(

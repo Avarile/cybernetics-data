@@ -1,9 +1,9 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Check, Key } from '@teable/icons';
 import type { GenerateOAuthSecretVo, OAuthUpdateRo } from '@teable/openapi';
 import { deleteOAuthSecret, generateOAuthSecret, oauthGet, oauthUpdate } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Badge, Button, Separator, cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

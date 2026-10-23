@@ -1,11 +1,11 @@
+import { InfiniteTable } from '@cybernetics/sdk/components';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
 import { Database, Trash2 } from '@teable/icons';
 import type { ITrashItemVo, ITrashVo } from '@teable/openapi';
 import { getTrash, TrashType, restoreTrash, deleteTrash, PrincipalType } from '@teable/openapi';
-import { InfiniteTable } from '@teable/sdk/components';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useIsHydrated } from '@teable/sdk/hooks';
 import { ConfirmDialog, Spin } from '@teable/ui-lib/base';
 import {
   Button,

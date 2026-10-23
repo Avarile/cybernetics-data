@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config/react-query-keys';
+import { useIsMobile } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getPublishedTemplateList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config/react-query-keys';
-import { useIsMobile } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

@@ -1,3 +1,9 @@
+import type { IMemberSelectorDialogRef, ISelectedMember } from '@cybernetics/sdk/components';
+import {
+  MemberSelectorDialog,
+  MemberSelectorNodeType,
+  UserAvatar,
+} from '@cybernetics/sdk/components';
 import { useMutation } from '@tanstack/react-query';
 import { Role, type IBaseRole, type IRole } from '@teable/core';
 import { Building2, Plus, X } from '@teable/icons';
@@ -8,8 +14,6 @@ import {
   CollaboratorType,
   PrincipalType,
 } from '@teable/openapi';
-import type { IMemberSelectorDialogRef, ISelectedMember } from '@teable/sdk/components';
-import { MemberSelectorDialog, MemberSelectorNodeType, UserAvatar } from '@teable/sdk/components';
 import { Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

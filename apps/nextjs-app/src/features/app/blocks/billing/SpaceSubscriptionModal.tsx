@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { hasPermission } from '@teable/core';
 import { getSpaceList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Button,
   Dialog,

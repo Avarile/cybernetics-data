@@ -1,6 +1,5 @@
-import { ColorConfigType, FieldType } from '@teable/core';
-import { ExpandRecorder } from '@teable/sdk/components';
-import { ShareViewContext } from '@teable/sdk/context';
+import { ExpandRecorder } from '@cybernetics/sdk/components';
+import { ShareViewContext } from '@cybernetics/sdk/context';
 import {
   useTableId,
   useView,
@@ -8,8 +7,9 @@ import {
   useTablePermission,
   usePersonalView,
   useButtonClickStatus,
-} from '@teable/sdk/hooks';
-import type { CalendarView } from '@teable/sdk/model';
+} from '@cybernetics/sdk/hooks';
+import type { CalendarView } from '@cybernetics/sdk/model';
+import { ColorConfigType, FieldType } from '@teable/core';
 import { useContext, useMemo, useState, type ReactNode } from 'react';
 import { useCalendarFields } from '../hooks';
 import { CalendarContext } from './CalendarContext';

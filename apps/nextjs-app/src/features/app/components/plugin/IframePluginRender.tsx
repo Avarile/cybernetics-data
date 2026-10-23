@@ -3,7 +3,7 @@ import type {
   IParentBridgeMethods,
   IParentBridgeUIMethods,
   IParentBridgeUtilsMethods,
-} from '@teable/sdk/plugin-bridge';
+} from '@cybernetics/sdk/plugin-bridge';
 import { cn } from '@teable/ui-lib';
 import type { Methods } from 'penpal';
 import { connectToChild } from 'penpal';

@@ -1,4 +1,17 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+import type { GridView } from '@cybernetics/sdk';
+import {
+  useFieldPermission,
+  useFields,
+  useGridViewStore,
+  useIsTouchDevice,
+  usePersonalView,
+  useSearch,
+  useTableId,
+  useTablePermission,
+  useView,
+} from '@cybernetics/sdk';
+import { insertSingle } from '@cybernetics/sdk/utils';
 import { useMutation } from '@tanstack/react-query';
 import type { IFilter, IGroup, ISort } from '@teable/core';
 import { FieldType, getValidFilterOperators } from '@teable/core';
@@ -16,19 +29,6 @@ import {
 } from '@teable/icons';
 import type { IDuplicateFieldRo } from '@teable/openapi';
 import { duplicateField } from '@teable/openapi';
-import type { GridView } from '@teable/sdk';
-import {
-  useFieldPermission,
-  useFields,
-  useGridViewStore,
-  useIsTouchDevice,
-  usePersonalView,
-  useSearch,
-  useTableId,
-  useTablePermission,
-  useView,
-} from '@teable/sdk';
-import { insertSingle } from '@teable/sdk/utils';
 
 import {
   cn,

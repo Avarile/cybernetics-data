@@ -1,8 +1,8 @@
+import { ApiRecordList } from '@cybernetics/sdk/components';
+import type { IFilterLinkSelectListProps } from '@cybernetics/sdk/components/filter/view-filter/component/filter-link/types';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { ShareViewContext } from '@cybernetics/sdk/context';
 import { getShareViewLinkRecords } from '@teable/openapi';
-import { ApiRecordList } from '@teable/sdk/components';
-import type { IFilterLinkSelectListProps } from '@teable/sdk/components/filter/view-filter/component/filter-link/types';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { ShareViewContext } from '@teable/sdk/context';
 import { useCallback, useContext, useState } from 'react';
 
 const pageSize = 50;

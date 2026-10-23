@@ -1,5 +1,5 @@
+import { useBaseId, useView } from '@cybernetics/sdk/hooks';
 import { BaseNodeResourceType } from '@teable/openapi';
-import { useBaseId, useView } from '@teable/sdk/hooks';
 import {
   Dialog,
   DialogContent,

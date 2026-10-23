@@ -1,3 +1,4 @@
+import { FileZone } from '@cybernetics/sdk/components/FileZone';
 import { useMutation } from '@tanstack/react-query';
 import { OAUTH_ACTIONS, type Action } from '@teable/core';
 import {
@@ -6,7 +7,6 @@ import {
   type OAuthCreateRo,
   type OAuthUpdateRo,
 } from '@teable/openapi';
-import { FileZone } from '@teable/sdk/components/FileZone';
 import { Button, Input, Separator, Textarea } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { useTranslation } from 'next-i18next';

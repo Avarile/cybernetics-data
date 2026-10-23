@@ -1,9 +1,9 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { Share2 } from '@teable/icons';
 import type { IBaseNodeAppResourceMeta } from '@teable/openapi';
 import { BaseNodeResourceType, listBaseShare } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import {
   Tooltip,
   TooltipContent,

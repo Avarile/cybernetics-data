@@ -1,4 +1,4 @@
-import type { IParentBridgeUIMethods } from '@teable/sdk/plugin-bridge';
+import type { IParentBridgeUIMethods } from '@cybernetics/sdk/plugin-bridge';
 import { useEffect, useRef } from 'react';
 
 export const useUIEvent = (params: { onExpandPlugin?: () => void }) => {

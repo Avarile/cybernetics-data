@@ -1,7 +1,7 @@
+import { useBase, useBaseId, useTables } from '@cybernetics/sdk/hooks';
 import type { IFieldRo } from '@teable/core';
 import { Colors, FieldType, getUniqName, NumberFormattingType, ViewType } from '@teable/core';
 import { BaseNodeResourceType } from '@teable/openapi';
-import { useBase, useBaseId, useTables } from '@teable/sdk/hooks';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { useCallback } from 'react';

@@ -1,6 +1,6 @@
+import { BaseViewFilter, useViewFilterLinkContext } from '@cybernetics/sdk';
+import { useFields, useViewId, useTableId, useTablePermission } from '@cybernetics/sdk/hooks';
 import type { IFilterSet } from '@teable/core';
-import { BaseViewFilter, useViewFilterLinkContext } from '@teable/sdk';
-import { useFields, useViewId, useTableId, useTablePermission } from '@teable/sdk/hooks';
 
 export const FilterBuilder = ({
   filter,

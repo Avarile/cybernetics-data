@@ -1,8 +1,8 @@
+import type { IUser } from '@cybernetics/sdk';
+import { SessionProvider } from '@cybernetics/sdk';
+import { AppProvider } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
 import { Settings, LayoutTemplate as TemplateIcon, ShieldUser, Zap } from '@teable/icons';
-import type { IUser } from '@teable/sdk';
-import { SessionProvider } from '@teable/sdk';
-import { AppProvider } from '@teable/sdk/context';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';

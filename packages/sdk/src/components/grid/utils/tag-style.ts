@@ -38,7 +38,7 @@ export const getTagHue = (color: string): ITagHue => {
   return hue && hue in TAG_HUES ? (hue as ITagHue) : 'gray';
 };
 
-/** Teable stores 5 shades per hue; they map onto 3 intensities so stored pairs stay distinct. */
+/** The palette stores 5 shades per hue; they map onto 3 intensities so stored pairs stay distinct. */
 export const getTagIntensity = (color: string): ITagIntensity => {
   const shade = SHADE_PATTERN.exec(color)?.[2];
   if (shade === 'Light1' || shade === 'Light2') return 'outline';

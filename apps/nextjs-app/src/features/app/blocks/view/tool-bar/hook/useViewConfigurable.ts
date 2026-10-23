@@ -1,5 +1,5 @@
-import { ShareViewContext } from '@teable/sdk/context';
-import { usePersonalView, useTablePermission, useView } from '@teable/sdk/hooks';
+import { ShareViewContext } from '@cybernetics/sdk/context';
+import { usePersonalView, useTablePermission, useView } from '@cybernetics/sdk/hooks';
 import { useContext } from 'react';
 
 export const useViewConfigurable = () => {

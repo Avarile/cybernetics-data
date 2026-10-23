@@ -1,5 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate, QueryClient } from '@tanstack/react-query';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 import { BaseTrashPage } from '@/features/app/blocks/trash/BaseTrashPage';

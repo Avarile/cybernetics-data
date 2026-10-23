@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Settings, Trash2 } from '@teable/icons';
 import type { OAuthGetListVo } from '@teable/openapi';
 import { oauthGetList, oauthDelete } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import { Button, Card, CardContent } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

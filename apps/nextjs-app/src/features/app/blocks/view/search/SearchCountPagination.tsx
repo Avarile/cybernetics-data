@@ -1,8 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { ChevronRight, ChevronLeft } from '@teable/icons';
-import type { ISearchIndexByQueryRo, ISearchIndexVo } from '@teable/openapi';
-import { getSearchIndex, getShareViewSearchIndex } from '@teable/openapi';
-import { type GridView } from '@teable/sdk';
+import { type GridView } from '@cybernetics/sdk';
 import {
   useTableId,
   useView,
@@ -10,7 +6,11 @@ import {
   useSearch,
   usePersonalView,
   useTableListener,
-} from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/hooks';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { ChevronRight, ChevronLeft } from '@teable/icons';
+import type { ISearchIndexByQueryRo, ISearchIndexVo } from '@teable/openapi';
+import { getSearchIndex, getShareViewSearchIndex } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import { isEmpty, pick } from 'lodash';

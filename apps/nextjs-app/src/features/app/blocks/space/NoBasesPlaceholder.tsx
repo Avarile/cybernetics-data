@@ -1,8 +1,8 @@
+import { useSession, useThemeMode } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { getUniqName, hasPermission } from '@teable/core';
 import { createBase } from '@teable/openapi';
 import type { IGetSpaceVo } from '@teable/openapi';
-import { useSession, useThemeMode } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';

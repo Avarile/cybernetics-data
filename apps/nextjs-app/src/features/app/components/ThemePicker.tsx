@@ -1,5 +1,5 @@
+import { APP_THEMES } from '@cybernetics/sdk/hooks';
 import { useTheme } from '@teable/next-themes';
-import { APP_THEMES } from '@teable/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import {

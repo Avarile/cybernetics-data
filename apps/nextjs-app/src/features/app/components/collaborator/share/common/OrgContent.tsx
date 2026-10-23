@@ -1,9 +1,9 @@
+import { MemberSelectorDialog, UserAvatar } from '@cybernetics/sdk/components';
+import type { IMemberSelectorDialogRef, ISelectedMember } from '@cybernetics/sdk/components';
+import { TreeNodeType } from '@cybernetics/sdk/components/member-selector/types';
 import type { IRole } from '@teable/core';
 import { Building2, ChevronLeft, Plus, UserPlus, X } from '@teable/icons';
 import { PrincipalType } from '@teable/openapi';
-import { MemberSelectorDialog, UserAvatar } from '@teable/sdk/components';
-import type { IMemberSelectorDialogRef, ISelectedMember } from '@teable/sdk/components';
-import { TreeNodeType } from '@teable/sdk/components/member-selector/types';
 import { Button, ScrollArea } from '@teable/ui-lib/shadcn';
 import { Loader } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

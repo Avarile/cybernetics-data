@@ -1,8 +1,8 @@
+import type { IAppContext } from '@cybernetics/sdk/context';
+import { AppContext, FieldContext, TableContext, ViewContext } from '@cybernetics/sdk/context';
+import { defaultLocale } from '@cybernetics/sdk/context/app/i18n';
+import type { IFieldInstance, IViewInstance } from '@cybernetics/sdk/model';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { IAppContext } from '@teable/sdk/context';
-import { AppContext, FieldContext, TableContext, ViewContext } from '@teable/sdk/context';
-import { defaultLocale } from '@teable/sdk/context/app/i18n';
-import type { IFieldInstance, IViewInstance } from '@teable/sdk/model';
 import type { FC, PropsWithChildren } from 'react';
 import { useRef } from 'react';
 import { I18nextTestStubProvider } from './I18nextTestStubProvider';

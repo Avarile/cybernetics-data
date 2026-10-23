@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate, QueryClient } from '@tanstack/react-query';
 import { LastVisitResourceType } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 import { SpacePage } from '@/features/app/blocks/space';

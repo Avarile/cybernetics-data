@@ -1,4 +1,4 @@
-import { useIsHydrated } from '@teable/sdk/hooks';
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import {
   AlertDialog,
   AlertDialogAction,

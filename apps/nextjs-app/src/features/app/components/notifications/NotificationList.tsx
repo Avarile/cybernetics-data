@@ -1,9 +1,9 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config/react-query-keys';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { NotificationStatesEnum } from '@teable/core';
 import { Inbox } from '@teable/icons';
 import type { INotificationVo } from '@teable/openapi';
 import { updateNotificationStatus } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config/react-query-keys';
 import { Button } from '@teable/ui-lib';
 import { useTranslation } from 'next-i18next';
 import React from 'react';

@@ -1,3 +1,6 @@
+import { HideFields, RowHeight, Sort, Group, ViewFilter } from '@cybernetics/sdk';
+import { useFields } from '@cybernetics/sdk/hooks';
+import { useView } from '@cybernetics/sdk/hooks/use-view';
 import type { RowHeightLevel, IGridViewOptions } from '@teable/core';
 import {
   ArrowUpDown,
@@ -7,9 +10,6 @@ import {
   Share2,
   AlertTriangle,
 } from '@teable/icons';
-import { HideFields, RowHeight, Sort, Group, ViewFilter } from '@teable/sdk';
-import { useFields } from '@teable/sdk/hooks';
-import { useView } from '@teable/sdk/hooks/use-view';
 import { cn } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { useTranslation } from 'next-i18next';

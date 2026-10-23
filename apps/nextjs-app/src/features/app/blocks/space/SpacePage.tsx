@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getSubscriptionSummaryList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useIsHydrated } from '@teable/sdk/hooks';
 import { keyBy } from 'lodash';
 import { useTranslation } from 'next-i18next';
 import { useRef, type FC, useMemo } from 'react';

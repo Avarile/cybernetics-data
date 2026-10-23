@@ -1,5 +1,5 @@
-import { ExpandRecorder } from '@teable/sdk/components';
-import { AnchorContext, TablePermissionProvider } from '@teable/sdk/context';
+import { ExpandRecorder } from '@cybernetics/sdk/components';
+import { AnchorContext, TablePermissionProvider } from '@cybernetics/sdk/context';
 
 interface IRecordEditorProps {
   baseId: string;

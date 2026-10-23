@@ -1,7 +1,7 @@
+import { UserAvatar } from '@cybernetics/sdk/components';
 import { Building2 } from '@teable/icons';
 import type { CollaboratorItem } from '@teable/openapi';
 import { PrincipalType } from '@teable/openapi';
-import { UserAvatar } from '@teable/sdk/components';
 
 interface IPreviewCollaboratorsProps {
   collaborators: CollaboratorItem[];

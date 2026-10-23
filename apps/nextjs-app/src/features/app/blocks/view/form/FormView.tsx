@@ -1,4 +1,4 @@
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { FormToolBar } from '../tool-bar/FormToolBar';
 import { FormViewBase } from './FormViewBase';
 

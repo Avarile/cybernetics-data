@@ -90,8 +90,8 @@ export const LinkConnectorLine = () => {
       setActiveTableId(top);
       setHighlightedTableId(top);
     };
-    window.addEventListener('teable:highlight-table', handler);
-    return () => window.removeEventListener('teable:highlight-table', handler);
+    window.addEventListener('cybernetics:highlight-table', handler);
+    return () => window.removeEventListener('cybernetics:highlight-table', handler);
   }, [setHighlightedTableId]);
 
   const update = useCallback(() => {

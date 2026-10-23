@@ -1,6 +1,6 @@
+import type { GalleryView } from '@cybernetics/sdk';
+import { useView } from '@cybernetics/sdk/hooks/use-view';
 import { ArrowUpDown, Filter as FilterIcon } from '@teable/icons';
-import type { GalleryView } from '@teable/sdk';
-import { useView } from '@teable/sdk/hooks/use-view';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useToolbarChange } from '@/features/app/blocks/view/hooks/useToolbarChange';
 import { SearchButton } from '@/features/app/blocks/view/search/SearchButton';

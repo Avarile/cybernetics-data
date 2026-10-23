@@ -1,4 +1,4 @@
-import { useTableId, useTables } from '@teable/sdk';
+import { useTableId, useTables } from '@cybernetics/sdk';
 import { TableListItem } from './TableListItem';
 import { useTableHref } from './useTableHref';
 

@@ -1,6 +1,6 @@
+import { useBaseId, useBasePermission } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { BillingProductLevel, getDbConnection } from '@teable/openapi';
-import { useBaseId, useBasePermission } from '@teable/sdk/hooks';
 import { useBaseUsage } from '@/features/app/hooks/useBaseUsage';
 import { useIsCloud } from '@/features/app/hooks/useIsCloud';
 

@@ -1,4 +1,4 @@
-import { useBaseId, useTable, useViews, useViewId } from '@teable/sdk/hooks';
+import { useBaseId, useTable, useViews, useViewId } from '@cybernetics/sdk/hooks';
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';
 

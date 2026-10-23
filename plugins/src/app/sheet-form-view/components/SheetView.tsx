@@ -1,11 +1,11 @@
 'use client';
 
+import type { IFieldInstance } from '@cybernetics/sdk';
+import { useView, useFields, useFieldStaticGetter, useTableId, useBaseId } from '@cybernetics/sdk';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Share2 } from '@teable/icons';
 import { getViewInstallPlugin, updateViewPluginStorage } from '@teable/openapi';
 
-import type { IFieldInstance } from '@teable/sdk';
-import { useView, useFields, useFieldStaticGetter, useTableId, useBaseId } from '@teable/sdk';
 import {
   Button,
   ToggleGroup,

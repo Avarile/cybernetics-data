@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPluginPanel, z } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Error, Spin } from '@teable/ui-lib/base';
 import {
   Button,

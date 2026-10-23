@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import type { QueryClient } from '@tanstack/react-query';
 import type { IRole } from '@teable/core';
 import type { IGetSpaceVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { ForbiddenError } from './withAuthSSR';
 
 export const spaceRoleChecker = ({

@@ -1,7 +1,7 @@
+import { useConnection } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { HttpError, HttpErrorCode } from '@teable/core';
 import { BaseNodeResourceType, getTableById } from '@teable/openapi';
-import { useConnection } from '@teable/sdk/hooks';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
 import type { ConnectionReceiveRequest } from 'sharedb/lib/sharedb';

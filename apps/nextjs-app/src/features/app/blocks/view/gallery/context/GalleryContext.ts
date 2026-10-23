@@ -1,5 +1,5 @@
+import type { AttachmentField, IFieldInstance } from '@cybernetics/sdk/model';
 import type { IGetRecordsRo } from '@teable/openapi';
-import type { AttachmentField, IFieldInstance } from '@teable/sdk/model';
 import type { Dispatch, SetStateAction } from 'react';
 import { createContext } from 'react';
 import type { IGalleryPermission } from '../type';

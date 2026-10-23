@@ -1,5 +1,5 @@
-import { useFieldStaticGetter, useView } from '@teable/sdk/hooks';
-import type { FormView, IFieldInstance } from '@teable/sdk/model';
+import { useFieldStaticGetter, useView } from '@cybernetics/sdk/hooks';
+import type { FormView, IFieldInstance } from '@cybernetics/sdk/model';
 import { useTranslation } from 'next-i18next';
 import type { FC } from 'react';
 import { tableConfig } from '@/features/i18n/table.config';

@@ -1,10 +1,10 @@
+import { useBase, useTables } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   checkBaseIntegrity,
   fixBaseIntegrity,
   getV2SchemaIntegrityDecision,
 } from '@teable/openapi';
-import { useBase, useTables } from '@teable/sdk/hooks';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { Check, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';

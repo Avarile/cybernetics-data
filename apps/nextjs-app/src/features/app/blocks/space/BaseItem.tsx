@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import { hasPermission } from '@teable/core';
 import {
   ChevronDown,
@@ -11,7 +12,6 @@ import {
 } from '@teable/icons';
 import type { IGetBaseVo } from '@teable/openapi';
 import { PinType } from '@teable/openapi';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { Avatar, AvatarFallback, AvatarImage, Button, cn, Input } from '@teable/ui-lib/shadcn';
 import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

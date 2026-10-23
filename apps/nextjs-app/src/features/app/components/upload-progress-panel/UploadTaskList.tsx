@@ -1,7 +1,7 @@
 'use client';
 
+import { useCellAttachmentUploadStore } from '@cybernetics/sdk/store/use-attachment-upload-store';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useCellAttachmentUploadStore } from '@teable/sdk/store/use-attachment-upload-store';
 import { cn, ScrollArea } from '@teable/ui-lib';
 import { memo, useRef } from 'react';
 import { TaskItem } from './TaskItem';

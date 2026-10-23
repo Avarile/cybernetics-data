@@ -1,4 +1,4 @@
-import type { IChildBridgeMethods } from '@teable/sdk/plugin-bridge';
+import type { IChildBridgeMethods } from '@cybernetics/sdk/plugin-bridge';
 import { useEffect } from 'react';
 import { useSelection } from './useSelection';
 

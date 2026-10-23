@@ -1,5 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate, QueryClient } from '@tanstack/react-query';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { ReactElement } from 'react';
 import { Design } from '@/features/app/blocks/design/Design';
 import { BaseLayout } from '@/features/app/layouts/BaseLayout';

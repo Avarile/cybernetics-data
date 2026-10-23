@@ -1,7 +1,7 @@
+import { AttachmentManager } from '@cybernetics/sdk/components';
 import { generateAttachmentId } from '@teable/core';
 import type { INotifyVo } from '@teable/openapi';
 import { UploadType } from '@teable/openapi';
-import { AttachmentManager } from '@teable/sdk/components';
 import { Spin, Button, cn } from '@teable/ui-lib';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';

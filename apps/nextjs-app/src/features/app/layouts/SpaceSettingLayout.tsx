@@ -1,9 +1,9 @@
+import type { IUser } from '@cybernetics/sdk';
+import { NotificationProvider, ReactQueryKeys, SessionProvider } from '@cybernetics/sdk';
+import { AppProvider } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
 import { Component, Home, Users } from '@teable/icons';
 import type { IGetSpaceVo } from '@teable/openapi';
-import type { IUser } from '@teable/sdk';
-import { NotificationProvider, ReactQueryKeys, SessionProvider } from '@teable/sdk';
-import { AppProvider } from '@teable/sdk/context';
 import { find } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

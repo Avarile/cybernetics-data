@@ -1,5 +1,5 @@
+import { BaseQueryBuilder } from '@cybernetics/sdk/components';
 import type { IBaseQuery } from '@teable/openapi';
-import { BaseQueryBuilder } from '@teable/sdk/components';
 import { Button, Dialog, DialogContent, DialogTrigger } from '@teable/ui-lib/shadcn';
 import { useState } from 'react';
 

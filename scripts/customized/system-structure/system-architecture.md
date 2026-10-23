@@ -35,7 +35,7 @@ fork rebranded as Cybernetics Data Centre.
 | `plugins` | `@teable/plugin` | Separate Next app for iframe-embedded plugins (charts, sheet-form, …) |
 | `packages/core` | `@teable/core` | Domain primitives: `IdPrefix`, zod field/view schemas, `FieldOpBuilder` / `ViewOpBuilder`, formula AST |
 | `packages/openapi` | `@teable/openapi` | **The contract**: route constants + zod request/response schemas + `createAxios()`. Imported by *both* controller and client |
-| `packages/sdk` | `@teable/sdk` | React contexts / hooks / models + the ShareDB client connection |
+| `packages/sdk` | `@cybernetics/sdk` | React contexts / hooks / models + the ShareDB client connection |
 | `packages/db-main-prisma` | `@teable/db-main-prisma` | Prisma client for **metadata** |
 | `packages/db-data-prisma` | `@teable/db-data-prisma` | Prisma client for **physical row data** |
 | `packages/ui-lib`, `icons`, `common-i18n`, `i18n-keys`, `formula` | | Shared presentation / i18n / expression layers |
@@ -172,7 +172,7 @@ export const getServerSideProps = withEnv(
 `@teable/openapi` is the shared contract. The controller validates with
 `ZodValidationPipe(schema)`; the client imports the *same* zod schema and the
 *same* route constant (e.g. `GET_RECORDS_URL`). Type drift between tiers is
-structurally impossible. `@teable/sdk` wraps these calls in React Query hooks
+structurally impossible. `@cybernetics/sdk` wraps these calls in React Query hooks
 and context providers.
 
 `packages/openapi/src/axios.ts` additionally carries a response interceptor that

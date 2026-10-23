@@ -1,6 +1,6 @@
+import { useBasePermission, useConnection } from '@cybernetics/sdk';
 import { File, FileCsv, FileExcel } from '@teable/icons';
 import { SUPPORTEDTYPE } from '@teable/openapi';
-import { useBasePermission, useConnection } from '@teable/sdk';
 import {
   DropdownMenu,
   DropdownMenuContent,

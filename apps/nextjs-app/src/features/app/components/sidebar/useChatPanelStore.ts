@@ -1,4 +1,4 @@
-import { LocalStorageKeys } from '@teable/sdk/config';
+import { LocalStorageKeys } from '@cybernetics/sdk/config';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 

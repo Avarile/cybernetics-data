@@ -10,7 +10,7 @@ const push = vi.fn();
 vi.mock('next/router', () => ({
   useRouter: () => ({ query: {}, pathname: '/base/[baseId]/graph', replace, push }),
 }));
-vi.mock('@teable/sdk/hooks', async (importOriginal) => ({
+vi.mock('@cybernetics/sdk/hooks', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useBaseId: () => 'bseTest',
   useTableListener: vi.fn(),

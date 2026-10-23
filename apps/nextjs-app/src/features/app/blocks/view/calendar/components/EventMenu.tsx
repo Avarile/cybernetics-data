@@ -1,6 +1,6 @@
+import { useTableId, useView } from '@cybernetics/sdk/hooks';
 import { Trash } from '@teable/icons';
 import { deleteRecord, duplicateRecord } from '@teable/openapi';
-import { useTableId, useView } from '@teable/sdk/hooks';
 import {
   cn,
   Command,

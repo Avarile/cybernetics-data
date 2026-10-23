@@ -1,8 +1,3 @@
-import { useMutation } from '@tanstack/react-query';
-import type { IGridViewOptions } from '@teable/core';
-import { RowHeightLevel } from '@teable/core';
-import type { IGetRecordsRo, IGroupPointsVo, IRangesRo } from '@teable/openapi';
-import { saveQueryParams, shareViewCopy } from '@teable/openapi';
 import type {
   CombinedSelection,
   IButtonCell,
@@ -12,7 +7,7 @@ import type {
   IGroupPoint,
   IPosition,
   IRectangle,
-} from '@teable/sdk/components';
+} from '@cybernetics/sdk/components';
 import {
   DraggableType,
   Grid,
@@ -33,8 +28,8 @@ import {
   RegionType,
   useGridViewStore,
   LARGE_QUERY_THRESHOLD,
-} from '@teable/sdk/components';
-import { ShareViewContext } from '@teable/sdk/context';
+} from '@cybernetics/sdk/components';
+import { ShareViewContext } from '@cybernetics/sdk/context';
 import {
   useButtonClickStatus,
   useFields,
@@ -46,7 +41,12 @@ import {
   useSearch,
   useTableId,
   useView,
-} from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/hooks';
+import { useMutation } from '@tanstack/react-query';
+import type { IGridViewOptions } from '@teable/core';
+import { RowHeightLevel } from '@teable/core';
+import type { IGetRecordsRo, IGroupPointsVo, IRangesRo } from '@teable/openapi';
+import { saveQueryParams, shareViewCopy } from '@teable/openapi';
 import { Skeleton } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { uniqueId } from 'lodash';

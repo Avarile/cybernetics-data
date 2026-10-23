@@ -1,4 +1,4 @@
-import { useViews } from '@teable/sdk/hooks';
+import { useViews } from '@cybernetics/sdk/hooks';
 import { useTranslation } from 'next-i18next';
 import { Selector } from '@/components/Selector';
 import { developerConfig } from '@/features/i18n/developer.config';

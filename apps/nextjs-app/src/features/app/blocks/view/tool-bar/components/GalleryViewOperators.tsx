@@ -1,3 +1,13 @@
+import type { GalleryView } from '@cybernetics/sdk';
+import {
+  Sort,
+  ViewFilter,
+  VisibleFields,
+  useTablePermission,
+  CreateRecordModal,
+  useIsReadOnlyPreview,
+} from '@cybernetics/sdk';
+import { useView } from '@cybernetics/sdk/hooks/use-view';
 import {
   ArrowUpDown,
   Filter as FilterIcon,
@@ -6,16 +16,6 @@ import {
   Plus,
   AlertTriangle,
 } from '@teable/icons';
-import type { GalleryView } from '@teable/sdk';
-import {
-  Sort,
-  ViewFilter,
-  VisibleFields,
-  useTablePermission,
-  CreateRecordModal,
-  useIsReadOnlyPreview,
-} from '@teable/sdk';
-import { useView } from '@teable/sdk/hooks/use-view';
 import { Button, Label, Switch, cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { tableConfig } from '@/features/i18n/table.config';

@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, usePermissionUpdateListener, useSession } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getBaseById } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, usePermissionUpdateListener, useSession } from '@teable/sdk/hooks';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';

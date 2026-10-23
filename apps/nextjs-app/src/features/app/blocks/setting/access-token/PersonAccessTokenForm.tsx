@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   createAccessToken,
@@ -6,7 +7,6 @@ import {
   type UpdateAccessTokenRo,
   type UpdateAccessTokenVo,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useRouter } from 'next/router';
 import type { IFormType } from './form/AccessTokenForm';
 import { AccessTokenForm } from './form/AccessTokenForm';

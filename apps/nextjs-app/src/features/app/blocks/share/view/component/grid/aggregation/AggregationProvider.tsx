@@ -1,7 +1,3 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IGridColumnMeta, ITableActionKey, IViewActionKey } from '@teable/core';
-import type { IShareViewAggregationsRo, StatisticsFunc } from '@teable/openapi';
-import { getShareViewAggregations } from '@teable/openapi';
 import {
   useView,
   ReactQueryKeys,
@@ -10,7 +6,11 @@ import {
   useViewListener,
   useTableListener,
   ShareViewContext,
-} from '@teable/sdk';
+} from '@cybernetics/sdk';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { IGridColumnMeta, ITableActionKey, IViewActionKey } from '@teable/core';
+import type { IShareViewAggregationsRo, StatisticsFunc } from '@teable/openapi';
+import { getShareViewAggregations } from '@teable/openapi';
 import type { ReactNode } from 'react';
 import { useCallback, useContext, useMemo, useRef } from 'react';
 

@@ -1,5 +1,5 @@
 // import { TableList } from '../../table-list/TableList';
-import { useBase } from '@teable/sdk/hooks';
+import { useBase } from '@cybernetics/sdk/hooks';
 import { ChangelogNotification } from '@/components/changelog';
 import { BaseNodeTree } from './BaseNodeTree';
 import { BasePageRouter } from './BasePageRouter';

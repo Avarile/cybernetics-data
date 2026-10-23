@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IUpdateBaseShareRo } from '@teable/openapi';
 import {
@@ -7,7 +8,6 @@ import {
   refreshBaseShare,
   updateBaseShare,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Spin } from '@teable/ui-lib';
 import { Dialog, DialogContent } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';

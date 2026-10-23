@@ -1,4 +1,4 @@
-import { useSession } from '@teable/sdk/hooks';
+import { useSession } from '@cybernetics/sdk/hooks';
 import { Badge, Button } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { usePublicSettingQuery } from '@/features/app/hooks/useSetting';

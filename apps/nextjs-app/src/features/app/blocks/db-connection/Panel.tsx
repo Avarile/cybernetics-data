@@ -1,7 +1,7 @@
+import { useBaseId, useBasePermission } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, Code2, HelpCircle } from '@teable/icons';
 import { deleteDbConnection, createDbConnection, BillingProductLevel } from '@teable/openapi';
-import { useBaseId, useBasePermission } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { Trans, useTranslation } from 'next-i18next';

@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
+import { createFieldInstance } from '@cybernetics/sdk/model';
 import { useQuery } from '@tanstack/react-query';
 import { getFields } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import type { IFieldInstance } from '@teable/sdk/model';
-import { createFieldInstance } from '@teable/sdk/model';
 import { useMemo } from 'react';
 
 /** Field instances for one table — what the SDK filter editor and cell renderers need. */

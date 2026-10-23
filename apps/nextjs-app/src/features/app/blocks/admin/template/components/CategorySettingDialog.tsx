@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +11,6 @@ import {
   updateTemplateCategory,
   updateTemplateCategoryOrder,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Button,
   Dialog,

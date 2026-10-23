@@ -1,4 +1,4 @@
-import { useTablePermission, usePersonalView, useView } from '@teable/sdk/hooks';
+import { useTablePermission, usePersonalView, useView } from '@cybernetics/sdk/hooks';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import {
   Switch,

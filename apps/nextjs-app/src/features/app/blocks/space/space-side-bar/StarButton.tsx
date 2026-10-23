@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Star } from '@teable/icons';
 import type { PinType } from '@teable/openapi';
 import { addPin, deletePin } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Tooltip,
   TooltipContent,

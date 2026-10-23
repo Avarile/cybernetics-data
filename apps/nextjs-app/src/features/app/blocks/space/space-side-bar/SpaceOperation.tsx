@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { hasPermission } from '@teable/core';
 import { MoreHorizontal } from '@teable/icons';
 import { deleteSpace, permanentDeleteSpace, type IGetSpaceVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useRouter } from 'next/router';
 import React, { useMemo } from 'react';
 import { SpaceActionTrigger } from '@/features/app/blocks/space/component/SpaceActionTrigger';

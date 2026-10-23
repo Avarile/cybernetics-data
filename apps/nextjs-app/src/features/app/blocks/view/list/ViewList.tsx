@@ -1,4 +1,4 @@
-import { useTablePermission, useViewId, useViews, useIsHydrated } from '@teable/sdk';
+import { useTablePermission, useViewId, useViews, useIsHydrated } from '@cybernetics/sdk';
 import { horizontalListSortingStrategy } from '@teable/ui-lib/base/dnd-kit';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useState } from 'react';

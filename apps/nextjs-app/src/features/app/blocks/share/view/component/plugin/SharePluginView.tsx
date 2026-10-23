@@ -1,6 +1,6 @@
+import { useView } from '@cybernetics/sdk/hooks';
+import type { PluginView as PluginViewInstance } from '@cybernetics/sdk/model/view/plugin.view';
 import { PluginPosition, type IShareViewPlugin } from '@teable/openapi';
-import { useView } from '@teable/sdk/hooks';
-import type { PluginView as PluginViewInstance } from '@teable/sdk/model/view/plugin.view';
 import { PluginContent } from '@/features/app/components/plugin/PluginContent';
 
 export const PluginView = (props: { shareId: string; plugin?: IShareViewPlugin }) => {

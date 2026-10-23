@@ -1,15 +1,3 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { IAttachmentItem, IFieldVo, IGridViewOptions } from '@teable/core';
-import {
-  FieldKeyType,
-  FieldType,
-  RowHeightLevel,
-  contractColorForTheme,
-  fieldVoSchema,
-  stringifyClipboardText,
-} from '@teable/core';
-import type { ICreateRecordsRo, IGroupPointsVo, IUpdateOrderRo } from '@teable/openapi';
-import { createRecords, stopFillField, autoFillCell } from '@teable/openapi';
 import type {
   IRectangle,
   IPosition,
@@ -25,7 +13,7 @@ import type {
   IButtonCell,
   ICellError,
   IUserData,
-} from '@teable/sdk';
+} from '@cybernetics/sdk';
 import {
   Grid,
   CellType,
@@ -62,10 +50,10 @@ import {
   TaskStatusCollectionContext,
   PendingUploadContext,
   isNeedPersistEditing,
-} from '@teable/sdk';
-import { GRID_DEFAULT } from '@teable/sdk/components/grid/configs';
-import { useScrollFrameRate } from '@teable/sdk/components/grid/hooks';
-import { ReactQueryKeys } from '@teable/sdk/config';
+} from '@cybernetics/sdk';
+import { GRID_DEFAULT } from '@cybernetics/sdk/components/grid/configs';
+import { useScrollFrameRate } from '@cybernetics/sdk/components/grid/hooks';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import {
   useBaseId,
   useFields,
@@ -83,12 +71,24 @@ import {
   useRecordOperations,
   useButtonClickStatus,
   useTableListener,
-} from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/hooks';
 import {
   finalizePendingUploadAfterCreate,
   mergePendingAttachmentsForCreate,
-} from '@teable/sdk/store/pending-upload-create';
-import { useCellAttachmentUploadStore } from '@teable/sdk/store/use-attachment-upload-store';
+} from '@cybernetics/sdk/store/pending-upload-create';
+import { useCellAttachmentUploadStore } from '@cybernetics/sdk/store/use-attachment-upload-store';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  FieldKeyType,
+  FieldType,
+  RowHeightLevel,
+  contractColorForTheme,
+  fieldVoSchema,
+  stringifyClipboardText,
+} from '@teable/core';
+import type { IAttachmentItem, IFieldVo, IGridViewOptions } from '@teable/core';
+import { createRecords, stopFillField, autoFillCell } from '@teable/openapi';
+import type { ICreateRecordsRo, IGroupPointsVo, IUpdateOrderRo } from '@teable/openapi';
 import { useConfirm } from '@teable/ui-lib';
 import { toast, toast as sonnerToast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { isEqual, keyBy, uniqueId, groupBy } from 'lodash';

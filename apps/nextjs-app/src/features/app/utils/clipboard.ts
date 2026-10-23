@@ -1,5 +1,5 @@
+import { createFieldInstance } from '@cybernetics/sdk/model';
 import { FieldType, fieldVoSchema, parseClipboardText, type IFieldVo } from '@teable/core';
-import { createFieldInstance } from '@teable/sdk/model';
 import { z } from 'zod';
 import { fromZodError } from 'zod-validation-error';
 

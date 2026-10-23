@@ -1,3 +1,7 @@
+import { CollaboratorWithHoverCard, InfiniteTable } from '@cybernetics/sdk/components';
+import { VIEW_ICON_MAP } from '@cybernetics/sdk/components/view/constant';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBasePermission, useFieldStaticGetter, useIsHydrated } from '@cybernetics/sdk/hooks';
 import type { QueryFunctionContext } from '@tanstack/react-query';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -8,10 +12,6 @@ import type {
   IFieldSnapshotItemVo,
 } from '@teable/openapi';
 import { getTrashItems, TrashType, restoreTrash, TableTrashType } from '@teable/openapi';
-import { CollaboratorWithHoverCard, InfiniteTable } from '@teable/sdk/components';
-import { VIEW_ICON_MAP } from '@teable/sdk/components/view/constant';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBasePermission, useFieldStaticGetter, useIsHydrated } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import dayjs from 'dayjs';

@@ -1,5 +1,5 @@
-import { useBasePermission, useThemeMode } from '@teable/sdk/hooks';
-import type { IUIConfig } from '@teable/sdk/plugin-bridge';
+import { useBasePermission, useThemeMode } from '@cybernetics/sdk/hooks';
+import type { IUIConfig } from '@cybernetics/sdk/plugin-bridge';
 import { useRouter } from 'next/router';
 import { useMemo } from 'react';
 import type { IPluginParams } from '../types';

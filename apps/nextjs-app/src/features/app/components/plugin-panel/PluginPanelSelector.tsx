@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useTablePermission } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { Check, ChevronsUpDown, PlusCircle } from '@teable/icons';
 import { listPluginPanels } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useTablePermission } from '@teable/sdk/hooks';
 import {
   Button,
   cn,

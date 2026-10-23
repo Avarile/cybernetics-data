@@ -1,8 +1,8 @@
+import { useBaseId } from '@cybernetics/sdk/hooks';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks/use-is-readonly-preview';
 import { useQuery } from '@tanstack/react-query';
 import type { IUsageVo } from '@teable/openapi';
 import { getBaseUsage, BillingProductLevel, UsageFeatureLimit } from '@teable/openapi';
-import { useBaseId } from '@teable/sdk/hooks';
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks/use-is-readonly-preview';
 import { useIsCloud } from './useIsCloud';
 import { useIsEE } from './useIsEE';
 

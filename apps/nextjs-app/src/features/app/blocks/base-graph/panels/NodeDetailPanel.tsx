@@ -1,5 +1,5 @@
+import { CellValue } from '@cybernetics/sdk/components';
 import { X } from '@teable/icons';
-import { CellValue } from '@teable/sdk/components';
 import { Button, Skeleton } from '@teable/ui-lib/shadcn';
 import { ExternalLink, Network } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

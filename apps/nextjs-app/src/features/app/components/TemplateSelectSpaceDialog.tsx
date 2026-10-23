@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createBaseFromTemplate,
@@ -6,7 +7,6 @@ import {
   getUserLastVisit,
   LastVisitResourceType,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Button,
   Dialog,
@@ -135,7 +135,7 @@ export const TemplateSelectSpaceDialog = React.forwardRef<
         <DialogDescription>{t('common:template.useTemplateDialog.description')}</DialogDescription>
         {hasNoSpaces ? (
           <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               {t('common:template.useTemplateDialog.noSpaceDescription')}
             </p>
             <div className="flex items-center gap-2">

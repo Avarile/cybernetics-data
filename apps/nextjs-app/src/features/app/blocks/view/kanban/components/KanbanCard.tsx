@@ -1,12 +1,12 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events */
+import { CellValue } from '@cybernetics/sdk/components';
+import { useFieldStaticGetter, useTableId, useViewId } from '@cybernetics/sdk/hooks';
+import type { Record } from '@cybernetics/sdk/model';
 import type { DraggableProvided } from '@hello-pangea/dnd';
 import { FieldKeyType, type IAttachmentCellValue } from '@teable/core';
 import { ArrowDown, ArrowUp, History, Link, Maximize2, MessageSquare } from '@teable/icons';
 import type { IRecordInsertOrderRo } from '@teable/openapi';
 import { createRecords, deleteRecord, duplicateRecord } from '@teable/openapi';
-import { CellValue } from '@teable/sdk/components';
-import { useFieldStaticGetter, useTableId, useViewId } from '@teable/sdk/hooks';
-import type { Record } from '@teable/sdk/model';
 import {
   ContextMenu,
   ContextMenuContent,

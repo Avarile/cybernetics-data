@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { RefreshAccessTokenRo } from '@teable/openapi';
 import { refreshAccessToken } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Spin } from '@teable/ui-lib/base';
 import {
   Dialog,

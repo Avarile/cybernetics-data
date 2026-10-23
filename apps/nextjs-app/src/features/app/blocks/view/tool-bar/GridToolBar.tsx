@@ -1,6 +1,6 @@
+import { CreateRecordModal } from '@cybernetics/sdk/components';
+import { useIsReadOnlyPreview, useTablePermission } from '@cybernetics/sdk/hooks';
 import { Plus } from '@teable/icons';
-import { CreateRecordModal } from '@teable/sdk/components';
-import { useIsReadOnlyPreview, useTablePermission } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import { useTranslation } from 'next-i18next';
 import { tableConfig } from '@/features/i18n/table.config';

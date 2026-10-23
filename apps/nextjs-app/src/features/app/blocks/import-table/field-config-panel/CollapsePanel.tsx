@@ -1,6 +1,6 @@
+import { BaseSingleSelect } from '@cybernetics/sdk/components/filter/view-filter/component/base/BaseSingleSelect';
 import { ChevronRight } from '@teable/icons';
 import type { IImportOptionRo } from '@teable/openapi';
-import { BaseSingleSelect } from '@teable/sdk/components/filter/view-filter/component/base/BaseSingleSelect';
 import {
   Button,
   cn,

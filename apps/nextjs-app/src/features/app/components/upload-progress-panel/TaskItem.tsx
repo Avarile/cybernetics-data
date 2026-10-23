@@ -1,7 +1,10 @@
-import { UsageLimitModalType, useUsageLimitModalStore } from '@teable/sdk/components/billing/store';
-import { EllipsisFileName } from '@teable/sdk/components/upload/EllipsisFileName';
-import { FileCover } from '@teable/sdk/components/upload/FileCover';
-import type { IGlobalUploadTask } from '@teable/sdk/store/use-attachment-upload-store';
+import {
+  UsageLimitModalType,
+  useUsageLimitModalStore,
+} from '@cybernetics/sdk/components/billing/store';
+import { EllipsisFileName } from '@cybernetics/sdk/components/upload/EllipsisFileName';
+import { FileCover } from '@cybernetics/sdk/components/upload/FileCover';
+import type { IGlobalUploadTask } from '@cybernetics/sdk/store/use-attachment-upload-store';
 import { cn, isImage } from '@teable/ui-lib';
 import { RotateCcw, X } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

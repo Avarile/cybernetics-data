@@ -1,8 +1,8 @@
+import { useBaseId, useIsAnonymous, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { LaptopIcon } from '@radix-ui/react-icons';
 import { Moon, Search, Settings, Sun, Zap } from '@teable/icons';
 import { useTheme } from '@teable/next-themes';
 import { BaseNodeResourceType } from '@teable/openapi';
-import { useBaseId, useIsAnonymous, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import {
   CommandDialog,
   CommandInput,

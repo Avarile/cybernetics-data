@@ -1,7 +1,7 @@
+import { FieldSelector } from '@cybernetics/sdk/components';
+import { useFields } from '@cybernetics/sdk/hooks';
 import type { ILastModifiedByFieldOptions } from '@teable/core';
 import { FieldType } from '@teable/core';
-import { FieldSelector } from '@teable/sdk/components';
-import { useFields } from '@teable/sdk/hooks';
 import { Label, RadioGroup, RadioGroupItem } from '@teable/ui-lib/shadcn';
 import { Badge } from '@teable/ui-lib/shadcn/ui/badge';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';

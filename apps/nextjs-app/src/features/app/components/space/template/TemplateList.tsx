@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useThemeMode } from '@cybernetics/sdk/hooks';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPublishedTemplateList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useThemeMode } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Button, cn, Skeleton } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';

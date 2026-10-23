@@ -1,5 +1,5 @@
-import { SelectionRegionType } from '@teable/sdk/components';
-import type { CombinedSelection } from '@teable/sdk/components';
+import { SelectionRegionType } from '@cybernetics/sdk/components';
+import type { CombinedSelection } from '@cybernetics/sdk/components';
 import { describe, expect, it } from 'vitest';
 
 import {

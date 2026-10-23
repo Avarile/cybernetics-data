@@ -1,9 +1,9 @@
-import type { FieldType } from '@teable/core';
-import type { IFilterComponents } from '@teable/sdk/components';
+import type { IFilterComponents } from '@cybernetics/sdk/components';
 import {
   FilterLinkBase,
   FilterLinkSelect,
-} from '@teable/sdk/components/filter/view-filter/component';
+} from '@cybernetics/sdk/components/filter/view-filter/component';
+import type { FieldType } from '@teable/core';
 import { FilterLinkSelectList } from './FilterLinkSelectList';
 import { FilterLinkSelectTrigger } from './FilterLinkSelectTrigger';
 

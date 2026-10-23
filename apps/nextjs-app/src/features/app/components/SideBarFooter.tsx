@@ -1,6 +1,6 @@
-import { useSession } from '@teable/sdk';
-import { BaseContext } from '@teable/sdk/context';
-import { useIsAnonymous, useIsReadOnlyPreview } from '@teable/sdk/hooks';
+import { useSession } from '@cybernetics/sdk';
+import { BaseContext } from '@cybernetics/sdk/context';
+import { useIsAnonymous, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Link from 'next/link';
 import { Trans } from 'next-i18next';

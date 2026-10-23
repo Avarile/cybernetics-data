@@ -1,7 +1,7 @@
+import { getColorPairs, isMarkdownShowAs, stripMarkdown } from '@cybernetics/sdk/components';
+import type { DateField, IFieldInstance, Record, SingleSelectField } from '@cybernetics/sdk/model';
 import type { IColorConfig } from '@teable/core';
 import { ColorConfigType, TimeFormatting } from '@teable/core';
-import { getColorPairs, isMarkdownShowAs, stripMarkdown } from '@teable/sdk/components';
-import type { DateField, IFieldInstance, Record, SingleSelectField } from '@teable/sdk/model';
 import { set } from 'date-fns';
 import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { DEFAULT_COLOR } from './components/CalendarConfig';

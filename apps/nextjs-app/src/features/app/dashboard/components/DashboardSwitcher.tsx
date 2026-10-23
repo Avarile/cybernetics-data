@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useBasePermission } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { Check, ChevronsUpDown, PlusCircle } from '@teable/icons';
 import { getDashboardList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useBasePermission } from '@teable/sdk/hooks';
 import {
   Button,
   cn,

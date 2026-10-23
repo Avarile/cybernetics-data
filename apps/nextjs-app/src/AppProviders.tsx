@@ -1,5 +1,5 @@
+import { APP_THEMES } from '@cybernetics/sdk/hooks';
 import { ThemeProvider } from '@teable/next-themes';
-import { APP_THEMES } from '@teable/sdk/hooks';
 import { ConfirmModalProvider } from '@teable/ui-lib';
 import { Toaster as SoonerToaster } from '@teable/ui-lib/shadcn/ui/sonner';
 import { Toaster } from '@teable/ui-lib/shadcn/ui/toaster';

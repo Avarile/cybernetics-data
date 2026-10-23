@@ -1,7 +1,7 @@
 'use client';
 
-import { useIsHydrated } from '@teable/sdk/hooks';
-import { useCellAttachmentUploadStore } from '@teable/sdk/store/use-attachment-upload-store';
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
+import { useCellAttachmentUploadStore } from '@cybernetics/sdk/store/use-attachment-upload-store';
 import { cn } from '@teable/ui-lib';
 import { useEffect, useRef, useState } from 'react';
 import { UploadProgressBubble } from './UploadProgressBubble';

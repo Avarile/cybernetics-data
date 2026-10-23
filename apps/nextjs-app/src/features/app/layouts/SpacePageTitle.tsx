@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import type { DehydratedState } from '@tanstack/react-query';
 import type { IGetSpaceVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { find } from 'lodash';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

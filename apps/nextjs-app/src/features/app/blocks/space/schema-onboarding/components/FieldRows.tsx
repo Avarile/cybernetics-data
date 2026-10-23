@@ -1,5 +1,5 @@
+import { useFieldStaticGetter } from '@cybernetics/sdk/hooks';
 import type { FieldType } from '@teable/core';
-import { useFieldStaticGetter } from '@teable/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 

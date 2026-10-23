@@ -1,6 +1,6 @@
+import { useIsTouchDevice, useSession } from '@cybernetics/sdk';
 import { useMutation } from '@tanstack/react-query';
 import { updateUserAvatar, updateUserName } from '@teable/openapi';
-import { useIsTouchDevice, useSession } from '@teable/sdk';
 import {
   Button,
   Input,

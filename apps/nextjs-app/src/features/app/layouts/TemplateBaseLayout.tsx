@@ -1,9 +1,9 @@
+import { SessionProvider, addQueryParamsToWebSocketUrl } from '@cybernetics/sdk';
+import type { IUser } from '@cybernetics/sdk/context';
+import { AnchorContext, AppProvider, BaseProvider, TableProvider } from '@cybernetics/sdk/context';
+import { getWsPath } from '@cybernetics/sdk/context/app/useConnection';
 import { type DehydratedState } from '@tanstack/react-query';
 import { incrementTemplateVisit, type IGetBaseVo, type ITableVo } from '@teable/openapi';
-import { SessionProvider, addQueryParamsToWebSocketUrl } from '@teable/sdk';
-import type { IUser } from '@teable/sdk/context';
-import { AnchorContext, AppProvider, BaseProvider, TableProvider } from '@teable/sdk/context';
-import { getWsPath } from '@teable/sdk/context/app/useConnection';
 import { useTranslation } from 'next-i18next';
 import React, { Fragment, useEffect, useMemo } from 'react';
 import { AppLayout } from '@/features/app/layouts';

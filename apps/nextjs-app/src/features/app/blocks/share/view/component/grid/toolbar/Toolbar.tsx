@@ -1,3 +1,4 @@
+import { useView, RowHeight, Group, HideFields } from '@cybernetics/sdk';
 import type { RowHeightLevel, IGridViewOptions } from '@teable/core';
 import {
   ArrowUpDown,
@@ -6,7 +7,6 @@ import {
   LayoutList,
   AlertTriangle,
 } from '@teable/icons';
-import { useView, RowHeight, Group, HideFields } from '@teable/sdk';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useEffect, useRef } from 'react';
 import { useToolbarChange } from '@/features/app/blocks/view/hooks/useToolbarChange';

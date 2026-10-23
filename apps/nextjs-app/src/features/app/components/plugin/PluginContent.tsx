@@ -1,4 +1,4 @@
-import type { IChildBridgeMethods } from '@teable/sdk/plugin-bridge';
+import type { IChildBridgeMethods } from '@cybernetics/sdk/plugin-bridge';
 import { CyberneticsLoader } from '@teable/ui-lib/base';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

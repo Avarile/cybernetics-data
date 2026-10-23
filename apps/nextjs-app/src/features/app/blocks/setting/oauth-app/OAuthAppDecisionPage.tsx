@@ -1,7 +1,7 @@
+import { useSession } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { HelpCircle } from '@teable/icons';
 import { decisionInfoGet } from '@teable/openapi';
-import { useSession } from '@teable/sdk/hooks';
 import { CyberneticsLoader } from '@teable/ui-lib/base';
 import { Button, Card, Separator, cn } from '@teable/ui-lib/shadcn';
 import Link from 'next/link';

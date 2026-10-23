@@ -1,3 +1,12 @@
+import { LocalStorageKeys, useView } from '@cybernetics/sdk';
+import {
+  useBaseId,
+  useFields,
+  useRowCount,
+  useSearch,
+  useTableId,
+  useTablePermission,
+} from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ViewType } from '@teable/core';
 import { AlertCircle, Search, X } from '@teable/icons';
@@ -9,15 +18,6 @@ import {
   repairTableIndex,
   DEFAULT_MAX_SEARCH_FIELD_COUNT,
 } from '@teable/openapi';
-import { LocalStorageKeys, useView } from '@teable/sdk';
-import {
-  useBaseId,
-  useFields,
-  useRowCount,
-  useSearch,
-  useTableId,
-  useTablePermission,
-} from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import {
   cn,

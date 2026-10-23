@@ -1,4 +1,4 @@
-import type { IParentBridgeMethods, IUIConfig } from '@teable/sdk';
+import type { IParentBridgeMethods, IUIConfig } from '@cybernetics/sdk';
 import { CyberneticsLoader } from '@teable/ui-lib';
 import { useTranslation } from 'next-i18next';
 import { useEnv } from '../hooks/useEnv';

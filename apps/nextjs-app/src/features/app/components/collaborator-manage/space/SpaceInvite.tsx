@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { IRole } from '@teable/core';
 import { hasPermission, Role } from '@teable/core';
 import { createSpaceInvitationLink, emailSpaceInvitation } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useState } from 'react';
 import { Invite } from '../components/Invite';
 import { RoleSelect } from '../components/RoleSelect';

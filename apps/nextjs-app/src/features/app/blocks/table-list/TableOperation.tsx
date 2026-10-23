@@ -1,10 +1,10 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBase, useBasePermission, useTables } from '@cybernetics/sdk/hooks';
+import type { Table } from '@cybernetics/sdk/model';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUniqName } from '@teable/core';
 import { MoreHorizontal, Settings, Export, Import, FileCsv, FileExcel } from '@teable/icons';
 import { duplicateTable, SUPPORTEDTYPE } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBase, useBasePermission, useTables } from '@teable/sdk/hooks';
-import type { Table } from '@teable/sdk/model';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import {
   DropdownMenu,

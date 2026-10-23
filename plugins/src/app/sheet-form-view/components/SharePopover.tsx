@@ -1,8 +1,8 @@
+import type { View } from '@cybernetics/sdk';
+import { useTablePermission, useView } from '@cybernetics/sdk';
 import { useMutation } from '@tanstack/react-query';
 import { sharePasswordSchema, type IShareViewMeta } from '@teable/core';
 import { Edit, RefreshCcw, Qrcode } from '@teable/icons';
-import type { View } from '@teable/sdk';
-import { useTablePermission, useView } from '@teable/sdk';
 
 import {
   Button,
@@ -148,7 +148,11 @@ export const SharePopover: React.FC<{
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button size={'icon-xs'} variant={'outline'} onClick={() => view.setRefreshLink()}>
+                    <Button
+                      size={'icon-xs'}
+                      variant={'outline'}
+                      onClick={() => view.setRefreshLink()}
+                    >
                       <RefreshCcw className="size-4 shrink-0" />
                     </Button>
                   </TooltipTrigger>

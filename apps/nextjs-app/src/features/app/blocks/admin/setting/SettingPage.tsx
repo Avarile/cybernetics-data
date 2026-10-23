@@ -1,3 +1,4 @@
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IUpdateSettingRo, ISettingVo } from '@teable/openapi';
 import {
@@ -7,7 +8,6 @@ import {
   SettingKey,
   updateSetting,
 } from '@teable/openapi';
-import { useIsHydrated } from '@teable/sdk/hooks';
 import { Button, Label, Switch } from '@teable/ui-lib/shadcn';
 import { RotateCcwIcon } from 'lucide-react';
 import { useRouter } from 'next/router';

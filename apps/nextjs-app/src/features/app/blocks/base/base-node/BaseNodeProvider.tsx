@@ -1,4 +1,4 @@
-import { useBaseId } from '@teable/sdk/hooks';
+import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useMemo } from 'react';
 import { useShareNodeId } from '@/features/app/context/ShareContext';
 import { BaseNodeContext } from './BaseNodeContext';

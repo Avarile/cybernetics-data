@@ -1,7 +1,7 @@
+import { useFieldStaticGetter } from '@cybernetics/sdk/hooks';
 import { Relationship } from '@teable/core';
 import { getBaseErd } from '@teable/openapi';
 import type { IBaseErdEdge, IBaseErdVo, IBaseErdTableNode } from '@teable/openapi';
-import { useFieldStaticGetter } from '@teable/sdk/hooks';
 import {
   Button,
   Label,

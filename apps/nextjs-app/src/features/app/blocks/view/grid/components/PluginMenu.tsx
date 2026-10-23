@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight, Puzzle, Settings } from '@teable/icons';
 import { getPluginContextMenuList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Button,
   cn,

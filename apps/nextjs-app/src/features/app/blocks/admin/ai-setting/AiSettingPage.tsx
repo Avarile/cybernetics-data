@@ -1,7 +1,7 @@
+import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ISettingVo, IUpdateSettingRo } from '@teable/openapi';
 import { getSetting, updateSetting } from '@teable/openapi';
-import { useIsHydrated } from '@teable/sdk/hooks';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { useCallback, useEffect, useRef, useState } from 'react';

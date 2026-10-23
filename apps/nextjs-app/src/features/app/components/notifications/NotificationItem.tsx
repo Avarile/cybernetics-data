@@ -1,6 +1,6 @@
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
 import { type NotificationStatesEnum } from '@teable/core';
 import type { INotificationVo } from '@teable/openapi';
-import { useLanDayjs } from '@teable/sdk/hooks';
 import { LinkNotification } from './notification-component';
 import { NotificationIcon } from './NotificationIcon';
 

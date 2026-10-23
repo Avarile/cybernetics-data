@@ -1,6 +1,6 @@
+import type { useFieldStaticGetter } from '@cybernetics/sdk/hooks';
 import { Table2 } from '@teable/icons';
 import type { IBaseErdTableNode } from '@teable/openapi';
-import type { useFieldStaticGetter } from '@teable/sdk/hooks';
 import { memo } from 'react';
 import type { NodeProps } from 'reactflow';
 import { Handle, Position } from 'reactflow';

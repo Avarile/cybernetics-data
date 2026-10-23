@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { Component, Database, Plus } from '@teable/icons';
 import type { IGetBaseVo } from '@teable/openapi';
 import { getBaseAll, getSharedBase, getSpaceList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Spin } from '@teable/ui-lib/base';
 import {
   Button,

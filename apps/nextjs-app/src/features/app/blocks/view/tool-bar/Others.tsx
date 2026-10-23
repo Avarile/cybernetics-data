@@ -1,5 +1,10 @@
+import {
+  useIsReadOnlyPreview,
+  useTableId,
+  useTablePermission,
+  useView,
+} from '@cybernetics/sdk/hooks';
 import { Check, MoreHorizontal, Share2 } from '@teable/icons';
-import { useIsReadOnlyPreview, useTableId, useTablePermission, useView } from '@teable/sdk/hooks';
 import { Button, cn, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';

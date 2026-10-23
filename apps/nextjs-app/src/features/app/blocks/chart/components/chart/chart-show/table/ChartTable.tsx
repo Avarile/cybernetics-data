@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CellValue } from '@cybernetics/sdk';
 import { CellFormat } from '@teable/core';
-import { CellValue } from '@teable/sdk';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table } from '@teable/ui-lib';
 import { useMemo } from 'react';
 import { useBaseQueryData } from '../../../../hooks/useBaseQueryData';

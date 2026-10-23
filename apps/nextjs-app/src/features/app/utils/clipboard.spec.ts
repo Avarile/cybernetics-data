@@ -42,7 +42,7 @@ vi.mock('zod', () => {
   };
 });
 
-vi.mock('@teable/sdk/model', () => {
+vi.mock('@cybernetics/sdk/model', () => {
   return {
     createFieldInstance: (header: { type: number }) => ({
       type: header.type,

@@ -1,6 +1,6 @@
+import { SearchInput } from '@cybernetics/sdk/components';
+import { useSearch } from '@cybernetics/sdk/hooks';
 import type { IQueryBaseRo } from '@teable/openapi';
-import { SearchInput } from '@teable/sdk/components';
-import { useSearch } from '@teable/sdk/hooks';
 import { isEqual } from 'lodash';
 import { useEffect } from 'react';
 

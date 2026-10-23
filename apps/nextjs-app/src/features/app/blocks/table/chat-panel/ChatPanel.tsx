@@ -1,3 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk';
+import { useIsTouchDevice, useSession } from '@cybernetics/sdk/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   aiGenerateStream,
@@ -11,8 +13,6 @@ import {
   UploadType,
 } from '@teable/openapi';
 import type { IAiThreadMessage, IChatFileVo } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk';
-import { useIsTouchDevice, useSession } from '@teable/sdk/hooks';
 import {
   AlertDialog,
   AlertDialogAction,

@@ -7,8 +7,8 @@ export const createSessionContext = (context: Partial<ISessionContext> = {}) => 
     refreshAvatar: noop,
     user: {
       id: 'usrxxxxxx',
-      name: 'teable',
-      email: 'example@teable.ai',
+      name: 'cybernetics',
+      email: 'example@cybernetics.com',
       notifyMeta: {},
       hasPassword: true,
     },

@@ -1,3 +1,4 @@
+import { useSession, useOrganization } from '@cybernetics/sdk/hooks';
 import { ActionPrefix, type Action } from '@teable/core';
 import {
   createAccessTokenRoSchema,
@@ -5,7 +6,6 @@ import {
   type UpdateAccessTokenRo,
   updateAccessTokenRoSchema,
 } from '@teable/openapi';
-import { useSession, useOrganization } from '@teable/sdk/hooks';
 import { ConfirmDialog, Spin } from '@teable/ui-lib/base';
 import { Button, Input, Label, Separator } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

@@ -1,3 +1,6 @@
+import { InfiniteTable } from '@cybernetics/sdk/components';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useBasePermission, useIsHydrated } from '@cybernetics/sdk/hooks';
 import type { QueryFunctionContext } from '@tanstack/react-query';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -9,9 +12,6 @@ import {
   restoreTrash,
   TrashType,
 } from '@teable/openapi';
-import { InfiniteTable } from '@teable/sdk/components';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useBasePermission, useIsHydrated } from '@teable/sdk/hooks';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';

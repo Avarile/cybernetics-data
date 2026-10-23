@@ -1,4 +1,4 @@
-import type { Table } from '@teable/sdk/model';
+import type { Table } from '@cybernetics/sdk/model';
 import ArrowDownIcon from '@teable/ui-lib/icons/app/arrow-down.svg';
 import SelectIcon from '@teable/ui-lib/icons/app/select.svg';
 import { cn } from '@teable/ui-lib/shadcn';

@@ -1,7 +1,7 @@
+import type { KanbanView } from '@cybernetics/sdk';
+import { useFields } from '@cybernetics/sdk';
+import { useView } from '@cybernetics/sdk/hooks/use-view';
 import { ArrowUpDown, Filter as FilterIcon, Layers, AlertTriangle } from '@teable/icons';
-import type { KanbanView } from '@teable/sdk';
-import { useFields } from '@teable/sdk';
-import { useView } from '@teable/sdk/hooks/use-view';
 import { cn } from '@teable/ui-lib/shadcn';
 import { Trans } from 'next-i18next';
 import { useMemo } from 'react';

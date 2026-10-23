@@ -1,5 +1,5 @@
+import { getFieldIconString } from '@cybernetics/sdk';
 import { X } from '@teable/icons';
-import { getFieldIconString } from '@teable/sdk';
 import { Progress } from '@teable/ui-lib';
 import { filesize } from 'filesize';
 

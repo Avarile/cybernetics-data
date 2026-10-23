@@ -1,3 +1,4 @@
+import { useFields } from '@cybernetics/sdk/hooks';
 import {
   FieldKeyType,
   replaceFilter,
@@ -6,7 +7,6 @@ import {
   replaceSearch,
 } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
-import { useFields } from '@teable/sdk/hooks';
 import { keyBy } from 'lodash';
 import { useCallback } from 'react';
 

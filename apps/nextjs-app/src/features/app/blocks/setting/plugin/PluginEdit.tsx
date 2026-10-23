@@ -1,3 +1,4 @@
+import { UserAvatar } from '@cybernetics/sdk/components';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RefreshCcw } from '@teable/icons';
@@ -10,7 +11,6 @@ import {
   updatePlugin,
   updatePluginRoSchema,
 } from '@teable/openapi';
-import { UserAvatar } from '@teable/sdk/components';
 import { Spin } from '@teable/ui-lib';
 import {
   Button,

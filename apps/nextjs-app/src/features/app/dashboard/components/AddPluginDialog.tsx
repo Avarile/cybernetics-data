@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { IDashboardInstallPluginRo } from '@teable/openapi';
 import { installPlugin, PluginPosition } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId } from '@teable/sdk/hooks';
 import { PluginCenterDialog } from '../../components/plugin/PluginCenterDialog';
 
 export const AddPluginDialog = (props: { children?: React.ReactNode; dashboardId: string }) => {

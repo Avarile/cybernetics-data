@@ -1,7 +1,7 @@
+import { useFields, useFieldStaticGetter } from '@cybernetics/sdk';
 import type { IFieldVo } from '@teable/core';
 import { HelpCircle, ChevronDown, ChevronRight, Check } from '@teable/icons';
 import type { IGetRecordsRo } from '@teable/openapi';
-import { useFields, useFieldStaticGetter } from '@teable/sdk';
 import {
   Button,
   Checkbox,

@@ -1,7 +1,7 @@
+import type { IFile } from '@cybernetics/sdk';
+import { AttachmentManager } from '@cybernetics/sdk';
 import { generateAttachmentId } from '@teable/core';
 import { UploadType, type INotifyVo } from '@teable/openapi';
-import type { IFile } from '@teable/sdk';
-import { AttachmentManager } from '@teable/sdk';
 
 export const uploadFiles = async (
   files: FileList | File[],

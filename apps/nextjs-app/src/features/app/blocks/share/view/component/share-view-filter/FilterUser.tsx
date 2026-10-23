@@ -1,10 +1,10 @@
+import type { IFilterComponents } from '@cybernetics/sdk/components';
+import { FilterUserSelectBase } from '@cybernetics/sdk/components/filter/view-filter/component';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { ShareViewContext } from '@cybernetics/sdk/context';
 import { useQuery } from '@tanstack/react-query';
 import type { FieldType } from '@teable/core';
 import { getShareViewCollaborators } from '@teable/openapi';
-import type { IFilterComponents } from '@teable/sdk/components';
-import { FilterUserSelectBase } from '@teable/sdk/components/filter/view-filter/component';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { ShareViewContext } from '@teable/sdk/context';
 import { useContext, useState } from 'react';
 
 export const FilterUser: IFilterComponents[FieldType.User] = (props) => {

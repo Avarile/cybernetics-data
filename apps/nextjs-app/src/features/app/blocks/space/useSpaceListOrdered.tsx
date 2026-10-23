@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getSpaceList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useMemo } from 'react';
 import { usePinMap } from './usePinMap';
 

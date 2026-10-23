@@ -1,7 +1,7 @@
+import { useViews } from '@cybernetics/sdk';
+import { useTablePermission } from '@cybernetics/sdk/hooks';
 import { ViewType, getUniqName } from '@teable/core';
 import { Plus } from '@teable/icons';
-import { useViews } from '@teable/sdk';
-import { useTablePermission } from '@teable/sdk/hooks';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';

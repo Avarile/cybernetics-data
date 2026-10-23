@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import type { FieldAction, IFieldRo } from '@teable/core';
 import { planField, planFieldCreate, planFieldConvert, planFieldDelete } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 
 export function usePlan({
   tableId,

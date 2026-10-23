@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getAccessToken } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Skeleton } from '@teable/ui-lib/shadcn';
 import type { IAccessTokenForm } from './AccessTokenForm';
 import { AccessTokenForm } from './AccessTokenForm';

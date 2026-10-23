@@ -1,6 +1,6 @@
+import { useBasePermission, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { Lock, MoreHorizontal, Network, Settings, Trash2 } from '@teable/icons';
 import { BillingProductLevel } from '@teable/openapi';
-import { useBasePermission, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,

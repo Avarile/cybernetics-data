@@ -1,8 +1,8 @@
+import type { IUser } from '@cybernetics/sdk';
+import { NotificationProvider, SessionProvider } from '@cybernetics/sdk';
+import { AppProvider } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
 import { LastVisitResourceType, updateUserLastVisit } from '@teable/openapi';
-import type { IUser } from '@teable/sdk';
-import { NotificationProvider, SessionProvider } from '@teable/sdk';
-import { AppProvider } from '@teable/sdk/context';
 import { isString } from 'lodash';
 import { useParams } from 'next/navigation';
 import { useTranslation } from 'next-i18next';

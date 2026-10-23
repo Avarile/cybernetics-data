@@ -1,3 +1,4 @@
+import { useTableId, useView, useFieldOperations, useRowCount } from '@cybernetics/sdk/hooks';
 import type {
   IFieldRo,
   IFieldVo,
@@ -17,7 +18,6 @@ import {
   StatisticsFunc,
 } from '@teable/core';
 import { type IPlanFieldConvertVo, getAggregation } from '@teable/openapi';
-import { useTableId, useView, useFieldOperations, useRowCount } from '@teable/sdk/hooks';
 import { ConfirmDialog, Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import { Sheet, SheetContent } from '@teable/ui-lib/shadcn/ui/sheet';

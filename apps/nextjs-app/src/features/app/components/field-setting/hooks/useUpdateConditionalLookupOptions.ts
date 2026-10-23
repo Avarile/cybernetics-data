@@ -1,6 +1,6 @@
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import type { IConditionalLookupOptions } from '@teable/core';
 import { isConditionalLookupOptions, safeParseOptions } from '@teable/core';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { useCallback } from 'react';
 import type { IFieldEditorRo } from '../type';
 

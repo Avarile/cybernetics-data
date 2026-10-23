@@ -1,3 +1,4 @@
+import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
 import { getUniqName } from '@teable/core';
 import type {
@@ -15,7 +16,6 @@ import {
   updateBaseNode,
   permanentDeleteBaseNode,
 } from '@teable/openapi';
-import { useBaseId } from '@teable/sdk/hooks';
 import { useTranslation } from 'next-i18next';
 import { useCallback, useMemo } from 'react';
 import { cleanParentId, getNodeName } from './helper';

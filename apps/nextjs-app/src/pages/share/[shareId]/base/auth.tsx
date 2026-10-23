@@ -1,5 +1,5 @@
+import { createQueryClient } from '@cybernetics/sdk/context';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { createQueryClient } from '@teable/sdk/context';
 import type { GetServerSideProps } from 'next';
 import { BaseShareAuthPage } from '@/features/app/blocks/share/base/BaseShareAuthPage';
 import { shareConfig } from '@/features/i18n/share.config';

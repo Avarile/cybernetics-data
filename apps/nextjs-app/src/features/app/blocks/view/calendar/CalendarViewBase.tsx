@@ -1,5 +1,5 @@
-import { CalendarDailyCollectionProvider } from '@teable/sdk/context';
-import { usePersonalView } from '@teable/sdk/hooks';
+import { CalendarDailyCollectionProvider } from '@cybernetics/sdk/context';
+import { usePersonalView } from '@cybernetics/sdk/hooks';
 import { Fragment, useMemo, useState } from 'react';
 import { AddDateFieldDialog } from './components/AddDateFieldDialog';
 import { Calendar } from './components/Calendar';

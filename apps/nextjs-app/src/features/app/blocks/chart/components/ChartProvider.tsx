@@ -1,4 +1,4 @@
-import type { IParentBridgeMethods, IUIConfig } from '@teable/sdk';
+import type { IParentBridgeMethods, IUIConfig } from '@cybernetics/sdk';
 import React, { useRef } from 'react';
 import type { IChartStorage } from '../types';
 

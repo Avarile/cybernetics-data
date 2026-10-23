@@ -1,5 +1,8 @@
-import { UsageLimitModalType, useUsageLimitModalStore } from '@teable/sdk/components/billing/store';
-import { useBase } from '@teable/sdk/hooks';
+import {
+  UsageLimitModalType,
+  useUsageLimitModalStore,
+} from '@cybernetics/sdk/components/billing/store';
+import { useBase } from '@cybernetics/sdk/hooks';
 import {
   Dialog,
   DialogContent,

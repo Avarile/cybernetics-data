@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { hasPermission } from '@teable/core';
 import { getSpaceList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Selector } from '@teable/ui-lib/base';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';

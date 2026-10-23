@@ -3,9 +3,9 @@ import {
   RecordProvider,
   RowCountProvider,
   TaskStatusCollectionProvider,
-} from '@teable/sdk/context';
-import { SearchProvider } from '@teable/sdk/context/query';
-import { usePersonalView } from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/context';
+import { SearchProvider } from '@cybernetics/sdk/context/query';
+import { usePersonalView } from '@cybernetics/sdk/hooks';
 import { GridToolBar } from '../tool-bar/GridToolBar';
 import type { IViewBaseProps } from '../types';
 import { GridViewBase } from './GridViewBase';

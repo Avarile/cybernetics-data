@@ -1,3 +1,4 @@
+import { ReactQueryKeys, useIsHydrated } from '@cybernetics/sdk';
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +11,6 @@ import {
   updateTemplate,
   updateTemplateOrder,
 } from '@teable/openapi';
-import { ReactQueryKeys, useIsHydrated } from '@teable/sdk';
 import {
   Spin,
   Button,

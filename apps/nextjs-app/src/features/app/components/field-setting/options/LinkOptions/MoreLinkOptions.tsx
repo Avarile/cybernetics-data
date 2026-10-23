@@ -1,17 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
-import { PRIMARY_SUPPORTED_TYPES, type IFilter, type ILinkFieldOptionsRo } from '@teable/core';
-import { EyeOff, Maximize2 } from '@teable/icons';
-import { getFields } from '@teable/openapi';
 import {
   FilterWithTable,
   HideFieldsBase,
   useFieldFilterLinkContext,
   ViewSelect,
   FieldSelector,
-} from '@teable/sdk/components';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useTableId } from '@teable/sdk/hooks';
-import { createFieldInstance, type IFieldInstance } from '@teable/sdk/model';
+} from '@cybernetics/sdk/components';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useTableId } from '@cybernetics/sdk/hooks';
+import { createFieldInstance, type IFieldInstance } from '@cybernetics/sdk/model';
+import { useQuery } from '@tanstack/react-query';
+import { PRIMARY_SUPPORTED_TYPES, type IFilter, type ILinkFieldOptionsRo } from '@teable/core';
+import { EyeOff, Maximize2 } from '@teable/icons';
+import { getFields } from '@teable/openapi';
 import { Button, cn, Dialog, DialogContent, DialogTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useMemo } from 'react';

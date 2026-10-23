@@ -1,12 +1,12 @@
+import { MarkdownPreview } from '@cybernetics/sdk';
+import { ReactQueryKeys } from '@cybernetics/sdk/config/react-query-keys';
+import { useIsMobile } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   createBaseFromTemplate,
   getTemplateCategoryList,
   getTemplateDetail,
 } from '@teable/openapi';
-import { MarkdownPreview } from '@teable/sdk';
-import { ReactQueryKeys } from '@teable/sdk/config/react-query-keys';
-import { useIsMobile } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import { Badge, Button, cn, useToast } from '@teable/ui-lib/shadcn';
 import { ArrowUpRight, ChevronLeft, Share2 } from 'lucide-react';

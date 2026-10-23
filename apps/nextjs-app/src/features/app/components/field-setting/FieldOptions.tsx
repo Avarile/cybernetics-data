@@ -1,3 +1,4 @@
+import { useFields } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import type {
   IFieldVo,
@@ -25,7 +26,6 @@ import {
   isLinkLookupOptions,
 } from '@teable/core';
 import { getField } from '@teable/openapi';
-import { useFields } from '@teable/sdk/hooks';
 import { useMemo } from 'react';
 import { ButtonOptions } from './options/ButtonOptions';
 import { CheckboxOptions } from './options/CheckboxOptions';

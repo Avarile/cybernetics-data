@@ -1,8 +1,8 @@
+import { useTables } from '@cybernetics/sdk';
 import { getUniqName, ViewType } from '@teable/core';
 import { FileCsv, FileExcel, Slack, Table2 } from '@teable/icons';
 import type { ICreateBaseNodeRo } from '@teable/openapi';
 import { BaseNodeResourceType, SUPPORTEDTYPE } from '@teable/openapi';
-import { useTables } from '@teable/sdk';
 import {
   DropdownMenu,
   DropdownMenuContent,

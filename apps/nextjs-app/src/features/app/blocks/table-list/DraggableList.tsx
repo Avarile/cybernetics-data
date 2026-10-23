@@ -1,4 +1,4 @@
-import { useTableId, useTables, useIsHydrated } from '@teable/sdk';
+import { useTableId, useTables, useIsHydrated } from '@cybernetics/sdk';
 import {
   DndKitContext,
   Droppable,

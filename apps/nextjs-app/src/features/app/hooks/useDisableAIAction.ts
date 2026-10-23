@@ -1,6 +1,6 @@
+import { useBaseId, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getAIDisableActions } from '@teable/openapi';
-import { useBaseId, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import { useMemo } from 'react';
 import { AIActions } from '../blocks/admin/setting/components/ai-config/AIControlCard';
 

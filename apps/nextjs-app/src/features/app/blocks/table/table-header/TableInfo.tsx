@@ -1,11 +1,11 @@
-import { Table2 } from '@teable/icons';
 import {
   useConnection,
   useTable,
   useTablePermission,
   useLanDayjs,
   useIsHydrated,
-} from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/hooks';
+import { Table2 } from '@teable/icons';
 import { Spin } from '@teable/ui-lib/base';
 import { cn, Input } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
@@ -89,7 +89,7 @@ export const TableInfo: React.FC<ITableInfoProps> = (props: ITableInfoProps) => 
             ref={inputRef}
             type="text"
             defaultValue={table?.name}
-            className="rounded-none absolute left-0 top-0 size-full cursor-text"
+            className="absolute left-0 top-0 size-full cursor-text rounded-none"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
             onBlur={(e) => {

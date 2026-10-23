@@ -1,6 +1,6 @@
+import { useIsHydrated } from '@cybernetics/sdk';
 import { DraggableHandle, Settings } from '@teable/icons';
 import type { IBaseQueryColumn } from '@teable/openapi';
-import { useIsHydrated } from '@teable/sdk';
 import type { DragEndEvent } from '@teable/ui-lib';
 import {
   DndKitContext,

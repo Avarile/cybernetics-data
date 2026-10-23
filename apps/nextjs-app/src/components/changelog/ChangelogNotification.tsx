@@ -1,6 +1,6 @@
+import { LocalStorageKeys } from '@cybernetics/sdk/config';
+import { useIsHydrated, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { ArrowUpRight, X } from '@teable/icons';
-import { LocalStorageKeys } from '@teable/sdk/config';
-import { useIsHydrated, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { Rocket } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

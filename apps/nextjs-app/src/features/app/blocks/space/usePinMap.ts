@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import type { IGetPinListVo } from '@teable/openapi';
 import { getPinList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks';
 
 export const usePinMap = () => {
   const isReadOnlyPreview = useIsReadOnlyPreview();

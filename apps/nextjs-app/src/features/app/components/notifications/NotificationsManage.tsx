@@ -1,3 +1,5 @@
+import { useNotification } from '@cybernetics/sdk';
+import { ReactQueryKeys } from '@cybernetics/sdk/config/react-query-keys';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { INotificationIcon } from '@teable/core';
 import { NotificationStatesEnum, NotificationTypeEnum } from '@teable/core';
@@ -7,8 +9,6 @@ import {
   getNotificationUnreadCount,
   notificationReadAll,
 } from '@teable/openapi';
-import { useNotification } from '@teable/sdk';
-import { ReactQueryKeys } from '@teable/sdk/config/react-query-keys';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib';
 import { cn } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';

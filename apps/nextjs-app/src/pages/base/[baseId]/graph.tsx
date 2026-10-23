@@ -1,5 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate, QueryClient } from '@tanstack/react-query';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import type { ReactElement } from 'react';
 import { DynamicBaseGraph } from '@/features/app/blocks/base-graph/DynamicBaseGraph';
 import { BaseLayout } from '@/features/app/layouts/BaseLayout';

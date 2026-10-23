@@ -1,7 +1,7 @@
+import { usePermissionActionsStatic } from '@cybernetics/sdk/hooks';
 import type { Action } from '@teable/core';
 import { ActionPrefix } from '@teable/core';
 import { Database, Hash, Sheet, Table2, User } from '@teable/icons';
-import { usePermissionActionsStatic } from '@teable/sdk/hooks';
 import { Badge, cn } from '@teable/ui-lib/shadcn';
 import { AppWindowMac, Bot, List } from 'lucide-react';
 import type { ReactNode } from 'react';

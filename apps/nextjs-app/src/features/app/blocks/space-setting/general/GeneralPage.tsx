@@ -1,8 +1,8 @@
 /* eslint-disable jsx-a11y/no-autofocus */
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { hasPermission } from '@teable/core';
 import { deleteSpace, getSpaceById, permanentDeleteSpace, updateSpace } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Button, Input } from '@teable/ui-lib/shadcn';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';

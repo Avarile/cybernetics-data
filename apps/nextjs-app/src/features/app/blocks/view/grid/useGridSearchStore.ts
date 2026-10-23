@@ -1,4 +1,4 @@
-import type { IGridRef, IRecordIndexMap, IFieldInstance } from '@teable/sdk';
+import type { IGridRef, IRecordIndexMap, IFieldInstance } from '@cybernetics/sdk';
 import { noop } from 'lodash';
 import { create } from 'zustand';
 

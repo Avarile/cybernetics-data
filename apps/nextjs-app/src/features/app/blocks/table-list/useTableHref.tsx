@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useBaseId, useTables } from '@cybernetics/sdk/hooks';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks/use-is-readonly-preview';
 import { useQuery } from '@tanstack/react-query';
 import { getUserLastVisitMap, LastVisitResourceType } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useBaseId, useTables } from '@teable/sdk/hooks';
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks/use-is-readonly-preview';
 import { useMemo } from 'react';
 import { useShareUrlPrefix } from '../../context/ShareContext';
 

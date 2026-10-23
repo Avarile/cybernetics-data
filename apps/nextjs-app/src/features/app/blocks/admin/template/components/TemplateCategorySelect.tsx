@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronsUpDown, Plus, Trash, Edit } from '@teable/icons';
 import type { ITemplateCategoryListVo, IUpdateTemplateRo } from '@teable/openapi';
@@ -8,7 +9,6 @@ import {
   updateTemplate,
   updateTemplateCategory,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import {
   Command,
   CommandGroup,

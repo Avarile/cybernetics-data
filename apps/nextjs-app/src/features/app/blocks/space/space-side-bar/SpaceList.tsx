@@ -1,8 +1,8 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getUniqName, hasPermission } from '@teable/core';
 import { Plus, Database, Component } from '@teable/icons';
 import { createSpace, createBase, getSpaceList } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Spin, ConfirmDialog } from '@teable/ui-lib/base';
 import {
   Button,

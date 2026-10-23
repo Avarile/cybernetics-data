@@ -1,7 +1,7 @@
+import { useRecords } from '@cybernetics/sdk/hooks';
+import type { Record as RecordModel } from '@cybernetics/sdk/model';
 import { arrayMove } from '@dnd-kit/sortable';
 import type { IGetRecordsRo } from '@teable/openapi';
-import { useRecords } from '@teable/sdk/hooks';
-import type { Record as RecordModel } from '@teable/sdk/model';
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 interface UseVirtualRecordsReturn {

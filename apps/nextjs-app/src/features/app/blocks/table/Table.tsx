@@ -1,11 +1,3 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IFieldVo, IRecord, IViewVo } from '@teable/core';
-import {
-  getBaseById,
-  LastVisitResourceType,
-  updateUserLastVisit,
-  type IGroupPointsVo,
-} from '@teable/openapi';
 import {
   AnchorContext,
   FieldProvider,
@@ -16,8 +8,16 @@ import {
   ReactQueryKeys,
   useTables,
   useIsReadOnlyPreview,
-} from '@teable/sdk';
-import { TablePermissionProvider } from '@teable/sdk/context/table-permission';
+} from '@cybernetics/sdk';
+import { TablePermissionProvider } from '@cybernetics/sdk/context/table-permission';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { IFieldVo, IRecord, IViewVo } from '@teable/core';
+import {
+  getBaseById,
+  LastVisitResourceType,
+  updateUserLastVisit,
+  type IGroupPointsVo,
+} from '@teable/openapi';
 import Head from 'next/head';
 import { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';

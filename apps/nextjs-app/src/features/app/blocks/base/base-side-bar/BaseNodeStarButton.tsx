@@ -1,5 +1,5 @@
+import { useIsAnonymous, useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { BaseNodeResourceType, PinType } from '@teable/openapi';
-import { useIsAnonymous, useIsReadOnlyPreview } from '@teable/sdk/hooks';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useMemo } from 'react';
 import { StarButton } from '../../space/space-side-bar/StarButton';

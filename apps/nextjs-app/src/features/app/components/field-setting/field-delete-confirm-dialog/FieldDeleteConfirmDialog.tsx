@@ -1,6 +1,6 @@
+import { useFields } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import { deleteFields } from '@teable/openapi';
-import { useFields } from '@teable/sdk/hooks';
-import type { IFieldInstance } from '@teable/sdk/model';
 import { Spin } from '@teable/ui-lib/base';
 import {
   AlertDialog,

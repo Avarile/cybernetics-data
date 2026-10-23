@@ -1,7 +1,7 @@
+import { LocalStorageKeys } from '@cybernetics/sdk/config';
+import { useFields, useTableId, useView } from '@cybernetics/sdk/hooks';
+import { type FormView } from '@cybernetics/sdk/model';
 import { Loader2 } from '@teable/icons';
-import { LocalStorageKeys } from '@teable/sdk/config';
-import { useFields, useTableId, useView } from '@teable/sdk/hooks';
-import { type FormView } from '@teable/sdk/model';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { omit } from 'lodash';

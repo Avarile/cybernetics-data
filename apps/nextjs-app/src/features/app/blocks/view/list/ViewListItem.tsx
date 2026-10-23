@@ -1,7 +1,3 @@
-import { useMutation } from '@tanstack/react-query';
-import { ViewType } from '@teable/core';
-import { Lock, Share2, Star, Trash } from '@teable/icons';
-import { BaseNodeResourceType, duplicateView } from '@teable/openapi';
 import {
   useBaseId,
   useIsReadOnlyPreview,
@@ -9,8 +5,12 @@ import {
   useTableId,
   useTablePermission,
   useView,
-} from '@teable/sdk/hooks';
-import type { IViewInstance } from '@teable/sdk/model';
+} from '@cybernetics/sdk/hooks';
+import type { IViewInstance } from '@cybernetics/sdk/model';
+import { useMutation } from '@tanstack/react-query';
+import { ViewType } from '@teable/core';
+import { Lock, Share2, Star, Trash } from '@teable/icons';
+import { BaseNodeResourceType, duplicateView } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';
 import {
   Button,

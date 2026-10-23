@@ -1,6 +1,6 @@
 'use client';
 
-import { useCellAttachmentUploadStore } from '@teable/sdk/store/use-attachment-upload-store';
+import { useCellAttachmentUploadStore } from '@cybernetics/sdk/store/use-attachment-upload-store';
 import { cn } from '@teable/ui-lib';
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

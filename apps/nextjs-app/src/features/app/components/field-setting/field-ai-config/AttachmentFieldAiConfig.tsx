@@ -1,3 +1,4 @@
+import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import type {
   IAttachmentFieldAIConfig,
@@ -7,7 +8,6 @@ import type {
 import { FieldAIActionType, FieldType } from '@teable/core';
 import { ImageGeneration, Pencil } from '@teable/icons';
 import { getAIConfig } from '@teable/openapi';
-import { useBaseId } from '@teable/sdk/hooks';
 import { Selector } from '@teable/ui-lib/base';
 import { Textarea } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

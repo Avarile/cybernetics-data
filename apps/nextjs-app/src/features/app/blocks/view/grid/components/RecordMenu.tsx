@@ -1,6 +1,6 @@
+import { useGridViewStore } from '@cybernetics/sdk/components';
+import { useBaseId, useTableId, useTablePermission, useView } from '@cybernetics/sdk/hooks';
 import { History, ArrowUp, ArrowDown, Link, MessageSquare, MessageSquareDot } from '@teable/icons';
-import { useGridViewStore } from '@teable/sdk/components';
-import { useBaseId, useTableId, useTablePermission, useView } from '@teable/sdk/hooks';
 import {
   cn,
   Command,

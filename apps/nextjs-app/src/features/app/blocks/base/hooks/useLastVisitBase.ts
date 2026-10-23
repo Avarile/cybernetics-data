@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 
 import { getUserLastVisitListBase } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { keyBy } from 'lodash';
 import { useMemo } from 'react';
 

@@ -1,5 +1,5 @@
+import { useBase } from '@cybernetics/sdk/hooks';
 import { Database } from '@teable/icons';
-import { useBase } from '@teable/sdk/hooks';
 import { useTranslation } from 'next-i18next';
 import { useEnv } from '@/features/app/hooks/useEnv';
 import { IntegrityButton } from './components/Integrity';

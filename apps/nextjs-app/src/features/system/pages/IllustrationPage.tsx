@@ -1,4 +1,4 @@
-import { useThemeMode } from '@teable/sdk/hooks';
+import { useThemeMode } from '@cybernetics/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Head from 'next/head';
 import Image from 'next/image';

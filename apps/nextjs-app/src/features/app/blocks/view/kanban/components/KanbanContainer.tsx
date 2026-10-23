@@ -1,9 +1,9 @@
+import { generateLocalId } from '@cybernetics/sdk/components';
+import { useTableId, useViewId, useRecordOperations } from '@cybernetics/sdk/hooks';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
 import { FieldKeyType, FieldType } from '@teable/core';
 import type { IUpdateRecordRo } from '@teable/openapi';
-import { generateLocalId } from '@teable/sdk/components';
-import { useTableId, useViewId, useRecordOperations } from '@teable/sdk/hooks';
 import { keyBy } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { UNCATEGORIZED_STACK_ID } from '../constant';

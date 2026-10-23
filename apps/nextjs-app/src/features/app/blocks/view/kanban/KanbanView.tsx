@@ -1,6 +1,6 @@
-import { GroupPointProvider, RecordProvider } from '@teable/sdk/context';
-import { SearchProvider } from '@teable/sdk/context/query';
-import { useIsHydrated, usePersonalView } from '@teable/sdk/hooks';
+import { GroupPointProvider, RecordProvider } from '@cybernetics/sdk/context';
+import { SearchProvider } from '@cybernetics/sdk/context/query';
+import { useIsHydrated, usePersonalView } from '@cybernetics/sdk/hooks';
 import { KanbanToolBar } from '../tool-bar/KanbanToolBar';
 import { KanbanProvider } from './context';
 import { KanbanViewBase } from './KanbanViewBase';

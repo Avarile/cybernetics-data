@@ -1,5 +1,5 @@
-import { useFieldStaticGetter } from '@teable/sdk/hooks';
-import type { IFieldInstance } from '@teable/sdk/model';
+import { useFieldStaticGetter } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import { Checkbox, cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useMemo } from 'react';

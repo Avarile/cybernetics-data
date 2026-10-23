@@ -1,4 +1,4 @@
-import { useIsReadOnlyPreview } from '@teable/sdk/hooks';
+import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks';
 import { Alert, AlertTitle, AlertDescription } from '@teable/ui-lib/shadcn/ui/alert';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import Head from 'next/head';

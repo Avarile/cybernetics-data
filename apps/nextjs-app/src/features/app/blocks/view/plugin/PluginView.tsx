@@ -1,7 +1,7 @@
+import { useBaseId, useTableId, useView } from '@cybernetics/sdk/hooks';
+import type { PluginView as PluginViewInstance } from '@cybernetics/sdk/model/view/plugin.view';
 import { useQuery } from '@tanstack/react-query';
 import { getViewInstallPlugin, PluginPosition } from '@teable/openapi';
-import { useBaseId, useTableId, useView } from '@teable/sdk/hooks';
-import type { PluginView as PluginViewInstance } from '@teable/sdk/model/view/plugin.view';
 import { PluginContent } from '@/features/app/components/plugin/PluginContent';
 
 export const PluginView = () => {

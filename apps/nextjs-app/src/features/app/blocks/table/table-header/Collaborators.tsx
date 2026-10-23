@@ -1,7 +1,7 @@
+import type { ICollaboratorUser } from '@cybernetics/sdk';
+import { useSession, CollaboratorWithHoverCard } from '@cybernetics/sdk';
+import { useConnection, useTableId, useThemeMode } from '@cybernetics/sdk/hooks';
 import { ColorUtils, contractColorForTheme, getCollaboratorsChannel } from '@teable/core';
-import type { ICollaboratorUser } from '@teable/sdk';
-import { useSession, CollaboratorWithHoverCard } from '@teable/sdk';
-import { useConnection, useTableId, useThemeMode } from '@teable/sdk/hooks';
 import { cn, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { chunk, isEmpty } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';

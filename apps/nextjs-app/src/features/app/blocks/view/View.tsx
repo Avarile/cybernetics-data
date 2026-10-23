@@ -1,4 +1,3 @@
-import { IdPrefix, ViewType } from '@teable/core';
 import {
   useConnection,
   useIsReadOnlyPreview,
@@ -6,7 +5,8 @@ import {
   useTableId,
   useView,
   useViews,
-} from '@teable/sdk';
+} from '@cybernetics/sdk';
+import { IdPrefix, ViewType } from '@teable/core';
 import { useTranslation } from 'next-i18next';
 import { useEffect } from 'react';
 import type { Query } from 'sharedb';

@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { IPluginPanelInstallRo } from '@teable/openapi';
 import { installPluginPanel, PluginPosition } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { PluginCenterDialog } from '@/features/app/components/plugin/PluginCenterDialog';
 import { useActivePluginPanelId } from '../hooks/useActivePluginPanelId';
 

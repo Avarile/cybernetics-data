@@ -1,3 +1,4 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   ISchemaPackAddRo,
@@ -13,7 +14,6 @@ import {
   planSchemaPackAdd,
   planSchemaPackInstall,
 } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useCallback } from 'react';
 
 export const useSchemaPackCatalog = () =>

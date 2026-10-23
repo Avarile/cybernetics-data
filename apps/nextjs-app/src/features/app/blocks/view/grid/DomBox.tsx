@@ -1,4 +1,4 @@
-import { GridTooltip, UserInfoPopover } from '@teable/sdk/components';
+import { GridTooltip, UserInfoPopover } from '@cybernetics/sdk/components';
 import type { FC } from 'react';
 import { RecordMenu, FieldMenu, FieldSetting, StatisticMenu, GroupHeaderMenu } from './components';
 

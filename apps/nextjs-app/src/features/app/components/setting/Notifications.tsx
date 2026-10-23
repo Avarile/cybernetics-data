@@ -1,5 +1,5 @@
+import { useSession } from '@cybernetics/sdk';
 import { updateUserNotifyMeta } from '@teable/openapi';
-import { useSession } from '@teable/sdk';
 import { Switch } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { SettingTabHeader, SettingTabShell } from './SettingTabShell';

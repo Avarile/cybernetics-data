@@ -4,7 +4,7 @@ import {
   useShareId,
   useTemplate,
   useThemeMode,
-} from '@teable/sdk/hooks';
+} from '@cybernetics/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import Image from 'next/image';
 import { useRouter } from 'next/router';

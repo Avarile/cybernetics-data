@@ -1,5 +1,5 @@
+import { Table } from '@cybernetics/sdk/model';
 import type { IAggregationVo } from '@teable/openapi';
-import { Table } from '@teable/sdk/model';
 import { useEffect, useState } from 'react';
 
 export const useAggregationsQuery = (tableId: string, viewId: string) => {

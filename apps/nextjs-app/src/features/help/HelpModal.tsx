@@ -1,5 +1,5 @@
+import { useIsTouchDevice } from '@cybernetics/sdk/hooks';
 import { Search } from '@teable/icons';
-import { useIsTouchDevice } from '@teable/sdk/hooks';
 import {
   Badge,
   Button,

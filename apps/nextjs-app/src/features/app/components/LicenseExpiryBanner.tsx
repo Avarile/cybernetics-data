@@ -1,7 +1,7 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { useSession } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
 import { getEnterpriseLicenseStatus } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { useSession } from '@teable/sdk/hooks';
 import { Button } from '@teable/ui-lib/shadcn';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import Link from 'next/link';

@@ -1,6 +1,6 @@
+import { useLanDayjs } from '@cybernetics/sdk/hooks';
+import { syncCopy } from '@cybernetics/sdk/utils';
 import { Copy, Trash2 } from '@teable/icons';
-import { useLanDayjs } from '@teable/sdk/hooks';
-import { syncCopy } from '@teable/sdk/utils';
 import {
   Button,
   Tooltip,

@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { listPluginPanels } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { Resizable } from 're-resizable';
 import { usePluginPanelStorage } from './hooks/usePluginPanelStorage';
 import { DEFAULT_PLUGIN_PANEL_WIDTH } from './hooks/usePluginPanelStore';

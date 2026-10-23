@@ -1,5 +1,5 @@
+import { useBaseId, useFieldStaticGetter } from '@cybernetics/sdk/hooks';
 import type { FieldType, ViewType } from '@teable/core';
-import { useBaseId, useFieldStaticGetter } from '@teable/sdk/hooks';
 import {
   cn,
   Table,

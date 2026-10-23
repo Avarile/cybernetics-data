@@ -1,8 +1,8 @@
+import { getLocalizationMessage } from '@cybernetics/sdk/context';
+import type { ILocaleFunction } from '@cybernetics/sdk/context/app/i18n';
 import { NotificationTypeEnum } from '@teable/core';
 import type { ILocalization, NotificationStatesEnum } from '@teable/core';
 import { type INotificationVo } from '@teable/openapi';
-import { getLocalizationMessage } from '@teable/sdk/context';
-import type { ILocaleFunction } from '@teable/sdk/context/app/i18n';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 

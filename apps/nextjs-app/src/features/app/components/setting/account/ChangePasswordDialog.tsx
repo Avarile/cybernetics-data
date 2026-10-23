@@ -1,7 +1,7 @@
+import { useSession } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
 import type { HttpError } from '@teable/core';
 import { changePassword, changePasswordRoSchema } from '@teable/openapi';
-import { useSession } from '@teable/sdk/hooks';
 import { Spin } from '@teable/ui-lib/base';
 import {
   Button,

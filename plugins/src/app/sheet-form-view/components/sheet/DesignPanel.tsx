@@ -1,4 +1,4 @@
-import { useIsHydrated } from '@teable/sdk';
+import { useIsHydrated } from '@cybernetics/sdk';
 import { forwardRef, lazy } from 'react';
 import { SheetSkeleton } from './SheetSkeleton';
 import type { IUniverSheetProps, IUniverSheetRef } from './UniverSheet';

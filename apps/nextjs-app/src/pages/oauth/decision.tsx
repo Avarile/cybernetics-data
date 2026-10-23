@@ -1,5 +1,5 @@
-import type { IUser } from '@teable/sdk/context';
-import { AppProvider, SessionProvider } from '@teable/sdk/context';
+import type { IUser } from '@cybernetics/sdk/context';
+import { AppProvider, SessionProvider } from '@cybernetics/sdk/context';
 import type { GetServerSideProps } from 'next';
 import { useTranslation } from 'next-i18next';
 import type { ReactElement } from 'react';

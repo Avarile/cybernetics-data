@@ -1,6 +1,6 @@
+import { useThemeMode } from '@cybernetics/sdk/hooks';
 import emojiData from '@emoji-mart/data';
 import EmojiPickerCom from '@emoji-mart/react';
-import { useThemeMode } from '@teable/sdk/hooks';
 import { cn, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib';
 import type { FC, PropsWithChildren } from 'react';
 

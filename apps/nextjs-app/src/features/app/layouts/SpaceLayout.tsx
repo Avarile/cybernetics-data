@@ -1,7 +1,7 @@
+import type { IUser } from '@cybernetics/sdk';
+import { NotificationProvider, SessionProvider } from '@cybernetics/sdk';
+import { AppProvider } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
-import type { IUser } from '@teable/sdk';
-import { NotificationProvider, SessionProvider } from '@teable/sdk';
-import { AppProvider } from '@teable/sdk/context';
 import { useTranslation } from 'next-i18next';
 import React, { Fragment } from 'react';
 import { LicenseExpiryBanner } from '@/features/app/components/LicenseExpiryBanner';

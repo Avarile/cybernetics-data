@@ -1,4 +1,4 @@
-import { useIsAnonymous } from '@teable/sdk';
+import { useIsAnonymous } from '@cybernetics/sdk';
 import { createContext, useContext } from 'react';
 
 interface IShareContext {

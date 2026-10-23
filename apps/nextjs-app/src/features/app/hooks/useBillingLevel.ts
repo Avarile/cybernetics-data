@@ -1,6 +1,6 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useQuery } from '@tanstack/react-query';
 import { getInstanceUsage, getSubscriptionSummary } from '@teable/openapi';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { useBaseUsage } from './useBaseUsage';
 import { useIsCloud } from './useIsCloud';
 import { useIsEE } from './useIsEE';

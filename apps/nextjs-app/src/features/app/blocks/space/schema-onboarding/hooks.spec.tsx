@@ -1,5 +1,5 @@
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryKeys } from '@teable/sdk/config';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { vi } from 'vitest';

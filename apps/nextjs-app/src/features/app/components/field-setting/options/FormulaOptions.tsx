@@ -1,14 +1,14 @@
-import type { IFormulaFieldOptions, IUnionFormatting, IUnionShowAs } from '@teable/core';
+import { FormulaEditor } from '@cybernetics/sdk/components';
+import { useFields } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
+import { FormulaField } from '@cybernetics/sdk/model';
 import {
   CellValueType,
   getShowAsSchema,
   getFormattingSchema,
   getDefaultFormatting,
 } from '@teable/core';
-import { FormulaEditor } from '@teable/sdk/components';
-import { useFields } from '@teable/sdk/hooks';
-import type { IFieldInstance } from '@teable/sdk/model';
-import { FormulaField } from '@teable/sdk/model';
+import type { IFormulaFieldOptions, IUnionFormatting, IUnionShowAs } from '@teable/core';
 import { Dialog, DialogContent, DialogTrigger } from '@teable/ui-lib/shadcn';
 import { isEmpty, isEqual, keyBy } from 'lodash';
 import { useTranslation } from 'next-i18next';

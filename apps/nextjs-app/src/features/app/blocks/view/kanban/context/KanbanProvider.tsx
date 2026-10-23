@@ -1,16 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import type { IUserCellValue } from '@teable/core';
-import { FieldType } from '@teable/core';
-import type { IShareViewCollaboratorsRo, UserCollaboratorItem } from '@teable/openapi';
-import {
-  getBaseCollaboratorList,
-  getShareViewCollaborators,
-  GroupPointType,
-  PrincipalType,
-} from '@teable/openapi';
-import { ExpandRecorder } from '@teable/sdk/components';
-import { ReactQueryKeys } from '@teable/sdk/config';
-import { ShareViewContext } from '@teable/sdk/context';
+import { ExpandRecorder } from '@cybernetics/sdk/components';
+import { ReactQueryKeys } from '@cybernetics/sdk/config';
+import { ShareViewContext } from '@cybernetics/sdk/context';
 import {
   useView,
   useFields,
@@ -22,8 +12,18 @@ import {
   usePersonalView,
   useIsReadOnlyPreview,
   useButtonClickStatus,
-} from '@teable/sdk/hooks';
-import type { KanbanView, IFieldInstance, AttachmentField } from '@teable/sdk/model';
+} from '@cybernetics/sdk/hooks';
+import type { KanbanView, IFieldInstance, AttachmentField } from '@cybernetics/sdk/model';
+import { useQuery } from '@tanstack/react-query';
+import type { IUserCellValue } from '@teable/core';
+import { FieldType } from '@teable/core';
+import type { IShareViewCollaboratorsRo, UserCollaboratorItem } from '@teable/openapi';
+import {
+  getBaseCollaboratorList,
+  getShareViewCollaborators,
+  GroupPointType,
+  PrincipalType,
+} from '@teable/openapi';
 import { useRouter } from 'next/router';
 import type { ReactNode } from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';

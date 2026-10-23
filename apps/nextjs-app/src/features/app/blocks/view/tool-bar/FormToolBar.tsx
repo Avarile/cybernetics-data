@@ -1,5 +1,5 @@
+import { useTableId, useTablePermission, useView, useViewId } from '@cybernetics/sdk/hooks';
 import { Settings as Edit, Edit as Fill, Share2 } from '@teable/icons';
-import { useTableId, useTablePermission, useView, useViewId } from '@teable/sdk/hooks';
 import { Tabs, TabsList, TabsTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';

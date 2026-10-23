@@ -1,6 +1,6 @@
+import { useFields, useFieldStaticGetter } from '@cybernetics/sdk/hooks';
 import type { FieldType } from '@teable/core';
 import { Check, ChevronDown } from '@teable/icons';
-import { useFields, useFieldStaticGetter } from '@teable/sdk/hooks';
 import {
   cn,
   Command,

@@ -1,8 +1,8 @@
+import { useSession } from '@cybernetics/sdk/hooks';
 import { ExitIcon } from '@radix-ui/react-icons';
 import { useMutation } from '@tanstack/react-query';
 import { Key, HelpCircle, License, MessageSquare, Settings } from '@teable/icons';
 import { signout } from '@teable/openapi';
-import { useSession } from '@teable/sdk/hooks';
 import {
   DropdownMenu,
   DropdownMenuContent,
