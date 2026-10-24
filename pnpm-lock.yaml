@@ -439,6 +439,9 @@ importers:
       lodash:
         specifier: 4.17.21
         version: 4.17.21
+      mailparser:
+        specifier: 3.7.2
+        version: 3.7.2
       mammoth:
         specifier: 1.12.0
         version: 1.12.0
@@ -577,6 +580,9 @@ importers:
       ts-pattern:
         specifier: 5.0.8
         version: 5.0.8
+      turndown:
+        specifier: 7.2.2
+        version: 7.2.2
       unzipper:
         specifier: 0.12.3
         version: 0.12.3
@@ -632,6 +638,9 @@ importers:
       '@types/lodash':
         specifier: 4.17.0
         version: 4.17.0
+      '@types/mailparser':
+        specifier: 3.4.6
+        version: 3.4.6
       '@types/markdown-it':
         specifier: 13.0.7
         version: 13.0.7
@@ -704,6 +713,9 @@ importers:
       '@types/through2':
         specifier: 2.0.41
         version: 2.0.41
+      '@types/turndown':
+        specifier: 5.0.6
+        version: 5.0.6
       '@types/unzipper':
         specifier: 0.10.11
         version: 0.10.11
@@ -12829,6 +12841,9 @@ packages:
   '@types/lodash@4.17.0':
     resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
 
+  '@types/mailparser@3.4.6':
+    resolution: {integrity: sha512-wVV3cnIKzxTffaPH8iRnddX1zahbYB1ZEoAxyhoBo3TBCBuK6nZ8M8JYO/RhsCuuBVOw/DEN/t/ENbruwlxn6Q==}
+
   '@types/markdown-it@13.0.7':
     resolution: {integrity: sha512-U/CBi2YUUcTHBt5tjO2r5QV/x0Po6nsYwQU4Y04fBS6vfoImaiZ6f8bi3CjTCxBPQSO1LMyUqkByzi8AidyxfA==}
 
@@ -18236,10 +18251,6 @@ packages:
 
   iconv-lite@0.6.3:
     resolution: {integrity: sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==}
-    engines: {node: '>=0.10.0'}
-
-  iconv-lite@0.7.2:
-    resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
     engines: {node: '>=0.10.0'}
 
   iconv-lite@0.7.3:
@@ -36085,6 +36096,11 @@ snapshots:
 
   '@types/lodash@4.17.0': {}
 
+  '@types/mailparser@3.4.6':
+    dependencies:
+      '@types/node': 22.18.0
+      iconv-lite: 0.6.3
+
   '@types/markdown-it@13.0.7':
     dependencies:
       '@types/linkify-it': 5.0.0
@@ -38685,7 +38701,7 @@ snapshots:
       content-type: 1.0.5
       debug: 4.4.3
       http-errors: 2.0.1
-      iconv-lite: 0.7.2
+      iconv-lite: 0.7.3
       on-finished: 2.4.1
       qs: 6.15.2
       raw-body: 3.0.2
@@ -43194,10 +43210,6 @@ snapshots:
       safer-buffer: 2.1.2
 
   iconv-lite@0.6.3:
-    dependencies:
-      safer-buffer: 2.1.2
-
-  iconv-lite@0.7.2:
     dependencies:
       safer-buffer: 2.1.2
 
@@ -48224,7 +48236,7 @@ snapshots:
     dependencies:
       bytes: 3.1.2
       http-errors: 2.0.1
-      iconv-lite: 0.7.2
+      iconv-lite: 0.7.3
       unpipe: 1.0.0
 
   rc-dialog@9.6.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):

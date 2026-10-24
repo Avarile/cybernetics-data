@@ -162,6 +162,7 @@ export class SettingOpenApiService {
     const availableIntegrationProviders: string[] = [
       ...(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET ? ['gmail'] : []),
       ...(process.env.OUTLOOK_CLIENT_ID && process.env.OUTLOOK_CLIENT_SECRET ? ['outlook'] : []),
+      'imap',
     ];
 
     return {

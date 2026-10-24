@@ -36,6 +36,7 @@ import { useHelpStore } from '@/features/help';
 import { tableConfig } from '@/features/i18n/table.config';
 import { BaseNodeMore } from '../../base/base-side-bar/BaseNodeMore';
 import { ShowInGraphButton } from '../../base-graph/ShowInGraphButton';
+import { EmailSyncStatus } from '../../email';
 import { ExpandViewList } from '../../view/list/ExpandViewList';
 import { ViewList } from '../../view/list/ViewList';
 import { useLockedViewTipStore } from '../store';
@@ -259,6 +260,7 @@ export const TableHeader: React.FC = () => {
         </ScrollArea>
         <AddView />
         <div className="grow basis-0"></div>
+        {!isReadOnlyPreview && <EmailSyncStatus />}
         {!isReadOnlyPreview && <RightActions setIsEditing={setIsEditing} />}
         {isRealTemplate && (
           <div className="flex min-w-20 items-center gap-1">

@@ -1,6 +1,6 @@
 import { useTables } from '@cybernetics/sdk';
 import { getUniqName, ViewType } from '@teable/core';
-import { FileCsv, FileExcel, Slack, Table2 } from '@teable/icons';
+import { FileCsv, FileExcel, Mail, Slack, Table2 } from '@teable/icons';
 import type { ICreateBaseNodeRo } from '@teable/openapi';
 import { BaseNodeResourceType, SUPPORTEDTYPE } from '@teable/openapi';
 import {
@@ -14,6 +14,7 @@ import {
 import { Button } from '@teable/ui-lib/shadcn/ui/button';
 import { useTranslation } from 'next-i18next';
 import { useState } from 'react';
+import { CreateEmailTableDialog } from '../../email';
 import { TableImport } from '../../import-table';
 import { useDefaultFields } from '../../table-list/useAddTable';
 import { BaseNodeResourceIconMap, ROOT_ID } from '../base-node/hooks';
@@ -43,6 +44,7 @@ export const BaseNodeAddResourceButton = (props: BaseNodeAddResourceButtonProps)
   const { t } = useTranslation(['table', 'common']);
   const [tableImportdialogVisible, setTableImportdialogVisible] = useState(false);
   const [fileType, setFileType] = useState<SUPPORTEDTYPE>(SUPPORTEDTYPE.CSV);
+  const [emailDialogVisible, setEmailDialogVisible] = useState(false);
   const importFile = (type: SUPPORTEDTYPE) => {
     setTableImportdialogVisible(true);
     setFileType(type);
@@ -170,6 +172,12 @@ export const BaseNodeAddResourceButton = (props: BaseNodeAddResourceButtonProps)
             {t('table:import.menu.excelFile')}
           </Button>
         </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onClick={() => setEmailDialogVisible(true)}>
+          <Button variant="ghost" size="xs" className="h-4">
+            <Mail className="size-4" />
+            {t('common:emailTable.menu')}
+          </Button>
+        </DropdownMenuItem>
       </>
     );
   };
@@ -184,6 +192,10 @@ export const BaseNodeAddResourceButton = (props: BaseNodeAddResourceButtonProps)
           <ImportTableMenuItems />
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {emailDialogVisible && (
+        <CreateEmailTableDialog open={emailDialogVisible} onOpenChange={setEmailDialogVisible} />
+      )}
 
       {tableImportdialogVisible && (
         <TableImport

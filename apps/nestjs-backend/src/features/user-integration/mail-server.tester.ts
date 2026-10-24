@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { isIP } from 'net';
 import { Logger } from '@nestjs/common';
 import { ImapFlow } from 'imapflow';
 import type { ImapFlowOptions } from 'imapflow';
@@ -63,42 +64,56 @@ export const describeMailServerError = (error: unknown): string => {
   return 'Could not connect to the server.';
 };
 
+const resolveMailHost = async (host: string, allowPrivateHosts: boolean) =>
+  allowPrivateHosts ? host : await resolvePublicHost(host);
+
 /**
- * Logs in to an IMAP or SMTP server to check credentials. Unless private hosts are allowed, the
- * host is resolved once, private addresses are rejected and the socket goes to the vetted
- * address, with the hostname kept for TLS. Plaintext logins are never attempted: without
- * implicit TLS, STARTTLS is required.
+ * An IMAP client for a user-supplied server. Unless private hosts are allowed, the host is
+ * resolved once, private addresses are rejected and the socket goes to the vetted address, with
+ * the hostname kept for TLS. Plaintext logins are never attempted: without implicit TLS, STARTTLS
+ * is required. The caller connects and closes it.
  */
+export const createImapClient = async (
+  server: IMailServerCredentials,
+  options: { allowPrivateHosts: boolean; verifyOnly?: boolean; logger: Logger }
+) => {
+  const address = await resolveMailHost(server.host, options.allowPrivateHosts);
+  // SNI only takes host names (RFC 6066)
+  const servername = isIP(server.host) ? undefined : server.host;
+  // doSTARTTLS is supported at runtime but missing from imapflow's types
+  const imapOptions: ImapFlowOptions & { doSTARTTLS?: boolean } = {
+    host: address,
+    port: server.port,
+    secure: server.secure,
+    servername,
+    ...(server.secure ? {} : { doSTARTTLS: true }),
+    auth: { user: server.username, pass: server.password },
+    tls: { servername },
+    logger: false,
+    verifyOnly: options.verifyOnly,
+    disableAutoIdle: true,
+    connectionTimeout: CONNECTION_TIMEOUT,
+    greetingTimeout: GREETING_TIMEOUT,
+    socketTimeout: SOCKET_TIMEOUT,
+  };
+  const client = new ImapFlow(imapOptions);
+  // errors also reject the pending command; without a listener an 'error' event would crash the process
+  client.on('error', (error) => options.logger.debug(`IMAP ${server.host}: ${error}`));
+  return client;
+};
+
+/** Logs in to an IMAP or SMTP server to check credentials (see createImapClient). */
 export class MailServerTester {
   private readonly logger = new Logger(MailServerTester.name);
 
   constructor(private readonly allowPrivateHosts: boolean) {}
 
-  private async resolve(host: string) {
-    return this.allowPrivateHosts ? host : await resolvePublicHost(host);
-  }
-
   async testImap(server: IMailServerCredentials): Promise<void> {
-    const address = await this.resolve(server.host);
-    // doSTARTTLS is supported at runtime but missing from imapflow's types
-    const options: ImapFlowOptions & { doSTARTTLS?: boolean } = {
-      host: address,
-      port: server.port,
-      secure: server.secure,
-      servername: server.host,
-      ...(server.secure ? {} : { doSTARTTLS: true }),
-      auth: { user: server.username, pass: server.password },
-      tls: { servername: server.host },
-      logger: false,
+    const client = await createImapClient(server, {
+      allowPrivateHosts: this.allowPrivateHosts,
       verifyOnly: true,
-      disableAutoIdle: true,
-      connectionTimeout: CONNECTION_TIMEOUT,
-      greetingTimeout: GREETING_TIMEOUT,
-      socketTimeout: SOCKET_TIMEOUT,
-    };
-    const client = new ImapFlow(options);
-    // errors also reject connect(); without a listener an 'error' event would crash the process
-    client.on('error', (error) => this.logger.debug(`IMAP ${server.host}: ${error}`));
+      logger: this.logger,
+    });
     try {
       await client.connect();
     } finally {
@@ -107,14 +122,15 @@ export class MailServerTester {
   }
 
   async testSmtp(server: IMailServerCredentials): Promise<void> {
-    const address = await this.resolve(server.host);
+    const address = await resolveMailHost(server.host, this.allowPrivateHosts);
+    const servername = isIP(server.host) ? undefined : server.host;
     const transport = createTransport({
       host: address,
       port: server.port,
       secure: server.secure,
       requireTLS: !server.secure,
       auth: { user: server.username, pass: server.password },
-      tls: { servername: server.host },
+      tls: { servername },
       connectionTimeout: CONNECTION_TIMEOUT,
       greetingTimeout: GREETING_TIMEOUT,
       socketTimeout: SOCKET_TIMEOUT,

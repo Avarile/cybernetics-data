@@ -34,6 +34,13 @@ interface IImapSecret {
   smtpPassword?: string;
 }
 
+export type IMailAccess =
+  | { kind: 'imap'; server: IMailServerCredentials; allowPrivateHosts: boolean }
+  | {
+      kind: UserIntegrationProvider.Gmail | UserIntegrationProvider.Outlook;
+      getAccessToken: () => Promise<string>;
+    };
+
 export type IOAuthCallbackResult =
   | { status: 'success'; provider: string; integrationId: string }
   | { status: 'error'; provider: string; message: string };
@@ -92,11 +99,53 @@ export class UserIntegrationService {
     throw new CustomHttpException('Integration not found', HttpErrorCode.NOT_FOUND);
   }
 
-  private async getOwned(integrationId: string) {
+  /** The signed-in user's integration, or 404 (also for someone else's id). */
+  async getOwned(integrationId: string) {
     const integration = await this.prismaService.userIntegration.findFirst({
       where: { id: integrationId, userId: this.userId },
     });
     return integration ?? this.notFound();
+  }
+
+  /**
+   * How to reach a mailbox, for the email sync engine (which runs as the integration's owner).
+   * Never returned to clients.
+   */
+  getMailAccess(integration: UserIntegration): IMailAccess {
+    if (integration.provider === UserIntegrationProvider.Imap) {
+      if (!integration.secret) {
+        throw new CustomHttpException(
+          'The mailbox has no saved password',
+          HttpErrorCode.FAILED_DEPENDENCY
+        );
+      }
+      const { password } = this.cipher.decrypt<IImapSecret>(integration.secret, integration.id);
+      const { imap } = JSON.parse(integration.metadata ?? '{}') as IUserIntegrationImapMetadata;
+      return {
+        kind: 'imap',
+        server: { ...imap, password },
+        allowPrivateHosts: this.integrationConfig.allowPrivateMailHosts,
+      };
+    }
+    if (
+      integration.provider === UserIntegrationProvider.Gmail ||
+      integration.provider === UserIntegrationProvider.Outlook
+    ) {
+      return {
+        kind: integration.provider,
+        getAccessToken: async () => {
+          // re-read so a token refreshed by another run is reused
+          const fresh = await this.prismaService.userIntegration.findUniqueOrThrow({
+            where: { id: integration.id },
+          });
+          return this.resolveAccessToken(fresh);
+        },
+      };
+    }
+    throw new CustomHttpException(
+      `${integration.provider} is not a mailbox integration`,
+      HttpErrorCode.VALIDATION_ERROR
+    );
   }
 
   private toVo(integration: UserIntegration): IUserIntegrationItemVo {
@@ -349,7 +398,16 @@ export class UserIntegrationService {
         ...data,
       },
     });
+    await this.resumeSources(id);
     return id;
+  }
+
+  /** Email tables stopped by an expired authorization start syncing again. */
+  private async resumeSources(integrationId: string) {
+    await this.prismaService.emailSource.updateMany({
+      where: { integrationId, status: 'disconnected', deletedTime: null },
+      data: { status: 'idle', lastError: null },
+    });
   }
 
   private tryDecrypt<T>(value: string, aad: string): T | undefined {
@@ -363,14 +421,12 @@ export class UserIntegrationService {
   private async assertTestRate() {
     const key =
       `user-integration:test-rate:${this.userId}:${Math.floor(Date.now() / 60_000)}` as const;
-    const count = (await this.cacheService.get(key)) ?? 0;
-    if (count >= CONNECTION_TESTS_PER_MINUTE) {
+    if ((await this.cacheService.incr(key, 60)) > CONNECTION_TESTS_PER_MINUTE) {
       throw new CustomHttpException(
         'Too many connection tests; wait a minute and try again',
         HttpErrorCode.TOO_MANY_REQUESTS
       );
     }
-    await this.cacheService.setDetail(key, count + 1, 60);
   }
 
   private async runTest(test: () => Promise<void>) {
@@ -452,6 +508,7 @@ export class UserIntegrationService {
         ...data,
       },
     });
+    await this.resumeSources(id);
     return { id };
   }
 }

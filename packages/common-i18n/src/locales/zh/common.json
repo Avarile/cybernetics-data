@@ -1579,5 +1579,88 @@
       "deleteDescription": "“{{name}}”将被删除，且不能再作为 AI 上下文使用。",
       "deleteFailed": "删除文件失败，请重试。"
     }
+  },
+  "emailTable": {
+    "menu": "邮件",
+    "back": "返回",
+    "next": "下一步",
+    "dialog": {
+      "title": "新建邮件表",
+      "description": "把邮箱中的邮件导入到一张会自动保持更新的表中。",
+      "privacy": "所有能访问此数据库的成员都可以阅读导入的邮件。"
+    },
+    "account": {
+      "existing": "你的邮箱",
+      "empty": "尚未连接邮箱。",
+      "connectNew": "连接邮箱",
+      "gmail": "Gmail",
+      "outlook": "Microsoft 365 / Outlook",
+      "imap": "其他邮箱（IMAP）",
+      "needsReauth": "需要重新连接",
+      "waiting": "请在打开的窗口中完成登录。",
+      "connected": "邮箱已连接",
+      "failed": "连接失败：{{message}}"
+    },
+    "imap": {
+      "title": "通过 IMAP 连接",
+      "email": "邮箱地址",
+      "displayName": "显示名称（可选）",
+      "incoming": "收件服务器（IMAP）",
+      "outgoing": "发件服务器（SMTP，可选）",
+      "outgoingHint": "仅保存以备后用，目前不会从 Cybernetics 发送邮件。",
+      "host": "主机",
+      "port": "端口",
+      "security": "加密方式",
+      "tls": "SSL/TLS",
+      "starttls": "STARTTLS",
+      "username": "用户名",
+      "password": "密码",
+      "passwordHint": "很多邮箱服务需要使用应用专用密码，而不是登录密码。",
+      "smtpPasswordHint": "留空则使用 IMAP 密码。",
+      "test": "测试连接",
+      "testOk": "连接正常",
+      "connect": "连接"
+    },
+    "config": {
+      "name": "表名称",
+      "folders": "要导入的文件夹",
+      "noFolders": "没有找到文件夹。",
+      "range": "导入以下时间范围的邮件",
+      "range30": "最近 30 天",
+      "range90": "最近 90 天",
+      "range365": "最近一年",
+      "rangeAll": "全部",
+      "maxMessages": "首次导入的最多邮件数",
+      "attachments": "导入附件",
+      "maxAttachmentMb": "跳过大于此大小的附件（MB）",
+      "interval": "检查新邮件的间隔",
+      "minutes": "{{count}} 分钟",
+      "create": "创建表"
+    },
+    "status": {
+      "syncing": "同步中",
+      "synced": "{{time}}同步",
+      "neverSynced": "等待首次同步",
+      "paused": "同步已暂停",
+      "error": "同步失败",
+      "disconnected": "需要重新连接",
+      "mailbox": "邮箱",
+      "messages": "已导入邮件",
+      "lastError": "最近的错误",
+      "syncNow": "立即同步",
+      "syncQueued": "已开始同步",
+      "pause": "暂停",
+      "resume": "继续",
+      "settings": "设置",
+      "reconnect": "重新连接邮箱",
+      "ownerOnly": "只有邮箱所有者可以重新连接。"
+    },
+    "settings": {
+      "title": "同步设置",
+      "foldersOwnerOnly": "只有邮箱所有者可以修改文件夹。",
+      "appliesToNew": "更改对新邮件生效。",
+      "save": "保存",
+      "saved": "设置已保存"
+    }
   }
 }

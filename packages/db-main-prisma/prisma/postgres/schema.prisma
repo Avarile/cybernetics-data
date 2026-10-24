@@ -779,6 +779,8 @@ model EmailMessage {
   internetMessageId String?   @map("internet_message_id")
   threadId          String?   @map("thread_id")
   recordId          String?   @map("record_id")
+  // JSON array of folder/label names the message was seen in
+  folders           String?
   state             String    @default("imported")
   createdTime       DateTime  @default(now()) @map("created_time")
   lastModifiedTime  DateTime? @updatedAt @map("last_modified_time")

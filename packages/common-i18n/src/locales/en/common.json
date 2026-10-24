@@ -1582,5 +1582,88 @@
       "deleteDescription": "\"{{name}}\" will be removed and can no longer be used as AI context.",
       "deleteFailed": "Failed to delete the file. Please try again."
     }
+  },
+  "emailTable": {
+    "menu": "Email",
+    "back": "Back",
+    "next": "Next",
+    "dialog": {
+      "title": "New email table",
+      "description": "Import mail from a mailbox into a table that keeps itself up to date.",
+      "privacy": "Everyone with access to this base can read the imported emails."
+    },
+    "account": {
+      "existing": "Your mailboxes",
+      "empty": "No mailbox connected yet.",
+      "connectNew": "Connect a mailbox",
+      "gmail": "Gmail",
+      "outlook": "Microsoft 365 / Outlook",
+      "imap": "Other mailbox (IMAP)",
+      "needsReauth": "Reconnect needed",
+      "waiting": "Finish signing in in the window that opened.",
+      "connected": "Mailbox connected",
+      "failed": "Connection failed: {{message}}"
+    },
+    "imap": {
+      "title": "Connect with IMAP",
+      "email": "Email address",
+      "displayName": "Display name (optional)",
+      "incoming": "Incoming server (IMAP)",
+      "outgoing": "Outgoing server (SMTP, optional)",
+      "outgoingHint": "Saved for later; nothing is sent from Cybernetics yet.",
+      "host": "Host",
+      "port": "Port",
+      "security": "Security",
+      "tls": "SSL/TLS",
+      "starttls": "STARTTLS",
+      "username": "Username",
+      "password": "Password",
+      "passwordHint": "Many providers require an app password instead of your normal password.",
+      "smtpPasswordHint": "Leave empty to use the IMAP password.",
+      "test": "Test connection",
+      "testOk": "Connection works",
+      "connect": "Connect"
+    },
+    "config": {
+      "name": "Table name",
+      "folders": "Folders to import",
+      "noFolders": "No folders found.",
+      "range": "Import mail from",
+      "range30": "The last 30 days",
+      "range90": "The last 90 days",
+      "range365": "The last year",
+      "rangeAll": "All time",
+      "maxMessages": "Most emails in the first import",
+      "attachments": "Import attachments",
+      "maxAttachmentMb": "Skip attachments over (MB)",
+      "interval": "Check for new mail every",
+      "minutes": "{{count}} minutes",
+      "create": "Create table"
+    },
+    "status": {
+      "syncing": "Syncing",
+      "synced": "Synced {{time}}",
+      "neverSynced": "Waiting for the first sync",
+      "paused": "Sync paused",
+      "error": "Sync failed",
+      "disconnected": "Reconnect needed",
+      "mailbox": "Mailbox",
+      "messages": "Emails imported",
+      "lastError": "Last error",
+      "syncNow": "Sync now",
+      "syncQueued": "Sync started",
+      "pause": "Pause",
+      "resume": "Resume",
+      "settings": "Settings",
+      "reconnect": "Reconnect mailbox",
+      "ownerOnly": "Only the mailbox owner can reconnect it."
+    },
+    "settings": {
+      "title": "Sync settings",
+      "foldersOwnerOnly": "Only the mailbox owner can change the folders.",
+      "appliesToNew": "Changes apply to new mail.",
+      "save": "Save",
+      "saved": "Settings saved"
+    }
   }
 }

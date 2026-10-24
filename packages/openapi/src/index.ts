@@ -48,5 +48,6 @@ export * from './base-node';
 export * from './base-share';
 export * from './types';
 export * from './user-integration';
+export * from './email';
 export * from './base-graph';
 export * from './schema-pack';

@@ -35,7 +35,7 @@ EmailController ─► EmailSourceService
                     ├ BaseNodeService.create(Table, template)   ← ordinary table node
                     ├ EmailSource (tableId ↔ integrationId, fieldMap by field id)
                     └ enqueue EMAIL_SYNC_QUEUE {sourceId, mode: backfill}
-EmailSyncProcessor (BullMQ, repeatable per source; interval fallback without Redis)
+EmailSyncScheduler (1-minute tick, one instance via lock) → EMAIL_SYNC_QUEUE → EmailSyncProcessor
   lock(source) → adapter.fetch(cursor) → mailparser → turndown/sanitize → EmailRecordMapper
              → RecordOpenApiService.create/updateRecords  (cls user = source owner)
              → EmailMessage index + cursor advance (only after commit)
@@ -69,6 +69,7 @@ model EmailSyncCursor {          // prefix esc; one per folder/label
 }
 model EmailMessage {             // prefix emm; dedupe + tombstones
   id, sourceId, providerMessageId, internetMessageId?, threadId?, recordId?
+  folders String?                // JSON: folders/labels this provider id is in
   state String                   // imported | user_deleted | source_deleted
   @@unique([sourceId, providerMessageId])
 }
@@ -123,7 +124,9 @@ provider list already reads the two `*_CLIENT_ID` vars), `BACKEND_INTEGRATION_EN
 ## 7. Sync engine
 
 - **Backfill** is newest first, in batches of ~100, limited by the chosen range and `maxMessages`.
-- **Incremental sync** runs as a repeatable job per source (default every 5 minutes), plus *Sync now*. Push sync comes later.
+- **Incremental sync** runs on a schedule: an in-process 1-minute tick queues each due source (default every 5 minutes), plus *Sync now*. The tick works with and without Redis, which BullMQ repeatable jobs would not. Push sync comes later.
+- **IMAP flag changes** use CONDSTORE when the server has it. Without it, the read/starred bits of the newest 200 messages are kept in the cursor, and only changes are reported.
+- **Same email under several ids** (IMAP folders, or a UIDVALIDITY reset) is matched by Message-ID: one record, with one index row per id. A record's `folders` field is the union of its live rows. It gets `deleted_at_source` once no row is still present at the provider.
 - **Locking and limits:** a per-source lock, and per-account concurrency limits (Graph allows ~4 requests per mailbox, Gmail IMAP ~15 connections).
 - **Writes** run under `cls.run` with `user.id = source.createdBy` and `skipRecordAuditLog`, using `typecast: true` and `fieldKeyType: id`.
 - **Token failures:** an `invalid_grant` response sets the integration to `needs_reauth` and its sources to `disconnected`, and sends a notification.
@@ -135,7 +138,8 @@ provider list already reads the two `*_CLIENT_ID` vars), `BACKEND_INTEGRATION_EN
 | Table restored | resumed |
 | Table permanently deleted | source and index deleted |
 | Table duplicated | the copy is a plain table |
-| Integration deleted | source set to `disconnected`, records kept |
+| Integration deleted | source set to `disconnected` for good, records kept (a new connection has a new id; create a new email table) |
+| Integration reconnected (same address) | disconnected sources resume |
 
 ## 8. Security
 
@@ -178,11 +182,13 @@ GET    /email/sources/:id · PATCH · POST /:id/sync (P1/P3)
 | `useOAuthPopup` (postMessage, refetch-on-focus fallback) | `blocks/email/hooks/` |
 | `EmailSyncStatus` chip in the table header (last synced, Sync now, settings, Reconnect) | `table-header/TableHeader.tsx` |
 | `EmailSourceSettingsDialog`, including the attachments toggle | `blocks/email/` |
-| Sidebar mail icon for bound tables (`useEmailSources(baseId)`) | table list item |
+| Email tables are created with the 📧 table icon (no extra sidebar query) | `EmailSourceService` |
 | `imap` provider, logo and name | `user-integration/utils.ts`, `ProviderLogo.tsx` |
 | i18n keys (en, zh) | `packages/common-i18n` |
 
 ## 11. Phases
+
+Status 2026-10-25: P0 to P3 are implemented (P0 in e204a5a). The `test/email.e2e-spec.ts` suite runs against a scripted mailbox by default, or a real IMAP server when `EMAIL_E2E_IMAP_PORT` is set.
 
 | Phase | Scope |
 |---|---|
