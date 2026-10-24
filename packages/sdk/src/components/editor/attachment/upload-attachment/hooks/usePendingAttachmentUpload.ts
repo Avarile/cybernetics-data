@@ -29,6 +29,7 @@ export const usePendingAttachmentUpload = (
 
   const startPendingUpload = useCellAttachmentUploadStore((state) => state.startPendingUpload);
   const cancelCellTask = useCellAttachmentUploadStore((state) => state.cancelTask);
+  const removeCellTask = useCellAttachmentUploadStore((state) => state.removeTask);
 
   const cellKey = useMemo(
     () => buildCellKey(tableId, tempRecordId, fieldId),
@@ -55,6 +56,10 @@ export const usePendingAttachmentUpload = (
   // multiple uploads complete in rapid succession.
   const localAdditionsRef = useRef<IAttachmentItem[]>([]);
 
+  // Ids of completed tasks whose attachment has shown up in parent's `attachments` prop.
+  // If such an attachment later disappears from the prop, the user removed it.
+  const deliveredTaskIdsRef = useRef<Set<string>>(new Set());
+
   // When parent's attachments update (i.e. our onChange has propagated),
   // remove items from the local buffer that are now in the parent's value.
   useEffect(() => {
@@ -67,20 +72,30 @@ export const usePendingAttachmentUpload = (
   useEffect(() => {
     const completedItems: { id: string; item: NonNullable<ICellUploadTask['attachmentItem']> }[] =
       [];
+    const parentIds = new Set((attachments || []).map((a) => a.id));
+    const removedTaskIds: string[] = [];
 
     tasks.forEach((task) => {
-      if (task.status === 'completed' && task.attachmentItem) {
+      if (task.status !== 'completed' || !task.attachmentItem) return;
+      if (parentIds.has(task.attachmentItem.id)) {
+        deliveredTaskIdsRef.current.add(task.id);
+      } else if (deliveredTaskIdsRef.current.has(task.id)) {
+        removedTaskIds.push(task.id);
+      } else {
         completedItems.push({ id: task.id, item: task.attachmentItem });
       }
+    });
+
+    // Drop tasks of removed attachments so neither this effect nor the create flow re-adds them.
+    removedTaskIds.forEach((taskId) => {
+      deliveredTaskIdsRef.current.delete(taskId);
+      removeCellTask(cellKey, taskId);
     });
 
     if (completedItems.length === 0 || !onChange) return;
 
     // Dedup against both parent attachments and our local additions buffer
-    const existingIds = new Set([
-      ...(attachments || []).map((a) => a.id),
-      ...localAdditionsRef.current.map((a) => a.id),
-    ]);
+    const existingIds = new Set([...parentIds, ...localAdditionsRef.current.map((a) => a.id)]);
     const genuinelyNew = completedItems.filter((c) => !existingIds.has(c.item.id));
 
     if (genuinelyNew.length > 0) {
@@ -93,7 +108,7 @@ export const usePendingAttachmentUpload = (
     // Do not remove completed tasks here.
     // They must remain in the pending store until create flow consumes/promotes them,
     // otherwise late-completion tasks can be lost during createRecords flight.
-  }, [tasks, attachments, onChange]);
+  }, [tasks, attachments, onChange, removeCellTask, cellKey]);
 
   const onUpload = useCallback(
     (files: File[]) => {

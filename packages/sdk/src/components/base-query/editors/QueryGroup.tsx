@@ -44,10 +44,11 @@ export const QueryGroup = (props: IQueryEditorProps<IBaseQueryGroupBy>) => {
             <div className="flex items-center gap-3">
               <ContextColumnSelector
                 value={groupBy.column}
-                onChange={(column) => {
+                onChange={(column, type) => {
                   const newGroupBy = [...value];
                   newGroupBy[index] = {
                     ...groupBy,
+                    type,
                     column,
                   };
                   onChange(newGroupBy);

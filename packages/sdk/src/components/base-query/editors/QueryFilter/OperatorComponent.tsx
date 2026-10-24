@@ -1,5 +1,4 @@
-import type { FieldCore } from '@teable/core';
-import { CellValueType, FieldType, getValidFilterOperators } from '@teable/core';
+import { CellValueType, FieldType } from '@teable/core';
 import { BaseQueryColumnType } from '@teable/openapi';
 import { useMemo } from 'react';
 import { useOperatorI18nMap, type IFilterBaseComponent } from '../../../filter';
@@ -11,6 +10,7 @@ import {
 } from '../../../filter/view-filter/utils';
 import { useAllColumns } from '../../common/useAllColumns';
 import type { IBaseFilterItem } from './types';
+import { getColumnFilterOperators } from './utils';
 
 export const OperatorComponent: IFilterBaseComponent<IBaseFilterItem> = (props) => {
   const { path, value, item } = props;
@@ -34,18 +34,7 @@ export const OperatorComponent: IFilterBaseComponent<IBaseFilterItem> = (props) 
     return {};
   }, [field?.cellValueType, field?.type, item.type]);
 
-  const operators = useMemo(() => {
-    if (item.type === BaseQueryColumnType.Field) {
-      return field ? getValidFilterOperators(field) : [];
-    }
-    if (item.type === BaseQueryColumnType.Aggregation) {
-      return getValidFilterOperators({
-        cellValueType: CellValueType.Number,
-        type: FieldType.Number,
-      } as FieldCore);
-    }
-    return [];
-  }, [field, item.type]);
+  const operators = useMemo(() => getColumnFilterOperators(item.type, field), [field, item.type]);
 
   const operatorsStatic = useOperatorI18nMap(cellValueType);
   const shouldDisabled = useMemo(

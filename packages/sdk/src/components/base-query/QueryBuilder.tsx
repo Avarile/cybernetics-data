@@ -1,11 +1,6 @@
 import { X } from '@teable/icons';
 import { BaseQueryColumnType, getFields } from '@teable/openapi';
-import type {
-  IBaseQueryColumn,
-  IBaseQuery,
-  IBaseQueryJoin,
-  IQueryAggregation,
-} from '@teable/openapi';
+import type { IBaseQueryColumn, IBaseQuery, IBaseQueryJoin } from '@teable/openapi';
 import { Button, cn } from '@teable/ui-lib';
 import {
   forwardRef,
@@ -66,9 +61,10 @@ const QueryBuilderContainer = forwardRef<
   const [fromType, setFromType] = useState<'table' | 'query' | undefined>();
   const [childContext, setChildContext] = useState<IBaseQueryColumn[]>([]);
   const [joinContext, setJoinContext] = useState<IContextColumns>([]);
-  const [aggregationContext, setAggregationContext] = useState<IBaseQueryColumn[]>([]);
   const [canSelectedColumnIds, setCanSelectedColumnIds] = useState<string[]>();
   const formQueryRef = useRef<IBaseQueryBuilderRef>(null);
+  // latest request per key, so a slow response can't overwrite a newer selection
+  const contextRequestIdRef = useRef({ from: 0, join: 0 });
   const { validators } = useContext(QueryFormContext);
 
   useEffect(() => {
@@ -106,10 +102,30 @@ const QueryBuilderContainer = forwardRef<
       const query = innerQuery || props.query;
       collectContext('from', query?.from);
       collectContext('join', query?.join);
-      collectContext('aggregation', query?.aggregation);
       formQueryRef.current?.initContext(query?.from as IBaseQuery);
     },
   }));
+
+  // derived from the from/join columns so it is never computed against a stale (or empty) context
+  const aggregationContext = useMemo(() => {
+    if (!query?.aggregation) {
+      return [];
+    }
+    return query.aggregation
+      .map((aggregation) => {
+        const column = [...joinContext, ...childContext].find(
+          (v) => v.column === aggregation.column
+        );
+        if (!column) return;
+        return {
+          name: `${column.name}_${aggregation.statisticFunc}`,
+          type: column.type,
+          column: `${aggregation.column}_${aggregation.statisticFunc}`,
+          fieldSource: column.fieldSource,
+        };
+      })
+      .filter(Boolean) as IBaseQueryColumn[];
+  }, [query?.aggregation, joinContext, childContext]);
 
   const hasAggregation = !!query?.aggregation?.length;
   useEffect(() => {
@@ -177,12 +193,16 @@ const QueryBuilderContainer = forwardRef<
     switch (key) {
       case 'join':
         {
+          const requestId = ++contextRequestIdRef.current.join;
           if (!value) {
             return setJoinContext([]);
           }
           const join = value as IBaseQueryJoin[];
           const tableIds = join.map((v) => v.table).filter((v) => !!v) as string[];
           const tablesContext = await getContextWithTableIds(tableIds);
+          if (requestId !== contextRequestIdRef.current.join) {
+            return;
+          }
           setJoinContext(
             tablesContext
               .map((context, i) =>
@@ -195,38 +215,18 @@ const QueryBuilderContainer = forwardRef<
           );
         }
         break;
-      case 'aggregation':
-        {
-          if (!value) {
-            return setAggregationContext([]);
-          }
-          const aggregations = value as IQueryAggregation;
-          setAggregationContext(
-            aggregations
-              .map((aggregation) => {
-                const column = [...joinContext, ...childContext].find(
-                  (v) => v.column === aggregation.column
-                );
-                if (!column) return;
-                return {
-                  name: `${column.name}_${aggregation.statisticFunc}`,
-                  type: column.type,
-                  column: `${aggregation.column}_${aggregation.statisticFunc}`,
-                  fieldSource: column.fieldSource,
-                };
-              })
-              .filter(Boolean) as IBaseQueryColumn[]
-          );
-        }
-        break;
       case 'from':
         {
+          const requestId = ++contextRequestIdRef.current.from;
           if (!value) {
             setChildContext([]);
             return;
           }
           if (typeof value === 'string') {
             const context = await getContextWithTableIds([value]);
+            if (requestId !== contextRequestIdRef.current.from) {
+              return;
+            }
             setChildContext(context.flat());
           }
         }
@@ -235,7 +235,6 @@ const QueryBuilderContainer = forwardRef<
   };
 
   const onQueryChange = async <T extends keyof IBaseQuery>(key: T, value: IBaseQuery[T]) => {
-    console.log(depth, 'onQueryChange', key, value);
     collectContext(key, value);
     if (!query) {
       key === 'from' &&
@@ -262,7 +261,6 @@ const QueryBuilderContainer = forwardRef<
   }, [childContext, joinContext]);
 
   const onFromChange = async (type: string, tableId?: string) => {
-    console.log(depth, 'onFromChange', type, tableId);
     if (type === 'query') {
       onQueryChange('from', '');
       setFromType('query');

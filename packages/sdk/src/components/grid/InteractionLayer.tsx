@@ -60,7 +60,7 @@ import type { CoordinateManager, ImageManager, SpriteManager, CombinedSelection 
 import { CellRegionType, getCellRenderer } from './renderers';
 import { RenderLayer } from './RenderLayer';
 import type { IRegionData } from './utils';
-import { BLANK_REGION_DATA, flatRanges, getRegionData, inRange } from './utils';
+import { BLANK_REGION_DATA, flatRanges, getRegionData, getRegionPosition, inRange } from './utils';
 
 const { columnAppendBtnWidth, columnHeadHeight } = GRID_DEFAULT;
 
@@ -255,6 +255,8 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
     coordInstance,
     scrollState,
     selection,
+    getLinearRow,
+    real2RowIndex,
     draggable
   );
   const { columnFreezeState, onColumnFreezeStart, onColumnFreezeMove, onColumnFreezeEnd } =
@@ -268,24 +270,7 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
   const [activeColumnIndex, activeRowIndex] = activeCell ?? [];
 
   const getPosition = () => {
-    const x = mousePosition.elX;
-    const y = mousePosition.elY;
-    const { freezeRegionWidth, totalWidth, rowInitSize, columnInitSize, columnCount } =
-      coordInstance;
-    const rowIndex =
-      y < 0 ? -Infinity : y <= rowInitSize ? -1 : coordInstance.getRowStartIndex(scrollTop + y);
-    const columnIndex =
-      x < 0
-        ? -Infinity
-        : scrollLeft + x > totalWidth && scrollLeft + x < totalWidth + columnAppendBtnWidth
-          ? -2
-          : x <= freezeRegionWidth
-            ? x <= columnInitSize
-              ? -1
-              : coordInstance.getColumnStartIndex(x)
-            : coordInstance.getColumnStartIndex(scrollLeft + x);
-
-    return { x, y, rowIndex, columnIndex: Math.min(columnIndex, columnCount - 1) };
+    return getRegionPosition(coordInstance, scrollState, mousePosition.elX, mousePosition.elY);
   };
 
   const getHoverCellPosition = (mouseState: IMouseState) => {
@@ -590,13 +575,8 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
       editorContainerRef.current?.saveValue?.();
     }
     onDragStart(mouseState, (type, ranges) => {
-      if (type === DragRegionType.Columns) {
-        _onDragStart?.(type, flatRanges(ranges));
-      }
-      if (type === DragRegionType.Rows) {
-        const originRealIndexs = flatRanges(ranges).map((index) => getLinearRow(index).realIndex);
-        _onDragStart?.(type, originRealIndexs);
-      }
+      // Column and row drag ranges are already column / real record indices
+      _onDragStart?.(type, flatRanges(ranges));
     });
     onColumnFreezeStart(mouseState);
     prevActiveCellRef.current = activeCell;
@@ -718,7 +698,7 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
       if (dragType === DragRegionType.Rows) {
         const { type: prevType } = getLinearRow(dropIndex - 1);
         const { type, realIndex } = getLinearRow(dropIndex);
-        const originRealIndexs = flatRanges(ranges).map((index) => getLinearRow(index).realIndex);
+        const originRealIndexs = flatRanges(ranges);
 
         if (
           (prevType === LinearRowType.Row && type === LinearRowType.Append) ||

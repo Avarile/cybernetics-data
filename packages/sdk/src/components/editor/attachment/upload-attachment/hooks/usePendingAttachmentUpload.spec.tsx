@@ -1,6 +1,7 @@
 import { generateAttachmentId, type IAttachmentItem } from '@teable/core';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mergePendingAttachmentsForCreate } from '../../../../../store/pending-upload-create';
 import {
   buildCellKey,
   type ICellUploadTask,
@@ -177,6 +178,52 @@ describe('usePendingAttachmentUpload', () => {
       expect(tasks[0].status).toBe('completed');
     });
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('does not re-add a completed upload after the user removes it', async () => {
+    const first = createAttachmentItem('first.txt');
+    const onChange = vi.fn();
+
+    const { rerender } = renderHook(
+      (props: { attachments: IAttachmentItem[] }) =>
+        usePendingAttachmentUpload({
+          tableId,
+          tempRecordId,
+          fieldId,
+          baseId,
+          attachments: props.attachments,
+          onChange,
+        }),
+      {
+        initialProps: { attachments: [] as IAttachmentItem[] },
+      }
+    );
+
+    act(() => {
+      setCellTasks([createCompletedTask(first)]);
+    });
+
+    await waitFor(() => {
+      expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    // Parent syncs the upload, then the user removes it.
+    rerender({ attachments: [first] });
+    rerender({ attachments: [] });
+
+    await waitFor(() => {
+      expect(useCellAttachmentUploadStore.getState().cellUploads[cellKey]).toBeUndefined();
+    });
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // Create flow must not merge the removed attachment back either.
+    const { mergedFields } = mergePendingAttachmentsForCreate({
+      fields: { [fieldId]: [] },
+      tableId,
+      tempRecordId,
+      consumePendingForCreate: useCellAttachmentUploadStore.getState().consumePendingForCreate,
+    });
+    expect(mergedFields[fieldId]).toEqual([]);
   });
 
   it('keeps late-completed task consumable during createRecords flight', async () => {

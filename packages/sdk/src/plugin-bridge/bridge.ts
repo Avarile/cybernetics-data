@@ -8,13 +8,25 @@ type IListenerRecord = {
   [K in IListenerKeys]: IChildBridgeMethods[K][];
 };
 
+export interface IPluginBridgeOptions {
+  /**
+   * Origin(s) allowed to act as the host. Defaults to the plugin's own origin, which is how
+   * official plugins are served (proxied under /plugin). Plugins hosted on another origin must
+   * pass the host origin explicitly; '*' accepts any parent and is unsafe.
+   */
+  parentOrigin?: string | RegExp;
+}
+
+const getDefaultParentOrigin = () =>
+  typeof window === 'undefined' ? undefined : window.location.origin;
+
 export class PluginBridge implements IBridgeListener {
   private connection: Connection<IParentBridgeMethods>;
   private bridge?: AsyncMethodReturns<IParentBridgeMethods>;
 
   private listeners: Partial<IListenerRecord> = {};
 
-  constructor() {
+  constructor(options?: IPluginBridgeOptions) {
     const methods: IChildBridgeMethods = {
       syncUIConfig: (uiConfig) => {
         this.listeners.syncUIConfig?.forEach((cb: IChildBridgeMethods['syncUIConfig']) =>
@@ -38,6 +50,8 @@ export class PluginBridge implements IBridgeListener {
       },
     };
     this.connection = connectToParent({
+      // Only complete the handshake with the real host, not any site that frames the plugin.
+      parentOrigin: options?.parentOrigin ?? getDefaultParentOrigin(),
       // Methods child is exposing to parent.
       methods: methods as unknown as Methods,
     });
@@ -85,11 +99,11 @@ export class PluginBridge implements IBridgeListener {
   }
 }
 
-export const initializeBridge = async () => {
+export const initializeBridge = async (options?: IPluginBridgeOptions) => {
   if (typeof window === 'undefined') {
     return;
   }
-  const pluginBridge = new PluginBridge();
+  const pluginBridge = new PluginBridge(options);
   const bridge = await pluginBridge.init();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any)._cybernetics_plugin_bridge = bridge;

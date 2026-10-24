@@ -6,9 +6,22 @@ import type { ForwardRefRenderFunction } from 'react';
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import type { ICellEditor, IEditorRef } from '../type';
 
+// Expand exponent notation (1e-7, 1e+21) into plain digits, since parseStringToNumber drops the "e".
+const toPlainStr = (value: number): string => {
+  const str = value.toString();
+  const match = /^(-?)(\d+)(?:\.(\d+))?e([+-]\d+)$/.exec(str);
+  if (!match) return str;
+  const [, sign, intPart, fracPart = '', exponent] = match;
+  const digits = intPart + fracPart;
+  const pointIndex = intPart.length + Number(exponent);
+  if (pointIndex <= 0) return `${sign}0.${'0'.repeat(-pointIndex)}${digits}`;
+  if (pointIndex >= digits.length) return sign + digits + '0'.repeat(pointIndex - digits.length);
+  return `${sign}${digits.slice(0, pointIndex)}.${digits.slice(pointIndex)}`;
+};
+
 const toDisplayStr = (value: number | null | undefined, isPercent: boolean): string => {
   if (!isNumber(value)) return '';
-  return isPercent ? parseFloat((value * 100).toPrecision(15)).toString() : value.toString();
+  return toPlainStr(isPercent ? parseFloat((value * 100).toPrecision(15)) : value);
 };
 
 export const NumberEditorBase: ForwardRefRenderFunction<

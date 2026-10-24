@@ -22,9 +22,12 @@ export const useRecord = (recordId: string | undefined, initData?: IRecord) => {
     if (!connection || !recordId) {
       return undefined;
     }
+    // Ignore late callbacks from a previous record or table once this effect is cleaned up
+    let cancelled = false;
     const doc = connection.get(`${IdPrefix.Record}_${tableId}`, recordId);
 
     doc.fetch((err) => {
+      if (cancelled) return;
       if (err) {
         console.error('Failed to fetch document:', err);
         return;
@@ -36,11 +39,17 @@ export const useRecord = (recordId: string | undefined, initData?: IRecord) => {
       setInstance(createRecordInstance(doc.data, doc));
     };
 
-    doc.subscribe(() => {
+    doc.subscribe((err) => {
+      if (cancelled) return;
+      if (err) {
+        console.error('Failed to subscribe document:', err);
+        return;
+      }
       doc.on('op batch', listeners);
     });
 
     return () => {
+      cancelled = true;
       doc.removeListener('op batch', listeners);
       doc.listenerCount('op batch') === 0 && doc.unsubscribe();
       doc.listenerCount('op batch') === 0 && doc.destroy();
@@ -48,7 +57,8 @@ export const useRecord = (recordId: string | undefined, initData?: IRecord) => {
   }, [connection, recordId, tableId]);
 
   return useMemo(() => {
-    if (!instance || !fields.length || recordId == null) {
+    // The instance may still belong to the previous record until the new one is fetched
+    if (!instance || instance.id !== recordId || !fields.length || recordId == null) {
       return undefined;
     }
     const fieldMap = keyBy(fields, 'id');

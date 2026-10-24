@@ -1,5 +1,5 @@
 import { getActionTriggerChannel } from '@teable/core';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Presence } from 'sharedb/lib/sharedb';
 import { useConnection } from './use-connection';
 
@@ -8,22 +8,26 @@ export interface IActionData {
   payload?: Record<string, unknown>;
 }
 
+// Delayed unsubscribes keyed by presence, so leaving one channel never cancels another's cleanup
+const pendingCleanups = new Map<Presence, ReturnType<typeof setTimeout>>();
+
 export const usePresence = (channel: string | undefined) => {
   const { connection } = useConnection();
   const [presence, setPresence] = useState<Presence>();
-  const cleanupTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     if (connection == null || channel == null) return;
 
-    if (cleanupTimeoutRef.current) {
-      clearTimeout(cleanupTimeoutRef.current);
-      cleanupTimeoutRef.current = undefined;
-    }
-
     const remotePresence = connection.getPresence(channel);
 
-    if (!remotePresence.subscribed && !remotePresence.wantSubscribe) {
+    const pendingCleanup = pendingCleanups.get(remotePresence);
+    if (pendingCleanup) {
+      clearTimeout(pendingCleanup);
+      pendingCleanups.delete(remotePresence);
+    }
+
+    // subscribed can still be true while an unsubscribe awaits its ack, so rely on wantSubscribe
+    if (!remotePresence.wantSubscribe) {
       remotePresence.subscribe((err) => {
         if (err) {
           console.error('[usePresence] Subscribe error:', err);
@@ -34,12 +38,15 @@ export const usePresence = (channel: string | undefined) => {
     setPresence(remotePresence);
 
     return () => {
-      cleanupTimeoutRef.current = setTimeout(() => {
+      clearTimeout(pendingCleanups.get(remotePresence));
+      const timeout = setTimeout(() => {
+        pendingCleanups.delete(remotePresence);
         if (remotePresence.listenerCount('receive') === 0) {
           remotePresence.unsubscribe();
           remotePresence.destroy();
         }
       }, 200);
+      pendingCleanups.set(remotePresence, timeout);
     };
   }, [channel, connection]);
 

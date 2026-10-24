@@ -1,5 +1,6 @@
 import { Plugin, PluginKey } from '@milkdown/prose/state';
 import type { EditorView } from '@milkdown/prose/view';
+import { isSafeUrl } from '../../../utils/safeUrl';
 
 const LINK_ICON =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
@@ -27,7 +28,7 @@ export function createLinkClickPlugin(readonly: boolean): Plugin {
     el.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (currentHref) {
+      if (isSafeUrl(currentHref)) {
         window.open(currentHref, '_blank', 'noopener,noreferrer');
       }
     });
@@ -150,9 +151,12 @@ export function createLinkClickPlugin(readonly: boolean): Plugin {
           const href = anchor.getAttribute('href');
           if (!href) return false;
 
+          // Also swallow unsafe links so the browser does not follow them natively.
           event.preventDefault();
           event.stopPropagation();
-          window.open(href, '_blank', 'noopener,noreferrer');
+          if (isSafeUrl(href)) {
+            window.open(href, '_blank', 'noopener,noreferrer');
+          }
           return true;
         },
       },

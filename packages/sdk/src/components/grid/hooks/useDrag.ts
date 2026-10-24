@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { DEFAULT_DRAG_STATE } from '../configs';
-import type { IDragState, IMouseState, IRange, IScrollState } from '../interface';
+import type { IDragState, ILinearRow, IMouseState, IRange, IScrollState } from '../interface';
 import { DragRegionType, RegionType, DraggableType } from '../interface';
 import type { CoordinateManager, CombinedSelection } from '../managers';
 import { inRange } from '../utils';
@@ -36,10 +36,20 @@ export const getDropTargetIndex = (
   return -Infinity;
 };
 
+// Row drag ranges hold real (record) indices, like row selection ranges
+const getRowDragRanges = (selection: CombinedSelection, realRowIndex: number): IRange[] => {
+  const { isRowSelection, ranges } = selection;
+  return isRowSelection && selection.includes([realRowIndex, realRowIndex])
+    ? ranges
+    : [[realRowIndex, realRowIndex]];
+};
+
 export const useDrag = (
   coordInstance: CoordinateManager,
   scrollState: IScrollState,
   selection: CombinedSelection,
+  getLinearRow: (index: number) => ILinearRow,
+  real2RowIndex: (index: number) => number,
   draggable?: DraggableType
 ) => {
   // Prevents Drag and Drop from Being Too Reactive
@@ -54,14 +64,11 @@ export const useDrag = (
     if (draggable === DraggableType.None) return;
 
     const { type, rowIndex: hoverRowIndex, columnIndex: hoverColumnIndex, x, y } = mouseState;
-    const { isRowSelection, isColumnSelection, ranges: selectionRanges } = selection;
+    const { isColumnSelection, ranges: selectionRanges } = selection;
 
     if (type === RegionType.RowHeaderDragHandler && draggable !== DraggableType.Column) {
       startPosition.current = y;
-      const ranges =
-        isRowSelection && selection.includes([hoverRowIndex, hoverRowIndex])
-          ? selectionRanges
-          : ([[hoverRowIndex, hoverRowIndex]] as IRange[]);
+      const ranges = getRowDragRanges(selection, getLinearRow(hoverRowIndex).realIndex);
       onEnd(DragRegionType.Rows, ranges);
       setDragState({
         type: DragRegionType.Rows,
@@ -111,7 +118,17 @@ export const useDrag = (
     if ([DragRegionType.Columns, DragRegionType.Rows].includes(type)) {
       const { ranges } = dragState;
       const targetIndex = getDropTargetIndex(coordInstance, mouseState, scrollState, type);
-      if (!inRange(targetIndex, ranges[0][0], ranges[ranges.length - 1][1])) {
+      const startIndex = ranges[0][0];
+      const endIndex = ranges[ranges.length - 1][1];
+      // The drop target is linear, row drag ranges are real
+      const isRows = type === DragRegionType.Rows;
+      if (
+        !inRange(
+          targetIndex,
+          isRows ? real2RowIndex(startIndex) : startIndex,
+          isRows ? real2RowIndex(endIndex) : endIndex
+        )
+      ) {
         onEnd(ranges, targetIndex);
       }
     }

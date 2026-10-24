@@ -25,11 +25,14 @@ export const CommentList = forwardRef<CommentListRefHandle, ICommentListProps>((
   const { t } = useTranslation();
   const listRef = useRef<HTMLDivElement>(null);
   const [commentList, setCommentList] = useState<ICommentVo[]>([]);
+  // Loaded pages are never refetched after a delete, so remember deleted ids to keep the merge from re-adding them
+  const deletedIdsRef = useRef<Set<string>>(new Set());
   const { user: self } = useSession();
 
   useEffect(() => {
     // reset comment list when switch record
     setCommentList([]);
+    deletedIdsRef.current = new Set();
   }, [tableId, recordId]);
 
   const queryClient = useQueryClient();
@@ -107,6 +110,7 @@ export const CommentList = forwardRef<CommentListRefHandle, ICommentListProps>((
       const uniqueComments: Record<string, ICommentVo> = {};
 
       [...pageList, ...result].forEach((comment) => {
+        if (deletedIdsRef.current.has(comment.id)) return;
         uniqueComments[comment.id] = comment;
       });
 
@@ -152,6 +156,7 @@ export const CommentList = forwardRef<CommentListRefHandle, ICommentListProps>((
           break;
         }
         case CommentPatchType.DeleteComment: {
+          deletedIdsRef.current.add(data.id as string);
           setCommentList((prevList) => prevList.filter((comment) => comment.id !== data.id));
           break;
         }

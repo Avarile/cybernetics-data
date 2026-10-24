@@ -74,7 +74,7 @@ const renderLongText: RenderFn = ({ value, className, plainLongText, options }) 
 
 const renderSingleLineText: RenderFn = ({ value, className, ellipsis, options }) => (
   <CellText
-    value={value as string}
+    value={value as string | string[]}
     className={className}
     ellipsis={ellipsis}
     displayType={(options as { showAs?: { type?: SingleLineTextDisplayType } })?.showAs?.type}
@@ -96,7 +96,7 @@ const renderAutoNumber: RenderFn = ({ value, className, ellipsis }) => (
 
 const renderDate: RenderFn = ({ value, className, ellipsis, options }) => (
   <CellDate
-    value={value as string}
+    value={value as string | string[]}
     formatting={options.formatting as IDatetimeFormatting}
     ellipsis={ellipsis}
     className={className}
@@ -185,7 +185,7 @@ const renderFormulaLike: RenderFn = ({ value, className, ellipsis, options, fiel
   if (field.cellValueType === CellValueType.DateTime) {
     return (
       <CellDate
-        value={value as string}
+        value={value as string | string[]}
         formatting={options.formatting as IDatetimeFormatting}
         className={className}
         ellipsis={ellipsis}
@@ -206,7 +206,7 @@ const renderFormulaLike: RenderFn = ({ value, className, ellipsis, options, fiel
 
   return (
     <CellText
-      value={value as string}
+      value={value as string | string[]}
       className={className}
       ellipsis={ellipsis}
       displayType={(options as { showAs?: { type?: SingleLineTextDisplayType } })?.showAs?.type}

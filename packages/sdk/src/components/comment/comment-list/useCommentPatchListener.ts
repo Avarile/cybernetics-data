@@ -17,11 +17,11 @@ export const useCommentPatchListener = (
       return;
     }
 
-    if (presence.subscribed) {
-      return;
+    // Check wantSubscribe, not subscribed: an unsubscribe from a previous cleanup may not be
+    // acked yet, and this instance still needs its own receive listener either way.
+    if (!presence.wantSubscribe) {
+      presence.subscribe();
     }
-
-    presence.subscribe();
 
     const receiveHandler = () => {
       const { remotePresences } = presence;

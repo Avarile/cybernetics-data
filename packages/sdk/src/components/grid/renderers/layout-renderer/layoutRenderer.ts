@@ -4,7 +4,14 @@ import type { IGridTheme } from '../../configs';
 import { GRID_DEFAULT, ROW_RELATED_REGIONS } from '../../configs';
 import type { IVisibleRegion } from '../../hooks';
 import { getDropTargetIndex } from '../../hooks';
-import type { ICellItem, ICell, IRectangle, ICollaborator, ILinearRow } from '../../interface';
+import type {
+  ICellItem,
+  ICell,
+  IRectangle,
+  ICollaborator,
+  ILinearRow,
+  IRowControlItem,
+} from '../../interface';
 import { DragRegionType, LinearRowType, RegionType, RowControlType } from '../../interface';
 import { GridInnerIcon } from '../../managers';
 import {
@@ -1202,6 +1209,16 @@ export const drawFillHandler = (ctx: CanvasRenderingContext2D, props: ILayoutDra
   ctx.restore();
 };
 
+// The comment count takes the Expand control's slot, whose hit region (utils/region.ts) opens the record
+export const getCommentCountOffsetX = (
+  width: number,
+  rowControls: IRowControlItem[]
+): number | null => {
+  const expandIndex = rowControls.findIndex(({ type }) => type === RowControlType.Expand);
+  if (expandIndex === -1) return null;
+  return (width / rowControls.length) * (expandIndex + 0.5);
+};
+
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export const drawRowHeader = (ctx: CanvasRenderingContext2D, props: IRowHeaderDrawerProps) => {
   const {
@@ -1255,11 +1272,12 @@ export const drawRowHeader = (ctx: CanvasRenderingContext2D, props: IRowHeaderDr
 
   ctx.font = `${10}px ${theme.fontFamily}`;
 
-  if (commentCount) {
-    const controlSize = width / rowControls.length;
-    const offsetX = controlSize * (2 + 0.5);
+  const commentCountOffsetX = commentCount ? getCommentCountOffsetX(width, rowControls) : null;
+  const hasCommentCount = commentCount != null && commentCountOffsetX != null;
+
+  if (hasCommentCount) {
     drawCommentCount(ctx, {
-      x: x + offsetX - halfSize,
+      x: x + commentCountOffsetX - halfSize,
       y: y + rowHeadIconPaddingTop,
       count: commentCount,
       theme,
@@ -1285,7 +1303,7 @@ export const drawRowHeader = (ctx: CanvasRenderingContext2D, props: IRowHeaderDr
         });
       } else {
         if (isChecked && !isHover && rowIndexVisible && type === RowControlType.Expand) continue;
-        if (!commentCount || type !== RowControlType.Expand) {
+        if (!hasCommentCount || type !== RowControlType.Expand) {
           spriteManager.drawSprite(ctx, {
             sprite: icon || spriteIconMap[type],
             x: x + offsetX - halfSize,
@@ -1723,7 +1741,7 @@ export const drawColumnDraggingRegion = (
 };
 
 export const drawRowDraggingRegion = (ctx: CanvasRenderingContext2D, props: ILayoutDrawerProps) => {
-  const { theme, mouseState, scrollState, dragState, coordInstance } = props;
+  const { theme, mouseState, scrollState, dragState, coordInstance, real2RowIndex } = props;
   const { columnDraggingPlaceholderBg, interactionLineColorHighlight } = theme;
   const { type, isDragging, ranges: draggingRanges, delta } = dragState;
   const { containerWidth } = coordInstance;
@@ -1732,7 +1750,8 @@ export const drawRowDraggingRegion = (ctx: CanvasRenderingContext2D, props: ILay
 
   if (!isDragging || type !== DragRegionType.Rows) return;
 
-  const draggingRowIndex = draggingRanges[0][0];
+  // Row drag ranges hold real indices
+  const draggingRowIndex = real2RowIndex(draggingRanges[0][0]);
   drawRect(ctx, {
     x: 0.5,
     y: y - delta,

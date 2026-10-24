@@ -39,7 +39,8 @@ export const useButtonClickStatus = (tableId: string, shareId?: string) => {
   // runId => status
   const [statusMap, setStatusMap] = useState<Record<string, IButtonClickStatus>>({});
   const toastMapRef = useRef<Record<string, number | string | undefined>>({});
-  const complatedMapRef = useRef<Record<string, boolean>>({});
+  // runId => completed status that arrived over the socket before the http response
+  const complatedMapRef = useRef<Record<string, IButtonClickStatus>>({});
   const { confirm } = useConfirm();
   const { t } = useTranslation();
 
@@ -97,6 +98,21 @@ export const useButtonClickStatus = (tableId: string, shareId?: string) => {
     [t]
   );
 
+  const showResult = useCallback(
+    (name: string, errorMessage?: string, toastId?: number | string) => {
+      if (errorMessage) {
+        toast.error(t('common.runStatus.failed', { name }), {
+          id: toastId,
+        });
+      } else {
+        toast.success(t('common.runStatus.success', { name }), {
+          id: toastId,
+        });
+      }
+    },
+    [t]
+  );
+
   const setComplated = useCallback(
     (status: IButtonClickStatus) => {
       const { runId, recordId, fieldId, errorMessage, name } = status;
@@ -109,23 +125,15 @@ export const useButtonClickStatus = (tableId: string, shareId?: string) => {
       if (!runId) {
         return;
       }
-      complatedMapRef.current[runId] = true;
       const toastId = toastMapRef.current[runId];
       if (!toastId) {
+        complatedMapRef.current[runId] = status;
         return;
       }
       delete toastMapRef.current[runId];
-      if (errorMessage) {
-        toast.error(t('common.runStatus.failed', { name }), {
-          id: toastId,
-        });
-      } else {
-        toast.success(t('common.runStatus.success', { name }), {
-          id: toastId,
-        });
-      }
+      showResult(name, errorMessage, toastId);
     },
-    [setStatusMap, t]
+    [setStatusMap, showResult]
   );
 
   /**
@@ -134,17 +142,17 @@ export const useButtonClickStatus = (tableId: string, shareId?: string) => {
   const setStatus = useCallback(
     (status: IButtonClickStatus) => {
       const { loading, runId, name } = status;
-      const isComplated = complatedMapRef.current[runId];
-      if (isComplated) {
-        toast.success(t('common.runStatus.success', { name }));
+      const complated = complatedMapRef.current[runId];
+      if (complated) {
         delete complatedMapRef.current[runId];
+        showResult(name, complated.errorMessage);
       } else if (loading) {
         setRunning(status);
       } else {
         setComplated(status);
       }
     },
-    [setComplated, setRunning, t]
+    [setComplated, setRunning, showResult]
   );
 
   useEffect(() => {
@@ -152,11 +160,11 @@ export const useButtonClickStatus = (tableId: string, shareId?: string) => {
       return;
     }
 
-    if (presence.subscribed) {
-      return;
+    // Other instances may share this presence, so always attach our own listener and only
+    // subscribe when no subscription is wanted yet (subscribed lags behind a pending unsubscribe)
+    if (!presence.wantSubscribe) {
+      presence.subscribe();
     }
-
-    presence.subscribe();
 
     const receiveHandler = () => {
       const { remotePresences } = presence;

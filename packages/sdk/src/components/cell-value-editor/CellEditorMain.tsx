@@ -8,6 +8,7 @@ import type {
   ILongTextCellValue,
   IMultipleSelectCellValue,
   INumberCellValue,
+  INumberFieldOptions,
   IRatingFieldOptions,
   ISelectFieldOptions,
   ISingleLineTextCellValue,
@@ -119,6 +120,7 @@ export const CellEditorMain = (props: Omit<ICellValueEditor, 'wrapClassName' | '
           ref={editorRef}
           className={className}
           value={cellValue as INumberCellValue}
+          formatting={(options as INumberFieldOptions).formatting}
           onChange={onChange}
           readonly={readonly}
         />
@@ -155,6 +157,7 @@ export const CellEditorMain = (props: Omit<ICellValueEditor, 'wrapClassName' | '
           ref={editorRef}
           className={className}
           value={cellValue as IMultipleSelectCellValue}
+          preventAutoNewOptions={(options as ISelectFieldOptions).preventAutoNewOptions}
           options={transformSelectOptions((options as ISelectFieldOptions).choices)}
           onChange={onChange}
           isMultiple

@@ -26,7 +26,7 @@ import type { CoordinateManager, ImageManager, SpriteManager } from './managers'
 import { emptySelection } from './managers';
 import { CellRegionType, getCellRenderer } from './renderers';
 import { RenderLayer } from './RenderLayer';
-import { getColumnStatisticData, inRange } from './utils';
+import { getColumnStatisticData, getRegionPosition, inRange } from './utils';
 
 export interface ITouchLayerProps
   extends Omit<
@@ -62,7 +62,7 @@ export interface ITouchLayerProps
   setActiveCell: Dispatch<SetStateAction<ICellItem | null>>;
 }
 
-const { columnAppendBtnWidth, columnHeadHeight } = GRID_DEFAULT;
+const { columnHeadHeight } = GRID_DEFAULT;
 
 export const TouchLayer: FC<ITouchLayerProps> = (props) => {
   const {
@@ -100,15 +100,7 @@ export const TouchLayer: FC<ITouchLayerProps> = (props) => {
   const hasAppendRow = onRowAppend != null;
   const hasAppendColumn = onColumnAppend != null;
   const { scrollTop, scrollLeft } = scrollState;
-  const {
-    totalHeight,
-    containerHeight,
-    freezeRegionWidth,
-    totalWidth,
-    columnInitSize,
-    rowCount,
-    rowInitSize,
-  } = coordInstance;
+  const { totalHeight, containerHeight } = coordInstance;
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -121,23 +113,6 @@ export const TouchLayer: FC<ITouchLayerProps> = (props) => {
     onSelectionChanged,
   });
 
-  const getRangeByPosition = (x: number, y: number) => {
-    const rowIndex =
-      y < 0 ? -Infinity : y <= rowInitSize ? -1 : coordInstance.getRowStartIndex(scrollTop + y);
-    const columnIndex =
-      x < 0
-        ? -Infinity
-        : scrollLeft + x > totalWidth && scrollLeft + x < totalWidth + columnAppendBtnWidth
-          ? -2
-          : x <= freezeRegionWidth
-            ? x <= columnInitSize
-              ? -1
-              : coordInstance.getColumnStartIndex(x)
-            : coordInstance.getColumnStartIndex(scrollLeft + x);
-
-    return [columnIndex, rowIndex];
-  };
-
   // Highlight the clicked area to enhance the user experience
   const onTapStyleEffect = (mouseState: IMouseState) => {
     setMouseState(mouseState);
@@ -149,7 +124,7 @@ export const TouchLayer: FC<ITouchLayerProps> = (props) => {
     const pointerEvent = e.changedPointers[0];
     const x = pointerEvent?.offsetX ?? pointerEvent?.layerX;
     const y = pointerEvent?.offsetY ?? pointerEvent?.layerY;
-    const [columnIndex, rowIndex] = getRangeByPosition(x, y);
+    const { rowIndex, columnIndex } = getRegionPosition(coordInstance, scrollState, x, y);
     const posInfo = { x, y, rowIndex, columnIndex, isOutOfBounds: false };
 
     // Tap the column statistic
@@ -183,17 +158,24 @@ export const TouchLayer: FC<ITouchLayerProps> = (props) => {
       return onColumnAppend?.();
     }
 
-    // Tap the append row button
-    if (hasAppendRow && rowIndex === rowCount - 1 && columnIndex >= -1) {
-      onTapStyleEffect({ ...posInfo, type: RegionType.AppendRow });
-      return onRowAppend?.();
-    }
-
     // Tap the row
     if (rowIndex >= 0) {
+      if (scrollTop + y > totalHeight && !inRange(y, containerHeight, height)) {
+        return;
+      }
+
       const linearRow = getLinearRow(rowIndex);
 
-      if (linearRow.type === LinearRowType.Group && x < rowInitSize) {
+      // Tap the append row button of any group
+      if (linearRow.type === LinearRowType.Append) {
+        if (!hasAppendRow || columnIndex < -1) return;
+        onTapStyleEffect({ ...posInfo, type: RegionType.AppendRow });
+        return onRowAppend?.(getLinearRow(rowIndex - 1).realIndex);
+      }
+
+      if (linearRow.type === LinearRowType.Group) {
+        // Only the group control in the row header toggles the group, like InteractionLayer
+        if (columnIndex !== -1) return;
         const { id } = linearRow;
         if (collapsedGroupIds == null) return onCollapsedGroupChanged?.(new Set([id]));
         if (collapsedGroupIds.has(id)) {
@@ -204,15 +186,14 @@ export const TouchLayer: FC<ITouchLayerProps> = (props) => {
         return onCollapsedGroupChanged?.(new Set([...collapsedGroupIds, id]));
       }
 
-      if (scrollTop + y > totalHeight && !inRange(y, containerHeight, height)) {
-        return;
-      }
+      if (linearRow.type !== LinearRowType.Row) return;
 
+      const { realIndex } = linearRow;
       let isPreview = false;
 
       // Tap the cell
       if (columnIndex >= 0) {
-        const cell = getCellContent([columnIndex, rowIndex]) as IInnerCell;
+        const cell = getCellContent([columnIndex, realIndex]) as IInnerCell;
         const cellRenderer = getCellRenderer(cell.type);
         const onCellClick = cellRenderer.onClick;
 
@@ -246,11 +227,11 @@ export const TouchLayer: FC<ITouchLayerProps> = (props) => {
         if (isPreview) return;
       }
 
-      const range = [0, rowIndex];
+      const range = [0, realIndex];
       setActiveCell(range as IRange);
       setSelection(selection.set(SelectionRegionType.Cells, [range, range] as IRange[]));
       onTapStyleEffect({ ...posInfo, type: RegionType.Cell });
-      onRowExpand?.(linearRow.realIndex);
+      onRowExpand?.(realIndex);
     }
   };
 

@@ -3,7 +3,7 @@ import type { IGetRecordsRo } from '@teable/openapi';
 import { getRecords } from '@teable/openapi';
 import { isEqual } from 'lodash';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import type { Doc, Query } from 'sharedb/lib/client';
+import type { Connection, Doc, Query } from 'sharedb/lib/client';
 import type { Presence } from 'sharedb/lib/sharedb';
 import { useConnection } from '../../hooks/use-connection';
 import { OpListenersManager } from './opListener';
@@ -38,9 +38,15 @@ const queryDestroy = (query: Query | undefined, cb?: () => void) => {
   });
 };
 
-// Global cache to dedupe identical subscribe queries across hook instances
-type CachedQuery = { query: Query; refCount: number };
-const subscribeQueryCache = new Map<string, CachedQuery>();
+// Global cache to dedupe identical subscribe queries across hook instances.
+// Scoped per connection so a recreated connection never reuses queries bound to the old one.
+type CachedQuery = {
+  key: string;
+  query: Query;
+  refCount: number;
+  cache: Map<string, CachedQuery>;
+};
+const subscribeQueryCaches = new WeakMap<Connection, Map<string, CachedQuery>>();
 
 type ActionTriggerPayload = {
   tableId?: string;
@@ -115,31 +121,50 @@ const makeQueryScopeKey = (collection: string, queryParams: unknown) =>
 const makeQueryKey = (collection: string, queryParams: unknown, refreshToken = 0) =>
   `${makeQueryScopeKey(collection, queryParams)}|refresh:${refreshToken}`;
 
-const acquireQuery = <T>(
-  collection: string,
-  connection: ReturnType<typeof useConnection>['connection'],
-  queryParams: unknown,
-  refreshToken = 0
-) => {
-  const key = makeQueryKey(collection, queryParams, refreshToken);
-  const cached = subscribeQueryCache.get(key);
-  if (cached) {
-    cached.refCount += 1;
-    return { key, query: cached.query };
+const getSubscribeQueryCache = (connection: Connection) => {
+  let cache = subscribeQueryCaches.get(connection);
+  if (!cache) {
+    cache = new Map();
+    subscribeQueryCaches.set(connection, cache);
   }
-  const query = connection!.createSubscribeQuery<T>(collection, queryParams);
-  subscribeQueryCache.set(key, { query, refCount: 1 });
-  return { key, query };
+  return cache;
 };
 
-const releaseQuery = (key?: string, cb?: () => void) => {
-  if (!key) return;
-  const cached = subscribeQueryCache.get(key);
-  if (!cached) return;
-  cached.refCount -= 1;
-  if (cached.refCount <= 0) {
-    subscribeQueryCache.delete(key);
-    queryDestroy(cached.query, cb);
+const acquireQuery = <T>(
+  collection: string,
+  connection: Connection,
+  queryParams: unknown,
+  refreshToken = 0
+): CachedQuery => {
+  const cache = getSubscribeQueryCache(connection);
+  const key = makeQueryKey(collection, queryParams, refreshToken);
+  const cached = cache.get(key);
+  if (cached) {
+    cached.refCount += 1;
+    return cached;
+  }
+  const query = connection.createSubscribeQuery<T>(collection, queryParams);
+  const entry: CachedQuery = { key, query, refCount: 1, cache };
+  // Without an 'error' listener the emitter throws; evict the failed query so later
+  // mounts create a fresh one instead of reusing it. Current holders still release it.
+  query.on('error', (error) => {
+    console.error(`[useInstances] ${collection} query error:`, error);
+    if (cache.get(key) === entry) {
+      cache.delete(key);
+    }
+  });
+  cache.set(key, entry);
+  return entry;
+};
+
+const releaseQuery = (entry?: CachedQuery, cb?: () => void) => {
+  if (!entry) return;
+  entry.refCount -= 1;
+  if (entry.refCount <= 0) {
+    if (entry.cache.get(entry.key) === entry) {
+      entry.cache.delete(entry.key);
+    }
+    queryDestroy(entry.query, cb);
     return;
   }
   cb?.();
@@ -410,7 +435,7 @@ export function useInstances<T, R extends { id: string }>({
   const schemaRefreshCollectionTableId = getSchemaRefreshCollectionTableId(collection);
   const [query, setQuery] = useState<Query<T>>();
   const [schemaRefreshToken, setSchemaRefreshToken] = useState(0);
-  const currentKeyRef = useRef<string>();
+  const currentEntryRef = useRef<CachedQuery>();
   const currentScopeKeyRef = useRef<string>();
   const [instances, dispatch] = useReducer(
     (state: IInstanceState<R>, action: IInstanceAction<T>) =>
@@ -539,7 +564,9 @@ export function useInstances<T, R extends { id: string }>({
     const presence: Presence = connection.getPresence(
       getActionTriggerChannel(schemaRefreshCollectionTableId)
     );
-    if (!presence.subscribed) {
+    // Check wantSubscribe, not subscribed: after a previous cleanup the unsubscribe may not be
+    // acked yet, so subscribed is still true although the server is about to drop the channel.
+    if (!presence.wantSubscribe) {
       presence.subscribe((error) => {
         if (error) {
           console.error('[useInstances] Failed to subscribe schema refresh presence:', error);
@@ -662,15 +689,15 @@ export function useInstances<T, R extends { id: string }>({
     let canceled = false;
 
     if (!collection || !connection) {
-      const previousKey = currentKeyRef.current;
-      currentKeyRef.current = undefined;
+      const previousEntry = currentEntryRef.current;
+      currentEntryRef.current = undefined;
       currentScopeKeyRef.current = undefined;
       preQueryRef.current = undefined;
       lastConnectionRef.current = connection;
       dispatch({ type: 'clear' });
       setQuery(undefined);
-      if (previousKey) {
-        releaseQuery(previousKey, () => opListeners.current.clear());
+      if (previousEntry) {
+        releaseQuery(previousEntry, () => opListeners.current.clear());
       }
       return () => {
         canceled = true;
@@ -687,20 +714,16 @@ export function useInstances<T, R extends { id: string }>({
         return;
       }
 
-      const { key, query } = acquireQuery<T>(
-        collection,
-        connection,
-        queryParams,
-        schemaRefreshToken
-      );
-      currentKeyRef.current = key;
+      const entry = acquireQuery<T>(collection, connection, queryParams, schemaRefreshToken);
+      const query = entry.query;
+      currentEntryRef.current = entry;
       currentScopeKeyRef.current = nextScopeKey;
       preQueryRef.current = query as Query<T>;
       lastConnectionRef.current = connection;
       setQuery(query as Query<T>);
     };
 
-    if (!connectionChanged && currentKeyRef.current === nextKey && preQueryRef.current) {
+    if (!connectionChanged && currentEntryRef.current?.key === nextKey && preQueryRef.current) {
       // Ensure state holds the existing query instance without re-acquiring
       setQuery((prev) => prev ?? (preQueryRef.current as Query<T>));
       return () => {
@@ -708,10 +731,10 @@ export function useInstances<T, R extends { id: string }>({
       };
     }
 
-    const previousKey = currentKeyRef.current;
+    const previousEntry = currentEntryRef.current;
     const previousScopeKey = currentScopeKeyRef.current;
     const shouldClearInstances = connectionChanged || previousScopeKey !== nextScopeKey;
-    currentKeyRef.current = undefined;
+    currentEntryRef.current = undefined;
     currentScopeKeyRef.current = undefined;
     preQueryRef.current = undefined;
 
@@ -720,8 +743,8 @@ export function useInstances<T, R extends { id: string }>({
       setQuery(undefined);
     }
 
-    if (previousKey && (connectionChanged || previousKey !== nextKey)) {
-      releaseQuery(previousKey, () => {
+    if (previousEntry && (connectionChanged || previousEntry.key !== nextKey)) {
+      releaseQuery(previousEntry, () => {
         opListeners.current.clear();
         acquireNextQuery();
       });
@@ -737,19 +760,19 @@ export function useInstances<T, R extends { id: string }>({
   useEffect(() => {
     const listeners = opListeners.current;
     return () => {
-      const currentKey = currentKeyRef.current;
-      if (!currentKey) {
+      const currentEntry = currentEntryRef.current;
+      if (!currentEntry) {
         return;
       }
       // Reset refs so the main effect re-acquires the query after
       // React Strict Mode unmount/re-mount cycles in development.
-      currentKeyRef.current = undefined;
+      currentEntryRef.current = undefined;
       currentScopeKeyRef.current = undefined;
       preQueryRef.current = undefined;
       lastConnectionRef.current = undefined;
       dispatch({ type: 'clear' });
       setQuery(undefined);
-      releaseQuery(currentKey, () => listeners.clear());
+      releaseQuery(currentEntry, () => listeners.clear());
     };
   }, []);
 

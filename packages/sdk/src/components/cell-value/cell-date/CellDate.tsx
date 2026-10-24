@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { OverflowTooltip } from '../components';
 import type { ICellValue } from '../type';
 
-interface ICellDate extends ICellValue<string> {
+interface ICellDate extends ICellValue<string | string[]> {
   formatting?: IDatetimeFormatting | null;
 }
 
@@ -15,8 +15,18 @@ export const CellDate = (props: ICellDate) => {
 
   const displayValue = useMemo(() => {
     if (value == null) return '';
-    if (formatting == null) return dayjs(value).format(DateFormattingPreset.ISO);
-    return formatDateToString(value, formatting);
+    const format = (v: string) =>
+      formatting == null
+        ? dayjs(v).format(DateFormattingPreset.ISO)
+        : formatDateToString(v, formatting);
+
+    if (Array.isArray(value)) {
+      return value
+        .filter((v) => v != null)
+        .map(format)
+        .join(', ');
+    }
+    return format(value);
   }, [value, formatting]);
 
   return (

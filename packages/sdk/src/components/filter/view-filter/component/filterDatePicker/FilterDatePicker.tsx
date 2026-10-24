@@ -122,33 +122,27 @@ const DateRangeInput = memo(function DateRangeInput({
 });
 
 interface INumberInputProps {
-  innerValue: IDateFilter | null;
-  onSelect: (value: IDateFilter | null) => void;
+  numberOfDays: number | undefined;
+  onChange: (numberOfDays: number | null) => void;
 }
 
-const NumberInput = memo(function NumberInput({ innerValue, onSelect }: INumberInputProps) {
+const NumberInput = memo(function NumberInput({ numberOfDays, onChange }: INumberInputProps) {
   const { t } = useTranslation();
-
-  const handleInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-    e.currentTarget.value = e.currentTarget.value?.replace(NON_DIGIT_REGEX, '');
-  }, []);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      if (innerValue && value !== '') {
-        onSelect({ ...innerValue, numberOfDays: Number(value) });
-      }
+      const value = e.target.value.replace(NON_DIGIT_REGEX, '');
+      onChange(value === '' ? null : Number(value));
     },
-    [innerValue, onSelect]
+    [onChange]
   );
 
+  // controlled, so the input always reflects the current value (row reuse, remote updates)
   return (
     <Input
       placeholder={t('filter.default.placeholder')}
-      defaultValue={innerValue?.numberOfDays ?? ''}
+      value={numberOfDays ?? ''}
       className="w-24 placeholder:text-xs"
-      onInput={handleInput}
       onChange={handleChange}
     />
   );
@@ -166,6 +160,8 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
   const previousOperatorRef = useRef<string>(operator);
   const onModeChangeRef = useRef(onModeChange);
   const onSelectRef = useRef(onSelect);
+  // set when clearing the days input emits null, so the echoed null keeps the selected mode
+  const keepModeOnClearRef = useRef(false);
 
   useEffect(() => {
     onModeChangeRef.current = onModeChange;
@@ -176,6 +172,8 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
     const normalizedInit = initValue ?? null;
     const prev = previousInitRef.current;
     const operatorChanged = previousOperatorRef.current !== operator;
+    const keepModeOnClear = keepModeOnClearRef.current;
+    keepModeOnClearRef.current = false;
 
     // Update refs
     previousInitRef.current = normalizedInit;
@@ -211,6 +209,11 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
     if (normalizedInit) {
       setInnerValue(normalizedInit);
       onModeChangeRef.current?.(normalizedInit.mode);
+      return;
+    }
+
+    // The days input was cleared locally, keep the mode so the user can type a new number
+    if (keepModeOnClear) {
       return;
     }
 
@@ -298,6 +301,26 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
     []
   );
 
+  const numberOfDaysSelect = useCallback(
+    (numberOfDays: number | null) => {
+      if (!innerValue) {
+        return;
+      }
+      const nextValue = { ...innerValue, numberOfDays: numberOfDays ?? undefined };
+      setInnerValue(nextValue);
+      if (numberOfDays !== null) {
+        onSelectRef.current(nextValue);
+        return;
+      }
+      // a days mode without numberOfDays is invalid, so clear the filter value instead
+      if (previousInitRef.current) {
+        keepModeOnClearRef.current = true;
+        onSelectRef.current(null);
+      }
+    },
+    [innerValue]
+  );
+
   const selectOptions = useMemo(() => {
     const optionMapping = getValidFilterSubOperators(
       FieldType.Date,
@@ -345,7 +368,7 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
     }
 
     if (INPUTOPTIONS.includes(mode)) {
-      return <NumberInput innerValue={innerValue} onSelect={onSelect} />;
+      return <NumberInput numberOfDays={innerValue.numberOfDays} onChange={numberOfDaysSelect} />;
     }
 
     return null;

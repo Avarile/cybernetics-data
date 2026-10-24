@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { RegionType } from '../../interface';
+import { RegionType, RowControlType } from '../../interface';
 import type { IMouseState } from '../../interface';
 import type { ILayoutDrawerProps } from './interface';
-import { computeShouldRerender, getHoveredRowIndex } from './layoutRenderer';
+import {
+  computeShouldRerender,
+  getCommentCountOffsetX,
+  getHoveredRowIndex,
+} from './layoutRenderer';
 
 const mouseAt = (rowIndex: number, overrides: Partial<IMouseState> = {}): IMouseState => ({
   x: 0,
@@ -53,5 +57,25 @@ describe('computeShouldRerender', () => {
     const current = makeProps(mouseAt(3, { columnIndex: 5, x: 200 }));
 
     expect(computeShouldRerender(current, last)).toBe(false);
+  });
+});
+
+describe('getCommentCountOffsetX', () => {
+  it('centres the badge on the Expand control slot', () => {
+    const rowControls = [
+      { type: RowControlType.Drag },
+      { type: RowControlType.Checkbox },
+      { type: RowControlType.Expand },
+    ];
+    expect(getCommentCountOffsetX(90, rowControls)).toBe(75);
+  });
+
+  it('stays inside the row header when Expand is the second of two controls', () => {
+    const rowControls = [{ type: RowControlType.Checkbox }, { type: RowControlType.Expand }];
+    expect(getCommentCountOffsetX(64, rowControls)).toBe(48);
+  });
+
+  it('has no slot without an Expand control', () => {
+    expect(getCommentCountOffsetX(64, [{ type: RowControlType.Checkbox }])).toBeNull();
   });
 });

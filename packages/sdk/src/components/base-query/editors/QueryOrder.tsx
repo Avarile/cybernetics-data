@@ -57,10 +57,11 @@ export const QueryOrder = (props: IQueryEditorProps<IBaseQueryOrderBy>) => {
                 isFilter
                 className="flex-1"
                 value={orderBy.column}
-                onChange={(column) => {
+                onChange={(column, type) => {
                   const newOrderBy = [...value];
                   newOrderBy[index] = {
                     ...orderBy,
+                    type,
                     column,
                   };
                   onChange(newOrderBy);

@@ -7,7 +7,9 @@ import type {
   IRectangle,
   IRegionPosition,
   IRowControlItem,
+  IScrollState,
 } from '../interface';
+import type { CoordinateManager } from '../managers';
 import type { IRenderLayerProps } from '../RenderLayer';
 import { inRange } from './range';
 
@@ -73,7 +75,36 @@ const {
   minColumnStatisticWidth,
   fillHandlerSize,
   fillHandlerPadding,
+  columnAppendBtnWidth,
 } = GRID_DEFAULT;
+
+/**
+ * Resolve a point relative to the grid stage to linear row / column indices.
+ * rowIndex: -1 column header; columnIndex: -1 row header, -2 append column button.
+ */
+export const getRegionPosition = (
+  coordInstance: CoordinateManager,
+  scrollState: Pick<IScrollState, 'scrollTop' | 'scrollLeft'>,
+  x: number,
+  y: number
+): IRegionPosition => {
+  const { scrollTop, scrollLeft } = scrollState;
+  const { freezeRegionWidth, totalWidth, rowInitSize, columnInitSize, columnCount } = coordInstance;
+  const rowIndex =
+    y < 0 ? -Infinity : y <= rowInitSize ? -1 : coordInstance.getRowStartIndex(scrollTop + y);
+  const columnIndex =
+    x < 0
+      ? -Infinity
+      : scrollLeft + x > totalWidth && scrollLeft + x < totalWidth + columnAppendBtnWidth
+        ? -2
+        : x <= freezeRegionWidth
+          ? x <= columnInitSize
+            ? -1
+            : coordInstance.getColumnStartIndex(x)
+          : coordInstance.getColumnStartIndex(scrollLeft + x);
+
+  return { x, y, rowIndex, columnIndex: Math.min(columnIndex, columnCount - 1) };
+};
 
 export const getRegionData = (props: ICheckRegionProps): IRegionData => {
   return (

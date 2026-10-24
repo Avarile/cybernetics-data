@@ -1,7 +1,8 @@
 import { useHotkeys, isHotkeyPressed } from 'react-hotkeys-hook';
 import type { IEditorContainerProps, IEditorRef } from '../components';
 import { SelectionRegionType } from '../interface';
-import type { IRange } from '../interface';
+import type { ICellItem, IRange } from '../interface';
+import type { CombinedSelection } from '../managers';
 
 interface ISelectionKeyboardProps
   extends Omit<
@@ -16,6 +17,15 @@ interface ISelectionKeyboardProps
   > {
   editorRef: React.MutableRefObject<IEditorRef | null>;
 }
+
+// Keyboard navigation works on cells; a row / column selection starts from the active cell
+export const getNavigationRanges = (
+  selection: CombinedSelection,
+  activeCell: ICellItem | null
+): IRange[] => {
+  if (selection.isCellSelection || activeCell == null) return selection.ranges;
+  return [activeCell, activeCell];
+};
 
 export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
   const {
@@ -83,7 +93,8 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
       const { shift, mod } = hotkeysEvent;
       const isMod = Boolean(mod);
       const isSelectionExpand = Boolean(shift);
-      let [columnIndex, rowIndex] = selection.ranges[isSelectionExpand ? 1 : 0];
+      const navigationRanges = getNavigationRanges(selection, activeCell);
+      let [columnIndex, rowIndex] = navigationRanges[isSelectionExpand ? 1 : 0];
 
       if (isMod) {
         if (isHotkeyPressed('up')) {
@@ -108,11 +119,11 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
       }
 
       const newRange = <IRange>[columnIndex, rowIndex];
-      const ranges = isSelectionExpand ? [selection.ranges[0], newRange] : [newRange, newRange];
+      const ranges = isSelectionExpand ? [navigationRanges[0], newRange] : [newRange, newRange];
 
       scrollToItem([columnIndex, rowIndex]);
       !isSelectionExpand && setActiveCell(newRange);
-      setSelection(selection.setRanges(ranges));
+      setSelection(selection.set(SelectionRegionType.Cells, ranges));
     },
     {
       enabled: Boolean(activeCell && !isEditing),
@@ -123,7 +134,7 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
   useHotkeys(
     ['tab', 'shift+tab'],
     () => {
-      const [columnIndex, rowIndex] = selection.ranges[0];
+      const [columnIndex, rowIndex] = getNavigationRanges(selection, activeCell)[0];
 
       let newColumnIndex = Math.min(columnIndex + 1, columnCount - 1);
       if (isHotkeyPressed('shift') && isHotkeyPressed('tab'))
@@ -136,7 +147,7 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
       scrollToItem([newColumnIndex, rowIndex]);
       setEditing(false);
       setActiveCell(newRange);
-      setSelection(selection.setRanges(ranges));
+      setSelection(selection.set(SelectionRegionType.Cells, ranges));
     },
     {
       enabled: Boolean(activeCell),
@@ -162,7 +173,7 @@ export const useKeyboardSelection = (props: ISelectionKeyboardProps) => {
         [0, 0],
         [columnCount - 1, pureRowCount - 1],
       ] as IRange[];
-      setSelection(selection.setRanges(ranges));
+      setSelection(selection.set(SelectionRegionType.Cells, ranges));
     },
     {
       enabled: Boolean(activeCell && !isEditing),

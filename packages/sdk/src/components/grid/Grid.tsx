@@ -40,7 +40,7 @@ import type { ISpriteMap, CombinedSelection, IIndicesMap } from './managers';
 import { CoordinateManager, SpriteManager, ImageManager } from './managers';
 import { getCellRenderer, type ICell, type IInnerCell } from './renderers';
 import { TouchLayer } from './TouchLayer';
-import { measuredCanvas } from './utils';
+import { getRegionPosition, measuredCanvas } from './utils';
 
 export interface IGridExternalProps {
   theme?: Partial<IGridTheme>;
@@ -274,10 +274,8 @@ const GridBase: ForwardRefRenderFunction<IGridRef, IGridProps> = (props, forward
     setActiveCell,
     getScrollState: () => scrollState,
     getCellIndicesAtPosition: (x: number, y: number): ICellItem | null => {
-      const { scrollLeft, scrollTop } = scrollState;
-
-      const rowIndex = coordInstance.getRowStartIndex(scrollTop + y);
-      const columnIndex = coordInstance.getColumnStartIndex(scrollLeft + x);
+      const { rowIndex, columnIndex } = getRegionPosition(coordInstance, scrollState, x, y);
+      if (rowIndex < 0 || columnIndex < 0) return null;
 
       const { type, realIndex } = getLinearRow(rowIndex);
       if (type !== LinearRowType.Row) return null;
@@ -776,6 +774,7 @@ const GridBase: ForwardRefRenderFunction<IGridRef, IGridProps> = (props, forward
         cellErrors={cellErrors}
         coordInstance={coordInstance}
         scrollState={scrollState}
+        real2RowIndex={real2RowIndex}
       />
     </div>
   );

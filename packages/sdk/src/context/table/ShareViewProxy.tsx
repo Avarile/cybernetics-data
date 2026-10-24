@@ -1,5 +1,6 @@
 import type { IViewVo, ISort, IColumnMetaRo, IFilter, IGroup, IColumnMeta } from '@teable/core';
-import { useEffect, useState } from 'react';
+import { pick } from 'lodash';
+import { useEffect, useRef, useState } from 'react';
 import { useView } from '../../hooks/use-view';
 import type { IViewInstance } from '../../model/view/factory';
 import { createViewInstance } from '../../model/view/factory';
@@ -43,19 +44,25 @@ export const ShareViewProxy = (props: IViewProxyProps) => {
   const { serverData, children } = props;
   const view = useView();
   const [viewData, setViewData] = useState<IViewVo>(getViewData(view, serverData));
+  // Keys the viewer owns locally; every other key follows the server view
+  const localKeysRef = useRef(new Set<string>(enableKey));
   const [proxyView, setProxyView] = useState<IProxyView | undefined>(() => {
     if (!viewData || !view?.id) return;
     return createViewInstance(viewData) as IProxyView;
   });
 
   useEffect(() => {
-    setViewData((viewData) => ({ ...getViewData(view, serverData), ...viewData }));
+    setViewData((viewData) => ({
+      ...getViewData(view, serverData),
+      ...pick(viewData, [...localKeysRef.current]),
+    }));
   }, [serverData, view]);
 
   useEffect(() => {
     if (!viewData || !view?.id) return;
     const newViewProxy = createViewInstance(viewData) as IProxyView;
     newViewProxy.updateSort = (sort: ISort) => {
+      localKeysRef.current.add('sort');
       setViewData({
         ...viewData,
         sort,
@@ -63,6 +70,7 @@ export const ShareViewProxy = (props: IViewProxyProps) => {
     };
 
     newViewProxy.updateFilter = (filter: IFilter) => {
+      localKeysRef.current.add('filter');
       setViewData({
         ...viewData,
         filter,
@@ -70,6 +78,7 @@ export const ShareViewProxy = (props: IViewProxyProps) => {
     };
 
     newViewProxy.updateGroup = (group: IGroup) => {
+      localKeysRef.current.add('group');
       setViewData({
         ...viewData,
         group,
@@ -77,6 +86,7 @@ export const ShareViewProxy = (props: IViewProxyProps) => {
     };
 
     newViewProxy.updateOption = (option: object) => {
+      localKeysRef.current.add('options');
       setViewData({
         ...viewData,
         options: {
@@ -86,6 +96,7 @@ export const ShareViewProxy = (props: IViewProxyProps) => {
       });
     };
     newViewProxy.updateColumnMeta = (columnMeta: IColumnMetaRo) => {
+      localKeysRef.current.add('columnMeta');
       const newViewData = {
         ...viewData,
         columnMeta: {
