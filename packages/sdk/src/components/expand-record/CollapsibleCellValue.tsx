@@ -7,9 +7,13 @@ const MAX_HEIGHT = 200;
 
 interface ICollapsibleCellValueProps {
   children: ReactNode;
+  maxHeight?: number;
 }
 
-export const CollapsibleCellValue = ({ children }: ICollapsibleCellValueProps) => {
+export const CollapsibleCellValue = ({
+  children,
+  maxHeight = MAX_HEIGHT,
+}: ICollapsibleCellValueProps) => {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [needsCollapse, setNeedsCollapse] = useState(false);
@@ -20,9 +24,9 @@ export const CollapsibleCellValue = ({ children }: ICollapsibleCellValueProps) =
 
   const checkOverflow = useCallback(() => {
     if (contentRef.current) {
-      setNeedsCollapse(contentRef.current.scrollHeight > MAX_HEIGHT);
+      setNeedsCollapse(contentRef.current.scrollHeight > maxHeight);
     }
-  }, []);
+  }, [maxHeight]);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -60,7 +64,7 @@ export const CollapsibleCellValue = ({ children }: ICollapsibleCellValueProps) =
             ? '[&_*]:[-webkit-line-clamp:unset]'
             : 'overflow-hidden [&_*]:[-webkit-line-clamp:unset]'
         }
-        style={!needsCollapse || expanded ? undefined : { maxHeight: MAX_HEIGHT }}
+        style={!needsCollapse || expanded ? undefined : { maxHeight }}
       >
         {children}
       </div>

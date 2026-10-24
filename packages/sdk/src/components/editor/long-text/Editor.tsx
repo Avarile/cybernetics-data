@@ -4,13 +4,24 @@ import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import AutoSizeTextarea from 'react-textarea-autosize';
 import type { ICellEditor, IEditorRef } from '../type';
 
-type ITextEditor = ICellEditor<string | null>;
+type ITextEditor = ICellEditor<string | null> & {
+  minRows?: number;
+  maxRows?: number;
+};
 
 const LongTextEditorBase: ForwardRefRenderFunction<IEditorRef<string>, ITextEditor> = (
   props,
   ref
 ) => {
-  const { value, onChange, className, readonly, saveOnBlur = true } = props;
+  const {
+    value,
+    onChange,
+    className,
+    readonly,
+    saveOnBlur = true,
+    minRows = 2,
+    maxRows = 10,
+  } = props;
   const [text, setText] = useState<string>(value || '');
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -36,8 +47,8 @@ const LongTextEditorBase: ForwardRefRenderFunction<IEditorRef<string>, ITextEdit
         className
       )}
       value={text}
-      minRows={2}
-      maxRows={10}
+      minRows={minRows}
+      maxRows={maxRows}
       readOnly={readonly}
       onBlur={() => saveOnBlur && saveValue()}
       onChange={onChangeInner}
