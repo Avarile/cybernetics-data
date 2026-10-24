@@ -1,4 +1,4 @@
-import type { IFilter } from '@teable/core';
+import type { IFilter } from '@cybernetics/core';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLocalFilterSync } from './useLocalFilterSync';

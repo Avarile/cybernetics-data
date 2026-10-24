@@ -1,6 +1,6 @@
+import { getBasePermissionUpdateChannel } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { getBasePermissionUpdateChannel } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ShareDbService } from '../../share-db/share-db.service';
 import { EventEmitterService } from '../event-emitter.service';

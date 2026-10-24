@@ -1,9 +1,9 @@
+import type { IDsn } from '@cybernetics/core';
+import { DriverClient, HttpErrorCode, parseDsn } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { IDsn } from '@teable/core';
-import { DriverClient, HttpErrorCode, parseDsn } from '@teable/core';
-import { Prisma, PrismaService, PrismaClient, getDatabaseUrl } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { Prisma, PrismaService, PrismaClient, getDatabaseUrl } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';
 import { CustomHttpException } from '../../custom.exception';

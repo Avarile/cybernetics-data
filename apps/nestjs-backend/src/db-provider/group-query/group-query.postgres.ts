@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INumberFieldOptions, IDateFieldOptions, FieldCore } from '@teable/core';
-import { DateFormattingPreset, TimeFormatting } from '@teable/core';
+import type { INumberFieldOptions, IDateFieldOptions, FieldCore } from '@cybernetics/core';
+import { DateFormattingPreset, TimeFormatting } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IRecordQueryGroupContext } from '../../features/record/query-builder/record-query-builder.interface';
 import { isUserOrLink } from '../../utils/is-user-or-link';

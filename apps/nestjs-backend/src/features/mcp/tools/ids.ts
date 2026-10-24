@@ -1,4 +1,4 @@
-import { IdPrefix } from '@teable/core';
+import { IdPrefix } from '@cybernetics/core';
 import { z } from 'zod';
 
 /**

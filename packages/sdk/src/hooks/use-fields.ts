@@ -1,4 +1,4 @@
-import { ViewType } from '@teable/core';
+import { ViewType } from '@cybernetics/core';
 import { sortBy } from 'lodash';
 import { useContext, useMemo } from 'react';
 import { FieldContext } from '../context';

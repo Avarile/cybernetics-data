@@ -1,9 +1,15 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type {
+  IFilter,
+  IFieldVo,
+  IViewVo,
+  ILinkFieldOptions,
+  StatisticsFunc,
+} from '@cybernetics/core';
+import { CellFormat, FieldKeyType, FieldType, HttpErrorCode, ViewType } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IFilter, IFieldVo, IViewVo, ILinkFieldOptions, StatisticsFunc } from '@teable/core';
-import { CellFormat, FieldKeyType, FieldType, HttpErrorCode, ViewType } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { ShareViewLinkRecordsType, PluginPosition } from '@teable/openapi';
 import type {
   IShareViewCalendarDailyCollectionRo,
@@ -476,9 +482,7 @@ export class ShareService {
 
     return Array.from(
       new Set(
-        rows
-          .map(({ user_id }) => user_id)
-          .filter((userId): userId is string => Boolean(userId))
+        rows.map(({ user_id }) => user_id).filter((userId): userId is string => Boolean(userId))
       )
     );
   }

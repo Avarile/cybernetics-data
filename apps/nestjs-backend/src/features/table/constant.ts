@@ -1,5 +1,5 @@
-import type { IFieldRo, IViewRo } from '@teable/core';
-import { Colors, FieldType, ViewType } from '@teable/core';
+import type { IFieldRo, IViewRo } from '@cybernetics/core';
+import { Colors, FieldType, ViewType } from '@cybernetics/core';
 import type { ICreateRecordsRo } from '@teable/openapi';
 
 export const DEFAULT_FIELDS: IFieldRo[] = [

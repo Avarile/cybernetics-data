@@ -1,5 +1,5 @@
+import { HttpErrorCode, type HttpError } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { HttpErrorCode, type HttpError } from '@teable/core';
 import { sendResetPasswordEmail } from '@teable/openapi';
 import { Spin, Error } from '@teable/ui-lib/base';
 import { Button, Input, Label, Separator } from '@teable/ui-lib/shadcn';

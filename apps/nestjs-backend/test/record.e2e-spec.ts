@@ -1,6 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
-import type { IButtonFieldCellValue, IFieldRo, IFieldVo, ISelectFieldOptions } from '@teable/core';
+import type {
+  IButtonFieldCellValue,
+  IFieldRo,
+  IFieldVo,
+  ISelectFieldOptions,
+} from '@cybernetics/core';
 import {
   CellFormat,
   Colors,
@@ -8,8 +12,10 @@ import {
   FieldType,
   generateWorkflowId,
   Relationship,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { axios, buttonClick, buttonReset, updateRecords, type ITableFullVo } from '@teable/openapi';
+import { X_TEABLE_V2_HEADER } from '../src/features/canary/interceptors/v2-indicator.interceptor';
 import {
   convertField,
   createField,
@@ -27,7 +33,6 @@ import {
   updateRecord,
   updateRecordByApi,
 } from './utils/init-app';
-import { X_TEABLE_V2_HEADER } from '../src/features/canary/interceptors/v2-indicator.interceptor';
 
 describe('OpenAPI RecordController (e2e)', () => {
   let app: INestApplication;

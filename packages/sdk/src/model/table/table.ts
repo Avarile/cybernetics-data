@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IFieldRo, IRecord, IUpdateFieldRo, IViewRo, TableAction } from '@teable/core';
-import { FieldKeyType, TableCore } from '@teable/core';
+import type { IFieldRo, IRecord, IUpdateFieldRo, IViewRo, TableAction } from '@cybernetics/core';
+import { FieldKeyType, TableCore } from '@cybernetics/core';
 import type { IUpdateOrderRo, IRecordInsertOrderRo, ITableVo } from '@teable/openapi';
 import {
   convertField,

@@ -1,4 +1,4 @@
-import { contractColorForTheme } from '@teable/core';
+import { contractColorForTheme } from '@cybernetics/core';
 import { isEqual, groupBy, cloneDeep } from 'lodash';
 import type { IGridTheme } from '../../configs';
 import { GRID_DEFAULT, ROW_RELATED_REGIONS } from '../../configs';

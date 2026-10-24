@@ -1,8 +1,8 @@
+import { getUniqName } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useBase, useBasePermission, useTables } from '@cybernetics/sdk/hooks';
 import type { Table } from '@cybernetics/sdk/model';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUniqName } from '@teable/core';
 import { MoreHorizontal, Settings, Export, Import, FileCsv, FileExcel } from '@teable/icons';
 import { duplicateTable, SUPPORTEDTYPE } from '@teable/openapi';
 import { ConfirmDialog } from '@teable/ui-lib/base';

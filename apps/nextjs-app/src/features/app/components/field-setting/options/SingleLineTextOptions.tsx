@@ -1,4 +1,4 @@
-import type { ISingleLineTextFieldOptions, ISingleLineTextShowAs } from '@teable/core';
+import type { ISingleLineTextFieldOptions, ISingleLineTextShowAs } from '@cybernetics/core';
 import { Input } from '@teable/ui-lib/shadcn';
 import { DefaultValue } from '../DefaultValue';
 import { SingleTextLineShowAs } from '../show-as/SingleLineTextShowAs';

@@ -1,4 +1,4 @@
-import { ButtonFieldCore } from '@teable/core';
+import { ButtonFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class ButtonFieldDto extends ButtonFieldCore implements FieldBase {

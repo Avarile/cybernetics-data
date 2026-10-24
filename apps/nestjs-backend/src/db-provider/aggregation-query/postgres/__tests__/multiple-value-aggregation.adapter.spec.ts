@@ -1,5 +1,5 @@
-import type { FieldCore } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { FieldCore } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import knex from 'knex';
 import { describe, expect, it } from 'vitest';
 import type { IRecordQueryAggregateContext } from '../../../../features/record/query-builder/record-query-builder.interface';

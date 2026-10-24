@@ -1,4 +1,4 @@
-import type { ILinkCellValue } from '@teable/core';
+import type { ILinkCellValue } from '@cybernetics/core';
 import { Skeleton } from '@teable/ui-lib';
 import { debounce } from 'lodash';
 import { useEffect, useMemo, useState } from 'react';

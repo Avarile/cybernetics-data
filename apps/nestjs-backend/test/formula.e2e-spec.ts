@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
 import type {
   IFieldRo,
   IFilter,
   ILinkFieldOptionsRo,
   ILookupOptionsRo,
   ISelectFieldOptionsRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   DateFormattingPreset,
   DbFieldType,
@@ -18,7 +17,8 @@ import {
   NumberFormattingType,
   Relationship,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import {
   X_CANARY_HEADER,
   axios,

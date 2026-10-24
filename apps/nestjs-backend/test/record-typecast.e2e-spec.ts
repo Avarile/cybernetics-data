@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import fs from 'fs';
 import path from 'path';
+import type { IAttachmentCellValue } from '@cybernetics/core';
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IAttachmentCellValue } from '@teable/core';
-import { FieldKeyType, FieldType } from '@teable/core';
 import { updateRecord, uploadAttachment, type ITableFullVo } from '@teable/openapi';
 import { pick } from 'lodash';
 import StorageAdapter from '../src/features/attachments/plugins/adapter';

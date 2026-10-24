@@ -1,5 +1,5 @@
-import type { INumberFormatting } from '@teable/core';
-import { NumberFormattingType, parseStringToNumber } from '@teable/core';
+import type { INumberFormatting } from '@cybernetics/core';
+import { NumberFormattingType, parseStringToNumber } from '@cybernetics/core';
 import { Input, cn } from '@teable/ui-lib';
 import { isNumber } from 'lodash';
 import type { ForwardRefRenderFunction } from 'react';

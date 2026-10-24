@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import type { ISchemaPackCatalogVo, SchemaPackId } from '@teable/openapi';
 import { vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@/test-utils';

@@ -1,4 +1,4 @@
-import type { Action } from '@teable/core';
+import type { Action } from '@cybernetics/core';
 import type { z } from 'zod';
 import type { BaseService } from '../base/base.service';
 import type { BaseGraphService } from '../base-graph/base-graph.service';

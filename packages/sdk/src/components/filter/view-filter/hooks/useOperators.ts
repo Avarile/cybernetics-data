@@ -1,5 +1,5 @@
-import type { FieldCore } from '@teable/core';
-import { getValidFilterOperators } from '@teable/core';
+import type { FieldCore } from '@cybernetics/core';
+import { getValidFilterOperators } from '@cybernetics/core';
 import { useMemo } from 'react';
 
 export const useOperators = (field?: FieldCore) => {

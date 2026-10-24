@@ -1,4 +1,17 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IViewVo } from '@cybernetics/core';
+import {
+  viewRoSchema,
+  manualSortRoSchema,
+  IManualSortRo,
+  IViewRo,
+  IColumnMetaRo,
+  columnMetaRoSchema,
+  IFilterRo,
+  IViewGroupRo,
+  filterRoSchema,
+  viewGroupRoSchema,
+} from '@cybernetics/core';
 import {
   Body,
   Controller,
@@ -13,19 +26,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import type { IViewVo } from '@teable/core';
-import {
-  viewRoSchema,
-  manualSortRoSchema,
-  IManualSortRo,
-  IViewRo,
-  IColumnMetaRo,
-  columnMetaRoSchema,
-  IFilterRo,
-  IViewGroupRo,
-  filterRoSchema,
-  viewGroupRoSchema,
-} from '@teable/core';
 import {
   viewNameRoSchema,
   IViewNameRo,

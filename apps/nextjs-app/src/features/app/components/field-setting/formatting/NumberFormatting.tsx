@@ -1,5 +1,5 @@
-import type { ICurrencyFormatting, INumberFormatting } from '@teable/core';
-import { NumberFormattingType, defaultNumberFormatting } from '@teable/core';
+import type { ICurrencyFormatting, INumberFormatting } from '@cybernetics/core';
+import { NumberFormattingType, defaultNumberFormatting } from '@cybernetics/core';
 import { Input } from '@teable/ui-lib/shadcn';
 import { Label } from '@teable/ui-lib/shadcn/ui/label';
 import {

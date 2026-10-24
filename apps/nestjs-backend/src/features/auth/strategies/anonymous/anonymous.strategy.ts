@@ -1,6 +1,6 @@
+import { ANONYMOUS_USER } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { ANONYMOUS_USER } from '@teable/core';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../../types/cls';
 import { PassportAnonymousStrategy } from './anonymous.passport';

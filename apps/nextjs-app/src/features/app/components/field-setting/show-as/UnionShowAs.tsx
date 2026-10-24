@@ -1,5 +1,5 @@
-import type { IUnionShowAs } from '@teable/core';
-import { CellValueType } from '@teable/core';
+import type { IUnionShowAs } from '@cybernetics/core';
+import { CellValueType } from '@cybernetics/core';
 import type { FC } from 'react';
 import { useMemo } from 'react';
 import { MultiNumberShowAs } from './MultiNumberShowAs';

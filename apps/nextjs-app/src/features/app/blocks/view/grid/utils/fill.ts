@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 
 const isNumberValue = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
 const isParsableDate = (v: unknown) =>

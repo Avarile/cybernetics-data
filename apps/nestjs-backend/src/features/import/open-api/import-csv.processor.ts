@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { PassThrough } from 'stream';
 import { text } from 'stream/consumers';
-import { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable, Logger } from '@nestjs/common';
 import {
   FieldKeyType,
   FieldType,
   getActionTriggerChannel,
   getRandomString,
   getTableImportChannel,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { CreateRecordAction, UploadType } from '@teable/openapi';
 import type {

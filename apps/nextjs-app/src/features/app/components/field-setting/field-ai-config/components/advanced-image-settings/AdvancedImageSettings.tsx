@@ -1,5 +1,5 @@
-import type { IAttachmentFieldGenerateImageAIConfig } from '@teable/core';
-import { IMAGE_RESOLUTIONS, ImageQuality } from '@teable/core';
+import type { IAttachmentFieldGenerateImageAIConfig } from '@cybernetics/core';
+import { IMAGE_RESOLUTIONS, ImageQuality } from '@cybernetics/core';
 import { ChevronDown, ChevronRight, Settings } from '@teable/icons';
 import { DEFAULT_ASPECT_RATIO_CANDIDATES } from '@teable/openapi';
 import type { IAspectRatio, IImageSize } from '@teable/openapi';

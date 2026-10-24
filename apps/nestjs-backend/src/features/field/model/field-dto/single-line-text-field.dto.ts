@@ -1,4 +1,4 @@
-import { SingleLineTextFieldCore } from '@teable/core';
+import { SingleLineTextFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 export class SingleLineTextFieldDto extends SingleLineTextFieldCore implements FieldBase {
   get isStructuredCellValue() {

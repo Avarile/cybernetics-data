@@ -1,6 +1,5 @@
 /* eslint-disable regexp/no-super-linear-backtracking */
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { INestApplication } from '@nestjs/common';
 import {
   FieldType,
   FieldKeyType,
@@ -8,8 +7,9 @@ import {
   TimeFormatting,
   Relationship,
   DbFieldType,
-} from '@teable/core';
-import type { IFieldRo, IFieldVo } from '@teable/core';
+} from '@cybernetics/core';
+import type { IFieldRo, IFieldVo } from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import { DB_PROVIDER_SYMBOL } from '../src/db-provider/db.provider';

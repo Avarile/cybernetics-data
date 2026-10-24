@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue, IRecord } from '@teable/core';
+import type { IAttachmentCellValue, IRecord } from '@cybernetics/core';
 import { deleteRecord } from '@teable/openapi';
 import { sonner } from '@teable/ui-lib';
 import { useEffect, useMemo, useState, type FC, type PropsWithChildren } from 'react';

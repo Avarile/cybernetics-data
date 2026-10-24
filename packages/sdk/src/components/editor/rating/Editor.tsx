@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ColorUtils } from '@teable/core';
-import type { IRatingFieldOptions } from '@teable/core';
+import { ColorUtils } from '@cybernetics/core';
+import type { IRatingFieldOptions } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useState, type FC } from 'react';
 import { RATING_ICON_MAP } from '../../cell-value';

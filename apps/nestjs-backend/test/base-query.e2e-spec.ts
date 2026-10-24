@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
 import {
   CellFormat,
   Colors,
@@ -12,7 +11,8 @@ import {
   SortFunc,
   StatisticsFunc,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { IBaseQuery, ITableFullVo } from '@teable/openapi';
 import { createTable, BaseQueryColumnType, BaseQueryJoinType } from '@teable/openapi';
 import dayjs from 'dayjs';

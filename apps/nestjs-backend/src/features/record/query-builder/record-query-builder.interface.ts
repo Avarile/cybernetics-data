@@ -1,4 +1,4 @@
-import type { FieldCore, IFilter, IGroup, ISortItem, TableDomain, Tables } from '@teable/core';
+import type { FieldCore, IFilter, IGroup, ISortItem, TableDomain, Tables } from '@cybernetics/core';
 import type { IAggregationField } from '@teable/openapi';
 import type { Knex } from 'knex';
 import type { IFieldSelectName } from './field-select.type';

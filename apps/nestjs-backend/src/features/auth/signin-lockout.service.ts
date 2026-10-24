@@ -1,5 +1,5 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { CacheService } from '../../cache/cache.service';
 import { AuthConfig, IAuthConfig } from '../../configs/auth.config';
 import { CustomHttpException } from '../../custom.exception';

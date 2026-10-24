@@ -1,5 +1,5 @@
+import { IdPrefix, HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { IdPrefix, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITemplatePermalinkVo } from '@teable/openapi';
 import { CustomHttpException } from '../../custom.exception';

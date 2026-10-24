@@ -1,5 +1,5 @@
-import type { IColumnMeta, IFieldVo, IRecord } from '@teable/core';
-import { FieldKeyType } from '@teable/core';
+import type { IColumnMeta, IFieldVo, IRecord } from '@cybernetics/core';
+import { FieldKeyType } from '@cybernetics/core';
 import { keyBy } from 'lodash';
 import { OperationName } from '../../../cache/types';
 import type { IPasteSelectionOperation } from '../../../cache/types';

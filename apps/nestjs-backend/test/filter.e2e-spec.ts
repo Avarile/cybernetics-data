@@ -1,5 +1,5 @@
+import { FieldKeyType, FieldType, isEmpty, type IFieldVo, type IFilterRo } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, isEmpty, type IFieldVo, type IFilterRo } from '@teable/core';
 import { updateViewFilter as apiSetViewFilter, getRecords as apiGetRecords } from '@teable/openapi';
 import { initApp, getView, createTable, permanentDeleteTable, createField } from './utils/init-app';
 

@@ -1,5 +1,5 @@
+import type { ITableActionKey } from '@cybernetics/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ITableActionKey } from '@teable/core';
 import { getTaskStatusCollection } from '@teable/openapi';
 import type { FC, ReactNode } from 'react';
 import { useCallback, useContext, useMemo } from 'react';

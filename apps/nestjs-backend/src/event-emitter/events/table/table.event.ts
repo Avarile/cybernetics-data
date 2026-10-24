@@ -1,4 +1,4 @@
-import type { ITableOp } from '@teable/core';
+import type { ITableOp } from '@cybernetics/core';
 import { match } from 'ts-pattern';
 import { RawOpType } from '../../../share-db/interface';
 import type { IEventContext } from '../core-event';

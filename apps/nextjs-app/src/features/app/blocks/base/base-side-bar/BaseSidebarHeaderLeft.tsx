@@ -1,8 +1,8 @@
+import { hasPermission } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useBase } from '@cybernetics/sdk/hooks';
 import { useIsReadOnlyPreview } from '@cybernetics/sdk/hooks/use-is-readonly-preview';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { ChevronsLeft, ChevronDown, Database, HelpCircle, Pencil, Share2 } from '@teable/icons';
 import {
   CollaboratorType,

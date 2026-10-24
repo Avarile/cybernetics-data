@@ -4,7 +4,7 @@ const packages = [
   '@cybernetics/sdk',
   '@teable/ui-lib',
   '@teable/openapi',
-  '@teable/core',
+  '@cybernetics/core',
   '@teable/common-i18n',
   '@teable/icons',
 ];

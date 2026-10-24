@@ -1,4 +1,4 @@
-import { DriverClient, HttpErrorCode } from '@teable/core';
+import { DriverClient, HttpErrorCode } from '@cybernetics/core';
 import type { AST } from 'node-sql-parser';
 import { Parser } from 'node-sql-parser';
 import { CustomHttpException } from '../../custom.exception';

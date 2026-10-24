@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { Action } from '@cybernetics/core';
+import { Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { Action } from '@teable/core';
-import { Role } from '@teable/core';
 import type {
   CreateAccessTokenRo,
   CreateAccessTokenVo,

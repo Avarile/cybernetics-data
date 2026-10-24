@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import { Plus } from '@teable/icons';
 import { Button, cn, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib';
 import { noop } from 'lodash';

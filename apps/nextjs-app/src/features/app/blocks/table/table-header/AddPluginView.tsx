@@ -1,5 +1,5 @@
+import { ViewType } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { ViewType } from '@teable/core';
 import { BaseNodeResourceType, type IViewInstallPluginRo } from '@teable/openapi';
 import { installViewPlugin, PluginPosition } from '@teable/openapi';
 import { Button } from '@teable/ui-lib/shadcn';

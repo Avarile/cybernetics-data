@@ -1,6 +1,6 @@
+import { NotificationStatesEnum } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config/react-query-keys';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { NotificationStatesEnum } from '@teable/core';
 import { Inbox } from '@teable/icons';
 import type { INotificationVo } from '@teable/openapi';
 import { updateNotificationStatus } from '@teable/openapi';

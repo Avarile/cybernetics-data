@@ -1,7 +1,7 @@
+import { AUTOMATION_ROBOT_USER, APP_ROBOT_USER } from '@cybernetics/core';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { AUTOMATION_ROBOT_USER, APP_ROBOT_USER } from '@teable/core';
 import type { Request } from 'express';
 import { ClsService } from 'nestjs-cls';
 import { ExtractJwt, Strategy } from 'passport-jwt';

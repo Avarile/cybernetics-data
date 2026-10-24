@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import fs from 'fs';
 import path from 'path';
+import type { IAttachmentCellValue, IAttachmentItem } from '@cybernetics/core';
+import { CellFormat, FieldKeyType, FieldType, getRandomString } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IAttachmentCellValue, IAttachmentItem } from '@teable/core';
-import { CellFormat, FieldKeyType, FieldType, getRandomString } from '@teable/core';
 import type { CreateAccessTokenRo, ITableFullVo } from '@teable/openapi';
 import {
   createAccessToken,

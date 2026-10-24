@@ -1,5 +1,5 @@
+import type { Action } from '@cybernetics/core';
 import { SetMetadata } from '@nestjs/common';
-import type { Action } from '@teable/core';
 
 export const PERMISSIONS_KEY = 'permissions';
 

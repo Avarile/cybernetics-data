@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 
 export const ID_FIELD_NAME = '__id';
 export const VERSION_FIELD_NAME = '__version';

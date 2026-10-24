@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string, @typescript-eslint/naming-convention */
-import { FieldKeyType, FieldType, Role, ViewType } from '@teable/core';
+import { FieldKeyType, FieldType, Role, ViewType } from '@cybernetics/core';
 import type { ISchemaPackAddRo, ISchemaPackInstallRo, ISchemaPackInstallVo } from '@teable/openapi';
 import {
   ADD_SCHEMA_PACKS,

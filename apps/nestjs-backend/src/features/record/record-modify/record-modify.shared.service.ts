@@ -1,18 +1,18 @@
-import { Injectable } from '@nestjs/common';
 import {
   FieldKeyType,
   FieldType,
   FormulaFieldCore,
   TableDomain,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   FieldCore,
   IMakeOptional,
   IUserFieldOptions,
   LastModifiedByFieldCore,
   LastModifiedTimeFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { IRecord, IRecordInsertOrderRo } from '@teable/openapi';
 import { isEqual, forEach, keyBy, map } from 'lodash';

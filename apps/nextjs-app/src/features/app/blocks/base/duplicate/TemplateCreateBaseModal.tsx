@@ -1,6 +1,6 @@
+import { hasPermission } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { createBaseFromTemplate, getSpaceList } from '@teable/openapi';
 import {
   Button,

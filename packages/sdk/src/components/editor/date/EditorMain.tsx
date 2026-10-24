@@ -1,4 +1,4 @@
-import { type IDateFieldOptions, TimeFormatting } from '@teable/core';
+import { type IDateFieldOptions, TimeFormatting } from '@cybernetics/core';
 import { Button, Calendar, cn, NavView } from '@teable/ui-lib';
 import { enUS, zhCN, ja, ru, fr } from 'date-fns/locale';
 import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';

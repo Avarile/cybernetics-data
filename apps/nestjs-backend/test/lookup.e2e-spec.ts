@@ -2,7 +2,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type INestApplication } from '@nestjs/common';
 import type {
   IConditionalRollupFieldOptions,
   IFieldRo,
@@ -14,7 +13,7 @@ import type {
   INumberFieldOptions,
   IUnionShowAs,
   LinkFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   CellFormat,
   Colors,
@@ -23,7 +22,8 @@ import {
   NumberFormattingType,
   Relationship,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { type INestApplication } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import { getRecords, updateRecords } from '@teable/openapi';
 import { RecordService } from '../src/features/record/record.service';

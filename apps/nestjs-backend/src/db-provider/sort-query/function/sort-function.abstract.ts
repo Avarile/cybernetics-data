@@ -1,6 +1,6 @@
+import type { FieldCore } from '@cybernetics/core';
+import { SortFunc } from '@cybernetics/core';
 import { InternalServerErrorException } from '@nestjs/common';
-import type { FieldCore } from '@teable/core';
-import { SortFunc } from '@teable/core';
 import type { Knex } from 'knex';
 import type { IRecordQuerySortContext } from '../../../features/record/query-builder/record-query-builder.interface';
 import type { ISortFunctionInterface } from './sort-function.interface';

@@ -1,6 +1,6 @@
+import { hasPermission } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { MoreHorizontal } from '@teable/icons';
 import { deleteSpace, permanentDeleteSpace, type IGetSpaceVo } from '@teable/openapi';
 import { useRouter } from 'next/router';

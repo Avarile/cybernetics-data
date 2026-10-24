@@ -1,5 +1,5 @@
+import type { IGetFieldsQuery } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IGetFieldsQuery } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { IS_TEMPLATE_HEADER, BASE_SHARE_ID_HEADER } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';

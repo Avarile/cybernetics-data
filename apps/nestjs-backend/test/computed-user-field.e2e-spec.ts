@@ -1,6 +1,6 @@
+import type { IFieldRo, IFieldVo, ILinkFieldOptionsRo, ILookupOptionsRo } from '@cybernetics/core';
+import { FieldKeyType, FieldType, Relationship, Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, ILinkFieldOptionsRo, ILookupOptionsRo } from '@teable/core';
-import { FieldKeyType, FieldType, Relationship, Role } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import {
   deleteSpaceCollaborator,

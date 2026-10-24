@@ -1,5 +1,5 @@
 import type { ParsedUrlQuery } from 'querystring';
-import { HttpError, isAnonymous } from '@teable/core';
+import { HttpError, isAnonymous } from '@cybernetics/core';
 import type {
   GetServerSidePropsContext,
   GetServerSidePropsResult,

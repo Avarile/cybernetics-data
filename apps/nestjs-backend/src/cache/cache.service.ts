@@ -1,5 +1,5 @@
+import { getRandomInt } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { getRandomInt } from '@teable/core';
 import type { Redis } from 'ioredis';
 import Keyv from 'keyv';
 import { second } from '../utils/second';

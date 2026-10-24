@@ -1,5 +1,5 @@
+import { generateAttachmentId } from '@cybernetics/core';
 import { AttachmentManager } from '@cybernetics/sdk/components';
-import { generateAttachmentId } from '@teable/core';
 import type { INotifyVo } from '@teable/openapi';
 import { UploadType } from '@teable/openapi';
 import { Spin, Button, cn } from '@teable/ui-lib';

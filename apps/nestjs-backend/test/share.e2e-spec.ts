@@ -1,4 +1,3 @@
-import { type INestApplication } from '@nestjs/common';
 import type {
   IFieldRo,
   IFilterRo,
@@ -6,7 +5,7 @@ import type {
   IRecord,
   IUserFieldOptions,
   IViewRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   ANONYMOUS_USER_ID,
   FieldKeyType,
@@ -15,7 +14,8 @@ import {
   Relationship,
   SortFunc,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { type INestApplication } from '@nestjs/common';
 import {
   urlBuilder,
   SHARE_VIEW_GET,

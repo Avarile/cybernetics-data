@@ -1,4 +1,4 @@
-import { defaultDatetimeFormatting, formatDateToString, TimeFormatting } from '@teable/core';
+import { defaultDatetimeFormatting, formatDateToString, TimeFormatting } from '@cybernetics/core';
 import { Calendar as CalendarIcon } from '@teable/icons';
 import { Button, Input, Popover, PopoverContent, PopoverTrigger, cn } from '@teable/ui-lib';
 import dayjs from 'dayjs';

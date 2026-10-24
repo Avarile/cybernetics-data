@@ -1,5 +1,3 @@
-import type { INestApplication } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import type {
   CellFormat,
   IDatetimeFormatting,
@@ -8,7 +6,7 @@ import type {
   ILinkFieldOptions,
   ILinkFieldOptionsRo,
   ILookupOptionsRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   Colors,
   DateFormattingPreset,
@@ -18,7 +16,9 @@ import {
   Relationship,
   SingleLineTextFieldCore,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import type { Knex } from 'knex';

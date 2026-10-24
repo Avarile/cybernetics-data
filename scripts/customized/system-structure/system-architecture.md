@@ -33,7 +33,7 @@ fork rebranded as Cybernetics Data Centre.
 | `apps/mastra-ai` | `mastra-ai` | Separate AI agent runtime (Mastra) |
 | `apps/nextjs-statics` | — | Static docs / homepage content, no package manifest |
 | `plugins` | `@teable/plugin` | Separate Next app for iframe-embedded plugins (charts, sheet-form, …) |
-| `packages/core` | `@teable/core` | Domain primitives: `IdPrefix`, zod field/view schemas, `FieldOpBuilder` / `ViewOpBuilder`, formula AST |
+| `packages/core` | `@cybernetics/core` | Domain primitives: `IdPrefix`, zod field/view schemas, `FieldOpBuilder` / `ViewOpBuilder`, formula AST |
 | `packages/openapi` | `@teable/openapi` | **The contract**: route constants + zod request/response schemas + `createAxios()`. Imported by *both* controller and client |
 | `packages/sdk` | `@cybernetics/sdk` | React contexts / hooks / models + the ShareDB client connection |
 | `packages/db-main-prisma` | `@teable/db-main-prisma` | Prisma client for **metadata** |

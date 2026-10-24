@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string, @typescript-eslint/naming-convention */
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
 import type { IBaseGraphQueryRo, IBaseGraphVo, ITableFullVo } from '@teable/openapi';
 import {
   axios,

@@ -1,5 +1,5 @@
+import { DriverClient } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { DriverClient } from '@teable/core';
 import { createTable, initApp, permanentDeleteTable } from './utils/init-app';
 
 describe('Table Creation Concurrency (e2e)', () => {

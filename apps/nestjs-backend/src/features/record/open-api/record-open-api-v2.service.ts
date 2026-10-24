@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/cognitive-complexity */
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { trace } from '@opentelemetry/api';
 import {
   CellFormat,
   CellValueType,
@@ -14,7 +12,9 @@ import {
   type IDatetimeFormatting,
   type IFilter,
   type IFilterSet,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { trace } from '@opentelemetry/api';
 import type {
   IClearSelectionStreamEvent,
   IDeleteSelectionStreamEvent,

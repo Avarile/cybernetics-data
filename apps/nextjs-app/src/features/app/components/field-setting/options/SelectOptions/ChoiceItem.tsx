@@ -1,5 +1,5 @@
-import type { ISelectFieldChoice } from '@teable/core';
-import { ColorUtils } from '@teable/core';
+import type { ISelectFieldChoice } from '@cybernetics/core';
+import { ColorUtils } from '@cybernetics/core';
 import { Popover, PopoverTrigger, Button, PopoverContent, Input } from '@teable/ui-lib/shadcn';
 import { useState, useEffect, useRef } from 'react';
 import { ColorPicker } from './ColorPicker';

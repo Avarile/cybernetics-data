@@ -1,10 +1,10 @@
+import { FieldType, TimeFormatting } from '@cybernetics/core';
 import {
   useFieldOperations,
   useTableId,
   useTablePermission,
   useView,
 } from '@cybernetics/sdk/hooks';
-import { FieldType, TimeFormatting } from '@teable/core';
 import {
   Button,
   Dialog,

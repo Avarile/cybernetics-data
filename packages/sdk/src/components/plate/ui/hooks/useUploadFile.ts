@@ -1,4 +1,4 @@
-import { generateAttachmentId } from '@teable/core';
+import { generateAttachmentId } from '@cybernetics/core';
 import type { INotifyVo } from '@teable/openapi';
 import { UploadType } from '@teable/openapi';
 import { useState } from 'react';

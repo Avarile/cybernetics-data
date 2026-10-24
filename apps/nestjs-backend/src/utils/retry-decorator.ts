@@ -1,5 +1,5 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Logger } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { thresholdConfig } from '../configs/threshold.config';
 import { CustomHttpException } from '../custom.exception';
 

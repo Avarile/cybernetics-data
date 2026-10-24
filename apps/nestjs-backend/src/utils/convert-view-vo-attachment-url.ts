@@ -1,5 +1,5 @@
-import type { IFormViewOptions, IPluginViewOptions, IViewVo } from '@teable/core';
-import { ViewType } from '@teable/core';
+import type { IFormViewOptions, IPluginViewOptions, IViewVo } from '@cybernetics/core';
+import { ViewType } from '@cybernetics/core';
 import { getPublicFullStorageUrl } from '../features/attachments/plugins/utils';
 
 export const convertViewVoAttachmentUrl = (viewVo: IViewVo) => {

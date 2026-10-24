@@ -1,4 +1,4 @@
-import type { FunctionName } from '@teable/core';
+import type { FunctionName } from '@cybernetics/core';
 import type { IFunctionSchema } from '@teable/openapi';
 import { cn } from '@teable/ui-lib';
 import type { FC } from 'react';

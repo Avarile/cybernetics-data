@@ -1,4 +1,4 @@
-import { getRandomString } from '@teable/core';
+import { getRandomString } from '@cybernetics/core';
 import * as bcrypt from 'bcrypt';
 
 export const generateSecret = async (_secret?: string) => {

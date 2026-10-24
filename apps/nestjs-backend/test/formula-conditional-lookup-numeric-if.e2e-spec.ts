@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { IFieldRo, IFilter, ILookupOptionsRo } from '@cybernetics/core';
+import { FieldType, getRandomString } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFilter, ILookupOptionsRo } from '@teable/core';
-import { FieldType, getRandomString } from '@teable/core';
 import {
   createField,
   createTable,

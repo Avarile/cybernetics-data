@@ -1,5 +1,5 @@
-import type { IFieldVo } from '@teable/core';
-import { CellValueType, DbFieldType, FieldType } from '@teable/core';
+import type { IFieldVo } from '@cybernetics/core';
+import { CellValueType, DbFieldType, FieldType } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 import { createFieldInstance } from './factory';
 

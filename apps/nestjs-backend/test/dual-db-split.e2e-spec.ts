@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { ILinkFieldOptions } from '@cybernetics/core';
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { ILinkFieldOptions } from '@teable/core';
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import {

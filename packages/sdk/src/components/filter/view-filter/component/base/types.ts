@@ -1,4 +1,4 @@
-import type { Colors } from '@teable/core';
+import type { Colors } from '@cybernetics/core';
 
 interface IOption<T = string> {
   value: T;

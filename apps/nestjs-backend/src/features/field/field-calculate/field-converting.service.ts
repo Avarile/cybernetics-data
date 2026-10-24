@@ -1,4 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
 import type {
   IFieldPropertyKey,
   ILookupOptionsVo,
@@ -7,7 +6,7 @@ import type {
   IConvertFieldRo,
   ILinkFieldOptions,
   FieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   ColorUtils,
   DbFieldType,
@@ -20,9 +19,10 @@ import {
   isLinkLookupOptions,
   PRIMARY_SUPPORTED_TYPES,
   RecordOpBuilder,
-} from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { difference, intersection, isEmpty, isEqual, keyBy, set, uniq } from 'lodash';
 import { InjectModel } from 'nest-knexjs';

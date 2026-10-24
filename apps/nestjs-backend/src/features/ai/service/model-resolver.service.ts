@@ -1,10 +1,10 @@
+import type { OpenAIProvider } from '@ai-sdk/openai';
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { LLMProviderType, SettingKey } from '@teable/openapi';
 import type { LLMProvider } from '@teable/openapi';
 import type { ImageModel, LanguageModel } from 'ai';
 import { createGateway } from 'ai';
-import type { OpenAIProvider } from '@ai-sdk/openai';
 import { CustomHttpException } from '../../../custom.exception';
 import { SettingService } from '../../setting/setting.service';
 import { getAdaptedProviderOptions, modelProviders } from '../util';

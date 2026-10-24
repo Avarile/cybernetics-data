@@ -1,4 +1,4 @@
-import type { IFilter, IGroup, StatisticsFunc } from '@teable/core';
+import type { IFilter, IGroup, StatisticsFunc } from '@cybernetics/core';
 import type {
   IAggregationField,
   IQueryBaseRo,

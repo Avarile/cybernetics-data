@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { HttpErrorCode, IdPrefix, RecordOpBuilder, FieldType } from '@cybernetics/core';
+import type { IOtOperation, IRecord, TableDomain } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { HttpErrorCode, IdPrefix, RecordOpBuilder, FieldType } from '@teable/core';
-import type { IOtOperation, IRecord, TableDomain } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { groupBy, isEmpty, keyBy } from 'lodash';
 import { customAlphabet } from 'nanoid';

@@ -1,4 +1,4 @@
-import type { TableDomain } from '@teable/core';
+import type { TableDomain } from '@cybernetics/core';
 
 export interface IDatabaseView {
   createView(table: TableDomain): Promise<void>;

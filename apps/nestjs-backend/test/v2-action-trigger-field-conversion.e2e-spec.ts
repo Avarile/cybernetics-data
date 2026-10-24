@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldKeyType, FieldType, Relationship, getActionTriggerChannel } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, Relationship, getActionTriggerChannel } from '@teable/core';
 import { axios, X_CANARY_HEADER } from '@teable/openapi';
 import type { Connection } from 'sharedb/lib/client';
 import { ShareDbService } from '../src/share-db/share-db.service';

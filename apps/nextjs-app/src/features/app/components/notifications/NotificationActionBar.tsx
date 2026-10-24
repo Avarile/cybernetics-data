@@ -1,4 +1,4 @@
-import { NotificationStatesEnum } from '@teable/core';
+import { NotificationStatesEnum } from '@cybernetics/core';
 import { CheckSquare, MarkUnread } from '@teable/icons';
 import {
   Button,

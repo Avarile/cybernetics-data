@@ -3,7 +3,7 @@ import {
   analyzeFilterValidationIssues,
   type IFilter,
   type IFilterValidationFieldMeta,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { Popover, PopoverTrigger, PopoverContent, cn } from '@teable/ui-lib';
 import { useMemo, useState } from 'react';
 import { useFields, useTableId, useViewId } from '../../../hooks';

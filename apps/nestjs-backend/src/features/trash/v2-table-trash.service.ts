@@ -1,6 +1,6 @@
+import type { IRecord } from '@cybernetics/core';
+import { generateOperationId } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { IRecord } from '@teable/core';
-import { generateOperationId } from '@teable/core';
 import { ResourceType } from '@teable/openapi';
 import { v2MetaDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import {

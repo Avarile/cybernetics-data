@@ -1,4 +1,4 @@
-import type { IRecord } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
 import React from 'react';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

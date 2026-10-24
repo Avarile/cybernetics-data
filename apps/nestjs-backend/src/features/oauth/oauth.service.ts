@@ -1,5 +1,5 @@
+import { generateClientId, getRandomString, nullsToUndefined } from '@cybernetics/core';
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { generateClientId, getRandomString, nullsToUndefined } from '@teable/core';
 import { Prisma, PrismaService } from '@teable/db-main-prisma';
 import type {
   AuthorizedVo,

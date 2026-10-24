@@ -1,5 +1,5 @@
-import type { IViewVo } from '@teable/core';
-import { assertNever, ViewType } from '@teable/core';
+import type { IViewVo } from '@cybernetics/core';
+import { assertNever, ViewType } from '@cybernetics/core';
 import { plainToInstance } from 'class-transformer';
 import type { Doc } from 'sharedb/lib/client';
 import { CalendarView } from './calendar.view';

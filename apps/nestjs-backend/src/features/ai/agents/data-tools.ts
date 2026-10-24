@@ -1,5 +1,5 @@
+import { filterSchema } from '@cybernetics/core';
 import { Logger } from '@nestjs/common';
-import { filterSchema } from '@teable/core';
 import { orderBySchema } from '@teable/openapi';
 import { tool } from 'ai';
 import { z } from 'zod';

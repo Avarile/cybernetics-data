@@ -1,4 +1,4 @@
-import { MultipleSelectFieldCore } from '@teable/core';
+import { MultipleSelectFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 import { SelectFieldSdk } from './mixin/select.field';

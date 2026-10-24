@@ -1,4 +1,4 @@
-import type { IOtOperation } from '@teable/core';
+import type { IOtOperation } from '@cybernetics/core';
 import { isEmpty, isEqual } from 'lodash';
 export interface IOpsMap {
   [tableId: string]: {

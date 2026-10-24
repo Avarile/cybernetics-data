@@ -13,8 +13,8 @@ import {
   oneWeekAgo,
   oneWeekFromNow,
   pastNumberOfDays,
-} from '@teable/core';
-import type { ITimeZoneString } from '@teable/core';
+} from '@cybernetics/core';
+import type { ITimeZoneString } from '@cybernetics/core';
 
 const INPUTOPTIONS: string[] = [
   daysAgo.value,

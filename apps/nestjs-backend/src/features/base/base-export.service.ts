@@ -1,18 +1,18 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { Readable, PassThrough } from 'stream';
-import { Injectable, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import * as Sentry from '@sentry/nestjs';
 import type {
   ILinkFieldOptions,
   ILocalization,
   IConditionalRollupFieldOptions,
   IConditionalLookupOptions,
-} from '@teable/core';
-import { FieldType, getRandomString, ViewType, isLinkLookupOptions } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldType, getRandomString, ViewType, isLinkLookupOptions } from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import * as Sentry from '@sentry/nestjs';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Field, View, TableMeta, Base } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import { PluginPosition, UploadType } from '@teable/openapi';
 import type { BaseNodeResourceType, IBaseJson } from '@teable/openapi';
 import archiver from 'archiver';

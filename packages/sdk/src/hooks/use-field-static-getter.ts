@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Colors, FieldType } from '@teable/core';
+import { Colors, FieldType } from '@cybernetics/core';
 
 import {
   Calendar as CalendarIcon,

@@ -3,8 +3,8 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable @typescript-eslint/naming-convention */
 
+import { FieldKeyType, FieldType, Relationship, getRandomString } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, Relationship, getRandomString } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {

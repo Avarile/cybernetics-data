@@ -1,5 +1,5 @@
+import type { IColorConfig } from '@cybernetics/core';
 import type { DateField, IFieldInstance, SingleSelectField } from '@cybernetics/sdk/model';
-import type { IColorConfig } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import type { Dispatch, SetStateAction } from 'react';
 import { createContext } from 'react';

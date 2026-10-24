@@ -1,4 +1,4 @@
-import type { IUserCellValue } from '@teable/core';
+import type { IUserCellValue } from '@cybernetics/core';
 import type { ForwardRefRenderFunction } from 'react';
 import { useRef, useImperativeHandle, forwardRef } from 'react';
 import { useTranslation } from '../../../context/app/i18n';

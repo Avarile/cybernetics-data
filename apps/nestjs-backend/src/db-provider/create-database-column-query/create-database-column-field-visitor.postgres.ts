@@ -22,8 +22,8 @@ import type {
   FieldCore,
   ILinkFieldOptions,
   ButtonFieldCore,
-} from '@teable/core';
-import { DbFieldType, Relationship } from '@teable/core';
+} from '@cybernetics/core';
+import { DbFieldType, Relationship } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { AutoNumberFieldDto } from '../../features/field/model/field-dto/auto-number-field.dto';
 import type { CreatedByFieldDto } from '../../features/field/model/field-dto/created-by-field.dto';

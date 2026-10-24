@@ -1,7 +1,7 @@
+import { FieldType, HttpErrorCode, isAnonymous } from '@cybernetics/core';
+import type { IViewVo, IShareViewMeta, ILinkFieldOptions } from '@cybernetics/core';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { FieldType, HttpErrorCode, isAnonymous } from '@teable/core';
-import type { IViewVo, IShareViewMeta, ILinkFieldOptions } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ClsService } from 'nestjs-cls';
 import { CustomHttpException } from '../../custom.exception';

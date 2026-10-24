@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { DbFieldType } from '@teable/core';
-import type { FormulaParamType, IFormulaParamMetadata } from '@teable/core';
+import { DbFieldType } from '@cybernetics/core';
+import type { FormulaParamType, IFormulaParamMetadata } from '@cybernetics/core';
 
 export interface IResolvedFormulaParamInfo {
   hasMetadata: boolean;

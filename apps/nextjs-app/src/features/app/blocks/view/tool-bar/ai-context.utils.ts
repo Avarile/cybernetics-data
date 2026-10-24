@@ -1,5 +1,5 @@
-import { FieldType, isMultiValueLink } from '@teable/core';
-import type { Relationship } from '@teable/core';
+import { FieldType, isMultiValueLink } from '@cybernetics/core';
+import type { Relationship } from '@cybernetics/core';
 
 export interface IFieldInfo {
   id: string;

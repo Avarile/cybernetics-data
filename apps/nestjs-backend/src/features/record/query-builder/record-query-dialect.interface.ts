@@ -5,7 +5,7 @@ import type {
   Relationship,
   DbFieldType,
   IDatetimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type { Knex } from 'knex';
 
 /**

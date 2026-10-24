@@ -1,5 +1,5 @@
-import type { IShareViewMeta } from '@teable/core';
-import { GalleryViewCore } from '@teable/core';
+import type { IShareViewMeta } from '@cybernetics/core';
+import { GalleryViewCore } from '@cybernetics/core';
 
 export class GalleryViewDto extends GalleryViewCore {
   defaultShareMeta: IShareViewMeta = {

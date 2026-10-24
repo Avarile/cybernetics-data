@@ -1,4 +1,4 @@
-import type { TableDomain } from '@teable/core';
+import type { TableDomain } from '@cybernetics/core';
 import { FormulaSupportGeneratedColumnValidator } from './formula-support-generated-column-validator';
 import type { IGeneratedColumnQuerySupportValidator } from './sql-conversion.visitor';
 

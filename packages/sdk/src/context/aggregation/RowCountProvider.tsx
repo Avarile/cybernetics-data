@@ -1,5 +1,5 @@
+import type { ITableActionKey, IViewActionKey } from '@cybernetics/core';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ITableActionKey, IViewActionKey } from '@teable/core';
 import type { IQueryBaseRo } from '@teable/openapi';
 import { getRowCount, getShareViewRowCount } from '@teable/openapi';
 import { throttle } from 'lodash';

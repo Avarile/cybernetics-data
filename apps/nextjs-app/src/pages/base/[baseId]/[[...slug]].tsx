@@ -1,6 +1,6 @@
+import { IdPrefix } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { QueryClient } from '@tanstack/react-query';
-import { IdPrefix } from '@teable/core';
 import { BaseNodeResourceType } from '@teable/openapi';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';

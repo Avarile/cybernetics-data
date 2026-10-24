@@ -1,5 +1,5 @@
-import type { IFieldVo, IRecord } from '@teable/core';
-import { CellValueType, Colors, DbFieldType, FieldType } from '@teable/core';
+import type { IFieldVo, IRecord } from '@cybernetics/core';
+import { CellValueType, Colors, DbFieldType, FieldType } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 import { createFieldInstance } from '../field/factory';
 import type { SingleSelectField } from '../field/single-select.field';

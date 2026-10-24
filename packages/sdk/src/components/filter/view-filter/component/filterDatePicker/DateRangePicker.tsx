@@ -1,6 +1,6 @@
+import type { IDateFieldOptions, ITimeZoneString } from '@cybernetics/core';
+import { TimeFormatting } from '@cybernetics/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type { IDateFieldOptions, ITimeZoneString } from '@teable/core';
-import { TimeFormatting } from '@teable/core';
 import {
   Button,
   Calendar,

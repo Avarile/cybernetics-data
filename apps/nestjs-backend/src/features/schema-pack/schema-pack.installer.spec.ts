@@ -1,4 +1,4 @@
-import { Relationship } from '@teable/core';
+import { Relationship } from '@cybernetics/core';
 import type { ISchemaPackAddRo, ISchemaPackInstallRo } from '@teable/openapi';
 import type { ICatalogField } from './schema-pack.catalog';
 import { holdsMany, SchemaPackInstallerService } from './schema-pack.installer';

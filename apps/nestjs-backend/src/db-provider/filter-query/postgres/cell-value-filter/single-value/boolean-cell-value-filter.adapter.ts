@@ -1,4 +1,4 @@
-import { isFieldReferenceValue, type IFilterOperator, type IFilterValue } from '@teable/core';
+import { isFieldReferenceValue, type IFilterOperator, type IFilterValue } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IDbProvider } from '../../../../db.provider.interface';
 import { CellValueFilterPostgres } from '../cell-value-filter.postgres';

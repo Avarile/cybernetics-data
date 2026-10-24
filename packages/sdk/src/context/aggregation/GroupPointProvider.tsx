@@ -1,6 +1,6 @@
+import type { IKanbanViewOptions, ITableActionKey, IViewActionKey } from '@cybernetics/core';
+import { SortFunc, ViewType } from '@cybernetics/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IKanbanViewOptions, ITableActionKey, IViewActionKey } from '@teable/core';
-import { SortFunc, ViewType } from '@teable/core';
 import type { IGroupPointsRo } from '@teable/openapi';
 import { getGroupPoints } from '@teable/openapi';
 import { throttle } from 'lodash';

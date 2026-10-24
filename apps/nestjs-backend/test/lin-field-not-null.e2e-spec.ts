@@ -8,8 +8,8 @@
  * 4. Edit the Link field and turn off notNull
  * 5. Try to create a record with empty Link value - FAILS because DB constraint still exists
  */
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   createField,

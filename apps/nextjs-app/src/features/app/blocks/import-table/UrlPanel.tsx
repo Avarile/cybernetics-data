@@ -1,5 +1,5 @@
+import type { FieldType } from '@cybernetics/core';
 import type { UseMutateAsyncFunction } from '@tanstack/react-query';
-import type { FieldType } from '@teable/core';
 import type { SUPPORTEDTYPE } from '@teable/openapi';
 import { importTypeMap } from '@teable/openapi';
 import { Input, Button, Spin } from '@teable/ui-lib';

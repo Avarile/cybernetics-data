@@ -1,6 +1,6 @@
+import type { IAttachmentCellValue, IOtOperation } from '@cybernetics/core';
+import { isImage, RecordOpBuilder } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IAttachmentCellValue, IOtOperation } from '@teable/core';
-import { isImage, RecordOpBuilder } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType } from '@teable/openapi';
 import type { EditOp, CreateOp, DeleteOp } from 'sharedb';

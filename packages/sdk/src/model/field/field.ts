@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IFieldRo, IFieldVo, IUpdateFieldRo } from '@teable/core';
-import { FieldCore } from '@teable/core';
+import type { IFieldRo, IFieldVo, IUpdateFieldRo } from '@cybernetics/core';
+import { FieldCore } from '@cybernetics/core';
 import { createField, deleteField, convertField, updateField } from '@teable/openapi';
 import type { Doc } from 'sharedb/lib/client';
 

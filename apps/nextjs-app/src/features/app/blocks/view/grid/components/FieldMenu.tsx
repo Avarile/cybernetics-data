@@ -1,4 +1,6 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+import type { IFilter, IGroup, ISort } from '@cybernetics/core';
+import { FieldType, getValidFilterOperators } from '@cybernetics/core';
 import type { GridView } from '@cybernetics/sdk';
 import {
   useFieldPermission,
@@ -13,8 +15,6 @@ import {
 } from '@cybernetics/sdk';
 import { insertSingle } from '@cybernetics/sdk/utils';
 import { useMutation } from '@tanstack/react-query';
-import type { IFilter, IGroup, ISort } from '@teable/core';
-import { FieldType, getValidFilterOperators } from '@teable/core';
 import {
   EyeOff,
   ArrowLeft,

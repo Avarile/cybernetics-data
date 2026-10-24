@@ -1,6 +1,6 @@
+import { FieldKeyType } from '@cybernetics/core';
 import { useRecordOperations } from '@cybernetics/sdk/hooks';
 import type { DateField } from '@cybernetics/sdk/model';
-import { FieldKeyType } from '@teable/core';
 import { Plus } from '@teable/icons';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 import { createPortal } from 'react-dom';

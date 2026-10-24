@@ -1,4 +1,4 @@
-import { CellValueType, FieldType } from '@teable/core';
+import { CellValueType, FieldType } from '@cybernetics/core';
 import { BaseQueryColumnType } from '@teable/openapi';
 import { useMemo } from 'react';
 import { useOperatorI18nMap, type IFilterBaseComponent } from '../../../filter';

@@ -1,13 +1,13 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Logger } from '@nestjs/common';
 import type {
   IFilter,
   ILookupLinkOptionsVo,
   ISortItem,
   TableDomain,
   FieldCore,
-} from '@teable/core';
-import { DriverClient, parseFormulaToSQL, FieldType } from '@teable/core';
+} from '@cybernetics/core';
+import { DriverClient, parseFormulaToSQL, FieldType } from '@cybernetics/core';
+import { Logger } from '@nestjs/common';
 import type { IAggregationField, ISearchIndexByQueryRo, TableIndex } from '@teable/openapi';
 import type { Knex } from 'knex';
 import type { IFieldInstance } from '../features/field/model/factory';

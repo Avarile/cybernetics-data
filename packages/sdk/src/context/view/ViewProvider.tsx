@@ -1,5 +1,5 @@
-import type { IViewVo } from '@teable/core';
-import { IdPrefix } from '@teable/core';
+import type { IViewVo } from '@cybernetics/core';
+import { IdPrefix } from '@cybernetics/core';
 import type { FC, ReactNode } from 'react';
 import { useContext, useMemo } from 'react';
 import { createViewInstance } from '../../model/view/factory';

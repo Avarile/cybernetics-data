@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldKeyType, IdPrefix, ViewType } from '@cybernetics/core';
+import type { IFieldVo, IRecord } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, IdPrefix, ViewType } from '@teable/core';
-import type { IFieldVo, IRecord } from '@teable/core';
 import {
   createRecords as apiCreateRecords,
   updateRecord as apiUpdateRecord,

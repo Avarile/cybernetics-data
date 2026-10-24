@@ -3,8 +3,8 @@ import type {
   ISingleSelectFieldCustomizeAIConfig,
   ISingleSelectFieldAIConfig,
   ITextFieldAIConfig,
-} from '@teable/core';
-import { FieldAIActionType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldAIActionType } from '@cybernetics/core';
 import { ListChecks, Pencil } from '@teable/icons';
 import { Selector } from '@teable/ui-lib/base';
 import { Textarea } from '@teable/ui-lib/shadcn';

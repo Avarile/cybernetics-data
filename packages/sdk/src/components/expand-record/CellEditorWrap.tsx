@@ -1,5 +1,5 @@
-import type { ILinkCellValue, ILinkFieldOptions } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { ILinkCellValue, ILinkFieldOptions } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { CellEditor } from '../cell-value-editor';
 import type { ICellValueEditor } from '../cell-value-editor/type';

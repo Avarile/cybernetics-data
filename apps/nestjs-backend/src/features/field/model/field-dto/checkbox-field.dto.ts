@@ -1,4 +1,4 @@
-import { CheckboxFieldCore } from '@teable/core';
+import { CheckboxFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class CheckboxFieldDto extends CheckboxFieldCore implements FieldBase {

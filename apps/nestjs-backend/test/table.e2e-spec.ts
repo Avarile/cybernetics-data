@@ -1,8 +1,8 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
+import { FieldKeyType, FieldType, Relationship, RowHeightLevel, ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { FieldKeyType, FieldType, Relationship, RowHeightLevel, ViewType } from '@teable/core';
 import type { ICreateTableRo } from '@teable/openapi';
 import {
   BaseNodeResourceType,

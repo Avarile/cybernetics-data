@@ -1,4 +1,4 @@
-import { CellValueType, FieldType, isNot, isNotExactly } from '@teable/core';
+import { CellValueType, FieldType, isNot, isNotExactly } from '@cybernetics/core';
 import type { IFieldInstance } from '../features/field/model/factory';
 import { generateFilterItem } from './filter';
 

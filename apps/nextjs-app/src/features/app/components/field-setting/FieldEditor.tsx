@@ -1,14 +1,14 @@
-import { useFieldStaticGetter } from '@cybernetics/sdk';
-import { useFields } from '@cybernetics/sdk/hooks';
-import { useQuery } from '@tanstack/react-query';
-import type { IFieldOptionsRo, IFieldVo } from '@teable/core';
+import type { IFieldOptionsRo, IFieldVo } from '@cybernetics/core';
 import {
   FieldType,
   checkFieldNotNullValidationEnabled,
   checkFieldUniqueValidationEnabled,
   isConditionalLookupOptions,
   isLinkLookupOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { useFieldStaticGetter } from '@cybernetics/sdk';
+import { useFields } from '@cybernetics/sdk/hooks';
+import { useQuery } from '@tanstack/react-query';
 import { Plus } from '@teable/icons';
 import { getField } from '@teable/openapi';
 import { Button, Textarea } from '@teable/ui-lib/shadcn';

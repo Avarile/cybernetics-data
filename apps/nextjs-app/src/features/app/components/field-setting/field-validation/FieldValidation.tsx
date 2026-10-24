@@ -1,8 +1,8 @@
-import type { FieldType } from '@teable/core';
+import type { FieldType } from '@cybernetics/core';
 import {
   checkFieldUniqueValidationEnabled,
   checkFieldNotNullValidationEnabled,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { Label, Switch } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { tableConfig } from '@/features/i18n/table.config';

@@ -1,5 +1,5 @@
+import { getUniqName } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { getUniqName } from '@teable/core';
 import { Database, LayoutTemplate } from '@teable/icons';
 import { createBase } from '@teable/openapi';
 import {

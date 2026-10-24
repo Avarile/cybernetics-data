@@ -145,7 +145,7 @@
     "@tanstack/react-table": "8.11.7",
     "@tanstack/react-virtual": "3.2.0",
     "@teable/common-i18n": "workspace:^",
-    "@teable/core": "workspace:^",
+    "@cybernetics/core": "workspace:^",
     "@teable/icons": "workspace:^",
     "@teable/next-themes": "0.3.5",
     "@teable/openapi": "workspace:^",

@@ -4,14 +4,14 @@ import type {
   IButtonFieldOptions,
   INumberShowAs,
   ISingleLineTextShowAs,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   RowHeightLevel,
   CellValueType,
   ColorUtils,
   FieldType,
   checkButtonClickable,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { keyBy } from 'lodash';
 import { LRUCache } from 'lru-cache';
 import { useCallback, useMemo } from 'react';

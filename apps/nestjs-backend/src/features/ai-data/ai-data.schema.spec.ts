@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
-import { SortFunc } from '@teable/core';
+import { SortFunc } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 import {
   detectTableProfile,

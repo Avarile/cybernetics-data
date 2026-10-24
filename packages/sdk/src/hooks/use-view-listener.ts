@@ -1,4 +1,4 @@
-import type { IViewActionKey } from '@teable/core';
+import type { IViewActionKey } from '@cybernetics/core';
 import { useActionListener } from './use-presence';
 
 export const useViewListener = (

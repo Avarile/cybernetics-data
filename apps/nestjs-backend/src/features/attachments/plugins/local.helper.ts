@@ -1,5 +1,5 @@
 import { isAbsolute, resolve } from 'path';
-import { HttpErrorCode } from '@teable/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { READ_PATH } from '@teable/openapi';
 import { CustomHttpException } from '../../../custom.exception';
 

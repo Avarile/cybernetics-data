@@ -1,5 +1,5 @@
+import type { ISort } from '@cybernetics/core';
 import { SortBase, useSortNode } from '@cybernetics/sdk/components';
-import type { ISort } from '@teable/core';
 import { isEqual } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useDebounce } from 'react-use';

@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import { useFields } from '@cybernetics/sdk/hooks';
-import { FieldType } from '@teable/core';
 import {
   Label,
   Select,

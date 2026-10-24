@@ -1,6 +1,6 @@
+import type { ILinkFieldOptions } from '@cybernetics/core';
+import { FieldType, Relationship, Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { ILinkFieldOptions } from '@teable/core';
-import { FieldType, Relationship, Role } from '@teable/core';
 import type {
   ICreateBaseVo,
   ICreateSpaceVo,

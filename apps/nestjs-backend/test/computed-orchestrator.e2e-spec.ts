@@ -2,14 +2,13 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-identical-functions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { INestApplication } from '@nestjs/common';
 import type {
   IFieldRo,
   IFilter,
   IFilterItem,
   ILinkFieldOptions,
   ILookupOptionsRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   FieldType,
   Relationship,
@@ -17,7 +16,8 @@ import {
   is as FilterOperatorIs,
   isGreater as FilterOperatorIsGreater,
   isNotEmpty as FilterOperatorIsNotEmpty,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { duplicateField, convertField } from '@teable/openapi';
 import { ActorId, type IComputedUpdateDrainService, v2CoreTokens } from '@teable/v2-core';

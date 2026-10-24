@@ -1,4 +1,4 @@
-import type { IFilterItem } from '@teable/core';
+import type { IFilterItem } from '@cybernetics/core';
 import { Input, cn } from '@teable/ui-lib';
 import { toString } from 'lodash';
 import { useEffect, useRef, useState } from 'react';

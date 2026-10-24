@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
 import type {
   IButtonFieldCellValue,
   IButtonFieldOptions,
@@ -14,7 +13,7 @@ import type {
   ISelectFieldOptions,
   ITextFieldAIConfig,
   IUserCellValue,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   Relationship,
   TimeFormatting,
@@ -34,7 +33,8 @@ import {
   FieldAIActionType,
   generateWorkflowId,
   Role as baseRole,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { IUserMeVo, ITableFullVo } from '@teable/openapi';
 import {

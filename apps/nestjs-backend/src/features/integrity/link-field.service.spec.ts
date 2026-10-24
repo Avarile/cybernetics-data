@@ -1,4 +1,4 @@
-import { FieldType, Relationship } from '@teable/core';
+import { FieldType, Relationship } from '@cybernetics/core';
 import { describe, expect, it, vi } from 'vitest';
 import { LinkFieldIntegrityService } from './link-field.service';
 

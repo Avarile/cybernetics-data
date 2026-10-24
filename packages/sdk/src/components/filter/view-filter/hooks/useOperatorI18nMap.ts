@@ -1,4 +1,4 @@
-import { CellValueType } from '@teable/core';
+import { CellValueType } from '@cybernetics/core';
 import { useTranslation } from '../../../../context/app/i18n';
 
 export const useOperatorI18nMap = (cellValueType?: CellValueType) => {

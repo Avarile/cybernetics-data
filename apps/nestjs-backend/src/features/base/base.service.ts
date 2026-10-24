@@ -1,4 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
 import {
   ActionPrefix,
   actionPrefixMap,
@@ -6,9 +5,10 @@ import {
   HttpErrorCode,
   Role,
   generateTemplateId,
-} from '@teable/core';
-import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
 import type {
   IBaseErdVo,
   ICreateBaseFromTemplateRo,

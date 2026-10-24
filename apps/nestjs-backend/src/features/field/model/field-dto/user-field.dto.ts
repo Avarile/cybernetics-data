@@ -1,5 +1,5 @@
-import type { IUserCellValue } from '@teable/core';
-import { UserFieldCore } from '@teable/core';
+import type { IUserCellValue } from '@cybernetics/core';
+import { UserFieldCore } from '@cybernetics/core';
 import { UploadType } from '@teable/openapi';
 import { omit } from 'lodash';
 import StorageAdapter from '../../../attachments/plugins/adapter';

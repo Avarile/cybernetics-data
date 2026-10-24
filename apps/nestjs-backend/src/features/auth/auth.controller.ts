@@ -1,5 +1,5 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Controller, Delete, Get, HttpCode, Post, Query, Req, Res } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import {
   deleteUserSchemaRo,
   IDeleteUserSchema,

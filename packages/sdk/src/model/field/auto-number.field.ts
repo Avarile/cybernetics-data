@@ -1,4 +1,4 @@
-import { AutoNumberFieldCore } from '@teable/core';
+import { AutoNumberFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

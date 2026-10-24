@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { FieldKeyType } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { FieldKeyType } from '@teable/core';
 import type { IFieldInstance } from '../field/model/factory';
 import { RecordService } from '../record/record.service';
 import type { IGraphRow, ITableRows } from './assembler';

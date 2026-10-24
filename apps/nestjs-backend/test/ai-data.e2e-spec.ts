@@ -15,8 +15,8 @@
  *   NODE_ENV=test BACKEND_PERFORMANCE_CACHE= BACKEND_CACHE_REDIS_URI= \
  *   PRISMA_DATABASE_URL=<test db> npx vitest run --config ./vitest-e2e.config.ts test/ai-data.e2e-spec.ts
  */
+import { FieldType, Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Role } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import { emailBaseInvitation, USER_ME } from '@teable/openapi';
 import { AiDataContextService } from '../src/features/ai-data/ai-data-context.service';

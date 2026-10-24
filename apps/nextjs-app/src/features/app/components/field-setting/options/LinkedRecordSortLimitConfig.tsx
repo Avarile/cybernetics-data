@@ -1,5 +1,3 @@
-import { FieldCommand, FieldSelector, OrderSelect } from '@cybernetics/sdk';
-import { useFields } from '@cybernetics/sdk/hooks';
 import {
   FieldType,
   SortFunc,
@@ -7,7 +5,9 @@ import {
   normalizeConditionalLimit,
   CONDITIONAL_QUERY_DEFAULT_LIMIT,
   CONDITIONAL_QUERY_MAX_LIMIT,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { FieldCommand, FieldSelector, OrderSelect } from '@cybernetics/sdk';
+import { useFields } from '@cybernetics/sdk/hooks';
 import { Input, Switch } from '@teable/ui-lib/shadcn';
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

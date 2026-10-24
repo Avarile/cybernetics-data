@@ -1,6 +1,6 @@
+import type { Action } from '@cybernetics/core';
+import { ActionPrefix } from '@cybernetics/core';
 import { usePermissionActionsStatic } from '@cybernetics/sdk/hooks';
-import type { Action } from '@teable/core';
-import { ActionPrefix } from '@teable/core';
 import { Database, Hash, Sheet, Table2, User } from '@teable/icons';
 import { Badge, cn } from '@teable/ui-lib/shadcn';
 import { AppWindowMac, Bot, List } from 'lucide-react';

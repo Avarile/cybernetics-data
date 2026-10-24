@@ -1,4 +1,4 @@
-import { LongTextFieldCore } from '@teable/core';
+import { LongTextFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

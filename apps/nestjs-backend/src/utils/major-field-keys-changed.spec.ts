@@ -1,11 +1,11 @@
-import { FieldType, Relationship, NumberFormattingType } from '@teable/core';
+import { FieldType, Relationship, NumberFormattingType } from '@cybernetics/core';
 import type {
   ILinkFieldOptions,
   INumberFormatting,
   IFieldVo,
   IConvertFieldRo,
   IFormulaFieldOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { majorFieldKeysChanged } from './major-field-keys-changed';
 
 // Mock data setup

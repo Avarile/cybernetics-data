@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import type { IFilePreviewDialogRef } from '@teable/ui-lib';
 import { FilePreviewDialog, FilePreviewProvider } from '@teable/ui-lib';
 import { noop } from 'lodash';

@@ -1,10 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
-import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { WsAdapter } from '@nestjs/platform-ws';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
 import type {
   IFieldRo,
   IFieldVo,
@@ -17,8 +11,14 @@ import type {
   IViewRo,
   IConditionalRollupFieldOptions,
   IFilter,
-} from '@teable/core';
-import { FieldKeyType, FieldType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldKeyType, FieldType } from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { WsAdapter } from '@nestjs/platform-ws';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import type {
   ICreateRecordsRo,
   ICreateRecordsVo,

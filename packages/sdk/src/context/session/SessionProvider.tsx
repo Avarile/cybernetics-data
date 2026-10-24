@@ -1,5 +1,5 @@
+import { isAnonymous } from '@cybernetics/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { isAnonymous } from '@teable/core';
 import { updateUserLang, userMe } from '@teable/openapi';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '../app/i18n';

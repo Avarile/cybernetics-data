@@ -1,3 +1,5 @@
+import type { IUserCellValue } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { ExpandRecorder } from '@cybernetics/sdk/components';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { ShareViewContext } from '@cybernetics/sdk/context';
@@ -15,8 +17,6 @@ import {
 } from '@cybernetics/sdk/hooks';
 import type { KanbanView, IFieldInstance, AttachmentField } from '@cybernetics/sdk/model';
 import { useQuery } from '@tanstack/react-query';
-import type { IUserCellValue } from '@teable/core';
-import { FieldType } from '@teable/core';
 import type { IShareViewCollaboratorsRo, UserCollaboratorItem } from '@teable/openapi';
 import {
   getBaseCollaboratorList,

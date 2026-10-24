@@ -1,4 +1,4 @@
-import { FieldKeyType } from '@teable/core';
+import { FieldKeyType } from '@cybernetics/core';
 import type { ICreateRecordsRo, IRecordsVo } from '@teable/openapi';
 import { OperationName, type ICreateRecordsOperation } from '../../../cache/types';
 import type { RecordOpenApiService } from '../../record/open-api/record-open-api.service';

@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import { NotImplementedException } from '@nestjs/common';
-import { FieldType } from '@teable/core';
 import { AbstractAggregationFunction } from '../aggregation-function.abstract';
 
 export class AggregationFunctionPostgres extends AbstractAggregationFunction {

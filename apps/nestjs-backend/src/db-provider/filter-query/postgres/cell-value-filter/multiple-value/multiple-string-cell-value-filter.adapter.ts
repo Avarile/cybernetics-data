@@ -1,4 +1,4 @@
-import type { IFilterOperator, ILiteralValue } from '@teable/core';
+import type { IFilterOperator, ILiteralValue } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { escapeJsonbRegex } from '../../../../../utils/postgres-regex-escape';
 import type { IDbProvider } from '../../../../db.provider.interface';

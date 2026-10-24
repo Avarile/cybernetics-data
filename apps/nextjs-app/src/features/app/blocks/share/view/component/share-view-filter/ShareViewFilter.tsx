@@ -1,6 +1,6 @@
+import { FieldType } from '@cybernetics/core';
 import { ViewFilter } from '@cybernetics/sdk/components';
 import { FieldValue } from '@cybernetics/sdk/components/filter/view-filter/custom-component';
-import { FieldType } from '@teable/core';
 import { type ComponentProps } from 'react';
 import { FilterLink } from './filter-link';
 import { FilterUser } from './FilterUser';

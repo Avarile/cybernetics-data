@@ -21,7 +21,7 @@ import {
   today,
   tomorrow,
   yesterday,
-} from '@teable/core';
+} from '@cybernetics/core';
 import dayjs from 'dayjs';
 import { getDates } from './utils';
 

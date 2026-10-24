@@ -1,5 +1,5 @@
+import type { ITableActionKey, IViewActionKey } from '@cybernetics/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ITableActionKey, IViewActionKey } from '@teable/core';
 import type { ICalendarDailyCollectionRo } from '@teable/openapi';
 import { getCalendarDailyCollection, getShareViewCalendarDailyCollection } from '@teable/openapi';
 import { throttle } from 'lodash';

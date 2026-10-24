@@ -1,4 +1,15 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IFieldVo } from '@cybernetics/core';
+import {
+  createFieldRoSchema,
+  getFieldsQuerySchema,
+  IFieldRo,
+  IGetFieldsQuery,
+  IConvertFieldRo,
+  convertFieldRoSchema,
+  updateFieldRoSchema,
+  IUpdateFieldRo,
+} from '@cybernetics/core';
 import {
   Body,
   Controller,
@@ -13,17 +24,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import type { IFieldVo } from '@teable/core';
-import {
-  createFieldRoSchema,
-  getFieldsQuerySchema,
-  IFieldRo,
-  IGetFieldsQuery,
-  IConvertFieldRo,
-  convertFieldRoSchema,
-  updateFieldRoSchema,
-  IUpdateFieldRo,
-} from '@teable/core';
 import {
   deleteFieldsQuerySchema,
   fieldDeleteReferencesQuerySchema,

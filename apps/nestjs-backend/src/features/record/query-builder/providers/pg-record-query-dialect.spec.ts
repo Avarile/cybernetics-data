@@ -1,4 +1,4 @@
-import { DbFieldType } from '@teable/core';
+import { DbFieldType } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { describe, expect, it } from 'vitest';
 import { PgRecordQueryDialect } from './pg-record-query-dialect';

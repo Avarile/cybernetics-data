@@ -1,4 +1,4 @@
-import { IdPrefix } from '@teable/core';
+import { IdPrefix } from '@cybernetics/core';
 
 // for performance, we detect if record contains link by check recordId cellValue
 export function isLinkCellValue(value: unknown): boolean {

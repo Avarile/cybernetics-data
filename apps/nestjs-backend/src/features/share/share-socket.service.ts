@@ -1,5 +1,5 @@
+import { HttpErrorCode, type IGetFieldsQuery } from '@cybernetics/core';
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
-import { HttpErrorCode, type IGetFieldsQuery } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { difference } from 'lodash';
 import { CustomHttpException } from '../../custom.exception';

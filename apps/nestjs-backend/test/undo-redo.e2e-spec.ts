@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, ILinkFieldOptions, IRollupFieldOptions } from '@teable/core';
+import type { IFieldRo, IFieldVo, ILinkFieldOptions, IRollupFieldOptions } from '@cybernetics/core';
 import {
   CellValueType,
   DbFieldType,
@@ -9,7 +8,8 @@ import {
   getRandomString,
   Relationship,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import {
   axios,
   clear,

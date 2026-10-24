@@ -1,5 +1,5 @@
+import type { IViewActionKey } from '@cybernetics/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IViewActionKey } from '@teable/core';
 import { getViewFilterLinkRecords } from '@teable/openapi';
 import { useCallback, useMemo } from 'react';
 import { ReactQueryKeys } from '../../../../config';

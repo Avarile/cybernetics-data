@@ -1,6 +1,6 @@
+import { FieldKeyType, HttpErrorCode, IdPrefix } from '@cybernetics/core';
+import type { Action } from '@cybernetics/core';
 import { HttpException, Injectable } from '@nestjs/common';
-import { FieldKeyType, HttpErrorCode, IdPrefix } from '@teable/core';
-import type { Action } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';
 import { AiDataConfig, type IAiDataConfig } from '../../configs/ai-data.config';

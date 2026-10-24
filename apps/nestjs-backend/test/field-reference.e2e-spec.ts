@@ -1,6 +1,6 @@
+import type { IFieldRo } from '@cybernetics/core';
+import { FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo } from '@teable/core';
-import { FieldType, Relationship } from '@teable/core';
 import type { LinkFieldDto } from '../src/features/field/model/field-dto/link-field.dto';
 import {
   createField,

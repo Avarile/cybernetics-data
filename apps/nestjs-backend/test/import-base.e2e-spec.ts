@@ -1,9 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
+import type { IAttachmentItem, IConditionalRollupFieldOptions, IFilter } from '@cybernetics/core';
+import {
+  Colors,
+  FieldKeyType,
+  FieldType,
+  Relationship,
+  SortFunc,
+  ViewType,
+} from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IAttachmentItem, IConditionalRollupFieldOptions, IFilter } from '@teable/core';
-import { Colors, FieldKeyType, FieldType, Relationship, SortFunc, ViewType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IImportBaseProgressEvent,

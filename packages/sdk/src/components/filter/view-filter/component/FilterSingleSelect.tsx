@@ -1,4 +1,4 @@
-import { ColorUtils } from '@teable/core';
+import { ColorUtils } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useMemo } from 'react';
 import type { SingleSelectField } from '../../../../model';

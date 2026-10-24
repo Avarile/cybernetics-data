@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { Readable as ReadableStream } from 'node:stream';
 import { join, resolve } from 'path';
+import { getRandomString, HttpErrorCode, isImage } from '@cybernetics/core';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { getRandomString, HttpErrorCode, isImage } from '@teable/core';
 import * as fse from 'fs-extra';
 import * as minio from 'minio';
 import sharp from 'sharp';

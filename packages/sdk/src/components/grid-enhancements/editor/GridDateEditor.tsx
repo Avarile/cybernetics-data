@@ -1,5 +1,9 @@
-import type { IDateFieldOptions } from '@teable/core';
-import { defaultDatetimeFormatting, normalizeDateFormatting, TimeFormatting } from '@teable/core';
+import type { IDateFieldOptions } from '@cybernetics/core';
+import {
+  defaultDatetimeFormatting,
+  normalizeDateFormatting,
+  TimeFormatting,
+} from '@cybernetics/core';
 import { Input } from '@teable/ui-lib';
 import type { ForwardRefRenderFunction } from 'react';
 import {

@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { fieldVoSchema, IdPrefix, viewVoSchema } from '@teable/core';
+import { fieldVoSchema, IdPrefix, viewVoSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { BaseNodeResourceType } from '../base-node/types';
 import { pluginInstallStorageSchema } from '../dashboard';

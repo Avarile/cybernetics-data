@@ -1,6 +1,6 @@
+import { generateRecordTrashId } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { generateRecordTrashId } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { ResourceType } from '@teable/openapi';
 import { IThresholdConfig, ThresholdConfig } from '../../../configs/threshold.config';

@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { FieldType, Relationship, Role, ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Relationship, Role, ViewType } from '@teable/core';
 import type { IBaseNodeTableResourceMeta, IBaseNodeVo } from '@teable/openapi';
 import {
   axios,

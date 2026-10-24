@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import { Info } from '@teable/icons';
 import { cn } from '@teable/ui-lib';
 import { useContext } from 'react';
@@ -58,7 +58,13 @@ export const RecordEditorItem = (props: {
 
   return (
     <div className={cn(vertical ? 'flex space-x-4' : 'space-y-2', 'relative group/field-row')}>
-      <div className={cn('w-36 flex items-top space-x-1 ', vertical ? 'pt-1' : 'w-full')}>
+      <div
+        className={cn(
+          'flex items-top space-x-1',
+          isTouchDevice ? 'w-36' : 'w-48',
+          vertical ? 'pt-1' : 'w-full'
+        )}
+      >
         <div className="flex size-5 items-center">
           <Icon className="size-4" />
         </div>
@@ -92,6 +98,7 @@ export const RecordEditorItem = (props: {
         record={record}
         buttonClickStatusHook={buttonClickStatusHook}
         onAttachmentDownload={onAttachmentDownload}
+        expanded={!isTouchDevice}
       />
 
       {!isTouchDevice && (

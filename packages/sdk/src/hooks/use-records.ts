@@ -1,5 +1,5 @@
-import type { IRecord } from '@teable/core';
-import { IdPrefix } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
+import { IdPrefix } from '@cybernetics/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { keyBy } from 'lodash';
 import { useMemo } from 'react';

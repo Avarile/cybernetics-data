@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import { AlertCircle, ChevronDown, Search, X } from '@teable/icons';
 import { DEFAULT_MAX_SEARCH_FIELD_COUNT } from '@teable/openapi';
 import {

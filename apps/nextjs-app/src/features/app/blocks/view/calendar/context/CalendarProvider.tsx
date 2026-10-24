@@ -1,3 +1,4 @@
+import { ColorConfigType, FieldType } from '@cybernetics/core';
 import { ExpandRecorder } from '@cybernetics/sdk/components';
 import { ShareViewContext } from '@cybernetics/sdk/context';
 import {
@@ -9,7 +10,6 @@ import {
   useButtonClickStatus,
 } from '@cybernetics/sdk/hooks';
 import type { CalendarView } from '@cybernetics/sdk/model';
-import { ColorConfigType, FieldType } from '@teable/core';
 import { useContext, useMemo, useState, type ReactNode } from 'react';
 import { useCalendarFields } from '../hooks';
 import { CalendarContext } from './CalendarContext';

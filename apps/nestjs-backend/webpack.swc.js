@@ -42,7 +42,7 @@ module.exports = function (options, webpack) {
     devtool: 'eval-cheap-module-source-map',
     externals: [
       nodeExternals({
-        allowlist: ['webpack/hot/poll?100', /^@teable/, /^@orpc/],
+        allowlist: ['webpack/hot/poll?100', /^@teable/, /^@cybernetics/, /^@orpc/],
       }),
     ],
     // ignore tests hot reload

@@ -1,6 +1,5 @@
 import https from 'https';
 import { join } from 'path';
-import { Injectable } from '@nestjs/common';
 import {
   generateAccountId,
   generateSpaceId,
@@ -8,7 +7,8 @@ import {
   HttpErrorCode,
   minidenticon,
   Role,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { CollaboratorType, PrincipalType, UploadType } from '@teable/openapi';

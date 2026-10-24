@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { FieldType, IdPrefix, ViewType } from '@teable/core';
+import { FieldType, IdPrefix, ViewType } from '@cybernetics/core';
 import { axios } from '../axios';
 import { userCollaboratorItem } from '../space';
 import { ResourceType } from '../types';

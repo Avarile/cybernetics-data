@@ -5,7 +5,7 @@ import {
   orderSchema,
   refineExtendedFilterOperatorSchema,
   StatisticsFunc,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { z } from '../../zod';
 
 export enum BaseQueryColumnType {

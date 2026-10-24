@@ -1,4 +1,4 @@
-import type { IRole } from '@teable/core';
+import type { IRole } from '@cybernetics/core';
 import type { IRoleStatic } from './types';
 
 export const getRolesWithLowerPermissions = (

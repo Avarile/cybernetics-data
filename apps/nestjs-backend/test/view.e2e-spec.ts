@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
 
 import type {
   IColumn,
@@ -9,7 +8,7 @@ import type {
   IFormColumnMeta,
   IPluginViewOptions,
   IViewRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   ColorConfigType,
   Colors,
@@ -20,7 +19,8 @@ import {
   RowHeightLevel,
   SortFunc,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService, type Prisma } from '@teable/db-main-prisma';
 import type { ICreateTableRo, ITableFullVo } from '@teable/openapi';
 import {

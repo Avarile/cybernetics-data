@@ -1,4 +1,4 @@
-import type { ITableActionKey } from '@teable/core';
+import type { ITableActionKey } from '@cybernetics/core';
 import { err, ok } from 'neverthrow';
 import type { Result } from 'neverthrow';
 import { z } from 'zod';

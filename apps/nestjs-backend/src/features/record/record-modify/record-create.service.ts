@@ -1,6 +1,12 @@
+import type { IMakeOptional, TableDomain } from '@cybernetics/core';
+import {
+  CellFormat,
+  FieldKeyType,
+  FieldType,
+  HttpErrorCode,
+  generateRecordId,
+} from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IMakeOptional, TableDomain } from '@teable/core';
-import { CellFormat, FieldKeyType, FieldType, HttpErrorCode, generateRecordId } from '@teable/core';
 import type { ICreateRecordsRo, ICreateRecordsVo } from '@teable/openapi';
 import { ThresholdConfig, IThresholdConfig } from '../../../configs/threshold.config';
 import { CustomHttpException } from '../../../custom.exception';

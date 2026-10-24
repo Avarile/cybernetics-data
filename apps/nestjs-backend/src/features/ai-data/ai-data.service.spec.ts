@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
+import { SortFunc } from '@cybernetics/core';
 import { ForbiddenException, HttpException, NotFoundException } from '@nestjs/common';
-import { SortFunc } from '@teable/core';
 import { describe, expect, it, vi } from 'vitest';
 import { AiDataService } from './ai-data.service';
 

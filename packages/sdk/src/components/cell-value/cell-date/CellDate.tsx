@@ -1,5 +1,5 @@
-import { DateFormattingPreset, formatDateToString } from '@teable/core';
-import type { IDatetimeFormatting } from '@teable/core';
+import { DateFormattingPreset, formatDateToString } from '@cybernetics/core';
+import type { IDatetimeFormatting } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import dayjs from 'dayjs';
 import { useMemo } from 'react';

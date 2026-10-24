@@ -6,6 +6,7 @@ import '@univerjs/sheets-ui/lib/index.css';
 import '@univerjs/sheets-formula/lib/index.css';
 import '@univerjs/sheets-data-validation/lib/index.css';
 
+import { ANONYMOUS_USER_ID } from '@cybernetics/core';
 import type { IUIConfig } from '@cybernetics/sdk';
 import {
   isIframe,
@@ -20,7 +21,6 @@ import {
   ShareViewProxy,
 } from '@cybernetics/sdk';
 import { useQuery } from '@tanstack/react-query';
-import { ANONYMOUS_USER_ID } from '@teable/core';
 
 import { ThemeProvider } from '@teable/next-themes';
 import { getShareView } from '@teable/openapi';

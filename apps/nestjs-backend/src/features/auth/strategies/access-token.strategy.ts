@@ -1,7 +1,7 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { HttpErrorCode } from '@teable/core';
 import type { Request } from 'express';
 import { ClsService } from 'nestjs-cls';
 import type { authConfig } from '../../../configs/auth.config';

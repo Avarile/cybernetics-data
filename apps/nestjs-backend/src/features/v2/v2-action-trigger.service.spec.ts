@@ -1,4 +1,4 @@
-import { getActionTriggerChannel } from '@teable/core';
+import { getActionTriggerChannel } from '@cybernetics/core';
 import {
   BaseId,
   FieldCreated,

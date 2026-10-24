@@ -1,8 +1,8 @@
+import { CellValueType, ColorConfigType, Colors, FieldType } from '@cybernetics/core';
+import type { IColorConfig } from '@cybernetics/core';
 import { ReadOnlyTip } from '@cybernetics/sdk';
 import { useFields, useFieldStaticGetter, usePersonalView, useView } from '@cybernetics/sdk/hooks';
 import type { CalendarView } from '@cybernetics/sdk/model';
-import { CellValueType, ColorConfigType, Colors, FieldType } from '@teable/core';
-import type { IColorConfig } from '@teable/core';
 import {
   Popover,
   PopoverTrigger,

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import type { IBaseGraphQueryRo } from '@teable/openapi';
 import type { IFieldInstance } from '../field/model/factory';
 import type { IResolverInput } from './graph-plan.resolver';

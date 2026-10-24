@@ -1,5 +1,5 @@
-import { TimeFormatting } from '@teable/core';
-import type { IDatetimeFormatting } from '@teable/core';
+import { TimeFormatting } from '@cybernetics/core';
+import type { IDatetimeFormatting } from '@cybernetics/core';
 import { fromZonedTime } from 'date-fns-tz';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { combineZonedDateAndTime, convertZonedInputToUtc } from './utils';

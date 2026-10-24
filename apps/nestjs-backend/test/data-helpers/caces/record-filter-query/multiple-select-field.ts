@@ -6,7 +6,7 @@ import {
   isEmpty,
   isExactly,
   isNotEmpty,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 export const MULTIPLE_SELECT_FIELD_CASES = [
   {

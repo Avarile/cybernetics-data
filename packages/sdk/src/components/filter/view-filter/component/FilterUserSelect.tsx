@@ -1,5 +1,5 @@
+import { isMeTag, Me } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import { isMeTag, Me } from '@teable/core';
 import { User as UserIcon } from '@teable/icons';
 import { getRecordGetCollaborators, getUserCollaborators } from '@teable/openapi';
 import { cn } from '@teable/ui-lib';

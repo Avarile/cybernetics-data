@@ -1,9 +1,9 @@
+import { ColorUtils, getCellCollaboratorsChannel } from '@cybernetics/core';
 import type { ICellItem, ICell } from '@cybernetics/sdk';
 import { useSession } from '@cybernetics/sdk';
 import { SelectionRegionType } from '@cybernetics/sdk/components/grid';
 import type { ICollaborator, CombinedSelection } from '@cybernetics/sdk/components/grid';
 import { useConnection, useIsReadOnlyPreview, useTableId, useViewId } from '@cybernetics/sdk/hooks';
-import { ColorUtils, getCellCollaboratorsChannel } from '@teable/core';
 import { useEffect, useState, useMemo } from 'react';
 import type { Presence } from 'sharedb/lib/sharedb';
 

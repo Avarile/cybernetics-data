@@ -1,5 +1,5 @@
-import { getValidFilterOperators } from '@teable/core';
-import type { IFilter } from '@teable/core';
+import { getValidFilterOperators } from '@cybernetics/core';
+import type { IFilter } from '@cybernetics/core';
 import { useMemo } from 'react';
 import type { IFieldInstance } from '../../../model';
 import { BaseFilter } from '../BaseFilter';

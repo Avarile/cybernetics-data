@@ -1,3 +1,4 @@
+import { ANONYMOUS_USER_ID, type DriverClient } from '@cybernetics/core';
 import {
   AnchorContext,
   AppProvider,
@@ -9,7 +10,6 @@ import {
 } from '@cybernetics/sdk/context';
 import { getWsPath } from '@cybernetics/sdk/context/app/useConnection';
 import { addQueryParamsToWebSocketUrl } from '@cybernetics/sdk/utils';
-import { ANONYMOUS_USER_ID, type DriverClient } from '@teable/core';
 import type { ShareViewGetVo } from '@teable/openapi';
 import Head from 'next/head';
 import { useRouter } from 'next/router';

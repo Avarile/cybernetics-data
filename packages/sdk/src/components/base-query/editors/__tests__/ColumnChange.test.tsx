@@ -1,4 +1,4 @@
-import { CellValueType, FieldType, SortFunc } from '@teable/core';
+import { CellValueType, FieldType, SortFunc } from '@cybernetics/core';
 import type { IBaseQueryColumn } from '@teable/openapi';
 import { BaseQueryColumnType } from '@teable/openapi';
 import { fireEvent, render, screen } from '@testing-library/react';

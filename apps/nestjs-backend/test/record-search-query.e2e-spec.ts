@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
 import {
   CellValueType,
   Colors,
@@ -7,7 +6,8 @@ import {
   FieldType,
   Relationship,
   SortFunc,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { IGetRecordsRo, ITableFullVo } from '@teable/openapi';
 import {
   getRecords as apiGetRecords,

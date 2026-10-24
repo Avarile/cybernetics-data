@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IFilterRo } from '@teable/core';
-import { filterRoSchema } from '@teable/core';
+import type { IFilterRo } from '@cybernetics/core';
+import { filterRoSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

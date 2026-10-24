@@ -1,4 +1,11 @@
-import type { IViewVo, ISort, IColumnMetaRo, IFilter, IGroup, IColumnMeta } from '@teable/core';
+import type {
+  IViewVo,
+  ISort,
+  IColumnMetaRo,
+  IFilter,
+  IGroup,
+  IColumnMeta,
+} from '@cybernetics/core';
 import { pick } from 'lodash';
 import { useEffect, useRef, useState } from 'react';
 import { useView } from '../../hooks/use-view';

@@ -1,7 +1,7 @@
+import { isImage, isPdf } from '@cybernetics/core';
 import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq';
 import type { NestWorkerOptions } from '@nestjs/bullmq/dist/interfaces/worker-options.interface';
 import { Injectable, Logger } from '@nestjs/common';
-import { isImage, isPdf } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { Queue } from 'bullmq';
 import type { Job } from 'bullmq';

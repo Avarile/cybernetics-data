@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { IGetFieldsQuery, getFieldsQuerySchema } from '@cybernetics/core';
 import {
   Controller,
   HttpCode,
@@ -11,7 +12,6 @@ import {
   Query,
   Param,
 } from '@nestjs/common';
-import { IGetFieldsQuery, getFieldsQuerySchema } from '@teable/core';
 import {
   ShareViewFormSubmitRo,
   shareViewFormSubmitRoSchema,

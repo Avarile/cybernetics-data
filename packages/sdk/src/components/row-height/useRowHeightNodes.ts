@@ -1,4 +1,4 @@
-import { RowHeightLevel } from '@teable/core';
+import { RowHeightLevel } from '@cybernetics/core';
 import { RowExtralTall, RowMedium, RowTall, RowShort } from '@teable/icons';
 import { useMemo } from 'react';
 import { useTranslation } from '../../context/app/i18n';

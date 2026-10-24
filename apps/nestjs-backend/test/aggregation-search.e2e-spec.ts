@@ -1,5 +1,5 @@
+import { FieldKeyType, FieldType, SortFunc, StatisticsFunc, ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, SortFunc, StatisticsFunc, ViewType } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   getAggregation,

@@ -1,5 +1,5 @@
-import type { IShareViewMeta } from '@teable/core';
-import { FormViewCore } from '@teable/core';
+import type { IShareViewMeta } from '@cybernetics/core';
+import { FormViewCore } from '@cybernetics/core';
 
 export class FormViewDto extends FormViewCore {
   defaultShareMeta: IShareViewMeta = {

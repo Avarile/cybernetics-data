@@ -1,4 +1,4 @@
-import { DbFieldType, FieldType } from '@teable/core';
+import { DbFieldType, FieldType } from '@cybernetics/core';
 import type { RestoreRecordInput } from '@teable/v2-core';
 
 import { BaseImportService } from './base-import.service';

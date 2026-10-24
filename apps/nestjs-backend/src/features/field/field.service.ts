@@ -1,4 +1,3 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   FieldOpBuilder,
   HttpErrorCode,
@@ -8,7 +7,7 @@ import {
   checkFieldValidationEnabled,
   FieldType,
   isLinkLookupOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IFieldVo,
   IFormulaFieldOptions,
@@ -19,10 +18,11 @@ import type {
   IOtOperation,
   ViewType,
   FormulaFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Field as RawField, Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import { instanceToPlain } from 'class-transformer';
 import { Knex } from 'knex';
 import { keyBy, sortBy, omit } from 'lodash';

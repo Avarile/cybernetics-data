@@ -1,4 +1,4 @@
-import { FieldType, NumberFormattingType } from '@teable/core';
+import { FieldType, NumberFormattingType } from '@cybernetics/core';
 import { render } from '@testing-library/react';
 import { forwardRef } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

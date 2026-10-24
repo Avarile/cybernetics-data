@@ -46,9 +46,9 @@ describe('TextFunc', () => {
 
   describe('Find', () => {
     const findFunc = new Find();
-    const findString = 'Teable';
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const findString = 'Cybernetics';
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should find the position in a string', () => {
       const result = findFunc.eval([
@@ -101,9 +101,9 @@ describe('TextFunc', () => {
 
   describe('Search', () => {
     const searchFunc = new Search();
-    const findString = 'Teable';
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const findString = 'Cybernetics';
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should search the position in a string', () => {
       const result = searchFunc.eval([
@@ -156,27 +156,27 @@ describe('TextFunc', () => {
 
   describe('Mid', () => {
     const midFunc = new Mid();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should return a specific number of characters in a text string starting at a specified position', () => {
       const result = midFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
         new TypedValue(7, CellValueType.Number, false),
-        new TypedValue(6, CellValueType.Number, false),
+        new TypedValue(11, CellValueType.Number, false),
       ]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
 
     it('should return a specific number of characters in a multiple values starting at a specified position', () => {
       const result = midFunc.eval([
         new TypedValue(targetMultipleValue, CellValueType.String, true),
         new TypedValue(7, CellValueType.Number, false),
-        new TypedValue(6, CellValueType.Number, false),
+        new TypedValue(11, CellValueType.Number, false),
       ]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
 
     it('should return a blank string if truncate length is a negative number', () => {
@@ -202,8 +202,8 @@ describe('TextFunc', () => {
 
   describe('Left', () => {
     const leftFunc = new Left();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should return the leftmost character of a given string by default', () => {
       const result = leftFunc.eval([new TypedValue(targetString, CellValueType.String, false)]);
@@ -241,31 +241,31 @@ describe('TextFunc', () => {
 
   describe('Right', () => {
     const rightFunc = new Right();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should return the rightmost character of a given string by default', () => {
       const result = rightFunc.eval([new TypedValue(targetString, CellValueType.String, false)]);
 
-      expect(result).toBe('e');
+      expect(result).toBe('s');
     });
 
     it('should return the specified number of characters from the right of a given string', () => {
       const result = rightFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
-        new TypedValue(6, CellValueType.Number, false),
+        new TypedValue(11, CellValueType.Number, false),
       ]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
 
     it('should handle an array of strings and return the specified number of characters from the right', () => {
       const result = rightFunc.eval([
         new TypedValue(targetMultipleValue, CellValueType.String, true),
-        new TypedValue(6, CellValueType.Number, false),
+        new TypedValue(11, CellValueType.Number, false),
       ]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
 
     it('should return an empty string when provided with a negative number as count', () => {
@@ -280,14 +280,14 @@ describe('TextFunc', () => {
 
   describe('Replace', () => {
     const replaceFunc = new Replace();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should replace the substring starting at position in a given string', () => {
       const result = replaceFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
         new TypedValue(8, CellValueType.Number, false),
-        new TypedValue(6, CellValueType.Number, false),
+        new TypedValue(11, CellValueType.Number, false),
         new TypedValue('Table', CellValueType.String, false),
       ]);
 
@@ -298,7 +298,7 @@ describe('TextFunc', () => {
       const result = replaceFunc.eval([
         new TypedValue(targetMultipleValue, CellValueType.String, true),
         new TypedValue(8, CellValueType.Number, false),
-        new TypedValue(6, CellValueType.Number, false),
+        new TypedValue(11, CellValueType.Number, false),
         new TypedValue('Table', CellValueType.String, false),
       ]);
 
@@ -313,7 +313,7 @@ describe('TextFunc', () => {
         new TypedValue('Table', CellValueType.String, false),
       ]);
 
-      expect(result).toBe('Hello, TeableTable');
+      expect(result).toBe('Hello, CyberneticsTable');
     });
 
     it('should append the substring before the substring when provided with a negative length', () => {
@@ -324,14 +324,14 @@ describe('TextFunc', () => {
         new TypedValue('Table', CellValueType.String, false),
       ]);
 
-      expect(result).toBe('Hello, Table Teable');
+      expect(result).toBe('Hello, Table Cybernetics');
     });
   });
 
   describe('RegExpReplace', () => {
     const regExpReplaceFunc = new RegExpReplace();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should replace substring that matches pattern in string', () => {
       const result = regExpReplaceFunc.eval([
@@ -340,7 +340,7 @@ describe('TextFunc', () => {
         new TypedValue('', CellValueType.String, false),
       ]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
 
     it('should replace all substring that matches pattern in string', () => {
@@ -360,19 +360,19 @@ describe('TextFunc', () => {
         new TypedValue('', CellValueType.String, false),
       ]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
   });
 
   describe('Substitute', () => {
     const substituteFunc = new Substitute();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should substitute the specified string in the target string', () => {
       const result = substituteFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue('Table', CellValueType.String, false),
       ]);
 
@@ -382,7 +382,7 @@ describe('TextFunc', () => {
     it('should substitute the specified string in the target string given a specific instance number', () => {
       const result = substituteFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue('Table', CellValueType.String, false),
         new TypedValue(1, CellValueType.Number, false),
       ]);
@@ -393,7 +393,7 @@ describe('TextFunc', () => {
     it('should handle an array of strings and substitute the specified string given a specific instance number', () => {
       const result = substituteFunc.eval([
         new TypedValue(targetMultipleValue, CellValueType.String, true),
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue('Table', CellValueType.String, false),
         new TypedValue(1, CellValueType.Number, false),
       ]);
@@ -404,7 +404,7 @@ describe('TextFunc', () => {
     it('should substitute the specified string in the target string even with a negative instance number', () => {
       const result = substituteFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue('Table', CellValueType.String, false),
         new TypedValue(-1, CellValueType.Number, false),
       ]);
@@ -427,7 +427,7 @@ describe('TextFunc', () => {
 
     it('should return the provided fallback when the delimiter is not found', () => {
       const result = textBeforeFunc.eval([
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue(',', CellValueType.String, false),
         new TypedValue(1, CellValueType.Number, false),
         new TypedValue(0, CellValueType.Number, false),
@@ -464,13 +464,13 @@ describe('TextFunc', () => {
 
   describe('Lower', () => {
     const lowerFunc = new Lower();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should convert a given string to lowercase', () => {
       const result = lowerFunc.eval([new TypedValue(targetString, CellValueType.String, false)]);
 
-      expect(result).toBe('hello, teable');
+      expect(result).toBe('hello, cybernetics');
     });
 
     it('should handle an array of strings and convert them to lowercase', () => {
@@ -478,19 +478,19 @@ describe('TextFunc', () => {
         new TypedValue(targetMultipleValue, CellValueType.String, true),
       ]);
 
-      expect(result).toBe('hello, teable');
+      expect(result).toBe('hello, cybernetics');
     });
   });
 
   describe('Upper', () => {
     const upperFunc = new Upper();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should convert a given string to uppercase', () => {
       const result = upperFunc.eval([new TypedValue(targetString, CellValueType.String, false)]);
 
-      expect(result).toBe('HELLO, TEABLE');
+      expect(result).toBe('HELLO, CYBERNETICS');
     });
 
     it('should handle an array of strings and convert them to uppercase', () => {
@@ -498,14 +498,14 @@ describe('TextFunc', () => {
         new TypedValue(targetMultipleValue, CellValueType.String, true),
       ]);
 
-      expect(result).toBe('HELLO, TEABLE');
+      expect(result).toBe('HELLO, CYBERNETICS');
     });
   });
 
   describe('Rept', () => {
     const reptFunc = new Rept();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should repeat the given string based on the provided number', () => {
       const result = reptFunc.eval([
@@ -513,7 +513,7 @@ describe('TextFunc', () => {
         new TypedValue(2, CellValueType.Number, false),
       ]);
 
-      expect(result).toBe('Hello, TeableHello, Teable');
+      expect(result).toBe('Hello, CyberneticsHello, Cybernetics');
     });
 
     it('should handle an array of strings and repeat based on the provided number', () => {
@@ -522,7 +522,7 @@ describe('TextFunc', () => {
         new TypedValue(2, CellValueType.Number, false),
       ]);
 
-      expect(result).toBe('Hello, TeableHello, Teable');
+      expect(result).toBe('Hello, CyberneticsHello, Cybernetics');
     });
 
     it('should return null when the repeat count is zero', () => {
@@ -537,13 +537,13 @@ describe('TextFunc', () => {
 
   describe('Trim', () => {
     const trimFunc = new Trim();
-    const targetString = ' Hello, Teable ';
-    const targetMultipleValue = [' Hello', 'Teable '];
+    const targetString = ' Hello, Cybernetics ';
+    const targetMultipleValue = [' Hello', 'Cybernetics '];
 
     it('should remove leading and trailing spaces from a given string', () => {
       const result = trimFunc.eval([new TypedValue(targetString, CellValueType.String, false)]);
 
-      expect(result).toBe('Hello, Teable');
+      expect(result).toBe('Hello, Cybernetics');
     });
 
     it('should handle an array of strings and remove leading and trailing spaces from each', () => {
@@ -551,7 +551,7 @@ describe('TextFunc', () => {
         new TypedValue(targetMultipleValue, CellValueType.String, true),
       ]);
 
-      expect(result).toBe('Hello, Teable');
+      expect(result).toBe('Hello, Cybernetics');
     });
   });
 
@@ -559,15 +559,17 @@ describe('TextFunc', () => {
     const tFunc = new T();
 
     it('should return the input string when provided a string value', () => {
-      const result = tFunc.eval([new TypedValue('Teable', CellValueType.String, false)]);
+      const result = tFunc.eval([new TypedValue('Cybernetics', CellValueType.String, false)]);
 
-      expect(result).toBe('Teable');
+      expect(result).toBe('Cybernetics');
     });
 
     it('should concatenate and return string array elements as a single string', () => {
-      const result = tFunc.eval([new TypedValue(['Hello', 'Teable'], CellValueType.String, true)]);
+      const result = tFunc.eval([
+        new TypedValue(['Hello', 'Cybernetics'], CellValueType.String, true),
+      ]);
 
-      expect(result).toBe('Hello, Teable');
+      expect(result).toBe('Hello, Cybernetics');
     });
 
     it('should return null when provided a number', () => {
@@ -585,13 +587,13 @@ describe('TextFunc', () => {
 
   describe('Len', () => {
     const lenFunc = new Len();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should return the length of a given string', () => {
       const result = lenFunc.eval([new TypedValue(targetString, CellValueType.String, false)]);
 
-      expect(result).toBe(13);
+      expect(result).toBe(18);
     });
 
     it('should handle an array of strings and return the combined length', () => {
@@ -599,21 +601,21 @@ describe('TextFunc', () => {
         new TypedValue(targetMultipleValue, CellValueType.String, true),
       ]);
 
-      expect(result).toBe(13);
+      expect(result).toBe(18);
     });
   });
 
   describe('EncodeUrlComponent', () => {
     const encodeUrlComponentFunc = new EncodeUrlComponent();
-    const targetString = 'Hello, Teable';
-    const targetMultipleValue = ['Hello', 'Teable'];
+    const targetString = 'Hello, Cybernetics';
+    const targetMultipleValue = ['Hello', 'Cybernetics'];
 
     it('should correctly encode a string with special characters for a URL component', () => {
       const result = encodeUrlComponentFunc.eval([
         new TypedValue(targetString, CellValueType.String, false),
       ]);
 
-      expect(result).toBe('Hello%2C%20Teable');
+      expect(result).toBe('Hello%2C%20Cybernetics');
     });
 
     it('should concatenate and correctly encode string array elements for a URL component', () => {
@@ -621,7 +623,7 @@ describe('TextFunc', () => {
         new TypedValue(targetMultipleValue, CellValueType.String, true),
       ]);
 
-      expect(result).toBe('Hello%2C%20Teable');
+      expect(result).toBe('Hello%2C%20Cybernetics');
     });
   });
 });

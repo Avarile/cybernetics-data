@@ -1,3 +1,12 @@
+import {
+  FieldKeyType,
+  FieldType,
+  RowHeightLevel,
+  contractColorForTheme,
+  fieldVoSchema,
+  stringifyClipboardText,
+} from '@cybernetics/core';
+import type { IAttachmentItem, IFieldVo, IGridViewOptions } from '@cybernetics/core';
 import type {
   IRectangle,
   IPosition,
@@ -78,15 +87,6 @@ import {
 } from '@cybernetics/sdk/store/pending-upload-create';
 import { useCellAttachmentUploadStore } from '@cybernetics/sdk/store/use-attachment-upload-store';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  FieldKeyType,
-  FieldType,
-  RowHeightLevel,
-  contractColorForTheme,
-  fieldVoSchema,
-  stringifyClipboardText,
-} from '@teable/core';
-import type { IAttachmentItem, IFieldVo, IGridViewOptions } from '@teable/core';
 import { createRecords, stopFillField, autoFillCell } from '@teable/openapi';
 import type { ICreateRecordsRo, IGroupPointsVo, IUpdateOrderRo } from '@teable/openapi';
 import { useConfirm } from '@teable/ui-lib';

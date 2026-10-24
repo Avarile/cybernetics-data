@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { IAttachmentCellValue, ILinkFieldOptions } from '@cybernetics/core';
+import { DbFieldType, FieldType, generateAttachmentId } from '@cybernetics/core';
 import { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
-import type { IAttachmentCellValue, ILinkFieldOptions } from '@teable/core';
-import { DbFieldType, FieldType, generateAttachmentId } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import type { IBaseJson, ImportBaseRo } from '@teable/openapi';
 import { CreateRecordAction, UploadType } from '@teable/openapi';
 import { Queue, Job } from 'bullmq';

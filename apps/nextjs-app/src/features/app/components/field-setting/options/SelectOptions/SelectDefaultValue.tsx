@@ -1,5 +1,5 @@
+import type { ISelectFieldOptions } from '@cybernetics/core';
 import { SelectEditor, transformSelectOptions } from '@cybernetics/sdk/components';
-import type { ISelectFieldOptions } from '@teable/core';
 import { DefaultValue } from '../../DefaultValue';
 
 interface ISelectDefaultValue {

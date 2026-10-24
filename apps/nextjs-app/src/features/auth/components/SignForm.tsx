@@ -1,5 +1,5 @@
+import { HttpErrorCode, type HttpError } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { HttpErrorCode, type HttpError } from '@teable/core';
 import type { ISignin, ISignup, ITwoFactorChallenge } from '@teable/openapi';
 import {
   signup,

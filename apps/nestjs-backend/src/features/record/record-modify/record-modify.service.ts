@@ -1,6 +1,6 @@
+import { FieldKeyType } from '@cybernetics/core';
+import type { IMakeOptional } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { FieldKeyType } from '@teable/core';
-import type { IMakeOptional } from '@teable/core';
 import type {
   IRecord,
   ICreateRecordsRo,

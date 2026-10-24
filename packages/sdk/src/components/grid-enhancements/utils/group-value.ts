@@ -1,5 +1,5 @@
-import type { IDatetimeFormatting } from '@teable/core';
-import { formatDateToString } from '@teable/core';
+import type { IDatetimeFormatting } from '@cybernetics/core';
+import { formatDateToString } from '@cybernetics/core';
 import { omit } from 'lodash';
 
 export const cellDate2String = (

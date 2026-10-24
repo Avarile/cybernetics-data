@@ -5,7 +5,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Logger } from '@nestjs/common';
 import {
   DriverClient,
   FieldType,
@@ -66,7 +65,8 @@ import {
   isEmpty as FilterOperatorIsEmpty,
   isOnOrAfter as FilterOperatorIsOnOrAfter,
   isOnOrBefore as FilterOperatorIsOnOrBefore,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Logger } from '@nestjs/common';
 import type { Knex } from 'knex';
 import { match } from 'ts-pattern';
 import type { IDbProvider } from '../../../db-provider/db.provider.interface';

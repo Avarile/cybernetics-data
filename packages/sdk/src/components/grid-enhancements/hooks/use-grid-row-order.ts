@@ -1,4 +1,4 @@
-import { FieldKeyType } from '@teable/core';
+import { FieldKeyType } from '@cybernetics/core';
 import { useCallback, useMemo, useState } from 'react';
 import { useRecordOperations, useTableId, useView, useViewId } from '../../../hooks';
 import type { GridView } from '../../../model';

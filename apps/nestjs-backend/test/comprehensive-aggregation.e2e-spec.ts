@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { INestApplication } from '@nestjs/common';
-import type { IRatingFieldOptions, IViewVo } from '@teable/core';
+import type { IRatingFieldOptions, IViewVo } from '@cybernetics/core';
 import {
   Colors,
   DateFormattingPreset,
@@ -11,7 +10,8 @@ import {
   Relationship,
   StatisticsFunc,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import { getAggregation, createField, createRecords, getView } from '@teable/openapi';
 import { createTable, permanentDeleteTable, initApp } from './utils/init-app';

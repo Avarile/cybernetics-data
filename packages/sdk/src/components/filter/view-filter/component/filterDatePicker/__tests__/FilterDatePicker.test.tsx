@@ -1,4 +1,4 @@
-import type { IDateFilter } from '@teable/core';
+import type { IDateFilter } from '@cybernetics/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { createAppContext } from '../../../../../../context/__tests__/createAppContext';

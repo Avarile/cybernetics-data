@@ -1,5 +1,5 @@
+import { FieldType, type ILongTextFieldOptions } from '@cybernetics/core';
 import { Milkdown, MilkdownProvider, useEditor, useInstance } from '@milkdown/react';
-import { FieldType, type ILongTextFieldOptions } from '@teable/core';
 import { DraggableHandle, Loader2, LongText, Maximize2 } from '@teable/icons';
 import { Popover, PopoverContent, PopoverTrigger, Switch, Label } from '@teable/ui-lib';
 import { useCallback, useEffect, useRef, useState } from 'react';

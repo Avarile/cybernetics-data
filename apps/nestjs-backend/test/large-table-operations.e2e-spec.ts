@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo } from '@teable/core';
+import type { IFieldRo } from '@cybernetics/core';
 import {
   Colors,
   FieldKeyType,
@@ -9,7 +8,8 @@ import {
   RatingIcon,
   Relationship,
   generateFieldId,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ICreateRecordsVo, ITableFullVo } from '@teable/openapi';
 import { getRecord as getRecordApi } from '@teable/openapi';
 import { beforeAll, afterAll, describe, expect, test } from 'vitest';

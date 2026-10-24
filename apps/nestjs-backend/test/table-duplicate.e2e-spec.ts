@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
-import type { INestApplication } from '@nestjs/common';
 import type {
   IButtonFieldCellValue,
   IButtonFieldOptions,
@@ -10,7 +9,7 @@ import type {
   ILinkFieldOptions,
   IViewGroupRo,
   IViewVo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   FieldType,
   ViewType,
@@ -20,7 +19,8 @@ import {
   Colors,
   generateWorkflowId,
   Relationship,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   ICreateBaseVo,

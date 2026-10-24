@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue, IAttachmentItem } from '@teable/core';
+import type { IAttachmentCellValue, IAttachmentItem } from '@cybernetics/core';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   buildCellKey,

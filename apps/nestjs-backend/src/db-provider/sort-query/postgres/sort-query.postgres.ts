@@ -1,4 +1,4 @@
-import type { FieldCore } from '@teable/core';
+import type { FieldCore } from '@cybernetics/core';
 import type { IRecordQuerySortContext } from '../../../features/record/query-builder/record-query-builder.interface';
 import { AbstractSortQuery } from '../sort-query.abstract';
 import { MultipleDateTimeSortAdapter } from './multiple-value/multiple-datetime-sort.adapter';

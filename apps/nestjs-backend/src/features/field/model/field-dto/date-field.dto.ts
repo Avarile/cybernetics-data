@@ -1,4 +1,4 @@
-import { DateFieldCore } from '@teable/core';
+import { DateFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class DateFieldDto extends DateFieldCore implements FieldBase {

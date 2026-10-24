@@ -1,5 +1,5 @@
-import type { FieldType, IFilter, IFilterValidationFieldMeta } from '@teable/core';
-import { analyzeFilterValidationIssues } from '@teable/core';
+import type { FieldType, IFilter, IFilterValidationFieldMeta } from '@cybernetics/core';
+import { analyzeFilterValidationIssues } from '@cybernetics/core';
 import { Filter as FilterIcon } from '@teable/icons';
 import { keyBy } from 'lodash';
 import { useCallback, useMemo } from 'react';

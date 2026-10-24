@@ -1,5 +1,5 @@
-import type { IFormulaFieldMeta, IUserCellValue } from '@teable/core';
-import { LastModifiedByFieldCore } from '@teable/core';
+import type { IFormulaFieldMeta, IUserCellValue } from '@cybernetics/core';
+import { LastModifiedByFieldCore } from '@cybernetics/core';
 import { omit } from 'lodash';
 import type { FieldBase } from '../field-base';
 import { UserFieldDto } from './user-field.dto';

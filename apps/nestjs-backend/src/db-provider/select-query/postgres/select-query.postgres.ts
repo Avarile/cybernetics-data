@@ -1,7 +1,7 @@
 /* eslint-disable regexp/no-unused-capturing-group */
 /* eslint-disable sonarjs/cognitive-complexity */
-import { DateFormattingPreset, DbFieldType, TimeFormatting } from '@teable/core';
-import type { IDatetimeFormatting } from '@teable/core';
+import { DateFormattingPreset, DbFieldType, TimeFormatting } from '@cybernetics/core';
+import type { IDatetimeFormatting } from '@cybernetics/core';
 import type { ISelectFormulaConversionContext } from '../../../features/record/query-builder/sql-conversion.visitor';
 import {
   buildDatetimeFormatSql,

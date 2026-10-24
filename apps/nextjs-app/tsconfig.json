@@ -34,7 +34,7 @@
       "@cybernetics/sdk/*": ["../../../packages/sdk/src/*"],
       "@cybernetics/sdk": ["../../../packages/sdk/src/index"],
       "@teable/db-main-prisma": ["../../../packages/db-main-prisma/src/index"],
-      "@teable/core": ["../../../packages/core/src/index"],
+      "@cybernetics/core": ["../../../packages/core/src/index"],
       "@teable/openapi": ["../../../packages/openapi/src/index"],
       "@teable/icons": ["../../../packages/icons/src/index"],
       "@teable/formula": ["../../../packages/formula/src/index"]

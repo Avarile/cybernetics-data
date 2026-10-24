@@ -1,6 +1,6 @@
+import type { IFieldRo, ILinkFieldOptionsRo, ILookupOptionsRo } from '@cybernetics/core';
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, ILinkFieldOptionsRo, ILookupOptionsRo } from '@teable/core';
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
 import {
   createField,
   createRecords,

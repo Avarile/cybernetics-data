@@ -2,8 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
-import type { INestApplication } from '@nestjs/common';
-import type { IFilter, IOperator, IRatingFieldOptions } from '@teable/core';
+import type { IFilter, IOperator, IRatingFieldOptions } from '@cybernetics/core';
 import {
   and,
   FieldKeyType,
@@ -35,7 +34,8 @@ import {
   isBefore,
   isOnOrAfter,
   isOnOrBefore,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import { getRecords as apiGetRecords, createField, createRecords } from '@teable/openapi';
 import { createTable, permanentDeleteTable, initApp } from './utils/init-app';

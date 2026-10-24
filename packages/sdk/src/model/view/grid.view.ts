@@ -1,4 +1,4 @@
-import { GridViewCore } from '@teable/core';
+import { GridViewCore } from '@cybernetics/core';
 import { updateViewOptions } from '@teable/openapi';
 import { Mixin } from 'ts-mixer';
 import { requestWrap } from '../../utils/requestWrap';

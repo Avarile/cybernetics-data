@@ -1,4 +1,4 @@
-import { TIME_ZONE_LIST } from '@teable/core';
+import { TIME_ZONE_LIST } from '@cybernetics/core';
 import { Selector } from '@teable/ui-lib/base';
 import { Label } from '@teable/ui-lib/shadcn';
 import dayjs from 'dayjs';

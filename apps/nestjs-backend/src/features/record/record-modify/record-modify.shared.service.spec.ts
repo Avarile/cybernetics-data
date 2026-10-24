@@ -1,4 +1,4 @@
-import { FieldKeyType, HttpErrorCode } from '@teable/core';
+import { FieldKeyType, HttpErrorCode } from '@cybernetics/core';
 import { describe, expect, it, vi } from 'vitest';
 import { CustomHttpException } from '../../../custom.exception';
 import { RecordModifySharedService } from './record-modify.shared.service';

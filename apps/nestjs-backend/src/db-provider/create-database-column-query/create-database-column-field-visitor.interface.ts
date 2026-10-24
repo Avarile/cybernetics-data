@@ -1,4 +1,4 @@
-import type { TableDomain } from '@teable/core';
+import type { TableDomain } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IFieldInstance } from '../../features/field/model/factory';
 import type { IDbProvider } from '../db.provider.interface';

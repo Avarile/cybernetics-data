@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { INestApplication } from '@nestjs/common';
 import type {
   IDateFieldOptions,
   IFieldRo,
@@ -8,7 +7,7 @@ import type {
   INumberFieldOptions,
   ISelectFieldOptions,
   ISortItem,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   CellValueType,
   SortFunc,
@@ -18,7 +17,8 @@ import {
   DateFormattingPreset,
   TimeFormatting,
   FieldKeyType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { IGetRecordsRo, ITableFullVo, IViewSortRo } from '@teable/openapi';
 import {
   updateViewSort as apiSetViewSort,

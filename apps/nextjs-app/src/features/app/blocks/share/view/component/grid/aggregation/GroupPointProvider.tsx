@@ -1,3 +1,5 @@
+import type { IKanbanViewOptions, ITableActionKey, IViewActionKey } from '@cybernetics/core';
+import { SortFunc, ViewType } from '@cybernetics/core';
 import {
   ReactQueryKeys,
   GroupPointContext,
@@ -8,8 +10,6 @@ import {
   ShareViewContext,
 } from '@cybernetics/sdk';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IKanbanViewOptions, ITableActionKey, IViewActionKey } from '@teable/core';
-import { SortFunc, ViewType } from '@teable/core';
 import { getShareViewGroupPoints } from '@teable/openapi';
 import type { ReactNode } from 'react';
 import { useCallback, useContext, useMemo } from 'react';

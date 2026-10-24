@@ -1,5 +1,5 @@
+import { isImage } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { isImage } from '@teable/core';
 import { UploadType } from '@teable/openapi';
 import type {
   AttachmentSignRequest,

@@ -1,8 +1,8 @@
+import type { CellValueType, IUserCellValue, IUserFieldOptions } from '@cybernetics/core';
 import { UserEditor } from '@cybernetics/sdk/components';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
-import type { CellValueType, IUserCellValue, IUserFieldOptions } from '@teable/core';
 import { getUserCollaborators } from '@teable/openapi';
 import { Label, Switch } from '@teable/ui-lib';
 import { keyBy } from 'lodash';

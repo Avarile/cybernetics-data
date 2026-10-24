@@ -1,12 +1,11 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { INestApplication } from '@nestjs/common';
 import type {
   FormulaFieldCore,
   IFieldVo,
   INumberFieldOptions,
   IRatingFieldOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   Colors,
   DateFormattingPreset,
@@ -14,7 +13,8 @@ import {
   FieldType,
   Relationship,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import { getError } from './utils/get-error';

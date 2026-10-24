@@ -1,6 +1,6 @@
+import type { Action } from '@cybernetics/core';
+import { generateAccessTokenId, getRandomString } from '@cybernetics/core';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import type { Action } from '@teable/core';
-import { generateAccessTokenId, getRandomString } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   CreateAccessTokenRo,

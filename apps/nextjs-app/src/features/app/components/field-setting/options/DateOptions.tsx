@@ -1,4 +1,4 @@
-import type { IDateFieldOptions, IDatetimeFormatting } from '@teable/core';
+import type { IDateFieldOptions, IDatetimeFormatting } from '@cybernetics/core';
 import { Label } from '@teable/ui-lib/shadcn/ui/label';
 import { Switch } from '@teable/ui-lib/shadcn/ui/switch';
 import { useTranslation } from 'next-i18next';

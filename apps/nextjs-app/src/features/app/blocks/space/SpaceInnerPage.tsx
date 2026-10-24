@@ -1,7 +1,7 @@
+import { getUniqName, hasPermission, Role } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useIsMobile, useThemeMode } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getUniqName, hasPermission, Role } from '@teable/core';
 import { Plus } from '@teable/icons';
 import {
   createBase,

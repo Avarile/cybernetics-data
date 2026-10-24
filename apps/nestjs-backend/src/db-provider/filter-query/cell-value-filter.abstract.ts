@@ -1,9 +1,4 @@
 import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotImplementedException,
-} from '@nestjs/common';
-import {
   CellValueType,
   contains,
   dateFilterSchema,
@@ -34,7 +29,7 @@ import {
   isFieldReferenceComparable,
   isFieldReferenceValue,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   FieldCore,
   IDateFieldOptions,
@@ -42,7 +37,12 @@ import type {
   IFilterOperator,
   IFilterValue,
   IFieldReferenceValue,
-} from '@teable/core';
+} from '@cybernetics/core';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotImplementedException,
+} from '@nestjs/common';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { Knex } from 'knex';

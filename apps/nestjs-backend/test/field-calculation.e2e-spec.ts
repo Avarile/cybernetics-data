@@ -1,6 +1,6 @@
+import type { IFieldRo, IFieldVo } from '@cybernetics/core';
+import { FieldType, NumberFormattingType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo } from '@teable/core';
-import { FieldType, NumberFormattingType } from '@teable/core';
 import type { IRecordsVo } from '@teable/openapi';
 import {
   createField,

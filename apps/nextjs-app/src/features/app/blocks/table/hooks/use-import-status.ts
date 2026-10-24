@@ -1,5 +1,5 @@
+import { getTableImportChannel } from '@cybernetics/core';
 import { useConnection } from '@cybernetics/sdk/hooks';
-import { getTableImportChannel } from '@teable/core';
 import { isEmpty, get } from 'lodash';
 import { useEffect, useState } from 'react';
 

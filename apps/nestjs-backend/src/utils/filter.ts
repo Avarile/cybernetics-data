@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IUserCellValue, ILinkCellValue, IOperator, IDatetimeFormatting } from '@teable/core';
+import type {
+  IUserCellValue,
+  ILinkCellValue,
+  IOperator,
+  IDatetimeFormatting,
+} from '@cybernetics/core';
 import {
   FieldType,
   isNot,
@@ -8,7 +13,7 @@ import {
   isNotExactly,
   CellValueType,
   exactFormatDate,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { fromZonedTime } from 'date-fns-tz';
 import type { IFieldInstance } from '../features/field/model/factory';
 

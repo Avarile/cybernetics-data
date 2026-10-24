@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import type { Action, ExcludeAction, TableAction } from '@teable/core';
+import type { Action, ExcludeAction, TableAction } from '@cybernetics/core';
 import {
   ActionPrefix,
   actionPrefixMap,
   getPermissionMap,
   HttpErrorCode,
   TemplateRolePermission,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { pick } from 'lodash';
 import { ClsService } from 'nestjs-cls';

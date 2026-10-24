@@ -1,8 +1,8 @@
+import { FieldType, type IUserCellValue } from '@cybernetics/core';
 import { CellEditor } from '@cybernetics/sdk/components';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import type { UserField } from '@cybernetics/sdk/model';
 import { useQuery } from '@tanstack/react-query';
-import { FieldType, type IUserCellValue } from '@teable/core';
 import { getShareViewCollaborators, PrincipalType } from '@teable/openapi';
 import { useState } from 'react';
 

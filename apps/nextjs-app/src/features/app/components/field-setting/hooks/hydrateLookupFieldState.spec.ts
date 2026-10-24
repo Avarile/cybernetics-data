@@ -1,4 +1,4 @@
-import { CellValueType, FieldType } from '@teable/core';
+import { CellValueType, FieldType } from '@cybernetics/core';
 import { hydrateLookupFieldState } from './hydrateLookupFieldState';
 
 describe('hydrateLookupFieldState', () => {

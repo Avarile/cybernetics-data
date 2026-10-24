@@ -7,7 +7,7 @@ import {
   isLessEqual,
   isNot,
   isNotEmpty,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 export const NUMBER_FIELD_CASES = [
   {

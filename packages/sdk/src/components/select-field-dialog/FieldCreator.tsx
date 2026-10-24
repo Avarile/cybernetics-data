@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-autofocus */
-import type { IFieldRo, IUserFieldOptions } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { IFieldRo, IUserFieldOptions } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { Input, Label, Switch } from '@teable/ui-lib';
 import { useTranslation } from '../../context/app/i18n';
 

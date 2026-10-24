@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
-import type { INestApplication } from '@nestjs/common';
 import {
   Colors,
   FieldKeyType,
@@ -11,8 +10,9 @@ import {
   Role,
   SortFunc,
   defaultNumberFormatting,
-} from '@teable/core';
-import type { IFieldRo, IUserCellValue } from '@teable/core';
+} from '@cybernetics/core';
+import type { IFieldRo, IUserCellValue } from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { IRecordsVo, IPasteRo, IPasteVo, ITableFullVo, IUserMeVo } from '@teable/openapi';
 import {
   RangeType,

@@ -1,18 +1,18 @@
 /* eslint-disable sonarjs/cognitive-complexity */
-import { StandaloneViewProvider } from '@cybernetics/sdk/context';
-import { useBaseId, useFields, useTable, useTableId } from '@cybernetics/sdk/hooks';
-import type { IFieldInstance } from '@cybernetics/sdk/model';
 import {
   CellValueType,
   getRollupFunctionsByCellValueType,
   ROLLUP_FUNCTIONS,
   CONDITIONAL_QUERY_DEFAULT_LIMIT,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IConditionalRollupFieldOptions,
   RollupFunction,
   IRollupFieldOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { StandaloneViewProvider } from '@cybernetics/sdk/context';
+import { useBaseId, useFields, useTable, useTableId } from '@cybernetics/sdk/hooks';
+import type { IFieldInstance } from '@cybernetics/sdk/model';
 import { Trans } from 'next-i18next';
 import { useCallback, useEffect, useMemo } from 'react';
 import { LookupFilterOptions } from '../lookup-options/LookupFilterOptions';

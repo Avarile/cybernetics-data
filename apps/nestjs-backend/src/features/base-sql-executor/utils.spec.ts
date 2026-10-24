@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { DriverClient } from '@teable/core';
+import { DriverClient } from '@cybernetics/core';
 import { CustomHttpException } from '../../custom.exception';
 import { validateRoleOperations, checkTableAccess } from './utils';
 

@@ -1,5 +1,5 @@
-import type { IShareViewMeta } from '@teable/core';
-import { CalendarViewCore } from '@teable/core';
+import type { IShareViewMeta } from '@cybernetics/core';
+import { CalendarViewCore } from '@cybernetics/core';
 
 export class CalendarViewDto extends CalendarViewCore {
   defaultShareMeta: IShareViewMeta = {

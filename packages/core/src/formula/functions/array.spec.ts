@@ -72,7 +72,7 @@ describe('ArrayFunc', () => {
         new TypedValue(200, CellValueType.Number, false),
         new TypedValue(300, CellValueType.Number, false),
         new TypedValue('', CellValueType.String, false),
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue(true, CellValueType.Boolean, false),
       ]);
 
@@ -104,7 +104,7 @@ describe('ArrayFunc', () => {
         new TypedValue(200, CellValueType.Number, false),
         new TypedValue(300, CellValueType.Number, false),
         new TypedValue('', CellValueType.String, false),
-        new TypedValue('Teable', CellValueType.String, false),
+        new TypedValue('Cybernetics', CellValueType.String, false),
         new TypedValue(true, CellValueType.Boolean, false),
       ]);
 

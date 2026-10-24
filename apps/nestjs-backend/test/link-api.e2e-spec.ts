@@ -4,14 +4,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 
-import type { INestApplication } from '@nestjs/common';
 import type {
   IFieldRo,
   IFieldVo,
   ILinkFieldOptions,
   ILookupLinkOptionsVo,
   LinkFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   Colors,
   FieldKeyType,
@@ -21,7 +20,8 @@ import {
   RatingIcon,
   Relationship,
   isLinkLookupOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ITableFullVo, IRecordsVo } from '@teable/openapi';
 import {
   axios,

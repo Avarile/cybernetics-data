@@ -1,4 +1,4 @@
-import { RowHeightLevel } from '@teable/core';
+import { RowHeightLevel } from '@cybernetics/core';
 
 export const GIRD_ROW_HEIGHT_DEFINITIONS = {
   [RowHeightLevel.AutoFit]: 32,

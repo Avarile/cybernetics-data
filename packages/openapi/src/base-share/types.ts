@@ -1,4 +1,4 @@
-import { sharePasswordSchema } from '@teable/core';
+import { sharePasswordSchema } from '@cybernetics/core';
 import { z } from '../zod';
 
 export const baseShareVoSchema = z.object({

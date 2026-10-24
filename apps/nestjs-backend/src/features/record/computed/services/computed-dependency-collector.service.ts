@@ -2,7 +2,6 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Injectable, Logger } from '@nestjs/common';
 import type {
   IFilter,
   IFilterItem,
@@ -13,10 +12,11 @@ import type {
   AutoNumberFieldCore,
   FieldCore,
   TableDomain,
-} from '@teable/core';
-import { DbFieldType, DriverClient, FieldType, isFieldReferenceValue } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { DbFieldType, DriverClient, FieldType, isFieldReferenceValue } from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';
 import { InjectDbProvider } from '../../../../db-provider/db.provider';
@@ -152,9 +152,9 @@ export class ComputedDependencyCollectorService {
   ): Promise<string[]> {
     const dbTable = await this.getDbTableName(tableId, ctx);
     const { schema, table } = this.splitDbTableName(dbTable);
-    const qb = (schema ? this.dataKnex.withSchema(schema) : this.dataKnex).select('__id').from(
-      table
-    );
+    const qb = (schema ? this.dataKnex.withSchema(schema) : this.dataKnex)
+      .select('__id')
+      .from(table);
     const rows = await this.dataPrismaService
       .txClient()
       .$queryRawUnsafe<Array<{ __id: string }>>(qb.toQuery());

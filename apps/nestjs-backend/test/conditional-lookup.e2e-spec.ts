@@ -5,7 +5,6 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import type { INestApplication } from '@nestjs/common';
 import type {
   IAttachmentCellValue,
   IConditionalRollupFieldOptions,
@@ -14,7 +13,7 @@ import type {
   IFilter,
   ILookupOptionsRo,
   IConditionalLookupOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   isConditionalLookupOptions,
   Colors,
@@ -24,7 +23,8 @@ import {
   NumberFormattingType,
   Relationship,
   SortFunc,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import { uploadAttachment } from '@teable/openapi';
 import {

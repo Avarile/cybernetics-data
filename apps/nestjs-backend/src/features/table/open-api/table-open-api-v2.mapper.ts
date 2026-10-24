@@ -1,5 +1,5 @@
-import { FieldType } from '@teable/core';
-import type { IFieldRo } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
+import type { IFieldRo } from '@cybernetics/core';
 import type { ICreateTableWithDefault } from '@teable/openapi';
 import type { ICreateTableCommandInput, ITableFieldInput } from '@teable/v2-core';
 

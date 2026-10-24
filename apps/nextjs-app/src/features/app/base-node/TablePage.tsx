@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/cognitive-complexity */
+import { ViewType } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { dehydrate } from '@tanstack/react-query';
-import { ViewType } from '@teable/core';
 import { BaseNodeResourceType, LastVisitResourceType } from '@teable/openapi';
 import dynamic from 'next/dynamic';
 import type { SsrApi } from '@/backend/api/rest/ssr-api';

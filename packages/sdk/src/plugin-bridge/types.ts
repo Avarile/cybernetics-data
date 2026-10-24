@@ -1,4 +1,4 @@
-import type { IFieldVo } from '@teable/core';
+import type { IFieldVo } from '@cybernetics/core';
 import type { IGetBasePermissionVo, IGetTempTokenVo, IRecordsVo } from '@teable/openapi';
 import type { AsyncMethodReturns } from 'penpal';
 import type { IRange, SelectionRegionType } from '../components/grid/interface';

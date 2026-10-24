@@ -1,4 +1,4 @@
-import type { IFilterOperator, IFilterValue } from '@teable/core';
+import type { IFilterOperator, IFilterValue } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IDbProvider } from '../db.provider.interface';
 

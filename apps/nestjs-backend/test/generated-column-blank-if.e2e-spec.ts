@@ -1,8 +1,8 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { IFieldVo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldVo } from '@teable/core';
-import { FieldType } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   createField,

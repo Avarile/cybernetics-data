@@ -1,12 +1,12 @@
 /* eslint-disable sonarjs/no-collapsible-if */
-import { CellValueType, FieldType, Relationship } from '@teable/core';
+import { CellValueType, FieldType, Relationship } from '@cybernetics/core';
 import type {
   FieldCore,
   ILinkFieldOptions,
   LinkFieldCore,
   TableDomain,
   FormulaFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 export function getTableAliasFromTable(table: TableDomain): string {
   // Use a short, deterministic alias derived from table id to avoid

@@ -1,7 +1,7 @@
+import type { IRatingColors, IRatingFieldOptions } from '@cybernetics/core';
+import { ColorUtils, RATING_ICON_COLORS, RatingIcon } from '@cybernetics/core';
 import { RATING_ICON_MAP } from '@cybernetics/sdk/components';
 import { RatingField } from '@cybernetics/sdk/model';
-import type { IRatingColors, IRatingFieldOptions } from '@teable/core';
-import { ColorUtils, RATING_ICON_COLORS, RatingIcon } from '@teable/core';
 import {
   Label,
   Select,

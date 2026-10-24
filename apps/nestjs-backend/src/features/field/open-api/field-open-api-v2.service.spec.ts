@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-identical-functions */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { CellValueType, DbFieldType, getDefaultFormatting, type IFieldVo } from '@teable/core';
+import { CellValueType, DbFieldType, getDefaultFormatting, type IFieldVo } from '@cybernetics/core';
 import { describe, expect, it, vi } from 'vitest';
 import { FieldOpenApiV2Service } from './field-open-api-v2.service';
 

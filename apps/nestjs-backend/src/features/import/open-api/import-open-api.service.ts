@@ -1,12 +1,12 @@
-import { Injectable, Logger, Optional } from '@nestjs/common';
-import type { IFieldRo } from '@teable/core';
+import type { IFieldRo } from '@cybernetics/core';
 import {
   FieldType,
   generateLogId,
   getRandomString,
   HttpErrorCode,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IAnalyzeRo,

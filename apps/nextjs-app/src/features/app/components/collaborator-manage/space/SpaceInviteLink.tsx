@@ -1,5 +1,5 @@
+import type { IRole } from '@cybernetics/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IRole } from '@teable/core';
 import {
   deleteSpaceInvitationLink,
   listSpaceInvitationLink,

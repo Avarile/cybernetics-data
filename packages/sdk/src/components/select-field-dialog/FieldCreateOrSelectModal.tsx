@@ -1,5 +1,5 @@
-import { createFieldRoSchema, FieldType } from '@teable/core';
-import type { IFieldVo, IFieldRo } from '@teable/core';
+import { createFieldRoSchema, FieldType } from '@cybernetics/core';
+import type { IFieldVo, IFieldRo } from '@cybernetics/core';
 import { ArrowLeft } from '@teable/icons';
 import {
   Button,

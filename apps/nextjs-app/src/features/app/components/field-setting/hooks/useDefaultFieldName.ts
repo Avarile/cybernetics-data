@@ -1,4 +1,3 @@
-import { useFields, useTables } from '@cybernetics/sdk/hooks';
 import type {
   IFieldRo,
   ILinkFieldOptionsRo,
@@ -6,8 +5,9 @@ import type {
   IConditionalRollupFieldOptions,
   IConditionalLookupOptions,
   ILookupLinkOptions,
-} from '@teable/core';
-import { FieldType, isConditionalLookupOptions } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldType, isConditionalLookupOptions } from '@cybernetics/core';
+import { useFields, useTables } from '@cybernetics/sdk/hooks';
 import { getField } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
 import { useCallback } from 'react';

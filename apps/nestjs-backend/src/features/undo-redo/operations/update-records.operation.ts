@@ -1,4 +1,4 @@
-import { FieldKeyType } from '@teable/core';
+import { FieldKeyType } from '@cybernetics/core';
 import { keyBy } from 'lodash';
 import type { IUpdateRecordsOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';

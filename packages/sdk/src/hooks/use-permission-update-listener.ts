@@ -1,4 +1,4 @@
-import { getBasePermissionUpdateChannel } from '@teable/core';
+import { getBasePermissionUpdateChannel } from '@cybernetics/core';
 import { useEffect } from 'react';
 import { useConnection } from './use-connection';
 

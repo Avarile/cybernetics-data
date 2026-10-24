@@ -1,5 +1,5 @@
+import type { IBaseRole, IRole } from '@cybernetics/core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IBaseRole, IRole } from '@teable/core';
 import {
   deleteBaseInvitationLink,
   listBaseInvitationLink,

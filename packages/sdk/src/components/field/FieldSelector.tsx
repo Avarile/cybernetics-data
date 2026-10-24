@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import { ChevronDown } from '@teable/icons';
 import { Button, Popover, PopoverTrigger, PopoverContent, cn } from '@teable/ui-lib';
 import { useState, useMemo } from 'react';

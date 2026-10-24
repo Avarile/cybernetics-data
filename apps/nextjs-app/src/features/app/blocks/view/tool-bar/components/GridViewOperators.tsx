@@ -1,7 +1,7 @@
+import type { RowHeightLevel, IGridViewOptions } from '@cybernetics/core';
 import { HideFields, RowHeight, Sort, Group, ViewFilter } from '@cybernetics/sdk';
 import { useFields } from '@cybernetics/sdk/hooks';
 import { useView } from '@cybernetics/sdk/hooks/use-view';
-import type { RowHeightLevel, IGridViewOptions } from '@teable/core';
 import {
   ArrowUpDown,
   Filter as FilterIcon,

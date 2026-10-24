@@ -4,8 +4,8 @@ import type {
   CellValueType,
   ISetFieldPropertyOpContext,
   FieldCore,
-} from '@teable/core';
-import { assertNever, FieldType, applyFieldPropertyOps } from '@teable/core';
+} from '@cybernetics/core';
+import { assertNever, FieldType, applyFieldPropertyOps } from '@cybernetics/core';
 import type { Field } from '@teable/db-main-prisma';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { AttachmentFieldDto } from './field-dto/attachment-field.dto';

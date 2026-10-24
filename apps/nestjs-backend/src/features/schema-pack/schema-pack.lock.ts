@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
+import { HttpErrorCode } from '@cybernetics/core';
 import type { Logger } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import type { RedisNativeService } from '../../cache/redis-native.service';
 import { CustomHttpException } from '../../custom.exception';
 

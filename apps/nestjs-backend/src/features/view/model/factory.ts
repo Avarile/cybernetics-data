@@ -1,5 +1,5 @@
-import type { IViewVo } from '@teable/core';
-import { assertNever, ViewType } from '@teable/core';
+import type { IViewVo } from '@cybernetics/core';
+import { assertNever, ViewType } from '@cybernetics/core';
 import type { View } from '@teable/db-main-prisma';
 import { plainToInstance } from 'class-transformer';
 import { CalendarViewDto } from './calendar-view.dto';

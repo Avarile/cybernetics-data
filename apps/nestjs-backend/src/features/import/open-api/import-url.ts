@@ -1,4 +1,4 @@
-import { HttpErrorCode } from '@teable/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { READ_PATH } from '@teable/openapi';
 import { baseConfig } from '../../../configs/base.config';
 import { storageConfig } from '../../../configs/storage';

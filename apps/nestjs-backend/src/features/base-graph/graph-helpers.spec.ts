@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import type { IFieldInstance } from '../field/model/factory';
 import { collectNeighbours, detailFieldOrder } from './graph-node.service';
 import { labelOf, toGraphRow } from './graph-row.reader';

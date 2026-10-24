@@ -1,8 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma } from '@prisma/client';
 import type {
   CreatedByFieldCore,
   FieldCore,
@@ -19,7 +16,7 @@ import type {
   IRecord,
   ISnapshotBase,
   ISortItem,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   and,
   CellFormat,
@@ -42,9 +39,12 @@ import {
   Relationship,
   StatisticsFunc,
   TableDomain,
-} from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Prisma } from '@prisma/client';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import type {
   CreateRecordAction,
   ICreateRecordsRo,

@@ -1,6 +1,6 @@
+import type { ITimeZoneString } from '@cybernetics/core';
 import { useBase, LocalStorageKeys } from '@cybernetics/sdk';
 import { useMutation } from '@tanstack/react-query';
-import type { ITimeZoneString } from '@teable/core';
 import type {
   IInplaceImportOptionRo,
   IImportOptionRo,

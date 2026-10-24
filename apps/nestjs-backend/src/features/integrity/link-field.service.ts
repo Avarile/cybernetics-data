@@ -1,5 +1,5 @@
+import { FieldType, type ILinkFieldOptions } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { FieldType, type ILinkFieldOptions } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { Prisma, PrismaService } from '@teable/db-main-prisma';
 import { IntegrityIssueType, type IIntegrityIssue } from '@teable/openapi';

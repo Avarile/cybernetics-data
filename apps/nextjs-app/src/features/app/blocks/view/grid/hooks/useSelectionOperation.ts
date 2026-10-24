@@ -1,4 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { FieldType, fieldVoSchema, type HttpError } from '@cybernetics/core';
 import type { CombinedSelection, IRecordIndexMap } from '@cybernetics/sdk';
 import {
   useBaseId,
@@ -14,7 +15,6 @@ import {
 } from '@cybernetics/sdk';
 import type { UseMutateAsyncFunction } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
-import { FieldType, fieldVoSchema, type HttpError } from '@teable/core';
 import type {
   ICopyVo,
   IClearSelectionStreamDoneEvent,

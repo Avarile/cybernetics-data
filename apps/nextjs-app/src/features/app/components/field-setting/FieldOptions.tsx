@@ -1,5 +1,3 @@
-import { useFields } from '@cybernetics/sdk/hooks';
-import { useQuery } from '@tanstack/react-query';
 import type {
   IFieldVo,
   IDateFieldOptions,
@@ -18,13 +16,15 @@ import type {
   ILongTextFieldOptions,
   IButtonFieldOptions,
   IConditionalRollupFieldOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   CellValueType,
   FieldType,
   getRollupFunctionsByCellValueType,
   isLinkLookupOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { useFields } from '@cybernetics/sdk/hooks';
+import { useQuery } from '@tanstack/react-query';
 import { getField } from '@teable/openapi';
 import { useMemo } from 'react';
 import { ButtonOptions } from './options/ButtonOptions';

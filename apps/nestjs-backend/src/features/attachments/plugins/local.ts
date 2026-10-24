@@ -3,8 +3,8 @@
 import { createReadStream, createWriteStream, unlinkSync, existsSync, rmSync } from 'fs';
 import { type Readable as ReadableStream } from 'node:stream';
 import { join, resolve } from 'path';
+import { getRandomString, HttpErrorCode, isImage } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { getRandomString, HttpErrorCode, isImage } from '@teable/core';
 import { READ_PATH } from '@teable/openapi';
 import type { Request } from 'express';
 import * as fse from 'fs-extra';

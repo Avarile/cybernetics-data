@@ -1,4 +1,4 @@
-import type { AppAction, AutomationAction, TableAction } from '@teable/core';
+import type { AppAction, AutomationAction, TableAction } from '@cybernetics/core';
 
 export enum BaseNodeAction {
   Read = 'base_node|read',

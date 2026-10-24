@@ -1,5 +1,5 @@
-import type { IAttachmentItem, IAttachmentCellValue } from '@teable/core';
-import { generateAttachmentId } from '@teable/core';
+import type { IAttachmentItem, IAttachmentCellValue } from '@cybernetics/core';
+import { generateAttachmentId } from '@cybernetics/core';
 import { UploadType, type INotifyVo } from '@teable/openapi';
 import { sonner } from '@teable/ui-lib';
 import { omit } from 'lodash';

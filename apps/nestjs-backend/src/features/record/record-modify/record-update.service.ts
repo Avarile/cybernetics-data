@@ -1,6 +1,6 @@
+import type { IAttachmentCellValue, TableDomain } from '@cybernetics/core';
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IAttachmentCellValue, TableDomain } from '@teable/core';
-import { FieldKeyType, FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { IRecordInsertOrderRo } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';

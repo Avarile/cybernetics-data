@@ -1,4 +1,4 @@
-import type { IFilter } from '@teable/core';
+import type { IFilter } from '@cybernetics/core';
 import { isEqual } from 'lodash';
 import { useRef, useState } from 'react';
 import { useDebounce, useUpdateEffect } from 'react-use';

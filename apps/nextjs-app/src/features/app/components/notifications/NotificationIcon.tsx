@@ -2,8 +2,8 @@ import type {
   INotificationIcon,
   INotificationSystemIcon,
   INotificationUserIcon,
-} from '@teable/core';
-import { NotificationTypeEnum } from '@teable/core';
+} from '@cybernetics/core';
+import { NotificationTypeEnum } from '@cybernetics/core';
 import { Avatar, AvatarFallback, AvatarImage } from '@teable/ui-lib';
 import React, { useCallback } from 'react';
 import { UserAvatar } from '@/features/app/components/user/UserAvatar';

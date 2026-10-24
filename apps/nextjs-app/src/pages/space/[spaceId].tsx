@@ -1,6 +1,6 @@
+import { Role } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk';
 import { dehydrate, QueryClient } from '@tanstack/react-query';
-import { Role } from '@teable/core';
 import { uniq } from 'lodash';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';

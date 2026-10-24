@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import { FieldType } from '@teable/core';
 import { Copy, Check } from '@teable/icons';
 import { getFields, getTableById } from '@teable/openapi';
 import { Button, Skeleton, Tabs, TabsList, TabsTrigger, TabsContent } from '@teable/ui-lib/shadcn';

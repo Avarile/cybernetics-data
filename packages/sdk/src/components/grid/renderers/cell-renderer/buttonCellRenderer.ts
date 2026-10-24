@@ -1,4 +1,4 @@
-import { Colors, ColorUtils } from '@teable/core';
+import { Colors, ColorUtils } from '@cybernetics/core';
 import { LRUCache } from 'lru-cache';
 import colors from 'tailwindcss/colors';
 

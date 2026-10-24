@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldType, Relationship } from '@cybernetics/core';
+import type { IFieldRo } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Relationship } from '@teable/core';
-import type { IFieldRo } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { DB_PROVIDER_SYMBOL } from '../src/db-provider/db.provider';
 import type { IDbProvider } from '../src/db-provider/db.provider.interface';

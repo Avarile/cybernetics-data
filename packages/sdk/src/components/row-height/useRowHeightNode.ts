@@ -1,4 +1,4 @@
-import { RowHeightLevel } from '@teable/core';
+import { RowHeightLevel } from '@cybernetics/core';
 import { Menu } from '@teable/icons';
 import { useMemo } from 'react';
 import { useRowHeightNodes } from './useRowHeightNodes';

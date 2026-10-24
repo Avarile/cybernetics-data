@@ -1,5 +1,5 @@
-import type { StatisticsFunc } from '@teable/core';
-import { CellValueType, FieldType, getValidStatisticFunc } from '@teable/core';
+import type { StatisticsFunc } from '@cybernetics/core';
+import { CellValueType, FieldType, getValidStatisticFunc } from '@cybernetics/core';
 import { X } from '@teable/icons';
 import { BaseQueryColumnType } from '@teable/openapi';
 import type { IQueryAggregation } from '@teable/openapi';

@@ -1,4 +1,4 @@
-import type { IViewRo, IViewVo } from '@teable/core';
+import type { IViewRo, IViewVo } from '@cybernetics/core';
 import type { ICreateViewOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';
 import type { ViewOpenApiService } from '../../view/open-api/view-open-api.service';

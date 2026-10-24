@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { DriverClient } from '@teable/core';
+import { DriverClient } from '@cybernetics/core';
 import knex from 'knex';
 import { getDriverName } from '../../utils/db-helpers';
 

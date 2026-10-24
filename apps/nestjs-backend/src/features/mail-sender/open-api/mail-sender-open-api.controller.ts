@@ -1,5 +1,5 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Body, Controller, Post } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { ITestMailTransportConfigRo, testMailTransportConfigRoSchema } from '@teable/openapi';
 import { CustomHttpException } from '../../../custom.exception';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';

@@ -1,4 +1,4 @@
-import { fieldVoSchema } from '@teable/core';
+import { fieldVoSchema } from '@cybernetics/core';
 import { z } from '../../zod';
 import { baseQueryColumnTypeSchema } from './types';
 

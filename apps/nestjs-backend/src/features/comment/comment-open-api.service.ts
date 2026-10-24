@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
-import type { ILocalization } from '@teable/core';
+import type { ILocalization } from '@cybernetics/core';
 import {
   generateCommentId,
   getCommentChannel,
   getTableCommentChannel,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   ICreateCommentRo,

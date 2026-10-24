@@ -1,12 +1,12 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable } from '@nestjs/common';
 import {
   generatePluginId,
   generatePluginUserId,
   getPluginEmail,
   nullsToUndefined,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType, PluginStatus } from '@teable/openapi';
 import type {

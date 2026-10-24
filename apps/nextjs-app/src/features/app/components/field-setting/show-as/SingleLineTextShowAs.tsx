@@ -1,5 +1,5 @@
-import { SingleLineTextDisplayType } from '@teable/core';
-import type { ISingleLineTextShowAs } from '@teable/core';
+import { SingleLineTextDisplayType } from '@cybernetics/core';
+import type { ISingleLineTextShowAs } from '@cybernetics/core';
 import { Label } from '@teable/ui-lib/shadcn/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@teable/ui-lib/shadcn/ui/tabs';
 import { useTranslation } from 'next-i18next';

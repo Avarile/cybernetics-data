@@ -1,4 +1,4 @@
-import type { IRecord } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
 import { match } from 'ts-pattern';
 import { CoreEvent, type IEventContext } from '../core-event';
 import { Events } from '../event.enum';

@@ -1,10 +1,10 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+import { FieldType } from '@cybernetics/core';
 import { useView } from '@cybernetics/sdk';
 import type { IFieldStatic } from '@cybernetics/sdk/hooks';
 import { useFieldStaticGetter, useFields, useIsHydrated } from '@cybernetics/sdk/hooks';
 import type { FormView, IFieldInstance } from '@cybernetics/sdk/model';
 import { useDroppable } from '@dnd-kit/core';
-import { FieldType } from '@teable/core';
 import { DraggableHandle, Plus } from '@teable/icons';
 import {
   Button,

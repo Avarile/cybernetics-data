@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { DriverClient } from '@cybernetics/core';
 import type { Provider } from '@nestjs/common';
 import { Inject } from '@nestjs/common';
-import { DriverClient } from '@teable/core';
 import type { Knex } from 'knex';
 import { DATA_KNEX } from '../global/knex';
 import { getDriverName } from '../utils/db-helpers';

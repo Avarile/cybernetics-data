@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { IFieldRo, IFieldVo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo } from '@teable/core';
-import { FieldType } from '@teable/core';
 import {
   createField,
   createTable,

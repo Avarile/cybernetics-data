@@ -1,5 +1,5 @@
-import { formatNumberToString } from '@teable/core';
-import type { INumberFormatting } from '@teable/core';
+import { formatNumberToString } from '@cybernetics/core';
+import type { INumberFormatting } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useMemo } from 'react';
 import { OverflowTooltip } from '../components';

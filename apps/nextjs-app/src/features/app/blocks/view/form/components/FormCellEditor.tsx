@@ -1,3 +1,10 @@
+import { FieldType } from '@cybernetics/core';
+import type {
+  IAttachmentCellValue,
+  ILinkCellValue,
+  ILinkFieldOptions,
+  IUserCellValue,
+} from '@cybernetics/core';
 import {
   AttachmentManager,
   CellEditor,
@@ -6,13 +13,6 @@ import {
 } from '@cybernetics/sdk/components';
 import { UploadAttachment } from '@cybernetics/sdk/components/editor/attachment/upload-attachment/UploadAttachment';
 import type { Field, LinkField, UserField } from '@cybernetics/sdk/model';
-import { FieldType } from '@teable/core';
-import type {
-  IAttachmentCellValue,
-  ILinkCellValue,
-  ILinkFieldOptions,
-  IUserCellValue,
-} from '@teable/core';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useRouter } from 'next/router';
 import { ShareFormLinkEditor } from './share-link-editor/FormLinkEditor';

@@ -1,3 +1,4 @@
+import { FieldType, ViewType } from '@cybernetics/core';
 import { LocalStorageKeys } from '@cybernetics/sdk/config';
 import {
   useBaseId,
@@ -8,7 +9,6 @@ import {
   useView,
 } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FieldType, ViewType } from '@teable/core';
 import { HelpCircle } from '@teable/icons';
 import {
   toggleTableIndex,

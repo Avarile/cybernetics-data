@@ -1,6 +1,6 @@
+import type { FieldCore } from '@cybernetics/core';
+import { CellValueType } from '@cybernetics/core';
 import { Logger } from '@nestjs/common';
-import type { FieldCore } from '@teable/core';
-import { CellValueType } from '@teable/core';
 import type { Knex } from 'knex';
 import type { IRecordQueryGroupContext } from '../../features/record/query-builder/record-query-builder.interface';
 import type { IGroupQueryInterface, IGroupQueryExtra } from './group-query.interface';

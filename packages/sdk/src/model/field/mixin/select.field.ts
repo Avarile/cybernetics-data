@@ -1,4 +1,4 @@
-import { ColorUtils, SelectFieldCore } from '@teable/core';
+import { ColorUtils, SelectFieldCore } from '@cybernetics/core';
 import { keyBy } from 'lodash';
 import colors from 'tailwindcss/colors';
 

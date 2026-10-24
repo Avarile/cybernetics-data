@@ -1,5 +1,5 @@
+import { FieldKeyType, HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { FieldKeyType, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { IRecordInsertOrderRo, IRecord } from '@teable/openapi';
 import { CustomHttpException } from '../../../custom.exception';

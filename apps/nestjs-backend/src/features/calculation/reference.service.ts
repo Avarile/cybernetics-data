@@ -1,6 +1,6 @@
+import type { IRecord, Relationship } from '@cybernetics/core';
+import { extractFieldIdsFromFilter } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IRecord, Relationship } from '@teable/core';
-import { extractFieldIdsFromFilter } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { difference, uniq } from 'lodash';

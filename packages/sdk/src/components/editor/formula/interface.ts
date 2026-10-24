@@ -1,4 +1,4 @@
-import type { FormulaFuncType, FunctionName } from '@teable/core';
+import type { FormulaFuncType, FunctionName } from '@cybernetics/core';
 import type { IFunctionSchema } from '@teable/openapi';
 
 export interface IFocusToken {

@@ -1,4 +1,4 @@
-import { CellValueType, DbFieldType, FieldType, Relationship } from '@teable/core';
+import { CellValueType, DbFieldType, FieldType, Relationship } from '@cybernetics/core';
 import { describe, expect, it, vi } from 'vitest';
 import { TableOpenApiService } from './table-open-api.service';
 

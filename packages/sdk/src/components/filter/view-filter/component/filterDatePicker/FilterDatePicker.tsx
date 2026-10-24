@@ -3,14 +3,14 @@ import type {
   IDateFilter,
   ITimeZoneString,
   ISubOperator,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   dateRange,
   exactDate,
   FieldType,
   getValidFilterSubOperators,
   isWithIn,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { Input, cn } from '@teable/ui-lib';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from '../../../../../context/app/i18n';

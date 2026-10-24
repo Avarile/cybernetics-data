@@ -1,4 +1,4 @@
-import { Me, type IFilter } from '@teable/core';
+import { Me, type IFilter } from '@cybernetics/core';
 
 export function filterHasMe(filter: IFilter | string | undefined | null) {
   if (!filter) {

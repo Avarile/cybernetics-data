@@ -1,5 +1,5 @@
+import { FieldKeyType, FieldType, SortFunc } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, SortFunc } from '@teable/core';
 import { createRecords, updateRecord, type ITableFullVo } from '@teable/openapi';
 import { createTable, permanentDeleteTable, getRecords, initApp } from './utils/init-app';
 

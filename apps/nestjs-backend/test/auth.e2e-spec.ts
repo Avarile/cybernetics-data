@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { DriverClient, generateAccountId, HttpErrorCode } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { DriverClient, generateAccountId, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   CreateAccessTokenVo,
@@ -127,7 +127,7 @@ describe('Auth Controller (e2e)', () => {
   it('api/auth/signup - system email', async () => {
     const error = await getError(() =>
       signup({
-        email: 'anonymous@system.teable.ai',
+        email: 'anonymous@system.cybernetics.ai',
         password: '12345678a',
       })
     );
@@ -245,7 +245,9 @@ describe('Auth Controller (e2e)', () => {
   });
 
   it('api/auth/send-signup-verification-code - system email', async () => {
-    const error = await getError(() => sendSignupVerificationCode('anonymous@system.teable.ai'));
+    const error = await getError(() =>
+      sendSignupVerificationCode('anonymous@system.cybernetics.ai')
+    );
     expect(error?.status).toBe(400);
   });
 

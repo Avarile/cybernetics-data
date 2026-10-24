@@ -1,4 +1,4 @@
-import type { FieldAction, RecordAction, TableAction, ViewAction } from '@teable/core';
+import type { FieldAction, RecordAction, TableAction, ViewAction } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

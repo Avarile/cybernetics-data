@@ -1,6 +1,6 @@
+import type { HttpError } from '@cybernetics/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
-import { HttpErrorCode } from '@teable/core';
 import type { IDeleteUserErrorData } from '@teable/openapi';
 import { deleteUser, deleteUserErrorDataSchema } from '@teable/openapi';
 import {

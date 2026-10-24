@@ -1,4 +1,4 @@
-import { allActions } from '@teable/core';
+import { allActions } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute } from '../utils';
 import { z } from '../zod';

@@ -1,4 +1,4 @@
-import type { IRecord } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
 import type { IGroupPointsVo } from '@teable/openapi';
 
 export interface IViewBaseProps {

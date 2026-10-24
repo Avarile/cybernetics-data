@@ -1,5 +1,5 @@
+import type { Action } from '@cybernetics/core';
 import { BadRequestException, ForbiddenException, Injectable, Logger } from '@nestjs/common';
-import type { Action } from '@teable/core';
 import { Task } from '@teable/openapi';
 import type { IAiGenerateRo } from '@teable/openapi';
 import type { ModelMessage } from 'ai';

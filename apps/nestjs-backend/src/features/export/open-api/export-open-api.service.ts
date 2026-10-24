@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
+import type { IAttachmentCellValue, IFieldVo } from '@cybernetics/core';
+import { FieldType, HttpErrorCode, ViewType } from '@cybernetics/core';
 import { Injectable, Logger, Optional } from '@nestjs/common';
-import type { IAttachmentCellValue, IFieldVo } from '@teable/core';
-import { FieldType, HttpErrorCode, ViewType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { IExportCsvRo } from '@teable/openapi';
 import type { Response } from 'express';

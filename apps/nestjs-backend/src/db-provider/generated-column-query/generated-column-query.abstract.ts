@@ -1,4 +1,4 @@
-import type { IFormulaParamMetadata } from '@teable/core';
+import type { IFormulaParamMetadata } from '@cybernetics/core';
 import type {
   IFormulaConversionContext,
   IGeneratedColumnQueryInterface,

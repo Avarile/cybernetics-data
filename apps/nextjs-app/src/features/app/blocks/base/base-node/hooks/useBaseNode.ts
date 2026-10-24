@@ -1,7 +1,7 @@
+import { getBaseNodeChannel } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useConnection } from '@cybernetics/sdk/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getBaseNodeChannel } from '@teable/core';
 import type { IBaseNodeTreeVo, IBaseNodeVo } from '@teable/openapi';
 import { BaseNodeResourceType, getBaseNodeTree } from '@teable/openapi';
 import { isEmpty, get } from 'lodash';

@@ -1,5 +1,5 @@
-import type { IAttachmentCellValue, IAttachmentItem } from '@teable/core';
-import { AttachmentFieldCore, generateAttachmentId } from '@teable/core';
+import type { IAttachmentCellValue, IAttachmentItem } from '@cybernetics/core';
+import { AttachmentFieldCore, generateAttachmentId } from '@cybernetics/core';
 import { omit } from 'lodash';
 import type { FieldBase } from '../field-base';
 

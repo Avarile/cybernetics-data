@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { join } from 'path';
+import { getRandomString, HttpErrorCode, Role } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { getRandomString, HttpErrorCode, Role } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { PluginStatus, PrincipalType, UploadType } from '@teable/openapi';
 import { Knex } from 'knex';

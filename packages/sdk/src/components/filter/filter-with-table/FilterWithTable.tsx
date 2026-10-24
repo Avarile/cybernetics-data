@@ -1,5 +1,5 @@
-import type { IFilter } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { IFilter } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { useCallback, useMemo, type ComponentProps } from 'react';
 import type { IFieldInstance } from '../../../model';
 import type { IViewFilterLinkContext } from '../view-filter';

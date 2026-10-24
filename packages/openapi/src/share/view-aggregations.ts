@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { viewVoSchema } from '@teable/core';
+import { viewVoSchema } from '@cybernetics/core';
 import type { IAggregationVo } from '../aggregation';
 import { aggregationRoSchema } from '../aggregation';
 import { axios } from '../axios';

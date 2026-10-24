@@ -1,7 +1,7 @@
+import { HttpErrorCode, IdPrefix, identify } from '@cybernetics/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { HttpErrorCode, IdPrefix, identify } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { BaseNodeResourceType } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';

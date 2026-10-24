@@ -1,5 +1,5 @@
+import { IdPrefix } from '@cybernetics/core';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { IdPrefix } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 
 export const TEMPLATE_SPACE_ID = `${IdPrefix.Space}DefaultTempSpcId`;

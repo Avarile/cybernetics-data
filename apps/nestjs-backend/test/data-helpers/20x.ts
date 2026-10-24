@@ -7,7 +7,7 @@ import {
   FieldType,
   NumberFormattingType,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 export const textField = {
   name: 'text field',

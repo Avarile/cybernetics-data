@@ -1,4 +1,4 @@
-import { generateWindowId, HttpError, HttpErrorCode } from '@teable/core';
+import { generateWindowId, HttpError, HttpErrorCode } from '@cybernetics/core';
 import type { AxiosInstance } from 'axios';
 import axiosInstance from 'axios';
 

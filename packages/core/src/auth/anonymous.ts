@@ -6,5 +6,5 @@ export const isAnonymous = (userId: string) => userId === ANONYMOUS_USER_ID;
 export const ANONYMOUS_USER = {
   id: ANONYMOUS_USER_ID,
   name: 'Anonymous',
-  email: 'anonymous@system.teable.ai',
+  email: 'anonymous@system.cybernetics.ai',
 };

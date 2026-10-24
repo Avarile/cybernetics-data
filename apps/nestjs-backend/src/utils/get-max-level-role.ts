@@ -1,4 +1,4 @@
-import { canManageRole, type IRole } from '@teable/core';
+import { canManageRole, type IRole } from '@cybernetics/core';
 
 export const getMaxLevelRole = (collaborators: { roleName: string | IRole }[]): IRole => {
   return collaborators.sort((a, b) => {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ViewType } from '@teable/core';
+import { ViewType } from '@cybernetics/core';
 import { act, render } from '@testing-library/react';
 import { useContext } from 'react';
 import { vi } from 'vitest';

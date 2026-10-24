@@ -1,4 +1,3 @@
-import { BadRequestException, Logger } from '@nestjs/common';
 import type {
   FieldCore,
   IConjunction,
@@ -9,7 +8,7 @@ import type {
   IFilterSet,
   ILiteralValueList,
   IFieldReferenceValue,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   CellValueType,
   DbFieldType,
@@ -20,7 +19,8 @@ import {
   isMeTag,
   isNotEmpty,
   isFieldReferenceValue,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { BadRequestException, Logger } from '@nestjs/common';
 import type { Knex } from 'knex';
 import { includes, invert } from 'lodash';
 import { ZodError } from 'zod';

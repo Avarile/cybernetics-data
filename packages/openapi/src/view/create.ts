@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IViewRo, IViewVo } from '@teable/core';
-import { viewRoSchema, viewVoSchema } from '@teable/core';
+import type { IViewRo, IViewVo } from '@cybernetics/core';
+import { viewRoSchema, viewVoSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

@@ -1,6 +1,6 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpErrorCode } from '@teable/core';
 import axios from 'axios';
 import { CustomHttpException } from '../../../custom.exception';
 

@@ -1,5 +1,5 @@
+import { ColorUtils, type ISelectFieldChoice } from '@cybernetics/core';
 import type { SingleSelectField } from '@cybernetics/sdk/model';
-import { ColorUtils, type ISelectFieldChoice } from '@teable/core';
 import { Plus } from '@teable/icons';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

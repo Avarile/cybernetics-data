@@ -8,8 +8,8 @@ import {
   NumberFieldCore,
   SingleLineTextFieldCore,
   TimeFormatting,
-} from '@teable/core';
-import type { FieldCore, IFilter } from '@teable/core';
+} from '@cybernetics/core';
+import type { FieldCore, IFilter } from '@cybernetics/core';
 import knex from 'knex';
 import type { IRecordQueryFilterContext } from '../../../features/record/query-builder/record-query-builder.interface';
 import type { IDbProvider } from '../../db.provider.interface';

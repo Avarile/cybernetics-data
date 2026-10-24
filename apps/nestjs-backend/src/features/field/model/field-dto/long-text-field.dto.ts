@@ -1,4 +1,4 @@
-import { LongTextFieldCore } from '@teable/core';
+import { LongTextFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class LongTextFieldDto extends LongTextFieldCore implements FieldBase {

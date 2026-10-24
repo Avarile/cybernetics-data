@@ -2,8 +2,8 @@ import type {
   ISelectFieldOptions,
   ISingleSelectCellValue,
   IMultipleSelectCellValue,
-} from '@teable/core';
-import { FieldType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { temporaryPaste } from '@teable/openapi';
 import type { ForwardRefRenderFunction } from 'react';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';

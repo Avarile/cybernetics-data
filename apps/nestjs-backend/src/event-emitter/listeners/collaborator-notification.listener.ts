@@ -1,7 +1,7 @@
+import type { IRecord, IUserCellValue } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import type { IRecord, IUserCellValue } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { has, intersection, isEmpty, keyBy, uniq } from 'lodash';

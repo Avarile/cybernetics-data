@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IAttachmentItem, IRecord } from '@teable/core';
-import { attachmentItemSchema, recordSchema } from '@teable/core';
+import type { IAttachmentItem, IRecord } from '@cybernetics/core';
+import { attachmentItemSchema, recordSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 

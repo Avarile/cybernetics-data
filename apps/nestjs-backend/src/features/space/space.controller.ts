@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { HttpErrorCode, Role } from '@cybernetics/core';
 import { Body, Controller, Param, Patch, Post, Get, Delete, Query } from '@nestjs/common';
-import { HttpErrorCode, Role } from '@teable/core';
 import type {
   ICreateSpaceVo,
   IUpdateSpaceVo,

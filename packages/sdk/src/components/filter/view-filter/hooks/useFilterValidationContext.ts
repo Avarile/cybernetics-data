@@ -1,4 +1,4 @@
-import type { IFilterValidationError } from '@teable/core';
+import type { IFilterValidationError } from '@cybernetics/core';
 import { createContext, useContext } from 'react';
 import type { IFilterPath } from '../../types';
 

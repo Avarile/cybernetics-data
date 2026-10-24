@@ -1,4 +1,4 @@
-import type { ISort } from '@teable/core';
+import type { ISort } from '@cybernetics/core';
 import { Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib';
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { useTranslation } from '../../context/app/i18n';

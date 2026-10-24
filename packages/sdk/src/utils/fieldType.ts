@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 
 export const FIELD_TYPE_ORDER = [
   FieldType.SingleLineText,

@@ -20,7 +20,7 @@ export const Modal: FC<
       <DialogContent
         closeable={false}
         container={container}
-        className={cn('h-full block p-0 max-w-4xl', className)}
+        className={cn('h-full block p-0 max-w-7xl', className)}
         style={{ width: 'calc(100% - 40px)', height: 'calc(100% - 100px)' }}
         onKeyDown={(e) => {
           if (e.key === 'Escape') {

@@ -1,4 +1,10 @@
-import type { IColumnMeta, IFieldVo, IOtOperation, IViewPropertyKeys, IViewVo } from '@teable/core';
+import type {
+  IColumnMeta,
+  IFieldVo,
+  IOtOperation,
+  IViewPropertyKeys,
+  IViewVo,
+} from '@cybernetics/core';
 import type { IBaseGraphVo, IRecord, MailType } from '@teable/openapi';
 import type { IAiDataContextClaims } from '../features/ai-data/ai-data-context';
 import type { ICellContext } from '../features/calculation/utils/changes';

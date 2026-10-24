@@ -1,5 +1,5 @@
-import type { IRatingFieldCustomizeAIConfig, IRatingFieldRatingAIConfig } from '@teable/core';
-import { FieldAIActionType } from '@teable/core';
+import type { IRatingFieldCustomizeAIConfig, IRatingFieldRatingAIConfig } from '@cybernetics/core';
+import { FieldAIActionType } from '@cybernetics/core';
 import { Pencil, Star } from '@teable/icons';
 import { Selector } from '@teable/ui-lib/base';
 import { Textarea } from '@teable/ui-lib/shadcn';

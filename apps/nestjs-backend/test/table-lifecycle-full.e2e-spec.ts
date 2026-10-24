@@ -11,9 +11,9 @@
   - Clean up by permanently deleting tables
 */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
+import type { IFieldRo, IFieldVo } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
-import type { IFieldRo, IFieldVo } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { Knex } from 'knex';
 import { DB_PROVIDER_SYMBOL } from '../src/db-provider/db.provider';

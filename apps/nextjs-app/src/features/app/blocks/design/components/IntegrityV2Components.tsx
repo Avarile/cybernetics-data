@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import { useFieldStaticGetter } from '@cybernetics/sdk/hooks';
-import { FieldType } from '@teable/core';
 import {
   Alert,
   AlertDescription,

@@ -1,12 +1,12 @@
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo } from '@teable/core';
+import type { IFieldRo } from '@cybernetics/core';
 import {
   DateFormattingPreset,
   FieldType,
   Relationship,
   TimeFormatting,
   formatDateToString,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { EventEmitterService } from '../src/event-emitter/event-emitter.service';
 import { Events, type RecordUpdateEvent } from '../src/event-emitter/events';
 import {

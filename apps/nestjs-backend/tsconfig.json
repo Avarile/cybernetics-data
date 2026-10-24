@@ -16,7 +16,7 @@
     "allowJs": false,
     "outDir": "./dist",
     "paths": {
-      "@teable/core": ["../../packages/core/src"],
+      "@cybernetics/core": ["../../packages/core/src"],
       "@teable/openapi": ["../../packages/openapi/src"],
       "@teable/db-main-prisma": ["../../packages/db-main-prisma/src"],
       "@teable/db-data-prisma": ["../../packages/db-data-prisma/src"],

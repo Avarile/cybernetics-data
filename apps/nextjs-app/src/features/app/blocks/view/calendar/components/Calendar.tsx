@@ -1,4 +1,5 @@
 /* eslint-disable import/no-duplicates */
+import { FieldKeyType } from '@cybernetics/core';
 import { AppContext, CalendarDailyCollectionContext } from '@cybernetics/sdk/context';
 import { useTableId, useRecordOperations } from '@cybernetics/sdk/hooks';
 import type { Record } from '@cybernetics/sdk/model';
@@ -12,7 +13,6 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import type { EventResizeDoneArg } from '@fullcalendar/interaction';
 import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
-import { FieldKeyType } from '@teable/core';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader2 } from '@teable/icons';
 import { updateRecord } from '@teable/openapi';
 import {

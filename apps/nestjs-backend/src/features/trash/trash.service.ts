@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { FieldType, IFieldVo } from '@cybernetics/core';
+import { FieldKeyType, HttpErrorCode, IdPrefix, Role } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { FieldType, IFieldVo } from '@teable/core';
-import { FieldKeyType, HttpErrorCode, IdPrefix, Role } from '@teable/core';
-import { PrismaService, type Prisma } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService, type Prisma } from '@teable/db-main-prisma';
 import type {
   IResetTrashItemsRo,
   IResourceMapVo,
@@ -22,6 +22,7 @@ import { ClsService } from 'nestjs-cls';
 import type { ICreateFieldsOperation } from '../../cache/types';
 import { IThresholdConfig, ThresholdConfig } from '../../configs/threshold.config';
 import { CustomHttpException } from '../../custom.exception';
+import { META_KNEX } from '../../global/knex';
 import type { IPerformanceCacheStore } from '../../performance-cache';
 import { PerformanceCacheService } from '../../performance-cache';
 import { generateBaseNodeListCacheKey } from '../../performance-cache/generate-keys';
@@ -40,7 +41,6 @@ import { V2ContainerService } from '../v2/v2-container.service';
 import { V2ExecutionContextFactory } from '../v2/v2-execution-context.factory';
 import { ViewService } from '../view/view.service';
 import { resolveV2TrashRecordDisplayName } from './v2-trash-record-name';
-import { META_KNEX } from '../../global/knex';
 
 @Injectable()
 export class TrashService {
@@ -834,15 +834,14 @@ export class TrashService {
         // A record can be deleted, restored through undo, then deleted again with the same id.
         // Restore should use the snapshot that belongs to this trash item, not every historical
         // record_trash row for the same record id.
-        const latestSnapshotsByRecordId = recordTrashRows.reduce<Map<string, IRecordTrashSnapshotRow>>(
-          (acc, row) => {
-            if (row.createdTime <= createdTime && !acc.has(row.recordId)) {
-              acc.set(row.recordId, row);
-            }
-            return acc;
-          },
-          new Map<string, IRecordTrashSnapshotRow>()
-        );
+        const latestSnapshotsByRecordId = recordTrashRows.reduce<
+          Map<string, IRecordTrashSnapshotRow>
+        >((acc, row) => {
+          if (row.createdTime <= createdTime && !acc.has(row.recordId)) {
+            acc.set(row.recordId, row);
+          }
+          return acc;
+        }, new Map<string, IRecordTrashSnapshotRow>());
 
         const matchedRecordTrashRows = recordIds
           .map((recordId) => latestSnapshotsByRecordId.get(recordId))

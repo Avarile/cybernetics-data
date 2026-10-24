@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFilter, ILookupOptionsRo } from '@teable/core';
+import type { IFieldRo, IFilter, ILookupOptionsRo } from '@cybernetics/core';
 import {
   and,
   contains,
@@ -10,7 +9,8 @@ import {
   FieldType,
   is,
   Relationship,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   getRecords as apiGetRecords,

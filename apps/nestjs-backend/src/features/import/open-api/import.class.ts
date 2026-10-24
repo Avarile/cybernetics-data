@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { PassThrough } from 'stream';
-import { getUniqName, FieldType, HttpErrorCode } from '@teable/core';
+import { getUniqName, FieldType, HttpErrorCode } from '@cybernetics/core';
 import type { IValidateTypes, IAnalyzeVo } from '@teable/openapi';
 import { SUPPORTEDTYPE, importTypeMap } from '@teable/openapi';
 import jschardet from 'jschardet';

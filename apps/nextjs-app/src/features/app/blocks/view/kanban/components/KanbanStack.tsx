@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import type { IFilter } from '@cybernetics/core';
+import { and, mergeFilter } from '@cybernetics/core';
 import { useRecords } from '@cybernetics/sdk/hooks';
 import type { Record } from '@cybernetics/sdk/model';
 import { Draggable, Droppable } from '@hello-pangea/dnd';
-import type { IFilter } from '@teable/core';
-import { and, mergeFilter } from '@teable/core';
 import { useTranslation } from 'next-i18next';
 import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useMeasure } from 'react-use';

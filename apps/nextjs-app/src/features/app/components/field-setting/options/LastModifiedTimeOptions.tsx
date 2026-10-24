@@ -1,7 +1,7 @@
+import type { IDatetimeFormatting, ILastModifiedTimeFieldOptionsRo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { FieldSelector } from '@cybernetics/sdk/components';
 import { useFields } from '@cybernetics/sdk/hooks';
-import type { IDatetimeFormatting, ILastModifiedTimeFieldOptionsRo } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { Label, RadioGroup, RadioGroupItem } from '@teable/ui-lib/shadcn';
 import { Badge } from '@teable/ui-lib/shadcn/ui/badge';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';

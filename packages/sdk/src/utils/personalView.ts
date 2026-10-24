@@ -10,7 +10,7 @@ import type {
   IFilterSet,
   ISelectFieldOptions,
   IOperator,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   assertNever,
   ColorConfigType,
@@ -18,7 +18,7 @@ import {
   filterSchema,
   getValidFilterOperators,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { keyBy } from 'lodash';
 import type { GridView, KanbanView, GalleryView, CalendarView, FormView } from '../model';
 import type { PluginView } from '../model/view/plugin.view';

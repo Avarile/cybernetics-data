@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Relationship } from '@teable/core';
+import { Relationship } from '@cybernetics/core';
 import type {
   AttachmentFieldCore,
   AutoNumberFieldCore,
@@ -24,7 +24,7 @@ import type {
   FieldCore,
   ILinkFieldOptions,
   ButtonFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { DropColumnOperationType } from './drop-database-column-field-visitor.interface';
 import type { IDropDatabaseColumnContext } from './drop-database-column-field-visitor.interface';
 

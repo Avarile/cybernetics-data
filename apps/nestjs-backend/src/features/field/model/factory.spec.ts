@@ -1,5 +1,5 @@
-import type { IFieldVo } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { IFieldVo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 
 import { createFieldInstanceByVo } from './factory';

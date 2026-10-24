@@ -1,5 +1,5 @@
-import type { IDatetimeFormatting } from '@teable/core';
-import { formatDateToString, normalizeDateFormatting, TimeFormatting } from '@teable/core';
+import type { IDatetimeFormatting } from '@cybernetics/core';
+import { formatDateToString, normalizeDateFormatting, TimeFormatting } from '@cybernetics/core';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import dayjs from 'dayjs';
 

@@ -1,4 +1,4 @@
-import { is } from '@teable/core';
+import { is } from '@cybernetics/core';
 
 export const CHECKBOX_FIELD_CASES = [
   {

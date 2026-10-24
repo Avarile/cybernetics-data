@@ -4,7 +4,7 @@ import type {
   AutomationAction,
   TableRecordHistoryAction,
   AppAction,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IButtonFieldCellValue } from '@teable/core';
-import { checkButtonClickable, Colors, ColorUtils } from '@teable/core';
+import type { IButtonFieldCellValue } from '@cybernetics/core';
+import { checkButtonClickable, Colors, ColorUtils } from '@cybernetics/core';
 import {
   Button,
   cn,

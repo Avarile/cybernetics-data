@@ -1,6 +1,6 @@
+import type { FieldCore, ISortItem } from '@cybernetics/core';
+import { CellValueType, DbFieldType } from '@cybernetics/core';
 import { Logger } from '@nestjs/common';
-import type { FieldCore, ISortItem } from '@teable/core';
-import { CellValueType, DbFieldType } from '@teable/core';
 import type { Knex } from 'knex';
 import type { IRecordQuerySortContext } from '../../features/record/query-builder/record-query-builder.interface';
 import type { ISortQueryExtra } from '../db.provider.interface';

@@ -1,4 +1,8 @@
-import { TimeFormatting, type DateFormattingPreset, type IDateFieldOptions } from '@teable/core';
+import {
+  TimeFormatting,
+  type DateFormattingPreset,
+  type IDateFieldOptions,
+} from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { getPostgresDateTimeFormatString } from '../../../group-query/format-string';
 import { SortFunctionPostgres } from '../sort-query.function';

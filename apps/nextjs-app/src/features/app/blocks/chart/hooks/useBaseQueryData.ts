@@ -1,5 +1,5 @@
+import type { CellFormat } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import type { CellFormat } from '@teable/core';
 import {
   getDashboardInstallPluginQuery,
   getPluginPanelInstallPluginQuery,

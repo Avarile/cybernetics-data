@@ -6,8 +6,8 @@ import type {
   ITextFieldImproveTextAIConfig,
   ITextFieldSummarizeAIConfig,
   ITextFieldTranslateAIConfig,
-} from '@teable/core';
-import { FieldAIActionType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldAIActionType } from '@cybernetics/core';
 import { Edit, Export, Layers, Pencil, Translation } from '@teable/icons';
 import { Selector } from '@teable/ui-lib/base';
 import { Input, Textarea } from '@teable/ui-lib/shadcn';

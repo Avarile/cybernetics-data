@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IManualSortRo, IViewVo } from '@teable/core';
-import { manualSortRoSchema } from '@teable/core';
+import type { IManualSortRo, IViewVo } from '@cybernetics/core';
+import { manualSortRoSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

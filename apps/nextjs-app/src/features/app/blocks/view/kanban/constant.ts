@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 
 export const UNCATEGORIZED_STACK_ID = 't_kanban_uncategorized';
 export const UNCATEGORIZED_STACK_NAME = 'Uncategorized';

@@ -1,4 +1,4 @@
-import type { ILongTextFieldOptions, ILongTextShowAs } from '@teable/core';
+import type { ILongTextFieldOptions, ILongTextShowAs } from '@cybernetics/core';
 import { Textarea } from '@teable/ui-lib/shadcn';
 import { Label } from '@teable/ui-lib/shadcn/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@teable/ui-lib/shadcn/ui/tabs';

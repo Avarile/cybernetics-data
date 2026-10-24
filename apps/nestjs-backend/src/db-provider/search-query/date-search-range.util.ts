@@ -1,4 +1,4 @@
-import { DateFormattingPreset, type IDateFieldOptions, TimeFormatting } from '@teable/core';
+import { DateFormattingPreset, type IDateFieldOptions, TimeFormatting } from '@cybernetics/core';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import timezone from 'dayjs/plugin/timezone';

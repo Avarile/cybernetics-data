@@ -1,4 +1,4 @@
-import { SingleSelectFieldCore } from '@teable/core';
+import { SingleSelectFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class SingleSelectFieldDto extends SingleSelectFieldCore implements FieldBase {

@@ -1,4 +1,4 @@
-import { CheckboxFieldCore } from '@teable/core';
+import { CheckboxFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

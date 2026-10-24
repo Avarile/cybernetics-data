@@ -1,7 +1,7 @@
+import { parseDsn } from '@cybernetics/core';
 import type { DynamicModule } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { parseDsn } from '@teable/core';
 import { getDatabaseUrl } from '@teable/db-main-prisma';
 import { KnexModule as BaseKnexModule } from 'nest-knexjs';
 

@@ -1,5 +1,5 @@
-import type { ITimeZoneString } from '@teable/core';
-import { TimeFormatting } from '@teable/core';
+import type { ITimeZoneString } from '@cybernetics/core';
+import { TimeFormatting } from '@cybernetics/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { createAppContext } from '../../../../../../context/__tests__/createAppContext';

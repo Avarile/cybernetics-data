@@ -1,8 +1,8 @@
 /* eslint-disable sonarjs/cognitive-complexity */
+import type { FieldCore, FormulaFieldCore, TableDomain } from '@cybernetics/core';
+import { FieldType, IdPrefix, RecordOpBuilder, Tables } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import type { FieldCore, FormulaFieldCore, TableDomain } from '@teable/core';
-import { FieldType, IdPrefix, RecordOpBuilder, Tables } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { Knex } from 'knex';
 import { RawOpType } from '../../../../share-db/interface';

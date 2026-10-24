@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IRecord } from '@teable/core';
-import { RecordCore, FieldKeyType, RecordOpBuilder, FieldType } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
+import { RecordCore, FieldKeyType, RecordOpBuilder, FieldType } from '@cybernetics/core';
 import { updateRecord } from '@teable/openapi';
 import { sonner } from '@teable/ui-lib';
 import { isEqual, isEmpty } from 'lodash';

@@ -16,8 +16,8 @@ import {
   hasAnyOf,
   is,
   isExactly,
-} from '@teable/core';
-import type { FieldCore, IFilter } from '@teable/core';
+} from '@cybernetics/core';
+import type { FieldCore, IFilter } from '@cybernetics/core';
 import knex from 'knex';
 import type { IDbProvider } from '../../db.provider.interface';
 import { FilterQueryPostgres } from '../postgres/filter-query.postgres';

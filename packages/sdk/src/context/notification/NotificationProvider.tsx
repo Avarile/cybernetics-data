@@ -1,5 +1,5 @@
-import type { INotificationBuffer } from '@teable/core';
-import { getUserNotificationChannel } from '@teable/core';
+import type { INotificationBuffer } from '@cybernetics/core';
+import { getUserNotificationChannel } from '@cybernetics/core';
 import type { FC, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useSession } from '../../hooks';

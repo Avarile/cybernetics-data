@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   AttachmentFieldCore,
   AutoNumberFieldCore,
@@ -37,7 +36,7 @@ import {
   SingleLineTextFieldCore,
   UserFieldCore,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IFieldRo,
   IFieldVo,
@@ -56,9 +55,10 @@ import type {
   ITextFieldSummarizeAIConfig,
   IConditionalLookupOptions,
   INumberFieldOptions,
-} from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { uniq, keyBy, mergeWith } from 'lodash';
 import { InjectModel } from 'nest-knexjs';

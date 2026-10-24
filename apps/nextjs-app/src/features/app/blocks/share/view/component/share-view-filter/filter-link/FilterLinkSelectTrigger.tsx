@@ -1,5 +1,5 @@
+import type { FieldType } from '@cybernetics/core';
 import { SelectTag, type IFilterComponents } from '@cybernetics/sdk/components';
-import type { FieldType } from '@teable/core';
 import { useTranslation } from 'next-i18next';
 import { shareConfig } from '@/features/i18n/share.config';
 import { StorageSelected } from './FilterLinkSelectList';

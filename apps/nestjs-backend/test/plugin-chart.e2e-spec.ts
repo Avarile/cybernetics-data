@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType } from '@teable/core';
 import type { IBaseQueryVo, ITableFullVo } from '@teable/openapi';
 import {
   createPluginPanel,

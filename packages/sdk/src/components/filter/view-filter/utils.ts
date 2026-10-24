@@ -1,5 +1,5 @@
-import type { IFilter, IFilterItem } from '@teable/core';
-import { CellValueType, FieldType } from '@teable/core';
+import type { IFilter, IFilterItem } from '@cybernetics/core';
+import { CellValueType, FieldType } from '@cybernetics/core';
 import type { IFieldInstance } from '../../../model';
 import type { IConditionItemProperty } from '../types';
 import { EMPTY_OPERATORS, ARRAY_OPERATORS } from './constant';

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ParsedUrlQuery } from 'querystring';
-import { HttpError, type IHttpError } from '@teable/core';
+import { HttpError, type IHttpError } from '@cybernetics/core';
 import { isUndefined, omitBy } from 'lodash';
 import type {
   GetServerSidePropsContext,

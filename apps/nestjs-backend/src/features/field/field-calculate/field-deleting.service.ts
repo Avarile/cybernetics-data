@@ -1,6 +1,6 @@
+import type { ILinkFieldOptions } from '@cybernetics/core';
+import { FieldOpBuilder, FieldType, HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { ILinkFieldOptions } from '@teable/core';
-import { FieldOpBuilder, FieldType, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { difference, keyBy } from 'lodash';
 import { CustomHttpException } from '../../../custom.exception';

@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable } from '@nestjs/common';
-import type { IBaseRole } from '@teable/core';
+import type { IBaseRole } from '@cybernetics/core';
 import {
   generatePluginInstallId,
   generatePluginPanelId,
@@ -8,7 +7,8 @@ import {
   HttpErrorCode,
   nullsToUndefined,
   Role,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { CollaboratorType, PluginPosition, PrincipalType } from '@teable/openapi';
 import type {

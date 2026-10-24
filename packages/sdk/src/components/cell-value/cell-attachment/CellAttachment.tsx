@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import { FilePreviewItem, FilePreviewProvider, cn } from '@teable/ui-lib';
 import { useThemeMode } from '../../../hooks';
 import { getFileCover, isSystemFileIcon } from '../../editor/attachment';

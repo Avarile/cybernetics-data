@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldType } from '@cybernetics/core';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { FormulaFieldService } from './formula-field.service';

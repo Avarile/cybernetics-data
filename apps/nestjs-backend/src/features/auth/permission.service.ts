@@ -1,6 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import type { IBaseRole, Action } from '@teable/core';
+import type { IBaseRole, Action } from '@cybernetics/core';
 import {
   HttpErrorCode,
   IdPrefix,
@@ -8,7 +6,9 @@ import {
   TemplatePermissions,
   getPermissions,
   isAnonymous,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@teable/db-main-prisma';
 import { CollaboratorType } from '@teable/openapi';
 import { intersection, union } from 'lodash';

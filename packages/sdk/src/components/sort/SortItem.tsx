@@ -1,4 +1,4 @@
-import { FieldType, type ISortItem } from '@teable/core';
+import { FieldType, type ISortItem } from '@cybernetics/core';
 import { useFields } from '../../hooks';
 import { FieldSelector } from '../field/FieldSelector';
 import { OrderSelect } from './OrderSelect';
