@@ -14,7 +14,7 @@ import {
   useState,
 } from 'react';
 import { useTranslation } from '../../../context/app/i18n';
-import { useTableId, useViewId } from '../../../hooks';
+import { useSearch, useTableId, useViewId } from '../../../hooks';
 import type { ICell, ICellItem, IGridColumn, IGridRef, IRectangle, IRange } from '../../grid';
 
 import {
@@ -108,6 +108,7 @@ const LinkListBase: ForwardRefRenderFunction<ILinkListRef, ILinkListProps> = (
   // Get tableId and viewId for API calls
   const tableId = useTableId();
   const viewId = useViewId();
+  const { searchQuery } = useSearch();
 
   // Selected records ref - maintains the source of truth for selected records (id -> title)
   const selectedRecordsRef = useRef<Map<string, string | undefined>>(new Map());
@@ -342,11 +343,15 @@ const LinkListBase: ForwardRefRenderFunction<ILinkListRef, ILinkListProps> = (
       }
 
       try {
+        // Resolve the ranges against the same query the list renders (see useRecordsQuery),
+        // otherwise row indexes point into the unfiltered view.
         const { data } = await getIdsFromRanges(tableId, {
+          viewId: viewId ?? undefined,
+          search: searchQuery,
+          ...recordQuery,
           ranges,
           type: RangeType.Rows,
           returnType: IdReturnType.RecordId,
-          viewId: viewId ?? undefined,
         });
 
         if (data.recordIds) {
@@ -373,7 +378,17 @@ const LinkListBase: ForwardRefRenderFunction<ILinkListRef, ILinkListProps> = (
         toast.error(t('editor.link.rangeSelectFailed'));
       }
     },
-    [tableId, viewId, recordMap, emitChange, setRowSelection, t, isMultiple]
+    [
+      tableId,
+      viewId,
+      searchQuery,
+      recordQuery,
+      recordMap,
+      emitChange,
+      setRowSelection,
+      t,
+      isMultiple,
+    ]
   );
 
   const onExpandInner = (rowIndex: number) => {

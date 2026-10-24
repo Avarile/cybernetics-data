@@ -10,9 +10,11 @@ interface IUploadTask {
   type: UploadType;
   baseId?: string;
   abortController?: AbortController;
+  cancelled?: boolean;
   successCallback: ISuccessCallback;
   errorCallback: IErrorCallback;
   progressCallback: IProgressCallback;
+  cancelCallback: ICancelCallback;
 }
 
 export interface IFile {
@@ -25,6 +27,8 @@ type ISuccessCallback = (file: IFile, attachment: INotifyVo) => void;
 type IErrorCallback = (file: IFile, error?: string, code?: number) => void;
 
 type IProgressCallback = (file: IFile, progress: number) => void;
+
+type ICancelCallback = (file: IFile) => void;
 
 export enum Status {
   Pending,
@@ -75,10 +79,16 @@ export class AttachmentManager {
       successCallback?: ISuccessCallback;
       errorCallback?: IErrorCallback;
       progressCallback?: IProgressCallback;
+      cancelCallback?: ICancelCallback;
     },
     baseId?: string
   ) {
-    const { successCallback = noop, errorCallback = noop, progressCallback = noop } = callbackFn;
+    const {
+      successCallback = noop,
+      errorCallback = noop,
+      progressCallback = noop,
+      cancelCallback = noop,
+    } = callbackFn;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
 
@@ -91,6 +101,7 @@ export class AttachmentManager {
         successCallback: successCallback,
         errorCallback: errorCallback,
         progressCallback: progressCallback,
+        cancelCallback: cancelCallback,
       };
       this.uploadQueue.push(uploadTask);
       this.nextUpload();
@@ -112,6 +123,10 @@ export class AttachmentManager {
         },
         this.shareId
       ); // Assuming you have an AttachmentApi that provides the upload URL
+      if (uploadTask.cancelled) {
+        uploadTask.cancelCallback(uploadTask.file);
+        return;
+      }
       if (!res.data) {
         uploadTask.errorCallback(uploadTask.file, 'Failed to get upload URL');
         return;
@@ -134,6 +149,11 @@ export class AttachmentManager {
       });
 
       const notifyRes = await notify(token, this.shareId, fileInstance.name);
+      // A cancel during notify can no longer abort a request, so drop the result here.
+      if (uploadTask.cancelled) {
+        uploadTask.cancelCallback(uploadTask.file);
+        return;
+      }
       if (!notifyRes.data) {
         uploadTask.errorCallback(uploadTask.file);
         return;
@@ -141,8 +161,9 @@ export class AttachmentManager {
       this.completeUpload(uploadTask, notifyRes.data);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // Skip error callback when the upload was intentionally cancelled
-      if (error instanceof CanceledError || error?.name === 'AbortError') {
+      // Report an intentional cancel through cancelCallback instead of errorCallback
+      if (uploadTask.cancelled || error instanceof CanceledError || error?.name === 'AbortError') {
+        uploadTask.cancelCallback(uploadTask.file);
         return;
       }
       uploadTask.errorCallback(uploadTask.file, error?.message, error?.status);
@@ -156,13 +177,15 @@ export class AttachmentManager {
     // 1. from uploadQueue（pending） remove
     const pendingIdx = this.uploadQueue.findIndex((t) => t.file.id === fileId);
     if (pendingIdx !== -1) {
-      this.uploadQueue.splice(pendingIdx, 1);
+      const [pendingTask] = this.uploadQueue.splice(pendingIdx, 1);
+      pendingTask.cancelCallback(pendingTask.file);
       return;
     }
-    // 2. abort the uploading request
+    // 2. abort the uploading request; executeUpload reports the cancel
     const uploadingTask = this.uploadingQueue.find((t) => t.file.id === fileId);
-    if (uploadingTask?.abortController) {
-      uploadingTask.abortController.abort();
+    if (uploadingTask) {
+      uploadingTask.cancelled = true;
+      uploadingTask.abortController?.abort();
     }
   }
 

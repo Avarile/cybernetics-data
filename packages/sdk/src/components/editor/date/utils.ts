@@ -1,7 +1,22 @@
 import type { IDatetimeFormatting } from '@teable/core';
 import { formatDateToString, normalizeDateFormatting, TimeFormatting } from '@teable/core';
-import { fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import dayjs from 'dayjs';
+
+/**
+ * Combine the calendar day of `day` with the time of day of `timeSource` (now when absent),
+ * both read in `timeZone`, and return the UTC ISO string. Reading both parts in the field
+ * timezone keeps the result independent of the browser timezone.
+ */
+export const combineZonedDateAndTime = (
+  day: Date,
+  timeSource: string | Date | null | undefined,
+  timeZone: string
+) => {
+  const datePart = formatInTimeZone(day, timeZone, 'yyyy-MM-dd');
+  const timePart = formatInTimeZone(timeSource ?? new Date(), timeZone, 'HH:mm:ss');
+  return fromZonedTime(`${datePart}T${timePart}`, timeZone).toISOString();
+};
 
 export const formatDisplayValue = (value: string, formatting: IDatetimeFormatting) => {
   const normalizedFormatting = {

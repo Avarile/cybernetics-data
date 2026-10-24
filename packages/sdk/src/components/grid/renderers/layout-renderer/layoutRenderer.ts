@@ -117,6 +117,18 @@ export const drawCellContent = (ctx: CanvasRenderingContext2D, props: ICellDrawe
   }
 };
 
+// A hovered row is lifted by this many pixels.
+const HOVER_LIFT = 2;
+
+/** Linear index of the row drawn lifted, or -1 when no row is hovered. */
+export const getHoveredRowIndex = ({
+  mouseState,
+  isSelecting,
+}: Pick<ILayoutDrawerProps, 'mouseState' | 'isSelecting'>) => {
+  const { rowIndex, type, isOutOfBounds } = mouseState;
+  return !isOutOfBounds && !isSelecting && ROW_RELATED_REGIONS.has(type) ? rowIndex : -1;
+};
+
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export const calcCells = (props: ILayoutDrawerProps, renderRegion: RenderRegion) => {
   const {
@@ -126,7 +138,6 @@ export const calcCells = (props: ILayoutDrawerProps, renderRegion: RenderRegion)
     mouseState,
     scrollState,
     selection,
-    isSelecting,
     rowControls,
     rowIndexVisible,
     hoverCellPosition,
@@ -152,8 +163,8 @@ export const calcCells = (props: ILayoutDrawerProps, renderRegion: RenderRegion)
     columnIndex: hoverColumnIndex,
     rowIndex: hoverRowIndex,
     type: hoverRegionType,
-    isOutOfBounds,
   } = mouseState;
+  const liftedRowIndex = getHoveredRowIndex(props);
 
   const cellPropList: ICellDrawerProps[] = [];
   const rowHeaderPropList: IRowHeaderDrawerProps[] = [];
@@ -253,11 +264,7 @@ export const calcCells = (props: ILayoutDrawerProps, renderRegion: RenderRegion)
       }
 
       const { displayIndex, realIndex: realRowIndex } = linearRow;
-      const isRowHovered =
-        !isOutOfBounds &&
-        !isSelecting &&
-        ROW_RELATED_REGIONS.has(hoverRegionType) &&
-        rowIndex === hoverRowIndex;
+      const isRowHovered = rowIndex === liftedRowIndex;
       const { isCellActive, isRowActive } = checkIfRowOrCellActive(
         activeCell,
         realRowIndex,
@@ -276,7 +283,7 @@ export const calcCells = (props: ILayoutDrawerProps, renderRegion: RenderRegion)
         fill = cellBgHovered;
       }
 
-      const adjustedY = isRowHovered ? y - 2 : y;
+      const adjustedY = isRowHovered ? y - HOVER_LIFT : y;
 
       if (isFirstColumn) {
         rowHeaderPropList.push({
@@ -657,7 +664,9 @@ export const drawActiveCell = (ctx: CanvasRenderingContext2D, props: ILayoutDraw
 
   const isFreezeRegion = columnIndex < freezeColumnCount;
   const x = coordInstance.getColumnRelativeOffset(columnIndex, scrollLeft);
-  const y = coordInstance.getRowOffset(activeLinearRowIndex) - scrollTop;
+  // Follow the hover lift so the outline stays on its row.
+  const lift = getHoveredRowIndex(props) === activeLinearRowIndex ? HOVER_LIFT : 0;
+  const y = coordInstance.getRowOffset(activeLinearRowIndex) - scrollTop - lift;
   const { realIndex: hoverRowIndex } = getLinearRow(hoverLinearRowIndex);
 
   ctx.save();
@@ -2074,7 +2083,9 @@ export const computeShouldRerender = (current: ILayoutDrawerProps, last?: ILayou
     current.coordInstance === last.coordInstance &&
     current.visibleRegion === last.visibleRegion &&
     current.forceRenderFlag === last.forceRenderFlag &&
-    current.hoverCellPosition === last.hoverCellPosition
+    current.hoverCellPosition === last.hoverCellPosition &&
+    // The cached cell content is drawn lifted for the hovered row.
+    getHoveredRowIndex(current) === getHoveredRowIndex(last)
   );
 };
 

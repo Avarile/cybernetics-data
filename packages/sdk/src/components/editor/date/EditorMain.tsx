@@ -1,13 +1,14 @@
 import { type IDateFieldOptions, TimeFormatting } from '@teable/core';
 import { Button, Calendar, cn, NavView } from '@teable/ui-lib';
 import { enUS, zhCN, ja, ru, fr } from 'date-fns/locale';
-import { formatInTimeZone, toDate, toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
 import type { ForwardRefRenderFunction } from 'react';
 import { forwardRef, useContext, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { AppContext } from '../../../context';
 import { useTranslation } from '../../../context/app/i18n';
 import type { ICellEditor, IEditorRef } from '../type';
 import { TimePicker } from './TimePicker';
+import { combineZonedDateAndTime } from './utils';
 
 export interface IDateEditorMain extends ICellEditor<string | null> {
   style?: React.CSSProperties;
@@ -59,23 +60,8 @@ const DateEditorMainBase: ForwardRefRenderFunction<IEditorRef<string>, IDateEdit
   const onSelect = (value?: Date) => {
     if (!value) return onChange?.(null);
 
-    const curDatetime = fromZonedTime(value, timeZone);
-
-    if (date) {
-      const prevDatetime = toDate(date, { timeZone });
-
-      curDatetime.setHours(prevDatetime.getHours());
-      curDatetime.setMinutes(prevDatetime.getMinutes());
-      curDatetime.setSeconds(prevDatetime.getSeconds());
-    } else {
-      const tempDate = now();
-
-      curDatetime.setHours(tempDate.getHours());
-      curDatetime.setMinutes(tempDate.getMinutes());
-      curDatetime.setSeconds(tempDate.getSeconds());
-    }
-
-    const dateStr = curDatetime.toISOString();
+    // With `timeZone` set, the calendar returns midnight of the picked day in that zone.
+    const dateStr = combineZonedDateAndTime(value, date, timeZone);
     setDate(dateStr);
     onChange?.(dateStr);
   };

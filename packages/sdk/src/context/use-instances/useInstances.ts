@@ -508,21 +508,23 @@ export function useInstances<T, R extends { id: string }>({
         return false;
       }
 
+      const deletedIds = new Set(recordIds);
       const currentQuery = preQueryRef.current;
       const currentDocs = (currentQuery?.results ?? []) as Doc<IRecord>[];
-      if (!currentDocs.length) {
+      const hasDocsInQuery = currentDocs.some((doc) => deletedIds.has(doc.id));
+      // The query can be shared with other hook instances, and the first one to handle the
+      // delete strips it from `results`. Each instance still removes the records it tracks.
+      const ownedIds = recordIds.filter((id) => opListeners.current.has(id));
+      if (!hasDocsInQuery && !ownedIds.length) {
         return false;
       }
 
-      const deletedIds = new Set(recordIds);
-      const docsToRemove = currentDocs.filter((doc) => deletedIds.has(doc.id));
-      if (!docsToRemove.length) {
-        return false;
+      if (currentQuery && hasDocsInQuery) {
+        currentQuery.results = currentDocs.filter(
+          (doc) => !deletedIds.has(doc.id)
+        ) as unknown as Doc<T>[];
       }
-
-      const remainingDocs = currentDocs.filter((doc) => !deletedIds.has(doc.id));
-      currentQuery!.results = remainingDocs as unknown as Doc<T>[];
-      docsToRemove.forEach((doc) => opListeners.current.remove(doc as unknown as Doc<T>));
+      ownedIds.forEach((id) => opListeners.current.removeById(id));
       dispatch({ type: 'removeByIds', ids: [...deletedIds] });
       return true;
     },

@@ -110,12 +110,21 @@ export const useLocalAttachmentUpload = (
         });
       };
 
+      // A cancelled file still settles the batch, so the other files get committed.
+      const handleCancel = () => {
+        batchResult.pending--;
+        if (batchResult.pending === 0) {
+          commitBatch();
+        }
+      };
+
       attachmentManager.upload(
         uploadList,
         UploadType.Table,
         {
           successCallback: handleSuccess,
           errorCallback: handleError,
+          cancelCallback: handleCancel,
           progressCallback: (file, progress) => {
             setUploadingFiles((prev) =>
               prev.map((item) => (item.id === file.id ? { ...item, progress } : item))

@@ -19,10 +19,18 @@ export class OpListenersManager<T> {
     });
   }
 
+  has(id: string) {
+    return this.opListeners.has(id);
+  }
+
   remove(doc: Doc<T>) {
-    const cleanupFunction = this.opListeners.get(doc.id);
+    this.removeById(doc.id);
+  }
+
+  removeById(id: string) {
+    const cleanupFunction = this.opListeners.get(id);
     cleanupFunction && cleanupFunction();
-    this.opListeners.delete(doc.id);
+    this.opListeners.delete(id);
   }
 
   clear() {

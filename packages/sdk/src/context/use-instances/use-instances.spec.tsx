@@ -1167,6 +1167,48 @@ describe('useInstances hook', () => {
     expect(result.current.instances.map((instance) => instance.id)).toEqual(['1']);
   });
 
+  it('removes deleted records from every hook instance sharing the same query', () => {
+    const receiveListeners = new Set<(id: string, batch: unknown) => void>();
+    const presence = {
+      subscribed: false,
+      subscribe: vi.fn((cb?: (error?: unknown) => void) => cb?.()),
+      addListener: vi.fn((event: string, cb: (id: string, batch: unknown) => void) => {
+        if (event === 'receive') receiveListeners.add(cb);
+      }),
+      removeListener: vi.fn((event: string, cb: (id: string, batch: unknown) => void) => {
+        if (event === 'receive') receiveListeners.delete(cb);
+      }),
+      listenerCount: vi.fn(() => receiveListeners.size),
+      unsubscribe: vi.fn(),
+      destroy: vi.fn(),
+    };
+    const { connection, createSubscribeQuery } = createMockConnection();
+    connection.getPresence = vi.fn(() => presence);
+    const props = { ...mockProps, collection: 'rec_tblSchemaRefresh11', queryParams: {} };
+
+    const { result } = renderHook(
+      () => ({ first: useInstances(props), second: useInstances(props) }),
+      { wrapper: createUseInstancesWrap({ ...mockAppContext, connection }) }
+    );
+
+    expect(createSubscribeQuery).toHaveBeenCalledTimes(1);
+    expect(receiveListeners.size).toBe(2);
+
+    act(() => {
+      receiveListeners.forEach((listener) =>
+        listener('presence-id', [
+          {
+            actionKey: 'deleteRecord',
+            payload: { tableId: 'tblSchemaRefresh11', recordIds: ['2'], skipRealtime: true },
+          },
+        ])
+      );
+    });
+
+    expect(result.current.first.instances.map((instance) => instance.id)).toEqual(['1']);
+    expect(result.current.second.instances.map((instance) => instance.id)).toEqual(['1']);
+  });
+
   it('refreshes the record query only when the final large setRecord chunk arrives', async () => {
     const { connection, createSubscribeQuery, presenceController, collection, queryParams } =
       createMockConnection({

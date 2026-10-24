@@ -4,9 +4,13 @@ import { memo } from 'react';
 import type { Components } from 'react-markdown';
 import Markdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
 
 export type { Components } from 'react-markdown';
+
+// Raw HTML comes from user content, so sanitize it after parsing.
+const rehypePlugins = [rehypeRaw, rehypeSanitize];
 
 export const MarkdownPreview = (props: {
   children?: string;
@@ -16,7 +20,7 @@ export const MarkdownPreview = (props: {
   return (
     <Markdown
       className={cn('markdown-body px-3 py-2', props.className)}
-      rehypePlugins={[rehypeRaw]}
+      rehypePlugins={rehypePlugins}
       remarkPlugins={[remarkGfm]}
       components={props.components}
     >
