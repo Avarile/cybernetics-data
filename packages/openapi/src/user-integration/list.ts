@@ -2,7 +2,11 @@ import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
 import { axios } from '../axios';
 import { registerRoute } from '../utils';
 import { z } from '../zod';
-import { userIntegrationMetadataSchema, UserIntegrationProvider } from './types';
+import {
+  userIntegrationMetadataSchema,
+  UserIntegrationProvider,
+  UserIntegrationStatus,
+} from './types';
 
 export const GET_USER_INTEGRATION_LIST = '/user-integrations';
 
@@ -22,6 +26,7 @@ export const getUserIntegrationItemVoSchema = z.object({
   connectedTime: z.string().optional(),
   lastModifiedTime: z.string().optional(),
   hasSecret: z.boolean(),
+  status: z.enum(UserIntegrationStatus).optional(),
   metadata: userIntegrationMetadataSchema,
 });
 

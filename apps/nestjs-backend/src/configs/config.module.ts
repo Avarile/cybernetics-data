@@ -10,6 +10,7 @@ import { baseConfig } from './base.config';
 import { bootstrapConfigs, nextJsConfig } from './bootstrap.config';
 import { cacheConfig } from './cache.config';
 import { envValidationSchema } from './env.validation.schema';
+import { integrationConfig } from './integration.config';
 import { loggerConfig } from './logger.config';
 import { mailConfig } from './mail.config';
 import { mcpConfig } from './mcp.config';
@@ -32,6 +33,7 @@ const configurations = [
   baseGraphConfig,
   mcpConfig,
   aiDataConfig,
+  integrationConfig,
 ];
 
 @Module({})

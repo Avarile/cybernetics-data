@@ -158,9 +158,10 @@ export class SettingOpenApiService {
     ]);
     const { aiConfig, appConfig, enableCreditReward, ...rest } = setting;
 
+    // the OAuth flow needs both values (see getMailOAuthProvider)
     const availableIntegrationProviders: string[] = [
-      ...(process.env.GMAIL_CLIENT_ID ? ['gmail'] : []),
-      ...(process.env.OUTLOOK_CLIENT_ID ? ['outlook'] : []),
+      ...(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET ? ['gmail'] : []),
+      ...(process.env.OUTLOOK_CLIENT_ID && process.env.OUTLOOK_CLIENT_SECRET ? ['outlook'] : []),
     ];
 
     return {

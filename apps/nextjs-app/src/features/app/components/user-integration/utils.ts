@@ -26,6 +26,8 @@ export const getUserIntegrationName = (provider: UserIntegrationProvider) => {
       return 'Gmail';
     case UserIntegrationProvider.Outlook:
       return 'Outlook';
+    case UserIntegrationProvider.Imap:
+      return 'IMAP';
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }

@@ -90,3 +90,20 @@ export async function assertPublicHost(hostname: string): Promise<void> {
     throw new Error(`Host ${hostname} resolves to a private address`);
   }
 }
+
+/**
+ * Resolves a hostname for a raw socket connection (IMAP, SMTP) and returns one vetted address.
+ * Connect to the returned address, with the hostname as TLS servername, so a second DNS answer
+ * cannot point the socket somewhere else.
+ */
+export async function resolvePublicHost(hostname: string): Promise<string> {
+  const host = hostname.replace(/^\[|\]$/g, '');
+  const addresses = await lookup(host, { all: true });
+  if (!addresses.length) {
+    throw new Error(`Host ${hostname} did not resolve`);
+  }
+  if (!isSsrfProtectionDisabled() && addresses.some((a) => isPrivateAddress(a.address, a.family))) {
+    throw new Error(`Host ${hostname} resolves to a private address`);
+  }
+  return addresses[0].address;
+}

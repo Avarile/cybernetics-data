@@ -16,6 +16,10 @@ export interface ICacheStore {
   [key: `auth:session-user:${string}`]: Record<string, number>;
   [key: `auth:session-expire:${string}`]: boolean;
   [key: `oauth2:${string}`]: IOauth2State;
+  // OAuth state -> pending mailbox connection (see UserIntegrationService)
+  [key: `user-integration:oauth:${string}`]: IUserIntegrationOAuthState;
+  // userId:minute-window -> IMAP/SMTP connection tests in that window
+  [key: `user-integration:test-rate:${string}:${number}`]: number;
   [key: `reset-password-email:${string}`]: IResetPasswordEmailCache;
   [key: `workflow:running:${string}`]: string;
   [key: `workflow:repeatKey:${string}`]: string;
@@ -86,6 +90,13 @@ export interface IAttachmentPreviewCache {
 
 export interface IOauth2State {
   redirectUri?: string;
+}
+
+export interface IUserIntegrationOAuthState {
+  userId: string;
+  provider: string;
+  name?: string;
+  codeVerifier: string;
 }
 
 export interface IVerificationCodeCache {

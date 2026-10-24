@@ -716,6 +716,79 @@ model Integration {
   @@map("integration")
 }
 
+model UserIntegration {
+  id               String    @id @default(cuid())
+  userId           String    @map("user_id")
+  provider         String
+  name             String
+  // lower-cased mailbox or account address; one integration per user, provider and address
+  address          String
+  // AES-256-GCM encrypted JSON (OAuth tokens or passwords), see integration-secret.cipher.ts
+  secret           String?
+  metadata         String?
+  status           String    @default("active")
+  lastUsedTime     DateTime? @map("last_used_time")
+  connectedTime    DateTime? @map("connected_time")
+  createdTime      DateTime  @default(now()) @map("created_time")
+  lastModifiedTime DateTime? @updatedAt @map("last_modified_time")
+
+  @@unique([userId, provider, address])
+  @@index([userId])
+  @@map("user_integration")
+}
+
+model EmailSource {
+  id               String    @id @default(cuid())
+  baseId           String    @map("base_id")
+  tableId          String    @unique @map("table_id")
+  integrationId    String    @map("integration_id")
+  fieldMap         String    @map("field_map")
+  config           String
+  status           String    @default("idle")
+  lastSyncedTime   DateTime? @map("last_synced_time")
+  lastError        String?   @map("last_error")
+  createdBy        String    @map("created_by")
+  createdTime      DateTime  @default(now()) @map("created_time")
+  lastModifiedTime DateTime? @updatedAt @map("last_modified_time")
+  deletedTime      DateTime? @map("deleted_time")
+
+  @@index([baseId])
+  @@index([integrationId])
+  @@map("email_source")
+}
+
+model EmailSyncCursor {
+  id               String    @id @default(cuid())
+  sourceId         String    @map("source_id")
+  folderId         String    @map("folder_id")
+  folderName       String    @map("folder_name")
+  cursor           String?
+  backfill         String?
+  lastSyncedTime   DateTime? @map("last_synced_time")
+  createdTime      DateTime  @default(now()) @map("created_time")
+  lastModifiedTime DateTime? @updatedAt @map("last_modified_time")
+
+  @@unique([sourceId, folderId])
+  @@map("email_sync_cursor")
+}
+
+model EmailMessage {
+  id                String    @id @default(cuid())
+  sourceId          String    @map("source_id")
+  providerMessageId String    @map("provider_message_id")
+  internetMessageId String?   @map("internet_message_id")
+  threadId          String?   @map("thread_id")
+  recordId          String?   @map("record_id")
+  state             String    @default("imported")
+  createdTime       DateTime  @default(now()) @map("created_time")
+  lastModifiedTime  DateTime? @updatedAt @map("last_modified_time")
+
+  @@unique([sourceId, providerMessageId])
+  @@index([sourceId, internetMessageId])
+  @@index([recordId])
+  @@map("email_message")
+}
+
 model PluginPanel {
   id               String    @id @default(cuid())
   name             String

@@ -49,7 +49,8 @@ export const List = (props: { list?: IUserIntegrationListVo['integrations'] }) =
                 />
               </SlackItem>
             ) : integration.provider === UserIntegrationProvider.Gmail ||
-              integration.provider === UserIntegrationProvider.Outlook ? (
+              integration.provider === UserIntegrationProvider.Outlook ||
+              integration.provider === UserIntegrationProvider.Imap ? (
               <EmailItem item={integration}>
                 <Rename
                   name={integration.name}
@@ -73,7 +74,12 @@ export const List = (props: { list?: IUserIntegrationListVo['integrations'] }) =
                 onRename={() => {
                   setEditingId(integration.id);
                 }}
-                onReconnect={() => handleReconnectIntegration(integration.provider, integration.id)}
+                onReconnect={
+                  // IMAP accounts are reconnected from the connect form, not an OAuth popup
+                  integration.provider === UserIntegrationProvider.Imap
+                    ? undefined
+                    : () => handleReconnectIntegration(integration.provider, integration.id)
+                }
               />
             </div>
           </div>

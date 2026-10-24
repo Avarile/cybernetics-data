@@ -1,4 +1,4 @@
-import { GoogleLogo, Mail, Slack } from '@teable/icons';
+import { GoogleLogo, Inbox, Mail, Slack } from '@teable/icons';
 import { UserIntegrationProvider } from '@teable/openapi';
 import { cn } from '@teable/ui-lib/shadcn';
 
@@ -6,6 +6,7 @@ const PROVIDER_ICONS: Record<UserIntegrationProvider, React.ReactNode> = {
   [UserIntegrationProvider.Slack]: <Slack className="size-8" />,
   [UserIntegrationProvider.Gmail]: <GoogleLogo className="size-8" />,
   [UserIntegrationProvider.Outlook]: <Mail className="size-8" />,
+  [UserIntegrationProvider.Imap]: <Inbox className="size-8" />,
 };
 
 export const UserIntegrationProviderLogo = (props: {

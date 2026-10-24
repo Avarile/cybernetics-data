@@ -57,6 +57,11 @@ export enum IdPrefix {
   OrganizationDepartment = 'odp',
 
   Integration = 'int',
+  UserIntegration = 'uin',
+
+  EmailSource = 'ems',
+  EmailSyncCursor = 'esc',
+  EmailMessage = 'emm',
 
   Template = 'tpl',
   TemplateCategory = 'tpc',
@@ -248,6 +253,22 @@ export function generateOrganizationDepartmentId() {
 
 export function generateIntegrationId() {
   return IdPrefix.Integration + getRandomString(16);
+}
+
+export function generateUserIntegrationId() {
+  return IdPrefix.UserIntegration + getRandomString(16);
+}
+
+export function generateEmailSourceId() {
+  return IdPrefix.EmailSource + getRandomString(16);
+}
+
+export function generateEmailSyncCursorId() {
+  return IdPrefix.EmailSyncCursor + getRandomString(16);
+}
+
+export function generateEmailMessageId() {
+  return IdPrefix.EmailMessage + getRandomString(16);
 }
 
 export function generateTemplateId() {
