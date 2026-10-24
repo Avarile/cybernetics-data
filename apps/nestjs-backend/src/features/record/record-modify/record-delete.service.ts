@@ -1,5 +1,5 @@
+import { generateOperationId } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { generateOperationId } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ClsService } from 'nestjs-cls';
 import { EventEmitterService } from '../../../event-emitter/event-emitter.service';

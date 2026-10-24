@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/cognitive-complexity */
+import type { IAttachmentCellValue, IFieldVo, IFilter } from '@cybernetics/core';
+import { FieldKeyType, FieldType, mergeFilter } from '@cybernetics/core';
 import type { IFieldInstance } from '@cybernetics/sdk';
-import type { IAttachmentCellValue, IFieldVo, IFilter } from '@teable/core';
-import { FieldKeyType, FieldType, mergeFilter } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import {
   getRecords,

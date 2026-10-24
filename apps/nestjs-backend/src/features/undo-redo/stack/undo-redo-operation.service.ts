@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { assertNever } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { assertNever } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import type { IUndoRedoOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';
 import { IThresholdConfig, ThresholdConfig } from '../../../configs/threshold.config';

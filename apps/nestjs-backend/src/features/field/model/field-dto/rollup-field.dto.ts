@@ -1,4 +1,4 @@
-import { RollupFieldCore } from '@teable/core';
+import { RollupFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class RollupFieldDto extends RollupFieldCore implements FieldBase {

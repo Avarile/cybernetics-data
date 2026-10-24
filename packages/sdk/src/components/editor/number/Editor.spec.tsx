@@ -1,4 +1,4 @@
-import { NumberFormattingType } from '@teable/core';
+import { NumberFormattingType } from '@cybernetics/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { NumberEditor } from './Editor';

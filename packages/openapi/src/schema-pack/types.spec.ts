@@ -1,4 +1,4 @@
-import { FieldType, Relationship } from '@teable/core';
+import { FieldType, Relationship } from '@cybernetics/core';
 import { schemaPackAddRoSchema, schemaPackInstallRoSchema } from './install';
 import { schemaPackFieldSchema, schemaPackSchema } from './types';
 

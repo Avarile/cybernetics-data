@@ -1,6 +1,6 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { CustomHttpException } from '../../custom.exception';
 

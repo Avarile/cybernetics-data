@@ -1,6 +1,6 @@
+import { HttpError, HttpErrorCode } from '@cybernetics/core';
 import { useConnection } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import { HttpError, HttpErrorCode } from '@teable/core';
 import { BaseNodeResourceType, getTableById } from '@teable/openapi';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';

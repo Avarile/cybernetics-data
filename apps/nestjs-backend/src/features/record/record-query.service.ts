@@ -1,7 +1,7 @@
 // TODO: move record service read related to record-query.service.ts
 
+import { TableDomain, type IRecord } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { TableDomain, type IRecord } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { Timing } from '../../utils/timing';
 import type { IFieldInstance } from '../field/model/factory';

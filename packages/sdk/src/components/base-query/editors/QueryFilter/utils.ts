@@ -1,5 +1,5 @@
-import type { IOperator } from '@teable/core';
-import { CellValueType, FieldType, getValidFilterOperators } from '@teable/core';
+import type { IOperator } from '@cybernetics/core';
+import { CellValueType, FieldType, getValidFilterOperators } from '@cybernetics/core';
 import { BaseQueryColumnType } from '@teable/openapi';
 
 type IFilterOperatorField = Parameters<typeof getValidFilterOperators>[0];

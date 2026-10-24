@@ -1,7 +1,7 @@
 import type { Readable as ReadableStream } from 'node:stream';
 import { resolve } from 'path';
+import { HttpErrorCode } from '@cybernetics/core';
 import { BadRequestException } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { UploadType } from '@teable/openapi';
 import { storageConfig } from '../../../configs/storage';
 import { CustomHttpException } from '../../../custom.exception';

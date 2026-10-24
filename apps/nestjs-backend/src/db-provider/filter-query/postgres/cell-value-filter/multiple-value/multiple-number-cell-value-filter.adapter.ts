@@ -4,8 +4,8 @@ import type {
   IFilterOperator,
   ILiteralValue,
   ILiteralValueList,
-} from '@teable/core';
-import { isFieldReferenceValue } from '@teable/core';
+} from '@cybernetics/core';
+import { isFieldReferenceValue } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IDbProvider } from '../../../../db.provider.interface';
 import { CellValueFilterPostgres } from '../cell-value-filter.postgres';

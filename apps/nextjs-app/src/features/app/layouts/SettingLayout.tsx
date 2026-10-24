@@ -1,7 +1,7 @@
+import type { DriverClient } from '@cybernetics/core';
 import type { IUser } from '@cybernetics/sdk';
 import { AppProvider, SessionProvider } from '@cybernetics/sdk';
 import type { DehydratedState } from '@tanstack/react-query';
-import type { DriverClient } from '@teable/core';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import React from 'react';

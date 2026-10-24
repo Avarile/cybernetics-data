@@ -1,4 +1,4 @@
-import type { IFieldVo, IRecord } from '@teable/core';
+import type { IFieldVo, IRecord } from '@cybernetics/core';
 import { match } from 'ts-pattern';
 import { RawOpType } from '../../../share-db/interface';
 import type { IEventContext } from '../core-event';

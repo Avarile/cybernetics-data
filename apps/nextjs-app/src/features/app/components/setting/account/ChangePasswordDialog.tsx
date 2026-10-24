@@ -1,6 +1,6 @@
+import type { HttpError } from '@cybernetics/core';
 import { useSession } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
 import { changePassword, changePasswordRoSchema } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';
 import {

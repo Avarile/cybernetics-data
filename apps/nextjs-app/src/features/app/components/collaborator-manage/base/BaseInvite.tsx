@@ -1,7 +1,7 @@
+import type { IBaseRole, IRole } from '@cybernetics/core';
+import { hasPermission, Role } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { IBaseRole, IRole } from '@teable/core';
-import { hasPermission, Role } from '@teable/core';
 import { createBaseInvitationLink, emailBaseInvitation } from '@teable/openapi';
 import { useState } from 'react';
 import { Invite } from '../components/Invite';

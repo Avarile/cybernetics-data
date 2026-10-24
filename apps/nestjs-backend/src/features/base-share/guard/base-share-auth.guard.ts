@@ -1,7 +1,7 @@
+import { ANONYMOUS_USER_ID, HttpErrorCode } from '@cybernetics/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { Injectable } from '@nestjs/common';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
-import { ANONYMOUS_USER_ID, HttpErrorCode } from '@teable/core';
 import { ClsService } from 'nestjs-cls';
 import { CustomHttpException } from '../../../custom.exception';
 import type { IClsStore } from '../../../types/cls';

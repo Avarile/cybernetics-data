@@ -1,4 +1,3 @@
-import type { INestApplication } from '@nestjs/common';
 import {
   ColorConfigType,
   FieldType,
@@ -6,7 +5,8 @@ import {
   SortFunc,
   ViewType,
   type IFilterRo,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import {

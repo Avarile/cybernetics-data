@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { DriverClient, isParsableDsn, parseDsn } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { DriverClient, isParsableDsn, parseDsn } from '@teable/core';
 import { getDatabaseUrl } from '@teable/db-main-prisma';
 import dotenv from 'dotenv-flow';
 import { buildSync } from 'esbuild';

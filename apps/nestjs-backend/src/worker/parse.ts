@@ -1,5 +1,5 @@
 import { parentPort, workerData } from 'worker_threads';
-import { getRandomString } from '@teable/core';
+import { getRandomString } from '@cybernetics/core';
 import type { IImportConstructorParams } from '../features/import/open-api/import.class';
 import { importerFactory } from '../features/import/open-api/import.class';
 

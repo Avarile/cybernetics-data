@@ -1,5 +1,5 @@
+import { FieldKeyType, FieldType, generateFieldId } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, generateFieldId } from '@teable/core';
 import {
   createRecords,
   createTable,

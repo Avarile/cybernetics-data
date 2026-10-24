@@ -1,6 +1,6 @@
+import { FieldType, Relationship } from '@cybernetics/core';
+import type { IFieldRo, LinkFieldCore } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Relationship } from '@teable/core';
-import type { IFieldRo, LinkFieldCore } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   createField,

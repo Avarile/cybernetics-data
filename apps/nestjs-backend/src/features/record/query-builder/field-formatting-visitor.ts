@@ -23,7 +23,7 @@ import {
   type ButtonFieldCore,
   type INumberFormatting,
   type IDatetimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { match, P } from 'ts-pattern';
 import type { IRecordQueryDialectProvider } from './record-query-dialect.interface';
 

@@ -1,4 +1,4 @@
-import { createFieldRoSchema, HttpErrorCode, viewRoSchema } from '@teable/core';
+import { createFieldRoSchema, HttpErrorCode, viewRoSchema } from '@cybernetics/core';
 import { tableRoSchema } from '@teable/openapi';
 import { z } from 'zod';
 import { CustomHttpException } from '../../../custom.exception';

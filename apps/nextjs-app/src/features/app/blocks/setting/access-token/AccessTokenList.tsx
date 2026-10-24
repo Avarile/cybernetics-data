@@ -1,7 +1,7 @@
+import type { Action } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { usePermissionActionsStatic } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { Action } from '@teable/core';
 import { deleteAccessToken, listAccessToken } from '@teable/openapi';
 import { ConfirmDialog } from '@teable/ui-lib/base';
 import {

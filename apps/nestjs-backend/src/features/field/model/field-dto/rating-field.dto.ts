@@ -1,4 +1,4 @@
-import { RatingFieldCore } from '@teable/core';
+import { RatingFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class RatingFieldDto extends RatingFieldCore implements FieldBase {

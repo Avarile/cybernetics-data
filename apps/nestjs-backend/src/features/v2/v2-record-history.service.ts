@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable sonarjs/no-identical-functions */
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { ISelectFieldOptions } from '@cybernetics/core';
+import { FieldType as CoreFieldType, generateRecordHistoryId } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { ISelectFieldOptions } from '@teable/core';
-import { FieldType as CoreFieldType, generateRecordHistoryId } from '@teable/core';
 import { v2DataDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import {
   FieldId,

@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { getRandomString } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { getRandomString } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import {
   createBaseNodeFolder,

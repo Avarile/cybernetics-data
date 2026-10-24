@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
 import { createTable as apiCreateTable } from '@teable/openapi';

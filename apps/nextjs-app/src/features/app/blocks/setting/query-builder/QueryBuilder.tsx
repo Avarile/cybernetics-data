@@ -1,7 +1,7 @@
+import { CellFormat, FieldKeyType, type IFilterSet, type ISortItem } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { StandaloneViewProvider } from '@cybernetics/sdk/context';
 import { useQuery } from '@tanstack/react-query';
-import { CellFormat, FieldKeyType, type IFilterSet, type ISortItem } from '@teable/core';
 import { ArrowUpRight, Code2, MagicAi } from '@teable/icons';
 import type { IQueryBaseRo } from '@teable/openapi';
 import { getBaseAll, getTableList } from '@teable/openapi';

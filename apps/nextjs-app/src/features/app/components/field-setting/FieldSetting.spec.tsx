@@ -1,4 +1,4 @@
-import { CellValueType, DbFieldType, FieldType, Relationship } from '@teable/core';
+import { CellValueType, DbFieldType, FieldType, Relationship } from '@cybernetics/core';
 import { render, screen } from '@/test-utils';
 import { FieldSettingBase } from './FieldSetting';
 import { FieldOperator } from './type';

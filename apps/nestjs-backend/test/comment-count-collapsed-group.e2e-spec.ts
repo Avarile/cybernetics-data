@@ -1,6 +1,6 @@
+import type { IFieldVo, IFilter, IGroup } from '@cybernetics/core';
+import { Colors, FieldKeyType, FieldType, SortFunc } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldVo, IFilter, IGroup } from '@teable/core';
-import { Colors, FieldKeyType, FieldType, SortFunc } from '@teable/core';
 import { CommentNodeType, GroupPointType, createComment, getCommentCount } from '@teable/openapi';
 import type { IGroupHeaderPoint, ITableFullVo } from '@teable/openapi';
 import {

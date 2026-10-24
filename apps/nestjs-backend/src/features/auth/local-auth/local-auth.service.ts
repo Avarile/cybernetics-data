@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { generateUserId, getRandomString, HttpErrorCode } from '@cybernetics/core';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { generateUserId, getRandomString, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { EmailVerifyCodeType, MailTransporterType, MailType } from '@teable/openapi';
 import type { IChangePasswordRo, IInviteWaitlistVo, ISignup } from '@teable/openapi';

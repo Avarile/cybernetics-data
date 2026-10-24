@@ -1,5 +1,5 @@
+import { CellValueType, FieldType, Relationship } from '@cybernetics/core';
 import type { IFieldInstance, LinkField } from '@cybernetics/sdk/model';
-import { CellValueType, FieldType, Relationship } from '@teable/core';
 import { renderHook, act } from '@testing-library/react';
 import type { IFieldEditorRo } from '../type';
 import { useUpdateLookupOptions } from './useUpdateLookupOptions';

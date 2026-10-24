@@ -1,7 +1,7 @@
 import type { ReadStream } from 'fs';
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IRecord } from '@teable/core';
-import { recordSchema } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
+import { recordSchema } from '@cybernetics/core';
 import FormData from 'form-data';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';

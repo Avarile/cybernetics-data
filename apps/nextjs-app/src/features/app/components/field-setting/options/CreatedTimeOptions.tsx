@@ -2,7 +2,7 @@ import type {
   IDatetimeFormatting,
   ICreatedTimeFieldOptionsRo,
   ILastModifiedTimeFieldOptionsRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { DatetimeFormatting } from '../formatting/DatetimeFormatting';
 
 export const CreatedTimeOptions = (props: {

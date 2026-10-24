@@ -1,6 +1,6 @@
+import { Role } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { QueryClient, dehydrate } from '@tanstack/react-query';
-import { Role } from '@teable/core';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 import { CollaboratorPage } from '@/features/app/blocks/space-setting';

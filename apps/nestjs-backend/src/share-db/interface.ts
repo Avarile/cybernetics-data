@@ -1,4 +1,4 @@
-import type { ISnapshotBase } from '@teable/core';
+import type { ISnapshotBase } from '@cybernetics/core';
 import type { CreateOp, DB, DeleteOp, EditOp } from 'sharedb';
 
 export interface IReadonlyAdapterService {

@@ -1,5 +1,5 @@
+import { IdPrefix, getTableCommentChannel } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import { IdPrefix, getTableCommentChannel } from '@teable/core';
 import type { IGetRecordsRo, ICommentCountVo } from '@teable/openapi';
 import { getCommentCount, CommentPatchType, saveQueryParams } from '@teable/openapi';
 import { get } from 'lodash';

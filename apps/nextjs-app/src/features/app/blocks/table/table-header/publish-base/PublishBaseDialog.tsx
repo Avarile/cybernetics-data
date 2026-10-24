@@ -1,7 +1,7 @@
+import { generateAttachmentId } from '@cybernetics/core';
 import { AttachmentManager } from '@cybernetics/sdk/components';
 import { useBase } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { generateAttachmentId } from '@teable/core';
 import { Discord, Heart, InIcon, Link, Plus, Twitter } from '@teable/icons';
 import type { ITemplateCoverRo, INotifyVo } from '@teable/openapi';
 import {

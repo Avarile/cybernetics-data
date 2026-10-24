@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { IdPrefix, ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { IdPrefix, ViewType } from '@teable/core';
 import {
   enableShareView as apiEnableShareView,
   disableShareView as apiDisableShareView,

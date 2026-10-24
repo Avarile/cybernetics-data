@@ -1,4 +1,4 @@
-import { ConditionalRollupFieldCore } from '@teable/core';
+import { ConditionalRollupFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class ConditionalRollupFieldDto extends ConditionalRollupFieldCore implements FieldBase {

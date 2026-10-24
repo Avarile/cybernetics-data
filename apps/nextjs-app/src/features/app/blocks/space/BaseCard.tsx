@@ -1,8 +1,8 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
+import { hasPermission } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { Database, MoreHorizontal, Share2 } from '@teable/icons';
 import type { IGetBaseVo } from '@teable/openapi';
 import { PinType, deleteBase, permanentDeleteBase, updateBase } from '@teable/openapi';

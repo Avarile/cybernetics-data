@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { IFieldRo, ILinkFieldOptions, IFieldVo } from '@cybernetics/core';
+import { FieldKeyType, FieldType, Relationship, getRandomString } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, ILinkFieldOptions, IFieldVo } from '@teable/core';
-import { FieldKeyType, FieldType, Relationship, getRandomString } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   convertField,

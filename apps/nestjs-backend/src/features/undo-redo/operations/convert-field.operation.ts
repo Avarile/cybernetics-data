@@ -1,5 +1,5 @@
-import { FieldType } from '@teable/core';
-import type { IFieldVo, IOtOperation } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
+import type { IFieldVo, IOtOperation } from '@cybernetics/core';
 import type { PrismaService } from '@teable/db-main-prisma';
 import type { IConvertFieldOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';

@@ -1,6 +1,6 @@
+import { hasPermission } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { Check, Database } from '@teable/icons';
 import { duplicateBase, getSpaceList, type IGetBaseVo } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';

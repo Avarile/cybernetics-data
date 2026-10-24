@@ -1,6 +1,6 @@
+import { getActionTriggerChannel } from '@cybernetics/core';
+import type { ITableActionKey } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { getActionTriggerChannel } from '@teable/core';
-import type { ITableActionKey } from '@teable/core';
 import {
   FieldCreated,
   FieldDeleted,

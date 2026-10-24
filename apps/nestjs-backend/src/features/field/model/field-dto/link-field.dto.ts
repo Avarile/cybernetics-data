@@ -1,5 +1,5 @@
-import { LinkFieldCore, Relationship } from '@teable/core';
-import type { ILinkCellValue, ILinkFieldMeta } from '@teable/core';
+import { LinkFieldCore, Relationship } from '@cybernetics/core';
+import type { ILinkCellValue, ILinkFieldMeta } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class LinkFieldDto extends LinkFieldCore implements FieldBase {

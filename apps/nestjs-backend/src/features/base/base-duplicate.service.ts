@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { ILinkFieldOptions } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { ILinkFieldOptions } from '@teable/core';
-import { FieldType } from '@teable/core';
-import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
 import {
   BaseDuplicateMode,
   CreateRecordAction,

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ParsedUrlQuery } from 'querystring';
-import { parseDsn } from '@teable/core';
+import { parseDsn } from '@cybernetics/core';
 import { isUndefined, omitBy, toNumber } from 'lodash';
 import ms from 'ms';
 import type {

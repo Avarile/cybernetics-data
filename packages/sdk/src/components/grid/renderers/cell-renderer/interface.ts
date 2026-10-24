@@ -1,4 +1,4 @@
-import type { IButtonFieldCellValue, IButtonFieldOptions } from '@teable/core';
+import type { IButtonFieldCellValue, IButtonFieldOptions } from '@cybernetics/core';
 import type { CSSProperties, ForwardRefRenderFunction } from 'react';
 import type { IButtonClickStatusHook } from '../../../../hooks';
 import type { Record as IRecord } from '../../../../model';

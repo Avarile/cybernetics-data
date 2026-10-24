@@ -1,4 +1,4 @@
-import { KanbanViewCore } from '@teable/core';
+import { KanbanViewCore } from '@cybernetics/core';
 import { updateViewOptions } from '@teable/openapi';
 import { Mixin } from 'ts-mixer';
 import { requestWrap } from '../../utils/requestWrap';

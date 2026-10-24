@@ -1,4 +1,4 @@
-import { ViewOpBuilder } from '@teable/core';
+import { ViewOpBuilder } from '@cybernetics/core';
 import { v2DataDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import { describe, expect, it, vi } from 'vitest';
 import { V2_FIELD_DELETE_COMPAT_CONTEXT_KEY } from './v2-field-delete-compat.constants';

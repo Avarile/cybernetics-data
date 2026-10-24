@@ -1,7 +1,7 @@
+import { IdPrefix } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { IdPrefix } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { IntegrityIssueType, type IIntegrityIssue } from '@teable/openapi';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';

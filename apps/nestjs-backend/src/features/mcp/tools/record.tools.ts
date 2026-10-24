@@ -1,4 +1,4 @@
-import { FieldKeyType, HttpErrorCode } from '@teable/core';
+import { FieldKeyType, HttpErrorCode } from '@cybernetics/core';
 import { z } from 'zod';
 import { CustomHttpException } from '../../../custom.exception';
 import { defineTool } from '../types';

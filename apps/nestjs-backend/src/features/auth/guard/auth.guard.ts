@@ -1,8 +1,8 @@
+import { isAnonymous } from '@cybernetics/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard as PassportAuthGuard } from '@nestjs/passport';
-import { isAnonymous } from '@teable/core';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
 import { IS_ALLOW_ANONYMOUS } from '../decorators/allow-anonymous.decorator';

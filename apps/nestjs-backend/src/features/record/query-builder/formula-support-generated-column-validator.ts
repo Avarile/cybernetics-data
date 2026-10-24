@@ -6,7 +6,7 @@ import type {
   FormulaFieldCore,
   UnaryOpContext,
   RuleNode,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   parseFormula,
   FunctionCallCollectorVisitor,
@@ -29,7 +29,7 @@ import {
   DbFieldType,
   extractFieldReferenceId,
   getFieldReferenceTokenText,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { match } from 'ts-pattern';
 import type { IGeneratedColumnQuerySupportValidator } from './sql-conversion.visitor';
 

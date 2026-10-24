@@ -1,5 +1,5 @@
-import { ViewType } from '@teable/core';
-import type { IShareViewMeta } from '@teable/core';
+import { ViewType } from '@cybernetics/core';
+import type { IShareViewMeta } from '@cybernetics/core';
 
 export const ROW_ORDER_FIELD_PREFIX = '__row';
 

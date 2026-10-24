@@ -1,3 +1,4 @@
+import type { IFieldVo } from '@cybernetics/core';
 import type { IFieldInstance, IFieldCreateOrSelectModalRef, KanbanView } from '@cybernetics/sdk';
 import {
   Sort,
@@ -13,7 +14,6 @@ import {
   usePersonalView,
 } from '@cybernetics/sdk';
 import { useView } from '@cybernetics/sdk/hooks/use-view';
-import type { IFieldVo } from '@teable/core';
 import {
   ArrowUpDown,
   Filter as FilterIcon,

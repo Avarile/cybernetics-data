@@ -1,7 +1,7 @@
+import type { ISort } from '@cybernetics/core';
+import { SortFunc } from '@cybernetics/core';
 import { DraggableSortList } from '@cybernetics/sdk/components/sort/DraggableSortList';
 import { SortFieldAddButton } from '@cybernetics/sdk/components/sort/SortFieldAddButton';
-import type { ISort } from '@teable/core';
-import { SortFunc } from '@teable/core';
 import { useTranslation } from 'next-i18next';
 import { useMemo } from 'react';
 import { developerConfig } from '@/features/i18n/developer.config';

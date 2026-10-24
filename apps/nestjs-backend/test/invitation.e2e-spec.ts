@@ -1,5 +1,5 @@
+import { Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { Role } from '@teable/core';
 import type { CreateSpaceInvitationLinkVo } from '@teable/openapi';
 import {
   ACCEPT_INVITATION_LINK,

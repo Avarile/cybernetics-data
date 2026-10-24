@@ -5,9 +5,9 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
+import { HttpErrorCode, type IAttachmentItem } from '@cybernetics/core';
+import { generateAttachmentId } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { HttpErrorCode, type IAttachmentItem } from '@teable/core';
-import { generateAttachmentId } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import {
   axios,

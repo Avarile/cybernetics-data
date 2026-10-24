@@ -1,6 +1,6 @@
+import { Role } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Role } from '@teable/core';
 import type { IGetBaseVo, IGetSpaceVo, ISubscriptionSummaryVo } from '@teable/openapi';
 import {
   PinType,

@@ -1,8 +1,8 @@
+import type { INotificationIcon } from '@cybernetics/core';
+import { NotificationStatesEnum, NotificationTypeEnum } from '@cybernetics/core';
 import { useNotification } from '@cybernetics/sdk';
 import { ReactQueryKeys } from '@cybernetics/sdk/config/react-query-keys';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { INotificationIcon } from '@teable/core';
-import { NotificationStatesEnum, NotificationTypeEnum } from '@teable/core';
 import { Bell, CheckCircle2 as Read, Download, RefreshCcw } from '@teable/icons';
 import {
   getNotificationList,

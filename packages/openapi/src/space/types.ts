@@ -1,4 +1,4 @@
-import { roleSchema } from '@teable/core';
+import { roleSchema } from '@cybernetics/core';
 import { z } from '../zod';
 
 export enum CollaboratorType {

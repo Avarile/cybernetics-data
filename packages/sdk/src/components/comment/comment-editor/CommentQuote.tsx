@@ -1,5 +1,5 @@
+import { assertNever } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import { assertNever } from '@teable/core';
 import { X, ChevronRight } from '@teable/icons';
 import type { ICommentContent } from '@teable/openapi';
 import { getCommentDetail, CommentNodeType } from '@teable/openapi';

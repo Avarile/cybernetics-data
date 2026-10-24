@@ -1,7 +1,7 @@
+import type { IRole } from '@cybernetics/core';
 import { MemberSelectorDialog, UserAvatar } from '@cybernetics/sdk/components';
 import type { IMemberSelectorDialogRef, ISelectedMember } from '@cybernetics/sdk/components';
 import { TreeNodeType } from '@cybernetics/sdk/components/member-selector/types';
-import type { IRole } from '@teable/core';
 import { Building2, ChevronLeft, Plus, UserPlus, X } from '@teable/icons';
 import { PrincipalType } from '@teable/openapi';
 import { Button, ScrollArea } from '@teable/ui-lib/shadcn';

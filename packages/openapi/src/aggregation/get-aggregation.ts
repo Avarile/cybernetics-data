@@ -1,11 +1,11 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { IdPrefix, StatisticsFunc } from '@teable/core';
+import { IdPrefix, StatisticsFunc } from '@cybernetics/core';
 import { axios } from '../axios';
 import { contentQueryBaseSchema, queryBaseSchema } from '../record';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';
 
-export { StatisticsFunc } from '@teable/core';
+export { StatisticsFunc } from '@cybernetics/core';
 
 export const aggregationFieldSchema = z.object({
   fieldId: z.string(),

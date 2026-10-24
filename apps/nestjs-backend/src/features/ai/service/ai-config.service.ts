@@ -1,12 +1,12 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { IntegrationType, SettingKey } from '@teable/openapi';
 import type { IAIConfig, IGetAIConfig, LLMProvider } from '@teable/openapi';
+import { CustomHttpException } from '../../../custom.exception';
 import { PerformanceCache, PerformanceCacheService } from '../../../performance-cache';
 import { SettingService } from '../../setting/setting.service';
-import { CustomHttpException } from '../../../custom.exception';
 
 @Injectable()
 export class AiConfigService {

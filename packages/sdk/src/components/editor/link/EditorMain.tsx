@@ -1,6 +1,6 @@
+import type { ILinkCellValue, ILinkFieldOptions } from '@cybernetics/core';
+import { isMultiValueLink, RelationshipRevert } from '@cybernetics/core';
 import { useQueryClient } from '@tanstack/react-query';
-import type { ILinkCellValue, ILinkFieldOptions } from '@teable/core';
-import { isMultiValueLink, RelationshipRevert } from '@teable/core';
 import { ArrowUpRight, Plus } from '@teable/icons';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { getRecordIndex } from '@teable/openapi';

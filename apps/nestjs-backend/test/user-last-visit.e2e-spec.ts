@@ -1,6 +1,6 @@
+import type { IViewVo } from '@cybernetics/core';
+import { ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IViewVo } from '@teable/core';
-import { ViewType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ICreateBaseVo, ITableFullVo } from '@teable/openapi';
 import {

@@ -1,10 +1,11 @@
-import type { IAttachmentCellValue } from '@teable/core';
-import { Button } from '@teable/ui-lib';
+import type { IAttachmentCellValue } from '@cybernetics/core';
+import { Button, cn } from '@teable/ui-lib';
 import { useRef } from 'react';
 import { useLocalStorage, useMeasure } from 'react-use';
 import { LocalStorageKeys } from '../../config';
 import { useTranslation } from '../../context/app/i18n';
 import type { IButtonClickStatusHook } from '../../hooks';
+import { useIsTouchDevice } from '../../hooks';
 import type { IFieldInstance, Record } from '../../model';
 import { RecordEditorItem } from './RecordEditorItem';
 
@@ -23,6 +24,7 @@ export const RecordEditor = (props: {
   const { t } = useTranslation();
   const [ref, { width }] = useMeasure<HTMLDivElement>();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const isTouchDevice = useIsTouchDevice();
   const {
     fields,
     hiddenFields = [],
@@ -39,7 +41,7 @@ export const RecordEditor = (props: {
   );
 
   return (
-    <div ref={ref} className="mx-auto max-w-3xl">
+    <div ref={ref} className={cn('mx-auto', isTouchDevice ? 'max-w-3xl' : 'max-w-6xl')}>
       <div ref={wrapRef} className="mx-auto space-y-6">
         {fields.map((field) => (
           <RecordEditorItem

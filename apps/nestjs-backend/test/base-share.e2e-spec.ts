@@ -1,6 +1,6 @@
+import type { IFieldRo, ILookupOptionsRo } from '@cybernetics/core';
+import { FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, ILookupOptionsRo } from '@teable/core';
-import { FieldType, Relationship } from '@teable/core';
 import type { IBaseNodeVo, IGetBaseShareVo, ITablePermissionVo } from '@teable/openapi';
 import {
   BASE_SHARE_AUTH,

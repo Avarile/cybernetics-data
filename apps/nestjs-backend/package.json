@@ -182,7 +182,7 @@
     "@sentry/profiling-node": "10.22.0",
     "@smithy/node-http-handler": "^3.1.1",
     "@teable/common-i18n": "workspace:^",
-    "@teable/core": "workspace:^",
+    "@cybernetics/core": "workspace:^",
     "@teable/db-data-prisma": "workspace:^",
     "@teable/db-main-prisma": "workspace:^",
     "@teable/openapi": "workspace:^",

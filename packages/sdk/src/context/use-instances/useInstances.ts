@@ -1,4 +1,4 @@
-import { FieldKeyType, IdPrefix, type IRecord, getActionTriggerChannel } from '@teable/core';
+import { FieldKeyType, IdPrefix, type IRecord, getActionTriggerChannel } from '@cybernetics/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { getRecords } from '@teable/openapi';
 import { isEqual } from 'lodash';

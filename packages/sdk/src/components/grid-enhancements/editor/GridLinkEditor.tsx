@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-import type { ILinkCellValue } from '@teable/core';
+import type { ILinkCellValue } from '@cybernetics/core';
 import type { FC } from 'react';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from '../../../context/app/i18n';

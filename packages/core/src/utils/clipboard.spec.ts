@@ -14,7 +14,7 @@ describe('clipboard', () => {
     expect(data).toEqual(parseData);
   });
 
-  it('extractTableHeader should return undefined from non-teable HTML', () => {
+  it('extractTableHeader should return undefined from non-cybernetics HTML', () => {
     const result = stringifyClipboardText(parseData);
     expect(result).toEqual(stringifyData);
   });

@@ -1,4 +1,4 @@
-import { FieldKeyType } from '@teable/core';
+import { FieldKeyType } from '@cybernetics/core';
 import type { DataPrismaService } from '@teable/db-data-prisma';
 import type { IDeleteFieldsOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';

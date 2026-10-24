@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable } from '@nestjs/common';
 import {
   canManageRole,
   getRandomString,
@@ -8,7 +7,8 @@ import {
   Role,
   type IBaseRole,
   type IRole,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   AddBaseCollaboratorRo,

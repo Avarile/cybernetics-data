@@ -1,6 +1,6 @@
+import { getUniqName, hasPermission } from '@cybernetics/core';
 import { useSession, useThemeMode } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import { getUniqName, hasPermission } from '@teable/core';
 import { createBase } from '@teable/openapi';
 import type { IGetSpaceVo } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';

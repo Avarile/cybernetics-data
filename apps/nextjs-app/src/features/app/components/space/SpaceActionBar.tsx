@@ -1,6 +1,6 @@
+import { getUniqName, hasPermission } from '@cybernetics/core';
 import { useIsMobile } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import { getUniqName, hasPermission } from '@teable/core';
 import { MoreHorizontal, Plus, UserPlus } from '@teable/icons';
 import { createBase, type IGetSpaceVo } from '@teable/openapi';
 import type { ButtonProps } from '@teable/ui-lib';

@@ -1,4 +1,4 @@
-import { SingleLineTextDisplayType } from '@teable/core';
+import { SingleLineTextDisplayType } from '@cybernetics/core';
 
 export const onMixedTextClick = (type: SingleLineTextDisplayType, text: string) => {
   let url = '';

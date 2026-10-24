@@ -1,5 +1,5 @@
-import { CellValueType, DbFieldType, FieldType } from '@teable/core';
-import type { FieldCore, TableDomain } from '@teable/core';
+import { CellValueType, DbFieldType, FieldType } from '@cybernetics/core';
+import type { FieldCore, TableDomain } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 import { GeneratedColumnQuerySupportValidatorPostgres } from '../../../db-provider/generated-column-query/postgres/generated-column-query-support-validator.postgres';
 import { validateFormulaSupport } from './formula-validation';

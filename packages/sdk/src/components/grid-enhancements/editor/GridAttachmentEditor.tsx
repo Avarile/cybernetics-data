@@ -1,6 +1,6 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import type { IFilePreviewDialogRef } from '@teable/ui-lib';
 import { cn, FilePreviewDialog, FilePreviewProvider } from '@teable/ui-lib';
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';

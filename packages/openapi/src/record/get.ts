@@ -1,12 +1,12 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IRecord } from '@teable/core';
-import { CellFormat, FieldKeyType, recordSchema } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
+import { CellFormat, FieldKeyType, recordSchema } from '@cybernetics/core';
 import type { AxiosResponse } from 'axios';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';
 
-export type { IRecord } from '@teable/core';
+export type { IRecord } from '@cybernetics/core';
 
 export const fieldKeyTypeRoSchema = z
   .enum(FieldKeyType, {

@@ -1,4 +1,4 @@
-import { contains, doesNotContain, is, isEmpty, isNot, isNotEmpty } from '@teable/core';
+import { contains, doesNotContain, is, isEmpty, isNot, isNotEmpty } from '@cybernetics/core';
 
 export const TEXT_FIELD_CASES = [
   {

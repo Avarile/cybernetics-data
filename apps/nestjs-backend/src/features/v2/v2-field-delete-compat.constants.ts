@@ -1,4 +1,4 @@
-import type { IOtOperation } from '@teable/core';
+import type { IOtOperation } from '@cybernetics/core';
 import type { ILegacyDeleteFieldsPayloadSnapshot } from '../field/open-api/field-open-api.service';
 
 export const V2_FIELD_DELETE_COMPAT_CONTEXT_KEY = '__teable_v2_field_delete_compat_context';

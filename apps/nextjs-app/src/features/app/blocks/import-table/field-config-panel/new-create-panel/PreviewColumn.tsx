@@ -1,7 +1,7 @@
+import { IMPORT_SUPPORTED_TYPES } from '@cybernetics/core';
+import type { FieldType } from '@cybernetics/core';
 import { useFieldStaticGetter } from '@cybernetics/sdk';
 import { BaseSingleSelect } from '@cybernetics/sdk/components/filter/view-filter/component/base/BaseSingleSelect';
-import { IMPORT_SUPPORTED_TYPES } from '@teable/core';
-import type { FieldType } from '@teable/core';
 import { Trash2, Lock } from '@teable/icons';
 import type { IImportColumn } from '@teable/openapi';
 import {

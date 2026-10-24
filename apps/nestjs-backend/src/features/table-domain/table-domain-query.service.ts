@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/cognitive-complexity */
+import { HttpErrorCode, TableDomain, Tables } from '@cybernetics/core';
+import type { FieldCore } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { HttpErrorCode, TableDomain, Tables } from '@teable/core';
-import type { FieldCore } from '@teable/core';
 import type { Field, TableMeta } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ClsService } from 'nestjs-cls';

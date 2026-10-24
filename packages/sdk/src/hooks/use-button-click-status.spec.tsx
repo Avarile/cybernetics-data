@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { getTableButtonClickChannel } from '@cybernetics/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getTableButtonClickChannel } from '@teable/core';
 import { buttonClick as buttonClickApi } from '@teable/openapi';
 import { act, renderHook } from '@testing-library/react';
 import type { Connection } from 'sharedb/lib/client';

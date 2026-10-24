@@ -1,4 +1,4 @@
-import type { IGridViewOptions, IGridColumnMeta, IGridColumn } from '@teable/core';
+import type { IGridViewOptions, IGridColumnMeta, IGridColumn } from '@cybernetics/core';
 
 export function adjustFrozenField(
   originOptions: IGridViewOptions,

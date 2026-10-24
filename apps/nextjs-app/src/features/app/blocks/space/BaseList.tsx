@@ -1,8 +1,8 @@
+import { hasPermission } from '@cybernetics/core';
 import { LocalStorageKeys, ReactQueryKeys } from '@cybernetics/sdk/config';
 import { AnchorContext } from '@cybernetics/sdk/context';
 import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { ChevronDown, Clock4, LayoutList } from '@teable/icons';
 import {
   deleteBase,

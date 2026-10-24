@@ -1,5 +1,5 @@
+import { ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { ViewType } from '@teable/core';
 import {
   addPin,
   deletePin,

@@ -1,5 +1,5 @@
-import type { IFieldRo } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { IFieldRo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import type { ISchemaPackField } from '@teable/openapi';
 import { SCHEMA_PACK_FORMULA_REF, SCHEMA_PACK_PLACEHOLDER } from '@teable/openapi';
 import type { ISchemaPackCatalog } from './schema-pack.catalog';

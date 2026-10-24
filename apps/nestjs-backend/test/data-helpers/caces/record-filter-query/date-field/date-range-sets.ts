@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { dateRange, is, isNot } from '@teable/core';
+import { dateRange, is, isNot } from '@cybernetics/core';
 import dayjs from 'dayjs';
 import { getDates } from './utils';
 

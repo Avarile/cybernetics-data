@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType } from '@teable/core';
 import { EventEmitterService } from '../src/event-emitter/event-emitter.service';
 import { Events, type RecordUpdateEvent } from '../src/event-emitter/events';
 import {

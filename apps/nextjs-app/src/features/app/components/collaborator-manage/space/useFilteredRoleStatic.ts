@@ -1,4 +1,4 @@
-import type { IRole } from '@teable/core';
+import type { IRole } from '@cybernetics/core';
 import { useMemo } from 'react';
 import { useRoleStatic } from '../useRoleStatic';
 import { getRolesWithLowerPermissions } from '../utils';

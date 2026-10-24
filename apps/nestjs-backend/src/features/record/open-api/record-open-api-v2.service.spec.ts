@@ -1,4 +1,4 @@
-import { CellValueType, FieldKeyType, FieldType, SortFunc } from '@teable/core';
+import { CellValueType, FieldKeyType, FieldType, SortFunc } from '@cybernetics/core';
 import {
   CreateRecordResult,
   CreateRecordsResult,

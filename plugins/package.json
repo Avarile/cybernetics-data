@@ -16,7 +16,7 @@
     "@hookform/resolvers": "3.3.4",
     "@tanstack/react-query": "5.90.16",
     "@teable/common-i18n": "workspace:^",
-    "@teable/core": "workspace:^",
+    "@cybernetics/core": "workspace:^",
     "@teable/icons": "workspace:^",
     "@teable/next-themes": "0.3.5",
     "@teable/openapi": "workspace:^",

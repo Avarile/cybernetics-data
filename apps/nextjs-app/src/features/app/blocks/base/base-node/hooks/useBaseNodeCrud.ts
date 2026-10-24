@@ -1,6 +1,6 @@
+import { getUniqName } from '@cybernetics/core';
 import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import { getUniqName } from '@teable/core';
 import type {
   IMoveBaseNodeRo,
   ICreateBaseNodeRo,

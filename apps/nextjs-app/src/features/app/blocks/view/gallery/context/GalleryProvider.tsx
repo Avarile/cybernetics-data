@@ -1,3 +1,4 @@
+import { FieldType } from '@cybernetics/core';
 import { ExpandRecorder } from '@cybernetics/sdk/components';
 import { ShareViewContext } from '@cybernetics/sdk/context';
 import {
@@ -9,7 +10,6 @@ import {
   useButtonClickStatus,
 } from '@cybernetics/sdk/hooks';
 import type { AttachmentField, GalleryView, IFieldInstance } from '@cybernetics/sdk/model';
-import { FieldType } from '@teable/core';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { GalleryContext } from './GalleryContext';

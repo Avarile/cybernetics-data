@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { fieldVoSchema, recordSchema, shareViewMetaSchema, viewVoSchema } from '@teable/core';
+import { fieldVoSchema, recordSchema, shareViewMetaSchema, viewVoSchema } from '@cybernetics/core';
 import { groupPointsVoSchema } from '../aggregation';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';

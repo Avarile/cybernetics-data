@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import type { AttachmentManager } from './uploadManage';
 
 export type UploadAttachmentMode = 'local' | 'cell';

@@ -1,6 +1,6 @@
+import { OAUTH_ACTIONS, type Action } from '@cybernetics/core';
 import { FileZone } from '@cybernetics/sdk/components/FileZone';
 import { useMutation } from '@tanstack/react-query';
-import { OAUTH_ACTIONS, type Action } from '@teable/core';
 import {
   UploadType,
   oauthCreateRoSchema,

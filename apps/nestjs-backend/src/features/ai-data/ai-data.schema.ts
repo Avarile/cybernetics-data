@@ -1,4 +1,4 @@
-import { HttpErrorCode } from '@teable/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { CustomHttpException } from '../../custom.exception';
 import type { IAiDataRecord } from './ai-data.limits';

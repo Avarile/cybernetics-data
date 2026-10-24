@@ -1,5 +1,5 @@
+import { DriverClient } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { DriverClient } from '@teable/core';
 import type { IDbConnectionVo } from '@teable/openapi';
 import {
   createDbConnection as apiCreateDbConnection,

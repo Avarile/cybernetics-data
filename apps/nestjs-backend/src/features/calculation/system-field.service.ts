@@ -1,10 +1,10 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { LastModifiedByFieldCore, LastModifiedTimeFieldCore } from '@cybernetics/core';
+import { FieldKeyType, TableDomain, FieldType } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { LastModifiedByFieldCore, LastModifiedTimeFieldCore } from '@teable/core';
-import { FieldKeyType, TableDomain, FieldType } from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';
 import { ClsService } from 'nestjs-cls';

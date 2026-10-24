@@ -1,3 +1,4 @@
+import { nullsToUndefinedShallow } from '@cybernetics/core';
 import type { ICell, ICellItem } from '@cybernetics/sdk/components';
 import {
   CellType,
@@ -11,7 +12,6 @@ import {
 } from '@cybernetics/sdk/components';
 import { useIsHydrated, useTableId } from '@cybernetics/sdk/hooks';
 import { Table } from '@cybernetics/sdk/model/table';
-import { nullsToUndefinedShallow } from '@teable/core';
 import { ChevronLeft, ChevronRight } from '@teable/icons';
 import { getRecords, type IGetRecordsRo, type IQueryBaseRo } from '@teable/openapi';
 import { ToggleGroup, ToggleGroupItem, Button } from '@teable/ui-lib/shadcn';

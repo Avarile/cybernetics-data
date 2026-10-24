@@ -1,5 +1,5 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Body, Controller, Get, HttpCode, Post, Res, UseGuards, Request } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import {
   BaseDuplicateMode,

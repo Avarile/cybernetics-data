@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { TableAction, AppAction, AutomationAction } from '@teable/core';
-import { HttpErrorCode } from '@teable/core';
+import type { TableAction, AppAction, AutomationAction } from '@cybernetics/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { BaseNodeResourceType } from '@teable/openapi';
 import { CustomHttpException } from '../../custom.exception';
 import type { IBaseNodePermissionContext } from './types';

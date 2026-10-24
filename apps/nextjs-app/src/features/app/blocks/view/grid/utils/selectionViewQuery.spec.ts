@@ -1,4 +1,4 @@
-import { SortFunc } from '@teable/core';
+import { SortFunc } from '@cybernetics/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { describe, expect, it } from 'vitest';
 import { buildSelectionViewQuery } from './selectionViewQuery';

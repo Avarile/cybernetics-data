@@ -1,4 +1,4 @@
-import type { IFilterItem } from '@teable/core';
+import type { IFilterItem } from '@cybernetics/core';
 import { render } from '@testing-library/react';
 import { useState } from 'react';
 import { vi } from 'vitest';

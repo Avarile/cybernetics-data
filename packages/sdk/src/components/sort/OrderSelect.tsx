@@ -1,5 +1,5 @@
-import { FieldType } from '@teable/core';
-import type { SortFunc } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
+import type { SortFunc } from '@cybernetics/core';
 import { Checked, Square } from '@teable/icons';
 import {
   Select,

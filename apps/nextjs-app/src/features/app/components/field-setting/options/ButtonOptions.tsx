@@ -1,7 +1,7 @@
+import { Colors, ColorUtils, FieldType } from '@cybernetics/core';
+import type { IButtonFieldOptions } from '@cybernetics/core';
 import { FieldSelector } from '@cybernetics/sdk/components';
 import { useFields } from '@cybernetics/sdk/hooks';
-import { Colors, ColorUtils, FieldType } from '@teable/core';
-import type { IButtonFieldOptions } from '@teable/core';
 import { Plus } from '@teable/icons';
 import {
   Button,

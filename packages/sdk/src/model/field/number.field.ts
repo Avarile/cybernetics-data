@@ -1,4 +1,4 @@
-import { NumberFieldCore } from '@teable/core';
+import { NumberFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

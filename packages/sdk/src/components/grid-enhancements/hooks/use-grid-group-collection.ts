@@ -1,5 +1,10 @@
-import type { IAttachmentCellValue, INumberShowAs, ISingleLineTextShowAs } from '@teable/core';
-import { CellValueType, ColorUtils, FieldType, validateDateFieldValueLoose } from '@teable/core';
+import type { IAttachmentCellValue, INumberShowAs, ISingleLineTextShowAs } from '@cybernetics/core';
+import {
+  CellValueType,
+  ColorUtils,
+  FieldType,
+  validateDateFieldValueLoose,
+} from '@cybernetics/core';
 import { LRUCache } from 'lru-cache';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from '../../../context/app/i18n/useTranslation';

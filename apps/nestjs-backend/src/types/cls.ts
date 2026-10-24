@@ -1,4 +1,4 @@
-import type { Action, IFieldVo } from '@teable/core';
+import type { Action, IFieldVo } from '@cybernetics/core';
 import type { Prisma } from '@teable/db-main-prisma';
 import type { V2Feature } from '@teable/openapi';
 import type { ClsStore } from 'nestjs-cls';

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import type { SchemaPackId } from '@teable/openapi';
 import { SCHEMA_PACK_IDS } from '@teable/openapi';
 import bridgesJson from './packs/bridges.json';

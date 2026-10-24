@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IFilter } from '@cybernetics/core';
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import type { IFilter } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IAggregationVo,

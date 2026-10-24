@@ -1,5 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import {
   CellValueType,
   HttpErrorCode,
@@ -9,11 +7,13 @@ import {
   mergeWithDefaultFilter,
   nullsToUndefined,
   ViewType,
-} from '@teable/core';
-import type { IGridColumnMeta, IFilter, IGroup } from '@teable/core';
+} from '@cybernetics/core';
+import type { IGridColumnMeta, IFilter, IGroup } from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import { StatisticsFunc } from '@teable/openapi';
 import type {
   IAggregationField,

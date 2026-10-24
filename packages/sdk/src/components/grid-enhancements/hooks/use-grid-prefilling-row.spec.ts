@@ -1,5 +1,5 @@
-import { FieldType, is } from '@teable/core';
-import type { IFieldVo } from '@teable/core';
+import { FieldType, is } from '@cybernetics/core';
+import type { IFieldVo } from '@cybernetics/core';
 import { describe, it, expect } from 'vitest';
 import { extractDefaultFieldsFromFilters } from '../../../utils';
 

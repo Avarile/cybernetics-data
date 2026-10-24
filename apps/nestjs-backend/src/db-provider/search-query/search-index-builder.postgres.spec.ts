@@ -1,4 +1,4 @@
-import { CellValueType, FieldType } from '@teable/core';
+import { CellValueType, FieldType } from '@cybernetics/core';
 import type { IFieldInstance } from '../../features/field/model/factory';
 import { FieldFormatter, IndexBuilderPostgres } from './search-index-builder.postgres';
 

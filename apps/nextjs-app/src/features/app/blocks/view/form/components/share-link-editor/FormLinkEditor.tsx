@@ -1,6 +1,6 @@
+import type { ILinkCellValue } from '@cybernetics/core';
 import { LinkCard } from '@cybernetics/sdk/components';
 import type { LinkField } from '@cybernetics/sdk/model';
-import type { ILinkCellValue } from '@teable/core';
 import { Plus } from '@teable/icons';
 import { Button, Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';

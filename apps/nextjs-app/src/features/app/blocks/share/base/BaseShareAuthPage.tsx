@@ -1,5 +1,5 @@
+import { HttpError, sharePasswordSchema } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { HttpError, sharePasswordSchema } from '@teable/core';
 import { baseShareAuth } from '@teable/openapi';
 import { Button, Input, Label } from '@teable/ui-lib';
 import { Spin } from '@teable/ui-lib/base';

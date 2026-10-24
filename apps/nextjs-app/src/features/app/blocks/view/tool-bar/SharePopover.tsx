@@ -1,7 +1,7 @@
+import { sharePasswordSchema, type IShareViewMeta, ViewType } from '@cybernetics/core';
 import { useTablePermission, useView } from '@cybernetics/sdk/hooks';
 import type { View } from '@cybernetics/sdk/model';
 import { useMutation } from '@tanstack/react-query';
-import { sharePasswordSchema, type IShareViewMeta, ViewType } from '@teable/core';
 import { Edit, RefreshCcw, Qrcode } from '@teable/icons';
 import {
   Button,

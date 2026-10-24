@@ -1,4 +1,4 @@
-import type { FieldCore, IFilter } from '@teable/core';
+import type { FieldCore, IFilter } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IRecordQueryFilterContext } from '../../../features/record/query-builder/record-query-builder.interface';
 import type { IDbProvider, IFilterQueryExtra } from '../../db.provider.interface';

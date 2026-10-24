@@ -1,4 +1,4 @@
-import type { IFieldVo, IRecord, IViewVo } from '@teable/core';
+import type { IFieldVo, IRecord, IViewVo } from '@cybernetics/core';
 import type { IGroupPointsVo, ITableVo } from '@teable/openapi';
 import type { SsrApi } from '@/backend/api/rest/ssr-api';
 

@@ -1,5 +1,5 @@
-import { checkButtonClickable, Colors, ColorUtils } from '@teable/core';
-import type { IButtonFieldCellValue, IButtonFieldOptions } from '@teable/core';
+import { checkButtonClickable, Colors, ColorUtils } from '@cybernetics/core';
+import type { IButtonFieldCellValue, IButtonFieldOptions } from '@cybernetics/core';
 import {
   Button,
   cn,

@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import fs from 'fs';
 import path from 'path';
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, IFilter, IGroup, ILinkFieldOptions } from '@teable/core';
+import type { IFieldRo, IFieldVo, IFilter, IGroup, ILinkFieldOptions } from '@cybernetics/core';
 import {
   Colors,
   FieldKeyType,
@@ -16,7 +15,8 @@ import {
   StatisticsFunc,
   ViewType,
   NumberFormattingType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { IGroupHeaderPoint, ITableFullVo } from '@teable/openapi';
 import {
   getAggregation,

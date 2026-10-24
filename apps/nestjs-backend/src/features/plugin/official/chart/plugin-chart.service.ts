@@ -1,5 +1,5 @@
+import { CellFormat, HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { CellFormat, HttpErrorCode } from '@teable/core';
 import type { IBaseQuery } from '@teable/openapi';
 import { CustomHttpException } from '../../../../custom.exception';
 import { BaseQueryService } from '../../../base/base-query/base-query.service';

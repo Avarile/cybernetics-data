@@ -1,6 +1,6 @@
+import type { IFieldRo } from '@cybernetics/core';
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo } from '@teable/core';
-import { FieldKeyType, FieldType } from '@teable/core';
 import type { IRecordsVo } from '@teable/openapi';
 import {
   createBase,

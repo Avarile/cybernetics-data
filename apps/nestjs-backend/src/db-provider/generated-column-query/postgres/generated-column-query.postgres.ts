@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable regexp/no-unused-capturing-group */
 /* eslint-disable no-useless-escape */
-import { DbFieldType } from '@teable/core';
+import { DbFieldType } from '@cybernetics/core';
 import {
   buildDatetimeFormatSql,
   buildDatetimeParseGuardRegex,

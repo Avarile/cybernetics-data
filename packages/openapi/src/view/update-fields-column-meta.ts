@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IColumnMetaRo } from '@teable/core';
-import { columnMetaRoSchema } from '@teable/core';
+import type { IColumnMetaRo } from '@cybernetics/core';
+import { columnMetaRoSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

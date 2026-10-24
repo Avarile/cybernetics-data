@@ -1,3 +1,5 @@
+import type { IGridViewOptions } from '@cybernetics/core';
+import { RowHeightLevel } from '@cybernetics/core';
 import type {
   CombinedSelection,
   IButtonCell,
@@ -43,8 +45,6 @@ import {
   useView,
 } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import type { IGridViewOptions } from '@teable/core';
-import { RowHeightLevel } from '@teable/core';
 import type { IGetRecordsRo, IGroupPointsVo, IRangesRo } from '@teable/openapi';
 import { saveQueryParams, shareViewCopy } from '@teable/openapi';
 import { Skeleton } from '@teable/ui-lib/shadcn';

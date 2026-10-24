@@ -1,11 +1,11 @@
-import type { INestApplication } from '@nestjs/common';
 import {
   CellFormat,
   FieldType,
   NumberFormattingType,
   Relationship,
   type LinkFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   createField,

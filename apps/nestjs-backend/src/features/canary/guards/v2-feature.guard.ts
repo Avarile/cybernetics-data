@@ -1,6 +1,6 @@
+import { IdPrefix } from '@cybernetics/core';
 import { Injectable, type CanActivate, type ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IdPrefix } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { V2Feature } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';

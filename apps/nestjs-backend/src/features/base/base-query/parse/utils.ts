@@ -4,7 +4,7 @@ import {
   FieldType,
   getRandomString,
   NumberFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { BaseQueryColumnType } from '@teable/openapi';
 import type { IFieldInstance } from '../../../field/model/factory';
 import { createFieldInstanceByVo } from '../../../field/model/factory';

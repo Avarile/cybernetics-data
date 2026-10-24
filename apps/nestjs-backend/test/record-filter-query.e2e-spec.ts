@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
+import type { IFilter, IOperator } from '@cybernetics/core';
+import { and, FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFilter, IOperator } from '@teable/core';
-import { and, FieldKeyType, FieldType } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import { getRecords as apiGetRecords, createField, getFields } from '@teable/openapi';
 import { textField, x_20 } from './data-helpers/20x';

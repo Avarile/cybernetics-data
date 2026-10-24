@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable } from '@nestjs/common';
-import type { IRole } from '@teable/core';
+import type { IRole } from '@cybernetics/core';
 import {
   HttpErrorCode,
   Role,
@@ -8,7 +7,8 @@ import {
   generateIntegrationId,
   generateSpaceId,
   getUniqName,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {

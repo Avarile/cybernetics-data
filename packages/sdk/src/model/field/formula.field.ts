@@ -1,4 +1,4 @@
-import { FormulaFieldCore } from '@teable/core';
+import { FormulaFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

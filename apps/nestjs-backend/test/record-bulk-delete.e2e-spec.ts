@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { performance } from 'node:perf_hooks';
+import { Colors, FieldKeyType, FieldType, RatingIcon, Relationship } from '@cybernetics/core';
+import type { IRecord } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { Colors, FieldKeyType, FieldType, RatingIcon, Relationship } from '@teable/core';
-import type { IRecord } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';
 import { RecordModifyService } from '../src/features/record/record-modify/record-modify.service';

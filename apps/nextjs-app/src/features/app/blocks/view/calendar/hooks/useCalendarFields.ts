@@ -1,6 +1,6 @@
+import { CellValueType } from '@cybernetics/core';
 import { useFields, useView } from '@cybernetics/sdk/hooks';
 import type { CalendarView, DateField } from '@cybernetics/sdk/model';
-import { CellValueType } from '@teable/core';
 import { useMemo } from 'react';
 
 export const useCalendarFields = () => {

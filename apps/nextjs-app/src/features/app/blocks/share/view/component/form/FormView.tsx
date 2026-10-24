@@ -1,6 +1,6 @@
+import { ANONYMOUS_USER_ID, isAnonymous } from '@cybernetics/core';
 import { SessionProvider, ShareViewContext } from '@cybernetics/sdk/context';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ANONYMOUS_USER_ID, isAnonymous } from '@teable/core';
 import { Lock } from '@teable/icons';
 import { shareViewFormSubmit, userMe } from '@teable/openapi';
 import { Button } from '@teable/ui-lib';

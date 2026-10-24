@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Relationship } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   getRecords as apiGetRecords,

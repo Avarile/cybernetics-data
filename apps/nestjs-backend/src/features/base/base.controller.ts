@@ -1,4 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IBaseRole } from '@cybernetics/core';
 import {
   Body,
   Controller,
@@ -13,7 +14,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import type { IBaseRole } from '@teable/core';
 import {
   createBaseRoSchema,
   duplicateBaseRoSchema,

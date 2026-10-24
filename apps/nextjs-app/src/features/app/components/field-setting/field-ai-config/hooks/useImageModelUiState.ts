@@ -1,5 +1,5 @@
-import type { IAttachmentFieldGenerateImageAIConfig } from '@teable/core';
-import { ImageQuality } from '@teable/core';
+import type { IAttachmentFieldGenerateImageAIConfig } from '@cybernetics/core';
+import { ImageQuality } from '@cybernetics/core';
 import {
   getImageAspectRatioCandidates,
   getImageModelConfigByModelKey,

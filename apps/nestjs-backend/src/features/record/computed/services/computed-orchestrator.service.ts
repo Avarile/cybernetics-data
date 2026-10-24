@@ -1,7 +1,11 @@
 /* eslint-disable sonarjs/cognitive-complexity */
+import { FieldType } from '@cybernetics/core';
+import type {
+  TableDomain,
+  LastModifiedByFieldCore,
+  LastModifiedTimeFieldCore,
+} from '@cybernetics/core';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FieldType } from '@teable/core';
-import type { TableDomain, LastModifiedByFieldCore, LastModifiedTimeFieldCore } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ClsService } from 'nestjs-cls';

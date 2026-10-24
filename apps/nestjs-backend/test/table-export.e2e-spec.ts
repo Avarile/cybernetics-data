@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import fs from 'fs';
 import path from 'path';
+import type { IFieldVo, IViewRo } from '@cybernetics/core';
+import { FieldType, Colors, Relationship, ViewType, SortFunc } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldVo, IViewRo } from '@teable/core';
-import { FieldType, Colors, Relationship, ViewType, SortFunc } from '@teable/core';
 import type { INotifyVo } from '@teable/openapi';
 import {
   exportCsvFromTable as apiExportCsvFromTable,

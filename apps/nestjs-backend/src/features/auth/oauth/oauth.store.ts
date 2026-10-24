@@ -1,5 +1,5 @@
+import { getRandomString } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { getRandomString } from '@teable/core';
 import type { Request } from 'express';
 import { CacheService } from '../../../cache/cache.service';
 import type { IOauth2State } from '../../../cache/types';

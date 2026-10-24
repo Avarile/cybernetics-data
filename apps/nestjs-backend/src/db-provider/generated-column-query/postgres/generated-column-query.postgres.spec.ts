@@ -1,4 +1,4 @@
-import { DbFieldType } from '@teable/core';
+import { DbFieldType } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 
 import { GeneratedColumnQueryPostgres } from './generated-column-query.postgres';

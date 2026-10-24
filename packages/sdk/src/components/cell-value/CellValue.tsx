@@ -11,8 +11,8 @@ import type {
   SingleLineTextDisplayType,
   IButtonFieldCellValue,
   IButtonFieldOptions,
-} from '@teable/core';
-import { CellValueType, FieldType } from '@teable/core';
+} from '@cybernetics/core';
+import { CellValueType, FieldType } from '@cybernetics/core';
 import type { IFieldInstance } from '../../model';
 import { isMarkdownShowAs, normalizeMarkdownValue, stripMarkdown } from '../editor/long-text/utils';
 import { CellAttachment } from './cell-attachment';

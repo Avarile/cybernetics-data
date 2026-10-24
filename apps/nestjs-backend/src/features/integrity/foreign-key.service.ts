@@ -1,7 +1,7 @@
+import { FieldType, type ILinkFieldOptions } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { FieldType, type ILinkFieldOptions } from '@teable/core';
-import { Prisma, PrismaService } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { Prisma, PrismaService } from '@teable/db-main-prisma';
 import { IntegrityIssueType, type IIntegrityIssue } from '@teable/openapi';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';
@@ -88,8 +88,9 @@ export class ForeignKeyIntegrityService {
       .toQuery();
 
     try {
-      const invalidRefs =
-        await this.dataPrismaService.txClient().$queryRawUnsafe<{ count: bigint }[]>(invalidQuery);
+      const invalidRefs = await this.dataPrismaService
+        .txClient()
+        .$queryRawUnsafe<{ count: bigint }[]>(invalidQuery);
       const refCount = Number(invalidRefs[0]?.count || 0);
 
       if (refCount > 0) {

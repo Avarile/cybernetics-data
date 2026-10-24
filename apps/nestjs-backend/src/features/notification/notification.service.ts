@@ -1,5 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import type { ILocalization, INotificationBuffer, INotificationUrl } from '@teable/core';
+import type { ILocalization, INotificationBuffer, INotificationUrl } from '@cybernetics/core';
 import {
   generateNotificationId,
   getUserNotificationChannel,
@@ -9,7 +8,8 @@ import {
   userIconSchema,
   SYSTEM_USER_ID,
   assertNever,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { MailTransporterType, MailType } from '@teable/openapi';

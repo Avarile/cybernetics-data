@@ -1,4 +1,4 @@
-import type { INumberShowAs, INumberFormatting, INumberFieldOptions } from '@teable/core';
+import type { INumberShowAs, INumberFormatting, INumberFieldOptions } from '@cybernetics/core';
 import { Input } from '@teable/ui-lib/shadcn';
 import { DefaultValue } from '../DefaultValue';
 import { NumberFormatting } from '../formatting/NumberFormatting';

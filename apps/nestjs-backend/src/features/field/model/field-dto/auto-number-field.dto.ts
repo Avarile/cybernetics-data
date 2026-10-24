@@ -1,5 +1,5 @@
-import { AutoNumberFieldCore } from '@teable/core';
-import type { IFormulaFieldMeta } from '@teable/core';
+import { AutoNumberFieldCore } from '@cybernetics/core';
+import type { IFormulaFieldMeta } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class AutoNumberFieldDto extends AutoNumberFieldCore implements FieldBase {

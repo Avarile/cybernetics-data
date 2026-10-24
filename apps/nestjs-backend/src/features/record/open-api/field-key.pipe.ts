@@ -1,13 +1,13 @@
-import type { PipeTransform } from '@nestjs/common';
-import { Inject, Injectable, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
 import {
   FieldKeyType,
   replaceFilter,
   replaceGroupBy,
   replaceOrderBy,
   replaceSearch,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { PipeTransform } from '@nestjs/common';
+import { Inject, Injectable, Scope } from '@nestjs/common';
+import { REQUEST } from '@nestjs/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { Request } from 'express';
 import { keyBy } from 'lodash';

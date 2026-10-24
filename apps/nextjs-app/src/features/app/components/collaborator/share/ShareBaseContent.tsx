@@ -1,7 +1,7 @@
+import { canManageRole, hasPermission, Role, type IBaseRole, type IRole } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useSession } from '@cybernetics/sdk/hooks';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { canManageRole, hasPermission, Role, type IBaseRole, type IRole } from '@teable/core';
 import type { CollaboratorItem, IAddCollaborator } from '@teable/openapi';
 import {
   addBaseCollaborator,

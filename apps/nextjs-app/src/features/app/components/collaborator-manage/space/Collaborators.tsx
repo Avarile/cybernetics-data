@@ -1,7 +1,7 @@
+import type { IRole } from '@cybernetics/core';
+import { canManageRole, Role } from '@cybernetics/core';
 import { ReactQueryKeys, useSession } from '@cybernetics/sdk';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { IRole } from '@teable/core';
-import { canManageRole, Role } from '@teable/core';
 import { Settings } from '@teable/icons';
 import type {
   CollaboratorItem,

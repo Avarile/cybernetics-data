@@ -1,4 +1,4 @@
-import { CellValueType, StatisticsFunc } from '@teable/core';
+import { CellValueType, StatisticsFunc } from '@cybernetics/core';
 import type { IFieldInstance } from '../model';
 
 export const percentFormatting = (value: number) => {

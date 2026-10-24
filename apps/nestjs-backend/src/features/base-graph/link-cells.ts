@@ -1,4 +1,4 @@
-import type { ILinkCellValue } from '@teable/core';
+import type { ILinkCellValue } from '@cybernetics/core';
 
 const isLinkCell = (v: unknown): v is ILinkCellValue =>
   typeof v === 'object' && v !== null && 'id' in v && typeof (v as ILinkCellValue).id === 'string';

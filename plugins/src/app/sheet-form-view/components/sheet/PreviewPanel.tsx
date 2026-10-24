@@ -1,7 +1,7 @@
+import { FieldType } from '@cybernetics/core';
 import type { IFieldInstance, LinkField } from '@cybernetics/sdk';
 import { useIsHydrated, useView, useFields } from '@cybernetics/sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { FieldType } from '@teable/core';
 import type { IRecordsVo, UserCollaboratorItem } from '@teable/openapi';
 import {
   shareViewFormSubmit,

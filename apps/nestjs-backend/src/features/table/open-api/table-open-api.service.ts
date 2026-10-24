@@ -1,4 +1,3 @@
-import { NotFoundException, Injectable, Logger } from '@nestjs/common';
 import type {
   FieldAction,
   IFieldRo,
@@ -11,7 +10,7 @@ import type {
   TableAction,
   ViewAction,
   BasePermission,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   ActionPrefix,
   FieldKeyType,
@@ -22,7 +21,8 @@ import {
   actionPrefixMap,
   getBasePermission,
   isLinkLookupOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { NotFoundException, Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {

@@ -19,7 +19,7 @@
     "moduleResolution": "Bundler",
     "paths": {
       "@teable/icons": ["../icons/src"],
-      "@teable/core": ["../core/src"],
+      "@cybernetics/core": ["../core/src"],
       "@teable/formula": ["../formula/src"],
       "@teable/ui-lib": ["../ui-lib/src"],
       "@teable/openapi": ["../openapi/src"]

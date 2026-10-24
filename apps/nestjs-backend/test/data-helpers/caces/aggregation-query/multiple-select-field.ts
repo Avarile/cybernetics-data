@@ -1,4 +1,4 @@
-import { StatisticsFunc } from '@teable/core';
+import { StatisticsFunc } from '@cybernetics/core';
 
 export const MULTIPLE_SELECT_FIELD_CASES = [
   {

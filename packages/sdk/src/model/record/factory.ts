@@ -1,4 +1,4 @@
-import type { IRecord } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
 import { plainToInstance } from 'class-transformer';
 import type { Doc } from 'sharedb/lib/client';
 import type { IFieldInstance } from '../field';

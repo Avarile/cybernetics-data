@@ -1,4 +1,4 @@
-import { createFieldRoSchema, generateFieldId, generateTableId } from '@teable/core';
+import { createFieldRoSchema, generateFieldId, generateTableId } from '@cybernetics/core';
 import { SCHEMA_PACK_IDS } from '@teable/openapi';
 import { buildCatalog } from './schema-pack.catalog';
 import type { IFieldRoContext } from './schema-pack.field-ro';

@@ -1,4 +1,4 @@
-import type { IHttpError } from '@teable/core';
+import type { IHttpError } from '@cybernetics/core';
 import type { GetServerSideProps } from 'next';
 import { SsrApi } from '@/backend/api/rest/ssr-api';
 import withEnv from '@/lib/withEnv';

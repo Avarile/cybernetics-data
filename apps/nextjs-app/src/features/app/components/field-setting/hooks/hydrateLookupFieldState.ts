@@ -1,5 +1,5 @@
-import { safeParseOptions } from '@teable/core';
-import type { IFieldVo } from '@teable/core';
+import { safeParseOptions } from '@cybernetics/core';
+import type { IFieldVo } from '@cybernetics/core';
 import type { IFieldEditorRo } from '../type';
 
 type LookupHydrationInput = {

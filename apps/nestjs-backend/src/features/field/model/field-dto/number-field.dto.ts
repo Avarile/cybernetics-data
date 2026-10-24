@@ -1,4 +1,4 @@
-import { NumberFieldCore, parseStringToNumber } from '@teable/core';
+import { NumberFieldCore, parseStringToNumber } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class NumberFieldDto extends NumberFieldCore implements FieldBase {

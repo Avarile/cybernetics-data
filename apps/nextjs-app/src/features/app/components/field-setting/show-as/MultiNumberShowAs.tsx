@@ -1,5 +1,5 @@
-import { ColorUtils, Colors, MultiNumberDisplayType } from '@teable/core';
-import type { IMultiNumberShowAs } from '@teable/core';
+import { ColorUtils, Colors, MultiNumberDisplayType } from '@cybernetics/core';
+import type { IMultiNumberShowAs } from '@cybernetics/core';
 import {
   Button,
   Popover,

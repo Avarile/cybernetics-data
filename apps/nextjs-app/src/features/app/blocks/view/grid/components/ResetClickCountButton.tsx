@@ -1,6 +1,6 @@
+import { FieldType } from '@cybernetics/core';
 import { Record, useFields, useTablePermission } from '@cybernetics/sdk';
 import type { IActiveCell, IGridRef, IRecordIndexMap } from '@cybernetics/sdk';
-import { FieldType } from '@teable/core';
 import { buttonReset } from '@teable/openapi';
 import { Button, sonner } from '@teable/ui-lib';
 import { RotateCcwIcon } from 'lucide-react';

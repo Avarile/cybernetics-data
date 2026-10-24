@@ -1,9 +1,9 @@
+import type { IFieldRo, ILinkFieldOptions, IConvertFieldRo } from '@cybernetics/core';
+import { FieldType, Relationship, isLinkLookupOptions } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { IFieldRo, ILinkFieldOptions, IConvertFieldRo } from '@teable/core';
-import { FieldType, Relationship, isLinkLookupOptions } from '@teable/core';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Field, TableMeta } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import type {
   IGraphEdge,
   IGraphNode,

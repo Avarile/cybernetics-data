@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import type {
   FieldCore,
   IAttachmentCellValueRo,
@@ -9,7 +8,7 @@ import type {
   ISelectFieldOptions,
   IUserCellValue,
   UserFieldCore,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   ColorUtils,
   FieldType,
@@ -18,7 +17,8 @@ import {
   HttpErrorCode,
   IdPrefix,
   nullsToUndefined,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { BadRequestException } from '@nestjs/common';
 import type { PrismaService } from '@teable/db-main-prisma';
 import { isObject, keyBy, map } from 'lodash';
 import { fromZodError } from 'zod-validation-error';

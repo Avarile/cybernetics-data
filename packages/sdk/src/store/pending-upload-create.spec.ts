@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IAttachmentItem } from '@teable/core';
+import type { IAttachmentItem } from '@cybernetics/core';
 import { describe, expect, it, vi } from 'vitest';
 import {
   finalizePendingUploadAfterCreate,

@@ -1,5 +1,5 @@
-import type { IUnionFormatting } from '@teable/core';
-import { CellValueType } from '@teable/core';
+import type { IUnionFormatting } from '@cybernetics/core';
+import { CellValueType } from '@cybernetics/core';
 import { useMemo } from 'react';
 import { DatetimeFormatting } from './DatetimeFormatting';
 import { NumberFormatting } from './NumberFormatting';

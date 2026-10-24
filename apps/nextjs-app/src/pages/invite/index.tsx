@@ -1,4 +1,4 @@
-import type { IHttpError } from '@teable/core';
+import type { IHttpError } from '@cybernetics/core';
 import type { GetServerSideProps } from 'next';
 import { Error } from '@/features/app/blocks/Error';
 import ensureLogin from '@/lib/ensureLogin';

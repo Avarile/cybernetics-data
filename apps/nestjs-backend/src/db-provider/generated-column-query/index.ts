@@ -1,4 +1,4 @@
-import { DriverClient } from '@teable/core';
+import { DriverClient } from '@cybernetics/core';
 import { match } from 'ts-pattern';
 import { GeneratedColumnQuerySupportValidatorPostgres } from './postgres/generated-column-query-support-validator.postgres';
 

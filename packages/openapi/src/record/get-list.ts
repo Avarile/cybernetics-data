@@ -6,7 +6,7 @@ import {
   IdPrefix,
   recordSchema,
   sortItemSchema,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type { AxiosResponse } from 'axios';
 import { groupHeaderRefSchema, groupPointsVoSchema } from '../aggregation/type';
 import { axios } from '../axios';

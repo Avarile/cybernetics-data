@@ -1,5 +1,5 @@
-import type { Colors } from '@teable/core';
-import { COLOR_PALETTE, ColorUtils } from '@teable/core';
+import type { Colors } from '@cybernetics/core';
+import { COLOR_PALETTE, ColorUtils } from '@cybernetics/core';
 import { Button, cn } from '@teable/ui-lib/shadcn';
 
 export const ColorPicker = ({

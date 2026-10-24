@@ -16,9 +16,10 @@ import type {
   ISingleSelectCellValue,
   IUserCellValue,
   IUserFieldOptions,
-} from '@teable/core';
-import { FieldType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { temporaryPaste } from '@teable/openapi';
+import { cn } from '@teable/ui-lib';
 import { useCallback, useEffect, useRef } from 'react';
 import { useTableId } from '../../hooks';
 import type { ButtonField } from '../../model/field/button.field';
@@ -53,6 +54,7 @@ export const CellEditorMain = (props: Omit<ICellValueEditor, 'wrapClassName' | '
     buttonClickStatusHook,
     record,
     hideExpand,
+    expanded,
   } = props;
   const tableId = useTableId();
   const { id: fieldId, type, options } = field;
@@ -96,7 +98,7 @@ export const CellEditorMain = (props: Omit<ICellValueEditor, 'wrapClassName' | '
       if (isMarkdown) {
         return (
           <MarkdownLongTextEditor
-            className={className}
+            className={cn(className, expanded && 'max-h-[32rem] [&_.ProseMirror]:min-h-[8rem]')}
             value={cellValue as ILongTextCellValue}
             onChange={onChange}
             readonly={readonly}
@@ -111,6 +113,8 @@ export const CellEditorMain = (props: Omit<ICellValueEditor, 'wrapClassName' | '
           value={cellValue as ILongTextCellValue}
           onChange={onChange}
           readonly={readonly}
+          minRows={expanded ? 4 : undefined}
+          maxRows={expanded ? 20 : undefined}
         />
       );
     }

@@ -1,4 +1,3 @@
-import type { INestApplication } from '@nestjs/common';
 import {
   DateFormattingPreset,
   FieldKeyType,
@@ -6,7 +5,8 @@ import {
   SortFunc,
   TimeFormatting,
   formatDateToString,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { GroupPointType } from '@teable/openapi';
 import type { ITableFullVo } from '@teable/openapi';
 import { createTable, getRecords, initApp, permanentDeleteTable } from './utils/init-app';

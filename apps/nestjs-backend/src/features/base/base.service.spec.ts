@@ -1,6 +1,6 @@
+import { Role } from '@cybernetics/core';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { Role } from '@teable/core';
 import { CollaboratorType } from '@teable/openapi';
 import { GlobalModule } from '../../global/global.module';
 import { BaseModule } from './base.module';

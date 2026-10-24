@@ -1,8 +1,8 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { ILinkCellValue, ILinkFieldOptions, IRecord, TableDomain } from '@cybernetics/core';
+import { FieldType, HttpErrorCode, Relationship } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { ILinkCellValue, ILinkFieldOptions, IRecord, TableDomain } from '@teable/core';
-import { FieldType, HttpErrorCode, Relationship } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Field } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';

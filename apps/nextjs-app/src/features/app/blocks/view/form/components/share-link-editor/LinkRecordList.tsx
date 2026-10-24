@@ -1,6 +1,6 @@
+import type { ILinkCellValue } from '@cybernetics/core';
 import { ApiRecordList } from '@cybernetics/sdk/components';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
-import type { ILinkCellValue } from '@teable/core';
 import { getShareViewLinkRecords } from '@teable/openapi';
 import { useCallback, useMemo, useState } from 'react';
 

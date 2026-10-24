@@ -1,6 +1,6 @@
+import { FieldOpBuilder, IdPrefix, ViewOpBuilder } from '@cybernetics/core';
 import { Injectable, Logger, Optional } from '@nestjs/common';
 import { context as otelContext, trace as otelTrace } from '@opentelemetry/api';
-import { FieldOpBuilder, IdPrefix, ViewOpBuilder } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { noop } from 'lodash';
 import { ClsService } from 'nestjs-cls';

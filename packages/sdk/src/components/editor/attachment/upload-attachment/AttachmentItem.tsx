@@ -1,6 +1,6 @@
+import type { IAttachmentItem } from '@cybernetics/core';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { IAttachmentItem } from '@teable/core';
 import { Download, X } from '@teable/icons';
 import { Button, cn, FilePreviewItem, isImage } from '@teable/ui-lib';
 import { useCallback, useEffect, useRef, useState } from 'react';

@@ -1,4 +1,4 @@
-import type { FieldCore } from '@teable/core';
+import type { FieldCore } from '@cybernetics/core';
 import { AbstractAggregationQuery } from '../aggregation-query.abstract';
 import type { AggregationFunctionPostgres } from './aggregation-function.postgres';
 import { MultipleValueAggregationAdapter } from './multiple-value/multiple-value-aggregation.adapter';

@@ -1,4 +1,4 @@
-import type { IRecord } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { inRange, debounce } from 'lodash';
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';

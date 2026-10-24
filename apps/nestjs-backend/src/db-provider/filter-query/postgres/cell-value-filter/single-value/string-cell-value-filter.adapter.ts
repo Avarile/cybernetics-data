@@ -4,7 +4,7 @@ import {
   type IFieldReferenceValue,
   type IFilterOperator,
   type ILiteralValue,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { escapeLikeWildcards } from '../../../../../utils/sql-like-escape';
 import type { IDbProvider } from '../../../../db.provider.interface';

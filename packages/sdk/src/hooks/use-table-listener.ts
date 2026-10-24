@@ -1,4 +1,4 @@
-import type { ITableActionKey } from '@teable/core';
+import type { ITableActionKey } from '@cybernetics/core';
 import { useActionListener } from './use-presence';
 
 export const useTableListener = (

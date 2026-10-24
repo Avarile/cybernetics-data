@@ -1,5 +1,5 @@
+import { generateShareId, HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { generateShareId, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ICreateBaseShareRo, IUpdateBaseShareRo, IBaseShareVo } from '@teable/openapi';
 import { BaseNodeResourceType } from '@teable/openapi';

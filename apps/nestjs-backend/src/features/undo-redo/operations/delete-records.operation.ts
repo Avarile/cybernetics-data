@@ -1,5 +1,5 @@
-import type { IRecord } from '@teable/core';
-import { FieldKeyType } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
+import { FieldKeyType } from '@cybernetics/core';
 import type { DataPrismaService } from '@teable/db-data-prisma';
 import type { IDeleteRecordsOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';

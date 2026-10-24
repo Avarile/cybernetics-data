@@ -1,5 +1,5 @@
+import { generateAttachmentId } from '@cybernetics/core';
 import { AttachmentManager } from '@cybernetics/sdk/components';
-import { generateAttachmentId } from '@teable/core';
 import { Plus } from '@teable/icons';
 import type { ITemplateCoverRo, ITemplateCoverVo } from '@teable/openapi';
 import { UploadType } from '@teable/openapi';

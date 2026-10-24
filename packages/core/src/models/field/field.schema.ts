@@ -50,7 +50,7 @@ export const fieldVoSchema = z.object({
   }),
 
   type: z.enum(FieldType).meta({
-    description: 'The field types supported by teable.',
+    description: 'The field types supported by cybernetics.',
     example: FieldType.SingleSelect,
   }),
 

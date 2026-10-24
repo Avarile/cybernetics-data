@@ -1,4 +1,4 @@
-import type { INumberFieldOptions } from '@teable/core';
+import type { INumberFieldOptions } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { SortFunctionPostgres } from '../sort-query.function';
 

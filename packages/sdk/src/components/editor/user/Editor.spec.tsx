@@ -1,4 +1,4 @@
-import type { IUserFieldOptions } from '@teable/core';
+import type { IUserFieldOptions } from '@cybernetics/core';
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { UserEditor } from './Editor';

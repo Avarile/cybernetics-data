@@ -1,7 +1,7 @@
+import { getUniqName } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk';
 import { useSession } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getUniqName } from '@teable/core';
 import { Check, ChevronDown, Database, Plus, ShieldUser, Trash2 } from '@teable/icons';
 import {
   createSpace,

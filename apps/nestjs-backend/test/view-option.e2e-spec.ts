@@ -1,6 +1,6 @@
+import type { IViewOptions, IGridView, IFormView } from '@cybernetics/core';
+import { RowHeightLevel, ViewType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IViewOptions, IGridView, IFormView } from '@teable/core';
-import { RowHeightLevel, ViewType } from '@teable/core';
 import { updateViewOptions as apiSetViewOption } from '@teable/openapi';
 import {
   initApp,

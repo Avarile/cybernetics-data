@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import { FieldType, TimeFormatting, defaultDatetimeFormatting } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, TimeFormatting, defaultDatetimeFormatting } from '@teable/core';
 import type { IInplaceImportOptionRo } from '@teable/openapi';
 import {
   getSignature as apiGetSignature,

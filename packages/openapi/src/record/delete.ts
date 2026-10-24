@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IRecord } from '@teable/core';
+import type { IRecord } from '@cybernetics/core';
 import type { AxiosResponse } from 'axios';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';

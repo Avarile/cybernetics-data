@@ -1,5 +1,5 @@
+import { HttpErrorCode, HttpError } from '@cybernetics/core';
 import { HttpException } from '@nestjs/common';
-import { HttpErrorCode, HttpError } from '@teable/core';
 import { CustomHttpException, getDefaultCodeByStatus } from '../custom.exception';
 
 // Matched by name rather than instanceof: the main and data Prisma clients ship separate error classes.

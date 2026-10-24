@@ -1,4 +1,4 @@
-import type { IConjunction } from '@teable/core';
+import type { IConjunction } from '@cybernetics/core';
 import { Plus, Trash, ListPlus } from '@teable/icons';
 import {
   Button,

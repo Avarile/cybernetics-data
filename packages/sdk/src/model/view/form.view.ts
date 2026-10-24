@@ -1,4 +1,4 @@
-import { FormViewCore } from '@teable/core';
+import { FormViewCore } from '@cybernetics/core';
 import { updateViewOptions } from '@teable/openapi';
 import { Mixin } from 'ts-mixer';
 import { requestWrap } from '../../utils/requestWrap';

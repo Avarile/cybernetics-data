@@ -1,5 +1,5 @@
+import type { TableDomain } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { TableDomain } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { InjectDbProvider } from '../../db-provider/db.provider';

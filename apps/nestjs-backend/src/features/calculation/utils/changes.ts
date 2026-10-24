@@ -1,5 +1,5 @@
-import type { IOtOperation } from '@teable/core';
-import { RecordOpBuilder } from '@teable/core';
+import type { IOtOperation } from '@cybernetics/core';
+import { RecordOpBuilder } from '@cybernetics/core';
 
 export interface ICellChange {
   tableId: string;

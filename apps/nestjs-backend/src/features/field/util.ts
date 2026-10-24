@@ -1,4 +1,4 @@
-import { assertNever, DbFieldType } from '@teable/core';
+import { assertNever, DbFieldType } from '@cybernetics/core';
 import type { Knex } from 'knex';
 
 // from knex define

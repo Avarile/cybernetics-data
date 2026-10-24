@@ -1,6 +1,6 @@
+import type { ISelectFieldOptions } from '@cybernetics/core';
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { ISelectFieldOptions } from '@teable/core';
-import { FieldKeyType, FieldType } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   createField,

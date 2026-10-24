@@ -1,4 +1,4 @@
-import { Relationship } from '@teable/core';
+import { Relationship } from '@cybernetics/core';
 
 const buildMarkerId = (baseId: string) => {
   return {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { FieldKeyType } from '@teable/core';
+import { FieldKeyType } from '@cybernetics/core';
 import { getRecords } from '@teable/openapi';
 import { act, renderHook } from '@testing-library/react';
 import type { Connection, Query } from 'sharedb/lib/client';

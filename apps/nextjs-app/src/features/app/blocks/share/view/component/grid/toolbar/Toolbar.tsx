@@ -1,5 +1,5 @@
+import type { RowHeightLevel, IGridViewOptions } from '@cybernetics/core';
 import { useView, RowHeight, Group, HideFields } from '@cybernetics/sdk';
-import type { RowHeightLevel, IGridViewOptions } from '@teable/core';
 import {
   ArrowUpDown,
   EyeOff,

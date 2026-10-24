@@ -1,5 +1,5 @@
-import type { ISort } from '@teable/core';
-import { FieldType, SortFunc } from '@teable/core';
+import type { ISort } from '@cybernetics/core';
+import { FieldType, SortFunc } from '@cybernetics/core';
 import { useMemo } from 'react';
 import { useFields } from '../../hooks';
 import { FieldCommand } from '../field/FieldCommand';

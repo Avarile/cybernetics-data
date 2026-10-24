@@ -1,4 +1,4 @@
-import { getCommentChannel } from '@teable/core';
+import { getCommentChannel } from '@cybernetics/core';
 import { isEmpty, get } from 'lodash';
 import { useEffect } from 'react';
 import { useConnection } from '../../../hooks';

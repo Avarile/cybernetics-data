@@ -1,7 +1,7 @@
+import type { ITableActionKey, IGridColumn, IViewActionKey } from '@cybernetics/core';
+import { getActionTriggerChannel, OpName } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import type { ITableActionKey, IGridColumn, IViewActionKey } from '@teable/core';
-import { getActionTriggerChannel, OpName } from '@teable/core';
 import { isEmpty } from 'lodash';
 import { ClsService } from 'nestjs-cls';
 import { match } from 'ts-pattern';

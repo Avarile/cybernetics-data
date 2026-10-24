@@ -1,4 +1,4 @@
-import type { IRole } from '@teable/core';
+import type { IRole } from '@cybernetics/core';
 
 export interface IRoleStatic {
   role: IRole;

@@ -1,6 +1,6 @@
+import type { IButtonFieldOptions } from '@cybernetics/core';
+import { getTableButtonClickChannel } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import type { IButtonFieldOptions } from '@teable/core';
-import { getTableButtonClickChannel } from '@teable/core';
 import {
   buttonClick as buttonClickApi,
   shareViewButtonClick as shareViewButtonClickApi,

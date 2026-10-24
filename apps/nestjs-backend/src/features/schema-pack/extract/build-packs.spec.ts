@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { FieldType, Relationship } from '@teable/core';
+import { FieldType, Relationship } from '@cybernetics/core';
 import { schemaPackBridgeSchema, schemaPackSchema } from '@teable/openapi';
 import type { ISourceTable } from './build-packs';
 import { buildPacks, toKey } from './build-packs';

@@ -1,5 +1,5 @@
+import type { IGroup } from '@cybernetics/core';
 import type { IFieldInstance } from '@cybernetics/sdk/model';
-import type { IGroup } from '@teable/core';
 import type { IGetRecordsRo, IQueryBaseRo } from '@teable/openapi';
 import { useEffect } from 'react';
 import { create } from 'zustand';

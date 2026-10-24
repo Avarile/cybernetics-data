@@ -1,5 +1,5 @@
-import type { IFieldRo } from '@teable/core';
-import { FieldType, ViewType } from '@teable/core';
+import type { IFieldRo } from '@cybernetics/core';
+import { FieldType, ViewType } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 
 import { mapLegacyCreateTableToV2Input } from './table-open-api-v2.mapper';

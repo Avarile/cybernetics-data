@@ -1,4 +1,4 @@
-import type { FieldType, IFilterItem } from '@teable/core';
+import type { FieldType, IFilterItem } from '@cybernetics/core';
 import type {
   IFieldInstance,
   LinkField,

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
+import { Colors, FieldType, RatingIcon, Relationship } from '@cybernetics/core';
 import { faker } from '@faker-js/faker';
 import type { INestApplication } from '@nestjs/common';
-import { Colors, FieldType, RatingIcon, Relationship } from '@teable/core';
 import { createRecords, createTable } from '@teable/openapi';
 import type { ITableFullVo } from '@teable/openapi';
 import { initApp, permanentDeleteTable } from './utils/init-app';

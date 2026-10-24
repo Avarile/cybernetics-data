@@ -1,5 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import type { FieldAction, ILinkCellValue, ILinkFieldOptions, IOtOperation } from '@teable/core';
+import type {
+  FieldAction,
+  ILinkCellValue,
+  ILinkFieldOptions,
+  IOtOperation,
+} from '@cybernetics/core';
 import {
   Relationship,
   RelationshipRevert,
@@ -8,7 +12,8 @@ import {
   isMultiValueLink,
   PRIMARY_SUPPORTED_TYPES,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { isEqual } from 'lodash';

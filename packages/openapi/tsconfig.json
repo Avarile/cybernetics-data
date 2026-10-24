@@ -19,7 +19,7 @@
     "rootDir": "../",
     "outDir": "dist",
     "paths": {
-      "@teable/core": ["../core/src"]
+      "@cybernetics/core": ["../core/src"]
     },
     "types": ["vitest/globals", "node"]
   },

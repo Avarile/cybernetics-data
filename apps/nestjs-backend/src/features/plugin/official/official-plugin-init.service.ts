@@ -1,7 +1,7 @@
 import { join, resolve } from 'path';
+import { getPluginEmail } from '@cybernetics/core';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { getPluginEmail } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { PluginStatus, UploadType } from '@teable/openapi';
 import { createReadStream } from 'fs-extra';

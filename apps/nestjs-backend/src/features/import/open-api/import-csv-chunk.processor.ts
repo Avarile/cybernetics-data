@@ -2,10 +2,10 @@
 import os from 'os';
 import { PassThrough, Readable } from 'stream';
 import { Worker } from 'worker_threads';
+import type { FieldType, ILocalization } from '@cybernetics/core';
+import { getRandomString } from '@cybernetics/core';
 import { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger, Optional } from '@nestjs/common';
-import type { FieldType, ILocalization } from '@teable/core';
-import { getRandomString } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType } from '@teable/openapi';
 import type { IImportOptionRo, IImportColumn, IInplaceImportOptionRo } from '@teable/openapi';

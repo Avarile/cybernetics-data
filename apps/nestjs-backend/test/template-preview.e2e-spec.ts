@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { FieldType, ViewType, NumberFormattingType, HttpError } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, ViewType, NumberFormattingType, HttpError } from '@teable/core';
 import {
   IS_TEMPLATE_HEADER,
   axios as defaultAxios,

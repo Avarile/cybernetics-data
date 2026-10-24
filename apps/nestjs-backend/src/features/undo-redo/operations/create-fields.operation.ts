@@ -1,5 +1,5 @@
-import { FieldKeyType } from '@teable/core';
-import type { IColumnMeta, IFieldVo } from '@teable/core';
+import { FieldKeyType } from '@cybernetics/core';
+import type { IColumnMeta, IFieldVo } from '@cybernetics/core';
 import type { ICreateFieldsOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';
 import type { FieldOpenApiService } from '../../field/open-api/field-open-api.service';

@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "8.1.0",
-    "@teable/core": "workspace:^",
+    "@cybernetics/core": "workspace:^",
     "@types/node": "22.18.0",
     "axios": "1.7.7",
     "form-data": "4.0.0",

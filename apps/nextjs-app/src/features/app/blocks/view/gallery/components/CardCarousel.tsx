@@ -1,7 +1,7 @@
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import { isSystemFileIcon, getFileCover } from '@cybernetics/sdk/components';
 import { useAttachmentPreviewI18Map } from '@cybernetics/sdk/components/hooks';
 import { useThemeMode } from '@cybernetics/sdk/hooks';
-import type { IAttachmentCellValue } from '@teable/core';
 import { FilePreviewProvider, FilePreviewItem } from '@teable/ui-lib/base';
 import {
   Carousel,

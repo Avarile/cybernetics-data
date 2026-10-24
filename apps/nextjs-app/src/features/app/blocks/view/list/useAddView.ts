@@ -1,5 +1,5 @@
+import { ViewType } from '@cybernetics/core';
 import { useBaseId, useTable, useViews } from '@cybernetics/sdk/hooks';
-import { ViewType } from '@teable/core';
 import { BaseNodeResourceType } from '@teable/openapi';
 import { useRouter } from 'next/router';
 import { useCallback } from 'react';

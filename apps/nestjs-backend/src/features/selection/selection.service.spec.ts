@@ -1,14 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { faker } from '@faker-js/faker';
-import type { TestingModule } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
 import type {
   IDatetimeFormatting,
   IFieldOptionsVo,
   IFieldVo,
   IMultiNumberShowAs,
   ISingleLineTextFieldOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   CellValueType,
   Colors,
@@ -23,7 +20,10 @@ import {
   defaultUserFieldOptions,
   getPermissions,
   Role,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { faker } from '@faker-js/faker';
+import type { TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { PrismaService } from '@teable/db-main-prisma';
 import { RangeType } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';

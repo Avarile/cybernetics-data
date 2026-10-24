@@ -1,4 +1,4 @@
-import { BillableRoles, type IRole } from '@teable/core';
+import { BillableRoles, type IRole } from '@cybernetics/core';
 import { Building2 } from '@teable/icons';
 import { PrincipalType } from '@teable/openapi';
 import {

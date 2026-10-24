@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/cognitive-complexity */
-import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
 import type {
   IFieldVo,
   IFormulaFieldOptions,
@@ -9,16 +8,17 @@ import type {
   IConditionalLookupOptions,
   IFilter,
   IFieldRo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   FieldType,
   HttpErrorCode,
   extractFieldIdsFromFilter,
   isConditionalLookupOptions,
   isLinkLookupOptions,
-} from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import type { IBaseJson, IFieldJson, IFieldWithTableIdJson } from '@teable/openapi';
 import { Knex } from 'knex';
 import { pick, get } from 'lodash';

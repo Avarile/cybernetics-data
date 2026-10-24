@@ -1,5 +1,5 @@
+import { ActionPrefix, type Action } from '@cybernetics/core';
 import { useSession, useOrganization } from '@cybernetics/sdk/hooks';
-import { ActionPrefix, type Action } from '@teable/core';
 import {
   createAccessTokenRoSchema,
   type CreateAccessTokenRo,

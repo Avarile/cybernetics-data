@@ -1,4 +1,4 @@
-import { ButtonFieldCore } from '@teable/core';
+import { ButtonFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

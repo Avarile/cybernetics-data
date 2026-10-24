@@ -1,5 +1,5 @@
+import { hasPermission } from '@cybernetics/core';
 import { useBase } from '@cybernetics/sdk/hooks';
-import { hasPermission } from '@teable/core';
 import { Button } from '@teable/ui-lib/shadcn';
 import { ChevronRight, Send } from 'lucide-react';
 import { useTranslation } from 'next-i18next';

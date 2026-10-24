@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
 
+import type { LinkFieldCore } from '@cybernetics/core';
+import { FieldType, NumberFormattingType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { LinkFieldCore } from '@teable/core';
-import { FieldType, NumberFormattingType, Relationship } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   convertField,

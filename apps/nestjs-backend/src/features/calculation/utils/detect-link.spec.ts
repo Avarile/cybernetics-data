@@ -1,4 +1,4 @@
-import { IdPrefix } from '@teable/core';
+import { IdPrefix } from '@cybernetics/core';
 import { isLinkCellValue } from './detect-link';
 
 describe('isLinkCellValue', () => {

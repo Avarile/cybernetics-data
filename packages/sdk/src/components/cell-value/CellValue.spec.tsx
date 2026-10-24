@@ -1,4 +1,4 @@
-import { CellValueType, FieldType, TimeFormatting } from '@teable/core';
+import { CellValueType, FieldType, TimeFormatting } from '@cybernetics/core';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { IFieldInstance } from '../../model';

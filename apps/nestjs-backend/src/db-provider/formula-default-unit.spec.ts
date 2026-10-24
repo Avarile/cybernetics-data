@@ -1,4 +1,4 @@
-import { CellValueType, DbFieldType, FieldType, TableDomain } from '@teable/core';
+import { CellValueType, DbFieldType, FieldType, TableDomain } from '@cybernetics/core';
 import knex from 'knex';
 import { describe, expect, it } from 'vitest';
 import { createFieldInstanceByVo } from '../features/field/model/factory';

@@ -1,7 +1,7 @@
+import { FieldType } from '@cybernetics/core';
+import type { ISelectFieldOptions, ISelectFieldChoice } from '@cybernetics/core';
 import { generateLocalId } from '@cybernetics/sdk/components';
 import { useTableId, useViewId } from '@cybernetics/sdk/hooks';
-import { FieldType } from '@teable/core';
-import type { ISelectFieldOptions, ISelectFieldChoice } from '@teable/core';
 import { ChevronDown, Minimize2, Pencil, Trash2 } from '@teable/icons';
 import {
   DropdownMenu,

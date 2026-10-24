@@ -7,7 +7,7 @@ import type {
   ILinkFieldOptions,
   IRecord,
   IUserCellValue,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   assertNever,
   contains,
@@ -22,7 +22,7 @@ import {
   yesterday,
   exactDate as exactDateConst,
   exactFormatDate,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { getRecords, getUserCollaborators } from '@teable/openapi';
 import { keyBy } from 'lodash';
 import { isFilterItemEffective } from '../components/filter/view-filter/utils';

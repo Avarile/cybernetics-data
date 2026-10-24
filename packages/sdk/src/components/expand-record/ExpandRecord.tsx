@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue, IRecord } from '@teable/core';
+import type { IAttachmentCellValue, IRecord } from '@cybernetics/core';
 import { Skeleton, cn } from '@teable/ui-lib';
 import { isEqual } from 'lodash';
 import { useCallback, useMemo } from 'react';
@@ -147,7 +147,7 @@ export const ExpandRecord = (props: IExpandRecordProps) => {
       model={isTouchDevice ? ExpandRecordModel.Drawer : model ?? ExpandRecordModel.Modal}
       visible={visible}
       onClose={onClose}
-      className={cn({ 'max-w-5xl': commentVisible })}
+      className={cn({ 'max-w-[1600px]': commentVisible })}
     >
       <div className="flex h-full flex-col">
         {tableId && recordId && (
@@ -202,7 +202,7 @@ export const ExpandRecord = (props: IExpandRecordProps) => {
               )}
 
               {commentVisible && baseId && tableId && recordId && (
-                <div className={isTouchDevice ? 'w-full' : 'w-[320px] shrink-0'}>
+                <div className={isTouchDevice ? 'w-full' : 'w-[400px] shrink-0'}>
                   <CommentPanel
                     tableId={tableId}
                     recordId={recordId}

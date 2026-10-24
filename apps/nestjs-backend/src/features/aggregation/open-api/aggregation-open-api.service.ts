@@ -1,6 +1,6 @@
+import type { StatisticsFunc } from '@cybernetics/core';
+import { getValidStatisticFunc } from '@cybernetics/core';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import type { StatisticsFunc } from '@teable/core';
-import { getValidStatisticFunc } from '@teable/core';
 import type {
   ISearchIndexByQueryRo,
   IAggregationRo,

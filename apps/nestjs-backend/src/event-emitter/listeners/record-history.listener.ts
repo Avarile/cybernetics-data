@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { ISelectFieldOptions } from '@cybernetics/core';
+import { FieldType, generateRecordHistoryId } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import type { ISelectFieldOptions } from '@teable/core';
-import { FieldType, generateRecordHistoryId } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Field } from '@teable/db-main-prisma';
 import { Knex } from 'knex';

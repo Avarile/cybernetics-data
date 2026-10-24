@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { IdPrefix, filterSchema, groupSchema } from '@teable/core';
+import { IdPrefix, filterSchema, groupSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { contentQueryBaseSchema, orderBySchema } from '../record';
 import { registerRoute, urlBuilder } from '../utils';

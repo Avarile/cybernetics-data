@@ -1,6 +1,6 @@
+import type { IRole } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import type { QueryClient } from '@tanstack/react-query';
-import type { IRole } from '@teable/core';
 import type { IGetSpaceVo } from '@teable/openapi';
 import { ForbiddenError } from './withAuthSSR';
 

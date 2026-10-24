@@ -1,4 +1,4 @@
-import { parseDsn, type DriverClient, type IHttpError } from '@teable/core';
+import { parseDsn, type DriverClient, type IHttpError } from '@cybernetics/core';
 import type { ShareViewGetVo } from '@teable/openapi';
 import type { GetServerSideProps } from 'next';
 import { SsrApi } from '@/backend/api/rest/ssr-api';

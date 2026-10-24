@@ -1,4 +1,4 @@
-import { getBaseNodeChannel } from '@teable/core';
+import { getBaseNodeChannel } from '@cybernetics/core';
 import type {
   IBaseNodePresenceFlushPayload,
   IBaseNodePresenceCreatePayload,

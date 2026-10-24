@@ -6,7 +6,7 @@ import type {
   ILookupLinkOptionsVo,
   ISortItem,
   TableDomain,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type { Prisma } from '@teable/db-main-prisma';
 import type { IAggregationField, ISearchIndexByQueryRo, TableIndex } from '@teable/openapi';
 import type { Knex } from 'knex';

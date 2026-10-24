@@ -1,5 +1,5 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import type { IMcpToolGroup } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';
 import { McpConfig, type IMcpConfig } from '../../configs/mcp.config';

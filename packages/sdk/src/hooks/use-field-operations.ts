@@ -1,5 +1,5 @@
+import type { IFieldRo } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import type { IFieldRo } from '@teable/core';
 import type { IAutoFillFieldRo } from '@teable/openapi';
 import {
   convertField as convertFieldApi,

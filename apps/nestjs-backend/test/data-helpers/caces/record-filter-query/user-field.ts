@@ -11,7 +11,7 @@ import {
   isNotEmpty,
   isNotExactly,
   Me,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 export const USER_FIELD_CASES = [
   {

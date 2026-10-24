@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType } from '@teable/core';
 import { getRecords as apiGetRecords } from '@teable/openapi';
 import { createTable, initApp, permanentDeleteTable } from './utils/init-app';
 

@@ -1,4 +1,4 @@
-import type { IUserCellValue } from '@teable/core';
+import type { IUserCellValue } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useMemo } from 'react';
 import type { ICellValue } from '../type';

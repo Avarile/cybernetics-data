@@ -1,8 +1,8 @@
+import { CellFormat, FieldKeyType, FieldType } from '@cybernetics/core';
+import type { IFilterSet, ISortItem } from '@cybernetics/core';
 import { MarkdownPreview } from '@cybernetics/sdk';
 import { StandaloneViewProvider } from '@cybernetics/sdk/context';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CellFormat, FieldKeyType, FieldType } from '@teable/core';
-import type { IFilterSet, ISortItem } from '@teable/core';
 import { ArrowUpRight, Code2, Copy, Check, Loader2, MagicAi, Key } from '@teable/icons';
 import {
   createAccessToken,

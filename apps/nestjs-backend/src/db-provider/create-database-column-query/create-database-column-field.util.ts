@@ -1,4 +1,4 @@
-import type { FormulaFieldCore, TableDomain } from '@teable/core';
+import type { FormulaFieldCore, TableDomain } from '@cybernetics/core';
 import type { IGeneratedColumnQuerySupportValidator } from '../../features/record/query-builder/sql-conversion.visitor';
 
 export function validateGeneratedColumnSupport(

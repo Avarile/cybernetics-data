@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import type { IFieldRo } from '@teable/core';
-import { createFieldRoSchema } from '@teable/core';
+import type { IFieldRo } from '@cybernetics/core';
+import { createFieldRoSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';

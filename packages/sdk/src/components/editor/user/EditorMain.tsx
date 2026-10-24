@@ -1,6 +1,6 @@
+import type { IUserCellValue } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import type { IUserCellValue } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { getUserCollaborators } from '@teable/openapi';
 import type { ForwardRefRenderFunction } from 'react';
 import React, { forwardRef, useState } from 'react';

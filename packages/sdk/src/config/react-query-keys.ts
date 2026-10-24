@@ -4,7 +4,7 @@ import type {
   IConvertFieldRo,
   NotificationStatesEnum,
   IGetFieldsQuery,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IListBaseCollaboratorUserRo,
   IShareViewRowCountRo,

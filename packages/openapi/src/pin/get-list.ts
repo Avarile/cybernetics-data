@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { ViewType } from '@teable/core';
+import { ViewType } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute } from '../utils';
 import { z } from '../zod';

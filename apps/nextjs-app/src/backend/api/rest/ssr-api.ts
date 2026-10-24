@@ -1,5 +1,5 @@
-import type { IFieldVo, IGetFieldsQuery, IRecord, IViewVo } from '@teable/core';
-import { FieldKeyType } from '@teable/core';
+import type { IFieldVo, IGetFieldsQuery, IRecord, IViewVo } from '@cybernetics/core';
+import { FieldKeyType } from '@cybernetics/core';
 import type {
   AcceptInvitationLinkRo,
   AcceptInvitationLinkVo,

@@ -1,5 +1,5 @@
-import type { ISelectFieldOptions } from '@teable/core';
-import { FieldType } from '@teable/core';
+import type { ISelectFieldOptions } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { isUserOrLink } from '../../../../utils/is-user-or-link';
 import { SortFunctionPostgres } from '../sort-query.function';

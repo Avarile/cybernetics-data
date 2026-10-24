@@ -1,3 +1,5 @@
+import type { ILookupLinkOptionsVo, ILookupOptionsRo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { StandaloneViewProvider } from '@cybernetics/sdk/context';
 import {
   useFields,
@@ -7,8 +9,6 @@ import {
   useTables,
 } from '@cybernetics/sdk/hooks';
 import type { IFieldInstance, LinkField } from '@cybernetics/sdk/model';
-import type { ILookupLinkOptionsVo, ILookupOptionsRo } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { ChevronDown } from '@teable/icons';
 import { Button } from '@teable/ui-lib/shadcn';
 import { Trans, useTranslation } from 'next-i18next';

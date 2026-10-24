@@ -1,4 +1,4 @@
-import type { IUserCellValue } from '@teable/core';
+import type { IUserCellValue } from '@cybernetics/core';
 import { Check } from '@teable/icons';
 import {
   Command,

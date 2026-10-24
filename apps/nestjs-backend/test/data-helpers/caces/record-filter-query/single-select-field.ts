@@ -9,7 +9,7 @@ import {
   hasAnyOf,
   hasNoneOf,
   isExactly,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 export const SINGLE_SELECT_FIELD_CASES = [
   {

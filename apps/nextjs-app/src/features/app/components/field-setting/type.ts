@@ -1,4 +1,4 @@
-import type { CellValueType, IFieldRo, IFieldVo } from '@teable/core';
+import type { CellValueType, IFieldRo, IFieldVo } from '@cybernetics/core';
 
 export enum FieldOperator {
   Add = 'add',

@@ -1,5 +1,5 @@
+import { FieldKeyType, type IRecord } from '@cybernetics/core';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { FieldKeyType, type IRecord } from '@teable/core';
 import type { IGetRecordsRo, IRecordsVo } from '@teable/openapi';
 import { getRecords } from '@teable/openapi';
 import { useMemo } from 'react';

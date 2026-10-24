@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IBaseRole, IRole } from '@cybernetics/core';
+import { generateInvitationId, HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { IBaseRole, IRole } from '@teable/core';
-import { generateInvitationId, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import {
   CollaboratorType,

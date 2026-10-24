@@ -1,4 +1,4 @@
-import type { ILinkCellValue } from '@teable/core';
+import type { ILinkCellValue } from '@cybernetics/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { getIdsFromRanges, RangeType, IdReturnType } from '@teable/openapi';
 import { Skeleton, sonner } from '@teable/ui-lib';

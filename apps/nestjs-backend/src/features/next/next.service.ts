@@ -1,7 +1,7 @@
+import { generateQueryId } from '@cybernetics/core';
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { generateQueryId } from '@teable/core';
 import type { IQueryParamsRo, IQueryParamsVo } from '@teable/openapi';
 import createServer from 'next';
 import { CacheService } from '../../cache/cache.service';

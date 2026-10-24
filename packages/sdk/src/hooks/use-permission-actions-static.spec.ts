@@ -1,4 +1,4 @@
-import { ActionPrefix } from '@teable/core';
+import { ActionPrefix } from '@cybernetics/core';
 import { renderHook } from '@testing-library/react';
 import { createAppContext } from '../context/__tests__/createAppContext';
 import { usePermissionActionsStatic } from './use-permission-actions-static';

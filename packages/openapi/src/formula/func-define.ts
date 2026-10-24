@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { FunctionName, FUNCTIONS, CellValueType } from '@teable/core';
+import { FunctionName, FUNCTIONS, CellValueType } from '@cybernetics/core';
 
 export interface IFunctionSchema<T extends FunctionName> {
   name: T;

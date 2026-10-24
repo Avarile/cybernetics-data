@@ -1,4 +1,4 @@
-import { Role } from '@teable/core';
+import { Role } from '@cybernetics/core';
 import { useTranslation } from 'next-i18next';
 import { useMemo } from 'react';
 import type { IRoleStatic } from './types';

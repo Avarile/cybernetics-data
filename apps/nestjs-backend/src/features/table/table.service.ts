@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable, Logger } from '@nestjs/common';
-import type { IOtOperation, ISnapshotBase } from '@teable/core';
+import type { IOtOperation, ISnapshotBase } from '@cybernetics/core';
 import {
   DriverClient,
   generateTableId,
@@ -9,10 +8,11 @@ import {
   HttpErrorCode,
   IdPrefix,
   nullsToUndefined,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import type { ICreateTableRo, ITableVo } from '@teable/openapi';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';
@@ -20,11 +20,11 @@ import { ClsService } from 'nestjs-cls';
 import { CustomHttpException } from '../../custom.exception';
 import { InjectDbProvider } from '../../db-provider/db.provider';
 import { IDbProvider } from '../../db-provider/db.provider.interface';
+import { DATA_KNEX } from '../../global/knex';
 import type { IReadonlyAdapterService } from '../../share-db/interface';
 import { RawOpType } from '../../share-db/interface';
 import type { IClsStore } from '../../types/cls';
 import { convertNameToValidCharacter } from '../../utils/name-conversion';
-import { DATA_KNEX } from '../../global/knex';
 import { BatchService } from '../calculation/batch.service';
 
 @Injectable()

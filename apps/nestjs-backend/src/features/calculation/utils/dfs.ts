@@ -1,4 +1,4 @@
-import { HttpErrorCode } from '@teable/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { CustomHttpException } from '../../../custom.exception';
 
 // topo item is for field level reference, all id stands for fieldId;

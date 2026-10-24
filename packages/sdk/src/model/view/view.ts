@@ -7,8 +7,8 @@ import type {
   IColumnMetaRo,
   IManualSortRo,
   IGroup,
-} from '@teable/core';
-import { ViewCore } from '@teable/core';
+} from '@cybernetics/core';
+import { ViewCore } from '@cybernetics/core';
 import type { IUpdateOrderRo } from '@teable/openapi';
 import {
   disableShareView,

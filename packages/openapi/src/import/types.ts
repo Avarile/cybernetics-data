@@ -1,4 +1,4 @@
-import { FieldType, timeZoneStringSchema } from '@teable/core';
+import { FieldType, timeZoneStringSchema } from '@cybernetics/core';
 import { z } from '../zod';
 
 export enum SUPPORTEDTYPE {

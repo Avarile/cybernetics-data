@@ -1,4 +1,4 @@
-import type { ISort } from '@teable/core';
+import type { ISort } from '@cybernetics/core';
 import { ArrowUpDown } from '@teable/icons';
 import { useMemo } from 'react';
 import { useTranslation } from '../../context/app/i18n';

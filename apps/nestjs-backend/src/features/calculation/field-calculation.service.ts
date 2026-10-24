@@ -1,5 +1,5 @@
+import { FieldType, type IRecord } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { FieldType, type IRecord } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { Knex } from 'knex';

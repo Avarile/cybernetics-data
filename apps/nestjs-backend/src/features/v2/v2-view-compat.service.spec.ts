@@ -1,4 +1,4 @@
-import { IdPrefix, ViewOpBuilder } from '@teable/core';
+import { IdPrefix, ViewOpBuilder } from '@cybernetics/core';
 import { v2MetaDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import { describe, expect, it, vi } from 'vitest';
 import { V2ViewCompatService } from './v2-view-compat.service';

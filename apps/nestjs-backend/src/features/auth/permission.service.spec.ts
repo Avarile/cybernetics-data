@@ -1,10 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Action } from '@cybernetics/core';
+import { Role, getPermissions } from '@cybernetics/core';
 import { ForbiddenException } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import type { Action } from '@teable/core';
-import { Role, getPermissions } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { noop } from 'lodash';
 import { ClsService } from 'nestjs-cls';

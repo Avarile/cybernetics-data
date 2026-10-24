@@ -1,5 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import type { ILinkFieldOptions } from '@teable/core';
+import type { ILinkFieldOptions } from '@cybernetics/core';
 import {
   generateViewId,
   generateShareId,
@@ -7,10 +6,11 @@ import {
   ViewType,
   generatePluginInstallId,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { View } from '@teable/db-main-prisma';
 import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import {
   CreateRecordAction,
   type IDuplicateTableRo,

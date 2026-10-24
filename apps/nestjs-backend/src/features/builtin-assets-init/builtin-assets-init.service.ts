@@ -1,7 +1,7 @@
 import { join, resolve, extname } from 'path';
+import { AUTOMATION_ROBOT_ID, APP_ROBOT_ID, ANONYMOUS_USER_ID } from '@cybernetics/core';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AUTOMATION_ROBOT_ID, APP_ROBOT_ID, ANONYMOUS_USER_ID } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType } from '@teable/openapi';
 import { createReadStream, stat } from 'fs-extra';

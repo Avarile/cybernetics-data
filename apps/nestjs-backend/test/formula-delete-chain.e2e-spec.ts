@@ -1,8 +1,8 @@
 /* eslint-disable regexp/no-super-linear-backtracking */
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { IFieldVo } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldVo } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import { DB_PROVIDER_SYMBOL } from '../src/db-provider/db.provider';

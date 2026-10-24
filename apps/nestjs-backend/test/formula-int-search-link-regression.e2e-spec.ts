@@ -1,6 +1,6 @@
+import type { IFieldRo } from '@cybernetics/core';
+import { DriverClient, FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo } from '@teable/core';
-import { DriverClient, FieldType, Relationship } from '@teable/core';
 import {
   createField,
   createRecords,

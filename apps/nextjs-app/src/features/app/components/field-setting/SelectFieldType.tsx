@@ -1,5 +1,5 @@
+import { FieldType, PRIMARY_SUPPORTED_TYPES } from '@cybernetics/core';
 import { FIELD_TYPE_ORDER, useFieldStaticGetter } from '@cybernetics/sdk';
-import { FieldType, PRIMARY_SUPPORTED_TYPES } from '@teable/core';
 import { ConditionalLookup as ConditionalLookupIcon } from '@teable/icons';
 import SearchIcon from '@teable/ui-lib/icons/app/search.svg';
 import {

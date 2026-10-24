@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Relationship } from '@teable/core';
 import {
   createField,
   createTable,

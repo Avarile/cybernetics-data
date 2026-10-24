@@ -1,5 +1,5 @@
+import { HttpErrorCode, type HttpError } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { HttpErrorCode, type HttpError } from '@teable/core';
 import type { ITwoFactorChallenge } from '@teable/openapi';
 import { resendSigninTwoFactor, signinTwoFactor } from '@teable/openapi';
 import { Spin, Error as ErrorCom } from '@teable/ui-lib/base';

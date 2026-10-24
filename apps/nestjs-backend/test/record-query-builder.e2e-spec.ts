@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IFieldRo, IFieldVo, ILinkFieldOptionsRo, ILookupOptionsRo } from '@cybernetics/core';
+import { FieldType as FT, Relationship, StatisticsFunc } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, ILinkFieldOptionsRo, ILookupOptionsRo } from '@teable/core';
-import { FieldType as FT, Relationship, StatisticsFunc } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { format as formatSql } from 'sql-formatter';
 import type { IRecordQueryBuilder } from '../src/features/record/query-builder';

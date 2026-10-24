@@ -1,4 +1,4 @@
-import type { ISort, ISortItem } from '@teable/core';
+import type { ISort, ISortItem } from '@cybernetics/core';
 import { DraggableHandle, Trash } from '@teable/icons';
 import { Button, cn, DndKitContext, Droppable, Draggable } from '@teable/ui-lib';
 import type { DraggableAttributes, SyntheticListenerMap, DragEndEvent } from '@teable/ui-lib';

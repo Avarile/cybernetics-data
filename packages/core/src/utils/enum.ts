@@ -10,7 +10,7 @@ export function has<T extends object>(obj: T, key: keyof any): key is keyof T {
  * the gap.
  *
  * This is an alias for TypeScript’s `Record` type, but the name “record” is confusing given our
- * Teable domain model.
+ * Cybernetics domain model.
  *
  * @hidden
  */

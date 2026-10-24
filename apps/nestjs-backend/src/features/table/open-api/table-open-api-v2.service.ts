@@ -1,6 +1,6 @@
+import { CellFormat, FieldKeyType, FieldType } from '@cybernetics/core';
+import type { IFieldRo, IFieldVo, ILinkFieldOptionsRo, IRecord } from '@cybernetics/core';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CellFormat, FieldKeyType, FieldType } from '@teable/core';
-import type { IFieldRo, IFieldVo, ILinkFieldOptionsRo, IRecord } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   ICreateTableWithDefault,

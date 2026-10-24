@@ -1,6 +1,6 @@
 /* eslint-disable regexp/no-unused-capturing-group */
 /* eslint-disable sonarjs/no-duplicate-string */
-import { assertNever, CellValueType, FieldType } from '@teable/core';
+import { assertNever, CellValueType, FieldType } from '@cybernetics/core';
 import type { IFieldInstance } from '../../features/field/model/factory';
 
 import { IndexBuilderAbstract } from '../index-query/index-abstract-builder';

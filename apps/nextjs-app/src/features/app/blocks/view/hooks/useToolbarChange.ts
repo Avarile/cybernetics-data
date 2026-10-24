@@ -1,6 +1,6 @@
+import type { IGroup, IFilter, ISort, RowHeightLevel } from '@cybernetics/core';
 import { generateLocalId, useGridCollapsedGroupStore } from '@cybernetics/sdk/components';
 import { useTableId, useView } from '@cybernetics/sdk/hooks';
-import type { IGroup, IFilter, ISort, RowHeightLevel } from '@teable/core';
 import { useMemo } from 'react';
 
 export const useToolbarChange = () => {

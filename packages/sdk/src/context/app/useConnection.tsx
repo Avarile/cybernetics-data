@@ -1,4 +1,4 @@
-import { HttpError, HttpErrorCode } from '@teable/core';
+import { HttpError, HttpErrorCode } from '@cybernetics/core';
 import { toast } from '@teable/ui-lib';
 import { useEffect, useMemo, useState } from 'react';
 import { Connection } from 'sharedb/lib/client';

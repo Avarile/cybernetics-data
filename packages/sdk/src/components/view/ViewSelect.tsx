@@ -1,5 +1,5 @@
+import type { ViewType } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import type { ViewType } from '@teable/core';
 import { getViewList } from '@teable/openapi';
 import { cn } from '@teable/ui-lib';
 import { ReactQueryKeys } from '../../config';

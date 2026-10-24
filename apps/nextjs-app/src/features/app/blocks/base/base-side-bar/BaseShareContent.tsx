@@ -1,4 +1,4 @@
-import { sharePasswordSchema } from '@teable/core';
+import { sharePasswordSchema } from '@cybernetics/core';
 import { Edit, Qrcode, RefreshCcw } from '@teable/icons';
 import { Spin } from '@teable/ui-lib';
 import {

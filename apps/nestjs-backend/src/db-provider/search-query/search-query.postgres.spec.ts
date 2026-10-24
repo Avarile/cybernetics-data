@@ -1,4 +1,4 @@
-import { CellValueType, DateFormattingPreset, FieldType, TimeFormatting } from '@teable/core';
+import { CellValueType, DateFormattingPreset, FieldType, TimeFormatting } from '@cybernetics/core';
 import { TableIndex } from '@teable/openapi';
 import knex from 'knex';
 import { describe, expect, it } from 'vitest';

@@ -1,13 +1,13 @@
 /* eslint-disable sonarjs/no-identical-functions */
-import { Injectable } from '@nestjs/common';
 import type {
   IAttachmentCellValue,
   IAttachmentItem,
   IButtonFieldCellValue,
   IButtonFieldOptions,
   IMakeOptional,
-} from '@teable/core';
-import { FieldKeyType, FieldType, HttpErrorCode, ViewType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldKeyType, FieldType, HttpErrorCode, ViewType } from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import {

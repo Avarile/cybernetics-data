@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { FieldKeyType, HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { FieldKeyType, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IBaseGraphExpandRo,

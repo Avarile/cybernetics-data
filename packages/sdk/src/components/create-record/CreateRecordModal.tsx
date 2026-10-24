@@ -1,5 +1,5 @@
+import { FieldKeyType, generateAttachmentId } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import { FieldKeyType, generateAttachmentId } from '@teable/core';
 import { createRecords } from '@teable/openapi';
 import { Dialog, DialogTrigger, DialogContent, Spin, Button } from '@teable/ui-lib';
 import { isEqual, keyBy } from 'lodash';
@@ -211,7 +211,7 @@ export const CreateRecordModal = (props: ICreateRecordModalProps) => {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         closeable={false}
-        className="flex h-full max-w-3xl flex-col p-0 pt-6"
+        className="flex h-full max-w-[1100px] flex-col p-0 pt-6"
         style={{ width: 'calc(100% - 40px)', height: 'calc(100% - 100px)' }}
         onMouseDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}

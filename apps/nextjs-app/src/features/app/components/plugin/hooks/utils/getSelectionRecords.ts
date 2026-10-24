@@ -1,6 +1,6 @@
+import { FieldKeyType } from '@cybernetics/core';
 import { SelectionRegionType } from '@cybernetics/sdk/components';
 import type { IGetSelectionRecordsVo, ISelection } from '@cybernetics/sdk/plugin-bridge';
-import { FieldKeyType } from '@teable/core';
 import type { IRecordsVo } from '@teable/openapi';
 import { getRecords } from '@teable/openapi';
 import { useSelectionStore } from '@/features/app/blocks/view/grid/hooks/useSelectionStore';

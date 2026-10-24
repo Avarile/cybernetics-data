@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import type { IWorkbookData } from '@univerjs/core';
 import { LocaleType } from '@univerjs/core';
 

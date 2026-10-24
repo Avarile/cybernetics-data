@@ -1,5 +1,5 @@
-import { ColorUtils, Colors, SingleNumberDisplayType } from '@teable/core';
-import type { ISingleNumberShowAs } from '@teable/core';
+import { ColorUtils, Colors, SingleNumberDisplayType } from '@cybernetics/core';
+import type { ISingleNumberShowAs } from '@cybernetics/core';
 import {
   Input,
   Popover,

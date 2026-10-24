@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { IUserCellValue } from '@teable/core';
-import { Colors, FieldType, UserFieldCore } from '@teable/core';
+import type { IUserCellValue } from '@cybernetics/core';
+import { Colors, FieldType, UserFieldCore } from '@cybernetics/core';
 import type { PrismaService } from '@teable/db-main-prisma';
 import { plainToInstance } from 'class-transformer';
 import { vi } from 'vitest';

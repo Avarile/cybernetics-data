@@ -1,5 +1,5 @@
-import type { IFormulaFieldMeta } from '@teable/core';
-import { FormulaFieldCore, CellValueType } from '@teable/core';
+import type { IFormulaFieldMeta } from '@cybernetics/core';
+import { FormulaFieldCore, CellValueType } from '@cybernetics/core';
 import { match, P } from 'ts-pattern';
 import type { FieldBase } from '../field-base';
 

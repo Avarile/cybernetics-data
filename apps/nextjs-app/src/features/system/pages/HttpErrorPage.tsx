@@ -1,6 +1,6 @@
+import type { ICustomHttpExceptionData, IHttpError } from '@cybernetics/core';
 import { getLocalizationMessage } from '@cybernetics/sdk';
 import type { ILocaleFunction } from '@cybernetics/sdk/context/app/i18n';
-import type { ICustomHttpExceptionData, IHttpError } from '@teable/core';
 import { useTranslation } from 'next-i18next';
 import type { FC } from 'react';
 import { ForbiddenPage } from './ForbiddenPage';

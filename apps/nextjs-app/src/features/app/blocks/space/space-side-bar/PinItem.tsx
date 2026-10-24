@@ -1,4 +1,4 @@
-import { ViewType } from '@teable/core';
+import { ViewType } from '@cybernetics/core';
 import { Component, Database, Table2 } from '@teable/icons';
 import type { IGetPinListVo } from '@teable/openapi';
 import { BaseNodeResourceType, PinType } from '@teable/openapi';

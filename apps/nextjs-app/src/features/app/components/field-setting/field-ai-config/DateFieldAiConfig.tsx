@@ -1,5 +1,5 @@
-import type { IDateFieldExtractionAIConfig, IDateFieldCustomizeAIConfig } from '@teable/core';
-import { FieldAIActionType } from '@teable/core';
+import type { IDateFieldExtractionAIConfig, IDateFieldCustomizeAIConfig } from '@cybernetics/core';
+import { FieldAIActionType } from '@cybernetics/core';
 import { Export, Pencil } from '@teable/icons';
 import { Selector } from '@teable/ui-lib/base';
 import { Textarea } from '@teable/ui-lib/shadcn';

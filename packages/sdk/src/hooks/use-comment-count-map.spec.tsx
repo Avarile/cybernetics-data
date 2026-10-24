@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { getTableCommentChannel } from '@cybernetics/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getTableCommentChannel } from '@teable/core';
 import { CommentPatchType, getCommentCount } from '@teable/openapi';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';

@@ -1,6 +1,6 @@
+import type { ICustomHttpExceptionData } from '@cybernetics/core';
+import { ErrorCodeToStatusMap, HttpErrorCode } from '@cybernetics/core';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import type { ICustomHttpExceptionData } from '@teable/core';
-import { ErrorCodeToStatusMap, HttpErrorCode } from '@teable/core';
 import type { Path } from 'nestjs-i18n';
 import type { I18nTranslations } from './types/i18n.generated';
 

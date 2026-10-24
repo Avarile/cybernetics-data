@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import {
   HttpErrorCode,
   IdPrefix,
@@ -7,7 +6,8 @@ import {
   viewVoSchema,
   type IOtOperation,
   type ISetViewPropertyOpContext,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { v2MetaDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import type { V1TeableDatabase } from '@teable/v2-postgres-schema';
 import type { Kysely } from 'kysely';

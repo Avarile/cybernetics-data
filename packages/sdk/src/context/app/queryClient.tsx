@@ -1,6 +1,6 @@
+import type { ICustomHttpExceptionData, IHttpError, ILocalization } from '@cybernetics/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
-import type { ICustomHttpExceptionData, IHttpError, ILocalization } from '@teable/core';
-import { HttpErrorCode } from '@teable/core';
 import { sonner } from '@teable/ui-lib';
 import {
   UsageLimitModalType,

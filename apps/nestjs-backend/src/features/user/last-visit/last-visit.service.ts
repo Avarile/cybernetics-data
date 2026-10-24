@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
+import { HttpErrorCode, type IRole } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { HttpErrorCode, type IRole } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IGetUserLastVisitRo,

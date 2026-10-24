@@ -4,7 +4,7 @@ import type {
   FieldCore,
   IDatetimeFormatting,
   Relationship,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   DriverClient,
   FieldType,
@@ -12,7 +12,7 @@ import {
   DbFieldType,
   DateFormattingPreset,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { FieldFormattingVisitor } from '../field-formatting-visitor';
 import type { IRecordQueryDialectProvider } from '../record-query-dialect.interface';

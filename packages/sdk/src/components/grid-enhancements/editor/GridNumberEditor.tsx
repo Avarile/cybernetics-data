@@ -1,4 +1,4 @@
-import type { INumberFormatting } from '@teable/core';
+import type { INumberFormatting } from '@cybernetics/core';
 import type { ForwardRefRenderFunction } from 'react';
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { useTranslation } from '../../../context/app/i18n';

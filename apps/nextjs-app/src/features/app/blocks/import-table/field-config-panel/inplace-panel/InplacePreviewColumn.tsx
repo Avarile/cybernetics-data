@@ -1,5 +1,5 @@
+import { type IFieldVo } from '@cybernetics/core';
 import { useFieldStaticGetter } from '@cybernetics/sdk';
-import { type IFieldVo } from '@teable/core';
 import { ArrowLeft } from '@teable/icons';
 import type { IInplaceImportOptionRo, IImportOptionRo } from '@teable/openapi';
 import {

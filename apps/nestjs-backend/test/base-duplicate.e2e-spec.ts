@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, ILinkFieldOptions, ILookupOptionsRo } from '@teable/core';
+import type { IFieldRo, ILinkFieldOptions, ILookupOptionsRo } from '@cybernetics/core';
 import {
   DriverClient,
   FieldAIActionType,
@@ -9,7 +8,8 @@ import {
   Relationship,
   Role,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ICreateBaseVo, ICreateSpaceVo } from '@teable/openapi';
 import {
   BaseNodeResourceType,

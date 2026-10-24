@@ -1,3 +1,4 @@
+import { Role, type IBaseRole, type IRole } from '@cybernetics/core';
 import type { IMemberSelectorDialogRef, ISelectedMember } from '@cybernetics/sdk/components';
 import {
   MemberSelectorDialog,
@@ -5,7 +6,6 @@ import {
   UserAvatar,
 } from '@cybernetics/sdk/components';
 import { useMutation } from '@tanstack/react-query';
-import { Role, type IBaseRole, type IRole } from '@teable/core';
 import { Building2, Plus, X } from '@teable/icons';
 import type { IAddCollaborator } from '@teable/openapi';
 import {

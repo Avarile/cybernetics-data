@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { IFieldRo, IFieldVo, ILinkFieldOptions } from '@cybernetics/core';
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, ILinkFieldOptions } from '@teable/core';
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import {

@@ -1,5 +1,5 @@
-import type { IFieldVo } from '@teable/core';
-import { CellValueType, assertNever, FieldType } from '@teable/core';
+import type { IFieldVo } from '@cybernetics/core';
+import { CellValueType, assertNever, FieldType } from '@cybernetics/core';
 import { plainToInstance } from 'class-transformer';
 import type { Doc } from 'sharedb/lib/client';
 import { AttachmentField } from './attachment.field';

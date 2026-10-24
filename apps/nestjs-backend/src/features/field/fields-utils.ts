@@ -1,4 +1,4 @@
-import { FieldKeyType, FieldType } from '@teable/core';
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type {
   CreatedByFieldCore,
   FieldCore,
@@ -6,7 +6,7 @@ import type {
   IFieldVo,
   IGetFieldsQuery,
   IViewVo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { sortBy } from 'lodash';
 import { isNotHiddenField } from '../../utils/is-not-hidden-field';
 

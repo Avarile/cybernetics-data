@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import { X } from '@teable/icons';
 import type { IImportOption, IImportOptionRo, IImportSheetItem } from '@teable/openapi';
 import { Button, cn } from '@teable/ui-lib';

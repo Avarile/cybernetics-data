@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
+import { HttpErrorCode } from '@cybernetics/core';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { Mock, MockInstance } from 'vitest';
 import { mockDeep } from 'vitest-mock-extended';

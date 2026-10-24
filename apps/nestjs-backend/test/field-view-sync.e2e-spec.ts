@@ -1,12 +1,19 @@
-import type { INestApplication } from '@nestjs/common';
 import type {
   IFieldVo,
   IGridColumnMeta,
   ISelectFieldChoice,
   ISelectFieldOptions,
   IFormColumn,
-} from '@teable/core';
-import { FieldKeyType, FieldType, ViewType, SortFunc, Colors, StatisticsFunc } from '@teable/core';
+} from '@cybernetics/core';
+import {
+  FieldKeyType,
+  FieldType,
+  ViewType,
+  SortFunc,
+  Colors,
+  StatisticsFunc,
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import { updateRecords } from '@teable/openapi';
 import {
   createTable,

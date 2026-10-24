@@ -1,5 +1,5 @@
+import { FieldType, NumberFormattingType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, NumberFormattingType } from '@teable/core';
 import { getSearchCount as apiGetSearchCount } from '@teable/openapi';
 import { createTable, initApp, permanentDeleteTable } from './utils/init-app';
 

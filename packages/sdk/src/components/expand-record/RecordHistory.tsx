@@ -1,8 +1,8 @@
+import type { IFieldVo } from '@cybernetics/core';
+import { FieldType, validateCellValue } from '@cybernetics/core';
 import type { QueryFunctionContext } from '@tanstack/react-query';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { IFieldVo } from '@teable/core';
-import { FieldType, validateCellValue } from '@teable/core';
 import { ArrowRight, ChevronRight, MagicAi } from '@teable/icons';
 import type { IRecordHistoryItemVo, IRecordHistoryVo } from '@teable/openapi';
 import { getRecordHistory, getRecordListHistory } from '@teable/openapi';
@@ -186,7 +186,7 @@ export const RecordHistory = (props: IRecordHistoryProps) => {
         cell: () => {
           return (
             <div className="-mx-4 flex w-[calc(100%+2rem)] justify-center">
-              <ArrowRight className="text-muted-foreground size-4 shrink-0" />
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
             </div>
           );
         },

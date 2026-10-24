@@ -1,4 +1,4 @@
-import type { IBaseRole, IRole } from '@teable/core';
+import type { IBaseRole, IRole } from '@cybernetics/core';
 import { ChevronLeft, UserPlus } from '@teable/icons';
 import type { ListSpaceInvitationLinkVo } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';

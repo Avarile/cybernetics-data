@@ -1,5 +1,10 @@
 /* eslint-disable sonarjs/no-identical-functions */
-import type { IDateFieldOptions, IDateFilter, IFilterOperator, IFilterValue } from '@teable/core';
+import type {
+  IDateFieldOptions,
+  IDateFilter,
+  IFilterOperator,
+  IFilterValue,
+} from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { CellValueFilterPostgres } from '../cell-value-filter.postgres';
 

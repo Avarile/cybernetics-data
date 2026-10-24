@@ -1,6 +1,6 @@
+import { IdPrefix } from '@cybernetics/core';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
-import { IdPrefix } from '@teable/core';
 import { vi } from 'vitest';
 import { GlobalModule } from '../global/global.module';
 import { ShareDbAdapter } from './share-db.adapter';

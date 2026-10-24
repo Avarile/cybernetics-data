@@ -6,7 +6,7 @@ import {
   viewRoSchema,
   viewVoSchema,
   recordSchema,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { axios } from '../axios';
 import { createRecordsRoSchema, fieldKeyTypeRoSchema } from '../record';
 import { registerRoute, urlBuilder } from '../utils';

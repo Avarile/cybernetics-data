@@ -1,4 +1,4 @@
-import type { ILinkCellValue } from '@teable/core';
+import type { ILinkCellValue } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useMemo } from 'react';
 import type { ICellValue } from '../type';

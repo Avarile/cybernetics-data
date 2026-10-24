@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { DriverClient } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { DriverClient } from '@teable/core';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {

@@ -3,8 +3,8 @@ import type {
   IKanbanViewOptions,
   IGalleryViewOptions,
   ICalendarViewOptions,
-} from '@teable/core';
-import { ColorConfigType, ViewType } from '@teable/core';
+} from '@cybernetics/core';
+import { ColorConfigType, ViewType } from '@cybernetics/core';
 
 export const isNotHiddenField = (
   fieldId: string,

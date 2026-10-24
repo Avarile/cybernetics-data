@@ -1,6 +1,6 @@
+import type { FieldCore } from '@cybernetics/core';
+import { StatisticsFunc } from '@cybernetics/core';
 import { InternalServerErrorException } from '@nestjs/common';
-import type { FieldCore } from '@teable/core';
-import { StatisticsFunc } from '@teable/core';
 import type { Knex } from 'knex';
 import type { IRecordQueryAggregateContext } from '../../features/record/query-builder/record-query-builder.interface';
 import type { IAggregationFunctionInterface } from './aggregation-function.interface';

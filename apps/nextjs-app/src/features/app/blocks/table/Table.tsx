@@ -1,3 +1,4 @@
+import type { IFieldVo, IRecord, IViewVo } from '@cybernetics/core';
 import {
   AnchorContext,
   FieldProvider,
@@ -11,7 +12,6 @@ import {
 } from '@cybernetics/sdk';
 import { TablePermissionProvider } from '@cybernetics/sdk/context/table-permission';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IFieldVo, IRecord, IViewVo } from '@teable/core';
 import {
   getBaseById,
   LastVisitResourceType,

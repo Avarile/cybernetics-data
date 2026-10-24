@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/cognitive-complexity */
-import { Injectable, Logger } from '@nestjs/common';
 import {
   FieldType,
   CellValueType,
@@ -9,17 +8,18 @@ import {
   DriverClient,
   getValidFilterOperators,
   FieldOpBuilder,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IFilter,
   IFilterItem,
   IFilterSet,
   ILinkFieldOptions,
   IOtOperation,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Field } from '@teable/db-main-prisma';
 import { Prisma, PrismaService } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import { IntegrityIssueType, type IIntegrityCheckVo, type IIntegrityIssue } from '@teable/openapi';
 import { Knex } from 'knex';
 import { InjectModel } from 'nest-knexjs';
@@ -348,10 +348,9 @@ export class LinkIntegrityService {
 
       let canCheckLinks = false;
       const tableExistsSql = this.dbProvider.checkTableExist(options.fkHostTableName);
-      const tableExists =
-        await this.dataPrismaService.txClient().$queryRawUnsafe<{ exists: boolean }[]>(
-          tableExistsSql
-        );
+      const tableExists = await this.dataPrismaService
+        .txClient()
+        .$queryRawUnsafe<{ exists: boolean }[]>(tableExistsSql);
       const hostTableExists = tableExists[0].exists;
 
       if (!hostTableExists) {
@@ -538,11 +537,7 @@ export class LinkIntegrityService {
 
     if (hostAlreadyExists) {
       const [selfKeyExists, foreignKeyExists, orderColumnExists] = await Promise.all([
-        this.dbProvider.checkColumnExist(
-          options.fkHostTableName,
-          options.selfKeyName,
-          dataPrisma
-        ),
+        this.dbProvider.checkColumnExist(options.fkHostTableName, options.selfKeyName, dataPrisma),
         this.dbProvider.checkColumnExist(
           options.fkHostTableName,
           options.foreignKeyName,

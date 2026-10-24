@@ -1,5 +1,5 @@
+import { FieldType } from '@cybernetics/core';
 import type { IFieldInstance, Record as IRecord } from '@cybernetics/sdk/model';
-import { FieldType } from '@teable/core';
 import { UNCATEGORIZED_STACK_ID } from '../constant';
 import type { IStackData } from '../type';
 

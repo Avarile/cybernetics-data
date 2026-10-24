@@ -1,4 +1,4 @@
-import { ActionPrefix } from '@teable/core';
+import { ActionPrefix } from '@cybernetics/core';
 
 export const OAuthActionsPrefixes = [
   ActionPrefix.App,

@@ -1,6 +1,6 @@
+import type { ILinkFieldOptions } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { ILinkFieldOptions } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { IFieldInstance } from '../model/factory';
 

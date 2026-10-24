@@ -8,7 +8,7 @@ import {
   isAnyOf,
   isEmpty,
   isNotEmpty,
-} from '@teable/core';
+} from '@cybernetics/core';
 
 const EMPTY_OPERATORS = [isEmpty.value, isNotEmpty.value] as string[];
 const SINGLE_SELECT_ARRAY_OPERATORS = [isAnyOf.value, isNoneOf.value] as string[];

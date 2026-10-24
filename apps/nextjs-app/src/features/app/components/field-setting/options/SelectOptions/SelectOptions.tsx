@@ -1,7 +1,7 @@
+import type { ISelectFieldChoice, ISelectFieldOptions } from '@cybernetics/core';
+import { ColorUtils } from '@cybernetics/core';
 import type { DropResult } from '@hello-pangea/dnd';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
-import type { ISelectFieldChoice, ISelectFieldOptions } from '@teable/core';
-import { ColorUtils } from '@teable/core';
 import { DraggableHandle, Plus, Trash } from '@teable/icons';
 import { cn, Label, Switch } from '@teable/ui-lib/shadcn';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';

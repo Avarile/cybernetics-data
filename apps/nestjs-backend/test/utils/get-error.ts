@@ -1,4 +1,4 @@
-import type { HttpError } from '@teable/core';
+import type { HttpError } from '@cybernetics/core';
 
 export const getError = async (call: () => unknown) => {
   try {

@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable, Logger } from '@nestjs/common';
 import type {
   IOtOperation,
   IViewRo,
@@ -16,7 +15,7 @@ import type {
   ISort,
   IGroup,
   TableDomain,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   ViewType,
   IManualSortRo,
@@ -31,9 +30,10 @@ import {
   extractFieldIdsFromFilter,
   analyzeFilterValidationIssues,
   HttpErrorCode,
-} from '@teable/core';
-import { PrismaService } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService } from '@teable/db-main-prisma';
 import { PluginPosition, PluginStatus } from '@teable/openapi';
 import type {
   IViewPluginUpdateStorageRo,

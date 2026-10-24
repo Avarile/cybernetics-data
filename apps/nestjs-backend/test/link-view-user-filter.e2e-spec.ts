@@ -1,6 +1,6 @@
+import type { IFieldRo, IFieldVo, IFilterRo } from '@cybernetics/core';
+import { FieldKeyType, FieldType, hasAnyOf, is, Me, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, IFilterRo } from '@teable/core';
-import { FieldKeyType, FieldType, hasAnyOf, is, Me, Relationship } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import {
   createField,

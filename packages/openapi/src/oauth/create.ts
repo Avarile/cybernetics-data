@@ -1,4 +1,4 @@
-import { OAUTH_ACTIONS } from '@teable/core';
+import { OAUTH_ACTIONS } from '@cybernetics/core';
 import { axios } from '../axios';
 import { registerRoute } from '../utils';
 import { z } from '../zod';

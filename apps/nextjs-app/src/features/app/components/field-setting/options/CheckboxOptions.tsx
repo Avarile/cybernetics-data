@@ -1,4 +1,4 @@
-import type { ICheckboxFieldOptions } from '@teable/core';
+import type { ICheckboxFieldOptions } from '@cybernetics/core';
 import { Checkbox } from '@teable/ui-lib/shadcn';
 import { DefaultValue } from '../DefaultValue';
 

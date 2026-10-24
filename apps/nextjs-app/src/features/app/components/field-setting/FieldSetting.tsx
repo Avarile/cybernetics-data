@@ -1,4 +1,3 @@
-import { useTableId, useView, useFieldOperations, useRowCount } from '@cybernetics/sdk/hooks';
 import type {
   IFieldRo,
   IFieldVo,
@@ -6,7 +5,7 @@ import type {
   ILookupLinkOptions,
   ILookupOptionsRo,
   ILookupOptionsVo,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   validateFieldOptions,
   convertFieldRoSchema,
@@ -16,7 +15,8 @@ import {
   isConditionalLookupOptions,
   isLinkLookupOptions,
   StatisticsFunc,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { useTableId, useView, useFieldOperations, useRowCount } from '@cybernetics/sdk/hooks';
 import { type IPlanFieldConvertVo, getAggregation } from '@teable/openapi';
 import { ConfirmDialog, Spin } from '@teable/ui-lib/base';
 import { Button } from '@teable/ui-lib/shadcn/ui/button';

@@ -1,4 +1,4 @@
-import { NoneFunc, StatisticsFunc } from '@teable/core';
+import { NoneFunc, StatisticsFunc } from '@cybernetics/core';
 import type { IAggregationVo } from '@teable/openapi';
 import { isEmpty, keyBy } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';

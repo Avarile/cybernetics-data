@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { FieldKeyType, FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, Relationship } from '@teable/core';
 import { getRecordHistory, getRecordListHistory, recordHistoryVoSchema } from '@teable/openapi';
 import type { ITableFullVo } from '@teable/openapi';
 import type { IBaseConfig } from '../src/configs/base.config';

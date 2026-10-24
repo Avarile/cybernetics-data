@@ -1,4 +1,4 @@
-import { PluginViewCore } from '@teable/core';
+import { PluginViewCore } from '@cybernetics/core';
 import type { AxiosResponse } from 'axios';
 import { Mixin } from 'ts-mixer';
 import { View } from './view';

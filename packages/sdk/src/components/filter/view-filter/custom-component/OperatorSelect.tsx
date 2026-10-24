@@ -1,4 +1,4 @@
-import type { IFilterOperator, IFilterItem } from '@teable/core';
+import type { IFilterOperator, IFilterItem } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useCallback, useMemo } from 'react';
 import { useCrud } from '../../hooks';

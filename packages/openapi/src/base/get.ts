@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { roleSchema } from '@teable/core';
+import { roleSchema } from '@cybernetics/core';
 import { axios } from '../axios';
 import { CollaboratorType } from '../space/types';
 import { registerRoute, urlBuilder } from '../utils';

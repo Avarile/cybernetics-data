@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, IFieldVo, IGroup, IGroupItem, IViewGroupRo } from '@teable/core';
+import type { IFieldRo, IFieldVo, IGroup, IGroupItem, IViewGroupRo } from '@cybernetics/core';
 import {
   CellValueType,
   Colors,
@@ -8,7 +7,8 @@ import {
   FieldType,
   Relationship,
   SortFunc,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { IGetRecordsRo, IGroupHeaderPoint, IGroupPoint, ITableFullVo } from '@teable/openapi';
 import { GroupPointType, updateViewGroup, updateViewSort } from '@teable/openapi';
 import { isEmpty, orderBy } from 'lodash';

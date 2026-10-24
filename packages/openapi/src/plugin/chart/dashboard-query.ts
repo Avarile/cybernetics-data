@@ -1,5 +1,5 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
-import { CellFormat } from '@teable/core';
+import { CellFormat } from '@cybernetics/core';
 import { axios } from '../../axios';
 import { baseQuerySchemaVo, type IBaseQueryVo } from '../../base';
 import { registerRoute, urlBuilder } from '../../utils';

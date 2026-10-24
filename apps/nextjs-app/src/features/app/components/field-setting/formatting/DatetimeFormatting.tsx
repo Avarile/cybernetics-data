@@ -1,5 +1,5 @@
-import type { IDatetimeFormatting } from '@teable/core';
-import { DateFormattingPreset, TimeFormatting } from '@teable/core';
+import type { IDatetimeFormatting } from '@cybernetics/core';
+import { DateFormattingPreset, TimeFormatting } from '@cybernetics/core';
 import { cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@teable/ui-lib';
 import { Label } from '@teable/ui-lib/shadcn/ui/label';
 import dayjs from 'dayjs';

@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { DbFieldType } from '@teable/core';
+import { DbFieldType } from '@cybernetics/core';
 import { describe, expect, it } from 'vitest';
 
 import { getDefaultDatetimeParsePattern } from '../../utils/default-datetime-parse-pattern';

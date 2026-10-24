@@ -1,4 +1,4 @@
-import { LinkFieldCore } from '@teable/core';
+import { LinkFieldCore } from '@cybernetics/core';
 import { Mixin } from 'ts-mixer';
 import { Field } from './field';
 

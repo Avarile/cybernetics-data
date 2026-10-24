@@ -1,5 +1,5 @@
+import type { FieldType, ViewType } from '@cybernetics/core';
 import { useBaseId, useFieldStaticGetter } from '@cybernetics/sdk/hooks';
-import type { FieldType, ViewType } from '@teable/core';
 import {
   cn,
   Table,

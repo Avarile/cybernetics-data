@@ -1,5 +1,5 @@
+import type { IFilter } from '@cybernetics/core';
 import { FilterWithTable, useFieldFilterLinkContext } from '@cybernetics/sdk/components';
-import type { IFilter } from '@teable/core';
 import {
   Button,
   Dialog,

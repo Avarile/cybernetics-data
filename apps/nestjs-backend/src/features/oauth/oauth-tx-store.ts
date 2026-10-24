@@ -1,5 +1,5 @@
+import { getRandomString } from '@cybernetics/core';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { getRandomString } from '@teable/core';
 import type { IUserMeVo } from '@teable/openapi';
 import type { Request } from 'express';
 import type { OAuth2, OAuth2Req } from 'oauth2orize';

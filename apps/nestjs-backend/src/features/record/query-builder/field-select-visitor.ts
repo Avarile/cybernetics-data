@@ -23,8 +23,8 @@ import type {
   IFieldVisitor,
   ButtonFieldCore,
   TableDomain,
-} from '@teable/core';
-import { DbFieldType, FieldType, isLinkLookupOptions, DriverClient } from '@teable/core';
+} from '@cybernetics/core';
+import { DbFieldType, FieldType, isLinkLookupOptions, DriverClient } from '@cybernetics/core';
 // no driver-specific logic here; use dialect for differences
 import type { Knex } from 'knex';
 import type { IDbProvider } from '../../../db-provider/db.provider.interface';

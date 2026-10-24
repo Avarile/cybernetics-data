@@ -1,5 +1,5 @@
-import type { IShareViewMeta } from '@teable/core';
-import { GridViewCore } from '@teable/core';
+import type { IShareViewMeta } from '@cybernetics/core';
+import { GridViewCore } from '@cybernetics/core';
 
 export class GridViewDto extends GridViewCore {
   defaultShareMeta: IShareViewMeta = {

@@ -1,5 +1,5 @@
-import type { IFieldRo, INumberFieldOptions, ISelectFieldOptions } from '@teable/core';
-import { Colors, FieldType, NumberFormattingType } from '@teable/core';
+import type { IFieldRo, INumberFieldOptions, ISelectFieldOptions } from '@cybernetics/core';
+import { Colors, FieldType, NumberFormattingType } from '@cybernetics/core';
 
 export const FIELD_MOCK_DATA: IFieldRo[] = [
   {

@@ -1,4 +1,4 @@
-import { generateAttachmentId } from '@teable/core';
+import { generateAttachmentId } from '@cybernetics/core';
 import type { IUpdateOrderRo } from '@teable/openapi';
 import { isEqual, keyBy } from 'lodash';
 import { useCallback, useEffect, useMemo, useState } from 'react';

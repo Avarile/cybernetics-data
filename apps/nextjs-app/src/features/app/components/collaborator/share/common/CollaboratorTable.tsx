@@ -1,4 +1,4 @@
-import type { IRole } from '@teable/core';
+import type { IRole } from '@cybernetics/core';
 import { PrincipalType } from '@teable/openapi';
 import type { CollaboratorItem } from '@teable/openapi';
 import { Spin } from '@teable/ui-lib/base';

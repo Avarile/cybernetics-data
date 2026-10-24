@@ -1,4 +1,4 @@
-import type { IRole } from '@teable/core';
+import type { IRole } from '@cybernetics/core';
 import { Popover, PopoverTrigger, PopoverContent } from '@teable/ui-lib/shadcn';
 import { useState } from 'react';
 import { InviteSpaceContent } from './InviteSpaceContent';

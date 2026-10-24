@@ -1,4 +1,11 @@
-import type { IViewVo, ISort, IColumnMetaRo, IFilter, IGroup, IColumnMeta } from '@teable/core';
+import type {
+  IViewVo,
+  ISort,
+  IColumnMetaRo,
+  IFilter,
+  IGroup,
+  IColumnMeta,
+} from '@cybernetics/core';
 import { defaults } from 'lodash';
 import { useCallback, useEffect, useMemo } from 'react';
 import { generateLocalId, useGridCollapsedGroupStore } from '../../components';

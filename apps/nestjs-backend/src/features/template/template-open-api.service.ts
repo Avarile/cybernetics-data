@@ -1,5 +1,5 @@
+import { generateTemplateCategoryId, generateTemplateId, HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { generateTemplateCategoryId, generateTemplateId, HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 
 import {

@@ -1,11 +1,9 @@
-import { BaseSingleSelect } from '@cybernetics/sdk/components/filter/view-filter/component/base/BaseSingleSelect';
-import { RollupField } from '@cybernetics/sdk/model';
 import type {
   IRollupFieldOptions,
   IUnionFormatting,
   IUnionShowAs,
   RollupFunction,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   assertNever,
   ROLLUP_FUNCTIONS,
@@ -13,7 +11,9 @@ import {
   getDefaultFormatting,
   getFormattingSchema,
   getShowAsSchema,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { BaseSingleSelect } from '@cybernetics/sdk/components/filter/view-filter/component/base/BaseSingleSelect';
+import { RollupField } from '@cybernetics/sdk/model';
 
 import { isEmpty, isEqual } from 'lodash';
 import { useTranslation } from 'next-i18next';

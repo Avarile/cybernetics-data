@@ -1,6 +1,6 @@
+import { getRandomString } from '@cybernetics/core';
 import { getQueueToken } from '@nestjs/bullmq';
 import type { Provider } from '@nestjs/common';
-import { getRandomString } from '@teable/core';
 import type { JobsOptions } from 'bullmq';
 import { localQueueEventEmitter } from './event-emitter';
 

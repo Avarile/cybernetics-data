@@ -1,5 +1,5 @@
+import type { ITableActionKey } from '@cybernetics/core';
 import { useQuery } from '@tanstack/react-query';
-import type { ITableActionKey } from '@teable/core';
 import { getTablePermission } from '@teable/openapi';
 import { useCallback, useMemo } from 'react';
 import { ReactQueryKeys } from '../../config';

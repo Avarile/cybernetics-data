@@ -1,4 +1,4 @@
-import { DateFormattingPreset, TimeFormatting } from '@teable/core';
+import { DateFormattingPreset, TimeFormatting } from '@cybernetics/core';
 
 export const getPostgresDateTimeFormatString = (
   date: DateFormattingPreset,

@@ -1,5 +1,5 @@
-import type { IFieldVo } from '@teable/core';
-import { HttpErrorCode, PRIMARY_SUPPORTED_TYPES } from '@teable/core';
+import type { IFieldVo } from '@cybernetics/core';
+import { HttpErrorCode, PRIMARY_SUPPORTED_TYPES } from '@cybernetics/core';
 import type { ICreateTableRo, ICreateTableWithDefault } from '@teable/openapi';
 import { CustomHttpException } from '../../../custom.exception';
 import { DEFAULT_FIELDS, DEFAULT_VIEWS, DEFAULT_RECORD_DATA } from '../constant';

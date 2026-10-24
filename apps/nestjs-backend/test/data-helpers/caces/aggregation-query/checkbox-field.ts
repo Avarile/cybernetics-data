@@ -1,4 +1,4 @@
-import { StatisticsFunc } from '@teable/core';
+import { StatisticsFunc } from '@cybernetics/core';
 
 export const CHECKBOX_FIELD_CASES = [
   {

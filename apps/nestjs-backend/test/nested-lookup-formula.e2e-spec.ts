@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { IFieldRo, ILookupOptionsRo, INumberFieldOptions } from '@cybernetics/core';
+import { FieldKeyType, FieldType, Relationship, NumberFormattingType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import type { IFieldRo, ILookupOptionsRo, INumberFieldOptions } from '@teable/core';
-import { FieldKeyType, FieldType, Relationship, NumberFormattingType } from '@teable/core';
 import {
   createField,
   createTable,

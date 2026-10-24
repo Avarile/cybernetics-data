@@ -1,3 +1,4 @@
+import { ViewType } from '@cybernetics/core';
 import { LocalStorageKeys, useView } from '@cybernetics/sdk';
 import {
   useBaseId,
@@ -8,7 +9,6 @@ import {
   useTablePermission,
 } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ViewType } from '@teable/core';
 import { AlertCircle, Search, X } from '@teable/icons';
 import {
   getTableActivatedIndex,

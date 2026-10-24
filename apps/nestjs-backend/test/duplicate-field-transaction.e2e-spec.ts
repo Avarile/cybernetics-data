@@ -1,5 +1,5 @@
+import { FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldType, Relationship } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ClsService } from 'nestjs-cls';
 import type { MockInstance } from 'vitest';

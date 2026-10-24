@@ -7,14 +7,14 @@ import {
   isFieldReferenceComparable,
   exactDate,
   exactFormatDate,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IDateFilter,
   IFilterItem,
   IFieldReferenceValue,
   INumberFormatting,
   IOperator,
-} from '@teable/core';
+} from '@cybernetics/core';
 import { Switch } from '@teable/icons';
 import {
   Button,

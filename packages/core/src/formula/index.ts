@@ -11,6 +11,6 @@ export type {
   IFieldMap,
   IFormulaParamMetadata,
   IFormulaParamFieldMetadata,
-  ITeableToDbFunctionConverter,
+  ICyberneticsToDbFunctionConverter,
   FormulaParamType,
 } from './function-convertor.interface';

@@ -1,5 +1,5 @@
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import { domainError, err, v2CoreTokens } from '@teable/v2-core';
 import type { ITableRecordRepository } from '@teable/v2-core';

@@ -1,4 +1,4 @@
-import type { IFieldVo, ISort, ITableActionKey, IViewVo, StatisticsFunc } from '@teable/core';
+import type { IFieldVo, ISort, ITableActionKey, IViewVo, StatisticsFunc } from '@cybernetics/core';
 import type { IGetRecordsRo, IAggregationRo } from '@teable/openapi';
 import { useCallback, useMemo } from 'react';
 import { useFields, useTableId, useTableListener, useView } from '../../hooks';

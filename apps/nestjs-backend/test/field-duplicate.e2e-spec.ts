@@ -1,12 +1,11 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
-import type { INestApplication } from '@nestjs/common';
 import type {
   IButtonFieldCellValue,
   IFieldRo,
   ILinkFieldOptions,
   INumberFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   Colors,
   FieldKeyType,
@@ -15,7 +14,8 @@ import {
   generateWorkflowId,
   Relationship,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
+import type { INestApplication } from '@nestjs/common';
 import type { ICreateBaseVo, ITableFullVo } from '@teable/openapi';
 import {
   createField,

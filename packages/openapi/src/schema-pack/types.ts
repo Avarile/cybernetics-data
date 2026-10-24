@@ -1,4 +1,4 @@
-import { FieldType, Relationship, timeZoneStringSchema } from '@teable/core';
+import { FieldType, Relationship, timeZoneStringSchema } from '@cybernetics/core';
 import { z } from '../zod';
 
 /**

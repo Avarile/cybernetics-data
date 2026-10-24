@@ -1,4 +1,4 @@
-import type { IOtOperation, IViewPropertyKeys } from '@teable/core';
+import type { IOtOperation, IViewPropertyKeys } from '@cybernetics/core';
 import Sharedb from 'sharedb';
 import type { IUpdateViewOperation } from '../../../cache/types';
 import { OperationName } from '../../../cache/types';

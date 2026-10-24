@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable @typescript-eslint/naming-convention */
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import {
   CellValueType,
   ColorConfigType,
@@ -17,7 +16,7 @@ import {
   isFieldReferenceValue,
   isFieldReferenceComparable,
   extractFieldIdsFromFilter,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IColumn,
   IFieldVo,
@@ -39,7 +38,9 @@ import type {
   ICalendarViewOptions,
   IGalleryViewOptions,
   IKanbanViewOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IDuplicateFieldRo,
@@ -53,7 +54,6 @@ import { Knex } from 'knex';
 import { groupBy, isEqual, omit, pick } from 'lodash';
 import { InjectModel } from 'nest-knexjs';
 import { ClsService } from 'nestjs-cls';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import { ThresholdConfig, IThresholdConfig } from '../../../configs/threshold.config';
 import { FieldReferenceCompatibilityException } from '../../../db-provider/filter-query/cell-value-filter.abstract';
 import { EventEmitterService } from '../../../event-emitter/event-emitter.service';

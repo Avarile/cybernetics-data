@@ -168,7 +168,7 @@ export class JsonVisitor extends AbstractParseTreeVisitor<any> implements QueryV
   }
 }
 
-// parse Teable Query Language
+// parse Cybernetics Query Language
 export const parseTQL = (input: string) => {
   const inputStream = CharStreams.fromString(input);
   const lexer = new QueryLexer(inputStream);

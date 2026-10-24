@@ -20,7 +20,7 @@ const parseData = [
   ['Bob', '40', 'heavy'],
 ];
 
-vi.mock('@teable/core', () => {
+vi.mock('@cybernetics/core', () => {
   return {
     __esModule: true,
     IFieldVo: {},

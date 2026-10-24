@@ -1,6 +1,12 @@
+import type { FieldType, IFieldVo, ILinkFieldOptions } from '@cybernetics/core';
+import {
+  FieldKeyType,
+  generateFieldId,
+  HttpErrorCode,
+  Relationship,
+  ViewType,
+} from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { FieldType, IFieldVo, ILinkFieldOptions } from '@teable/core';
-import { FieldKeyType, generateFieldId, HttpErrorCode, Relationship, ViewType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   ISchemaPackAddOptions,

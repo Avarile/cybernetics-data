@@ -1,4 +1,4 @@
-import { Colors } from '@teable/core';
+import { Colors } from '@cybernetics/core';
 import { getTagHue, getTagIntensity, getTagStyle, TAG_HUES } from './tag-style';
 
 const light = { surface: '#ffffff', foreground: '#333333' };

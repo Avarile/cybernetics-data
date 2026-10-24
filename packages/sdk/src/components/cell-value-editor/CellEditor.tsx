@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import type { IFieldInstance } from '../../model';
 import { CellValue } from '../cell-value/CellValue';
 import { CollapsibleCellValue } from '../expand-record/CollapsibleCellValue';
@@ -6,7 +6,7 @@ import { CellEditorMain } from './CellEditorMain';
 import type { ICellValueEditor } from './type';
 
 export const CellEditor = (props: ICellValueEditor) => {
-  const { field, cellValue, wrapStyle, wrapClassName } = props;
+  const { field, cellValue, wrapStyle, wrapClassName, expanded } = props;
   const { type, isComputed } = field;
   const isAttachment = type === FieldType.Attachment;
   const isRating = type === FieldType.Rating;
@@ -30,7 +30,11 @@ export const CellEditor = (props: ICellValueEditor) => {
     <div style={wrapStyle} className={wrapClassName}>
       {(readonly || isComputed) && !isAttachment ? (
         collapsible ? (
-          <CollapsibleCellValue>{cellValueNode}</CollapsibleCellValue>
+          <CollapsibleCellValue
+            maxHeight={expanded && type === FieldType.LongText ? 400 : undefined}
+          >
+            {cellValueNode}
+          </CollapsibleCellValue>
         ) : (
           cellValueNode
         )

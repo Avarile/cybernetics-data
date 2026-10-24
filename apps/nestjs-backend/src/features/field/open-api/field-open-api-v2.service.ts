@@ -1,6 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable sonarjs/cognitive-complexity */
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import {
   CellValueType,
   DbFieldType,
@@ -20,7 +19,8 @@ import {
   type IOtOperation,
   type IUpdateFieldRo,
   type IViewVo,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import type { IDuplicateFieldRo } from '@teable/openapi';
 import {
   mapDomainErrorToHttpError,

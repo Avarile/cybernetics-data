@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { FieldKeyType, FieldType, generateFieldId } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, generateFieldId } from '@teable/core';
 import type { ITableFullVo } from '@teable/openapi';
 import { duplicateField } from '@teable/openapi';
 import { createTable, getRecords, initApp, permanentDeleteTable } from './utils/init-app';

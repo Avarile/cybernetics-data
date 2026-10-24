@@ -1,5 +1,5 @@
+import { getUniqName, ViewType } from '@cybernetics/core';
 import { useTables } from '@cybernetics/sdk';
-import { getUniqName, ViewType } from '@teable/core';
 import { FileCsv, FileExcel, Slack, Table2 } from '@teable/icons';
 import type { ICreateBaseNodeRo } from '@teable/openapi';
 import { BaseNodeResourceType, SUPPORTEDTYPE } from '@teable/openapi';

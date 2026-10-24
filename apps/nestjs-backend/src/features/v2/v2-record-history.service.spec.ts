@@ -1,4 +1,4 @@
-import { FieldType as CoreFieldType } from '@teable/core';
+import { FieldType as CoreFieldType } from '@cybernetics/core';
 import { v2DataDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import { describe, expect, it, vi } from 'vitest';
 import { Events } from '../../event-emitter/events';

@@ -4,8 +4,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 
+import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import { convertField } from '@teable/openapi';

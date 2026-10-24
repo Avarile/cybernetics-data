@@ -1,6 +1,6 @@
+import { hasPermission } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { hasPermission } from '@teable/core';
 import { Component } from '@teable/icons';
 import { PinType, updateSpace } from '@teable/openapi';
 import type { IGetSpaceVo } from '@teable/openapi';

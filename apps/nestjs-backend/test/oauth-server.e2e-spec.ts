@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable sonarjs/no-duplicate-string */
 import crypto from 'crypto';
+import { HttpError } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { HttpError } from '@teable/core';
 import {
   CREATE_BASE,
   CREATE_SPACE,

@@ -1,6 +1,6 @@
+import type { IColumn, IColumnMeta } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import type { IColumn, IColumnMeta } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { ViewService } from '../../view/view.service';
 import { FieldService } from '../field.service';

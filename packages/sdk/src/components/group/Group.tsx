@@ -1,4 +1,4 @@
-import type { IGroup } from '@teable/core';
+import type { IGroup } from '@cybernetics/core';
 import { LayoutList } from '@teable/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib';
 import React, { useMemo, useState } from 'react';

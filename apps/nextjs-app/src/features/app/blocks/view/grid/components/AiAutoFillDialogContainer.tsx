@@ -1,7 +1,7 @@
+import type { IGroup } from '@cybernetics/core';
+import { StatisticsFunc } from '@cybernetics/core';
 import type { GridView } from '@cybernetics/sdk';
 import { useFieldOperations, useTableId, useView, useViewId } from '@cybernetics/sdk/hooks';
-import type { IGroup } from '@teable/core';
-import { StatisticsFunc } from '@teable/core';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { getAggregation } from '@teable/openapi';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';

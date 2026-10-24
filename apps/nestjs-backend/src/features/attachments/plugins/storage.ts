@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { HttpErrorCode } from '@cybernetics/core';
 import type { Provider } from '@nestjs/common';
 import { Inject, Logger } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { ClsService } from 'nestjs-cls';
 import { CacheService } from '../../../cache/cache.service';
 import { baseConfig, type IBaseConfig } from '../../../configs/base.config';

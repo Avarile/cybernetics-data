@@ -4,8 +4,8 @@ import type {
   IFilterOperator,
   ILiteralValue,
   ILiteralValueList,
-} from '@teable/core';
-import { FieldType, isFieldReferenceValue } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldType, isFieldReferenceValue } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { isUserOrLink } from '../../../../../utils/is-user-or-link';
 import { escapeJsonbRegex, escapePostgresRegex } from '../../../../../utils/postgres-regex-escape';

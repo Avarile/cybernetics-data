@@ -1,9 +1,9 @@
 /* eslint-disable sonarjs/no-identical-functions */
+import { getUniqName } from '@cybernetics/core';
 import { RecordHistory } from '@cybernetics/sdk/components/expand-record/RecordHistory';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useBaseId, useBasePermission, useTables } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUniqName } from '@teable/core';
 import { FileCsv, FileExcel, History, Code2, Download, Share2 } from '@teable/icons';
 import type { IBaseNodeVo, IDuplicateBaseNodeRo } from '@teable/openapi';
 import { BaseNodeResourceType, SUPPORTEDTYPE } from '@teable/openapi';

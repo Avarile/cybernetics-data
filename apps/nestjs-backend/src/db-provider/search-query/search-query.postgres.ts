@@ -1,5 +1,5 @@
-import type { IDateFieldOptions } from '@teable/core';
-import { CellValueType, FieldType } from '@teable/core';
+import type { IDateFieldOptions } from '@cybernetics/core';
+import { CellValueType, FieldType } from '@cybernetics/core';
 import type { ISearchIndexByQueryRo } from '@teable/openapi';
 import { TableIndex } from '@teable/openapi';
 import { type Knex } from 'knex';

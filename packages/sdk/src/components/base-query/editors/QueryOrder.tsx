@@ -1,4 +1,4 @@
-import { SortFunc } from '@teable/core';
+import { SortFunc } from '@cybernetics/core';
 import { X } from '@teable/icons';
 import type { BaseQueryColumnType, IBaseQueryOrderBy } from '@teable/openapi';
 import {

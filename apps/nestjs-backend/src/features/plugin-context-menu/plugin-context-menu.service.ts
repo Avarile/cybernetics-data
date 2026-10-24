@@ -1,6 +1,6 @@
+import type { IBaseRole } from '@cybernetics/core';
+import { generatePluginInstallId, HttpErrorCode, Role } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IBaseRole } from '@teable/core';
-import { generatePluginInstallId, HttpErrorCode, Role } from '@teable/core';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { CollaboratorType, PluginPosition, PrincipalType } from '@teable/openapi';

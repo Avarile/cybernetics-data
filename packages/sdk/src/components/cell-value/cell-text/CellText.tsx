@@ -1,4 +1,4 @@
-import type { SingleLineTextDisplayType } from '@teable/core';
+import type { SingleLineTextDisplayType } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { onMixedTextClick } from '../../editor/text/utils';
 import { OverflowTooltip } from '../components';

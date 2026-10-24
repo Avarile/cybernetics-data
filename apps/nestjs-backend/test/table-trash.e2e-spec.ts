@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { FieldKeyType, FieldType, ViewType, generateRecordTrashId } from '@cybernetics/core';
 import { faker } from '@faker-js/faker';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType, FieldType, ViewType, generateRecordTrashId } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableTrashItemVo } from '@teable/openapi';
 import {

@@ -1,4 +1,4 @@
-import { CellFormat, FieldKeyType, recordSchema } from '@teable/core';
+import { CellFormat, FieldKeyType, recordSchema } from '@cybernetics/core';
 import { getRecordsRoSchema, recordsVoSchema } from './get-list';
 
 describe('recordsRoSchema', () => {

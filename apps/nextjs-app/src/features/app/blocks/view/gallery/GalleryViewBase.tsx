@@ -1,3 +1,4 @@
+import { FieldKeyType } from '@cybernetics/core';
 import { useRowCount, useTableId, useViewId, useRecordOperations } from '@cybernetics/sdk/hooks';
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core';
 import {
@@ -10,7 +11,6 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { FieldKeyType } from '@teable/core';
 import { cn } from '@teable/ui-lib/shadcn';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Card } from './components/Card';

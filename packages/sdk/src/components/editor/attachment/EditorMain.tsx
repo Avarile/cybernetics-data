@@ -1,4 +1,4 @@
-import type { IAttachmentCellValue } from '@teable/core';
+import type { IAttachmentCellValue } from '@cybernetics/core';
 import { noop } from 'lodash';
 import type { ICellEditor } from '../type';
 import { UploadAttachment } from './upload-attachment/UploadAttachment';

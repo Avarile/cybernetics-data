@@ -1,6 +1,4 @@
 import type { Readable } from 'stream';
-import { Injectable, Logger } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   DbFieldType,
   FieldType,
@@ -17,9 +15,11 @@ import {
   generateViewId,
   getUniqName,
   ViewType,
-} from '@teable/core';
-import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService, ProvisionState } from '@teable/db-main-prisma';
 import type {
   ICreateBaseVo,
   IBaseJson,
@@ -59,7 +59,8 @@ import {
 
 import * as csvParser from 'csv-parser';
 import { Knex } from 'knex';
-import { Kysely, sql } from 'kysely';
+import type { Kysely } from 'kysely';
+import { sql } from 'kysely';
 import { InjectModel } from 'nest-knexjs';
 import { ClsService } from 'nestjs-cls';
 import streamJson from 'stream-json';

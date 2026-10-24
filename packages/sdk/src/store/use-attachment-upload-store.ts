@@ -1,5 +1,5 @@
-import type { IAttachmentItem } from '@teable/core';
-import { generateAttachmentId, HttpError } from '@teable/core';
+import type { IAttachmentItem } from '@cybernetics/core';
+import { generateAttachmentId, HttpError } from '@cybernetics/core';
 import { insertAttachment, UploadType } from '@teable/openapi';
 import { isEqual, omit } from 'lodash';
 import { create } from 'zustand';

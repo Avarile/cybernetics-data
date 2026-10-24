@@ -1,4 +1,4 @@
-import { IdPrefix } from '@teable/core';
+import { IdPrefix } from '@cybernetics/core';
 import type { ITableVo } from '@teable/openapi';
 import type { FC, ReactNode } from 'react';
 import { useContext, useMemo } from 'react';

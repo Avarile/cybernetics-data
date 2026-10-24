@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import type {
   IButtonFieldOptions,
   IDateFieldOptions,
@@ -10,7 +9,7 @@ import type {
   IRecord,
   ISingleLineTextFieldOptions,
   IUserFieldOptions,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   CellValueType,
   FieldKeyType,
@@ -25,7 +24,8 @@ import {
   singleLineTextShowAsSchema,
   singleNumberShowAsSchema,
   stringifyClipboardText,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {
   IUpdateRecordsRo,

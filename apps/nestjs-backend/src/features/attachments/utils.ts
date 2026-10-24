@@ -1,4 +1,4 @@
-import { isImage } from '@teable/core';
+import { isImage } from '@cybernetics/core';
 import { ATTACHMENT_THUMBNAIL_DEFAULT_MIMETYPE } from './constant';
 
 export const getExtensionPreview = (contentType: string) => {

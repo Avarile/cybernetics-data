@@ -1,4 +1,5 @@
-import { Readable } from 'stream';
+import type { Readable } from 'stream';
+import { HttpErrorCode } from '@cybernetics/core';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string }>;
@@ -6,7 +7,6 @@ const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string
 const mammoth = require('mammoth') as {
   extractRawText: (opts: { buffer: Buffer }) => Promise<{ value: string }>;
 };
-import { HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType } from '@teable/openapi';
 import type { ISaveChatFileRo } from '@teable/openapi';

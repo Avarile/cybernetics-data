@@ -1,4 +1,4 @@
-import type { ITableActionKey } from '@teable/core';
+import type { ITableActionKey } from '@cybernetics/core';
 import type { BaseId } from '../../base/BaseId';
 import { DomainEventName } from '../../shared/DomainEventName';
 import { OccurredAt } from '../../shared/OccurredAt';

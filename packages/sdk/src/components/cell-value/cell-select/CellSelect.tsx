@@ -1,4 +1,4 @@
-import type { Colors, ISelectFieldOptions } from '@teable/core';
+import type { Colors, ISelectFieldOptions } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { keyBy } from 'lodash';
 import { useMemo } from 'react';

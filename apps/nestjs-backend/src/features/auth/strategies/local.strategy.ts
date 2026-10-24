@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { HttpErrorCode } from '@teable/core';
 import type { Request } from 'express';
 import { Strategy } from 'passport-local';
 import { CustomHttpException } from '../../../custom.exception';

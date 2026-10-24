@@ -3,8 +3,8 @@
  * External modules should inject AiService; sub-services are implementation details.
  */
 import type { OpenAIProvider } from '@ai-sdk/openai';
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import type { IAiGenerateRo, IGetAIConfig, GatewayModelTag, LLMProvider } from '@teable/openapi';
 import type { ImageModel } from 'ai';
 import type { Response } from 'express';

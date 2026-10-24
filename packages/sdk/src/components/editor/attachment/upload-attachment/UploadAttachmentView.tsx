@@ -1,3 +1,4 @@
+import type { IAttachmentItem, IAttachmentCellValue } from '@cybernetics/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import {
   DndContext,
@@ -13,7 +14,6 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
-import type { IAttachmentItem, IAttachmentCellValue } from '@teable/core';
 import { Button, FilePreviewProvider, ScrollArea, cn } from '@teable/ui-lib';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useTranslation } from '../../../../context/app/i18n';

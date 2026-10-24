@@ -1,6 +1,6 @@
+import type { IRole } from '@cybernetics/core';
 import { ReactQueryKeys } from '@cybernetics/sdk';
 import { useQuery } from '@tanstack/react-query';
-import type { IRole } from '@teable/core';
 import { Building2 } from '@teable/icons';
 import type { IGetSpaceVo } from '@teable/openapi';
 import { getSpaceCollaboratorList, PrincipalType } from '@teable/openapi';

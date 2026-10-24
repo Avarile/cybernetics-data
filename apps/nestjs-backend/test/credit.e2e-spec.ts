@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { FieldKeyType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
-import { FieldKeyType } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import type { ITableFullVo } from '@teable/openapi';
 import { createBase, createSpace, deleteBase, deleteSpace } from '@teable/openapi';

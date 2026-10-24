@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { getPluginEmail, IdPrefix, Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { getPluginEmail, IdPrefix, Role } from '@teable/core';
 import type {
   ICreateSpaceVo,
   IUserMeVo,

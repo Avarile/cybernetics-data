@@ -1,11 +1,11 @@
-import type { IFilterOperator, IFilterValue } from '@teable/core';
+import type { IFilterOperator, IFilterValue } from '@cybernetics/core';
 import {
   CellValueType,
   doesNotContain,
   isFieldReferenceValue,
   isNoneOf,
   literalValueListSchema,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type { Knex } from 'knex';
 import type { IDbProvider } from '../../../db.provider.interface';
 import { AbstractCellValueFilter } from '../../cell-value-filter.abstract';

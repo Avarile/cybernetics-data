@@ -1,4 +1,4 @@
-import type { FieldType } from '@teable/core';
+import type { FieldType } from '@cybernetics/core';
 import type { ICollaborator } from './user/types';
 
 export interface ICellEditor<T> {

@@ -1,5 +1,5 @@
-import type { ILinkCellValue, ILinkFieldOptions } from '@teable/core';
-import { isMultiValueLink } from '@teable/core';
+import type { ILinkCellValue, ILinkFieldOptions } from '@cybernetics/core';
+import { isMultiValueLink } from '@cybernetics/core';
 import { Plus } from '@teable/icons';
 import type { IGetRecordsRo } from '@teable/openapi';
 import { Button, Dialog, DialogContent, DialogTrigger, sonner } from '@teable/ui-lib';

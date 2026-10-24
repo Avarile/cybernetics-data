@@ -1,4 +1,4 @@
-import { DbFieldType } from '@teable/core';
+import { DbFieldType } from '@cybernetics/core';
 import type { Knex } from 'knex';
 import { AbstractSortFunction } from '../function/sort-function.abstract';
 

@@ -1,7 +1,13 @@
+import {
+  ANONYMOUS_USER_ID,
+  HttpErrorCode,
+  IdPrefix,
+  isAnonymous,
+  type Action,
+} from '@cybernetics/core';
 import type { ExecutionContext } from '@nestjs/common';
 import { ForbiddenException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ANONYMOUS_USER_ID, HttpErrorCode, IdPrefix, isAnonymous, type Action } from '@teable/core';
 import cookie from 'cookie';
 import { ClsService } from 'nestjs-cls';
 import { CustomHttpException } from '../../../custom.exception';

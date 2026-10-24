@@ -1,4 +1,4 @@
-import type { CellValueType } from '@teable/core';
+import type { CellValueType } from '@cybernetics/core';
 import type { TableIndex } from '@teable/openapi';
 import type { Knex } from 'knex';
 import type { IFieldInstance } from '../../features/field/model/factory';

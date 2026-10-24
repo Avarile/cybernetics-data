@@ -1,4 +1,4 @@
-import { LOCALES } from '@teable/core';
+import { LOCALES } from '@cybernetics/core';
 import { z } from '../zod';
 
 export type IPlugin18nJsonType = {

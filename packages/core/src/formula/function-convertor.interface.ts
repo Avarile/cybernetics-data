@@ -26,11 +26,11 @@ export interface IFormulaParamMetadata {
 export type IFieldMap<T extends FieldCore = FieldCore> = Map<string, T>;
 
 /**
- * Base interface for converting Teable formula functions to database-specific implementations
- * This interface defines the contract for translating Teable functions to database functions
+ * Base interface for converting Cybernetics formula functions to database-specific implementations
+ * This interface defines the contract for translating Cybernetics functions to database functions
  * with a generic return type to support different use cases (SQL strings, boolean validation, etc.)
  */
-export interface ITeableToDbFunctionConverter<TReturn, TContext> {
+export interface ICyberneticsToDbFunctionConverter<TReturn, TContext> {
   // Context management
   setContext(context: TContext): void;
   setCallMetadata(metadata?: IFormulaParamMetadata[]): void;

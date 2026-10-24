@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const {

@@ -1,4 +1,4 @@
-import type { IUserFieldOptions, IUserCellValue } from '@teable/core';
+import type { IUserFieldOptions, IUserCellValue } from '@cybernetics/core';
 import { X } from '@teable/icons';
 import { Button, Popover, PopoverContent, PopoverTrigger, cn } from '@teable/ui-lib';
 import { useRef, useState } from 'react';

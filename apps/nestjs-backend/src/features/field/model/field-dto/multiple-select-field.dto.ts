@@ -1,4 +1,4 @@
-import { MultipleSelectFieldCore } from '@teable/core';
+import { MultipleSelectFieldCore } from '@cybernetics/core';
 import type { FieldBase } from '../field-base';
 
 export class MultipleSelectFieldDto extends MultipleSelectFieldCore implements FieldBase {

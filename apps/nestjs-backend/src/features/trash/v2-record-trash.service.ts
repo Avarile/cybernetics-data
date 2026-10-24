@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { generateRecordTrashId } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { generateRecordTrashId } from '@teable/core';
 import { v2DataDbTokens } from '@teable/v2-adapter-db-postgres-pg';
 import type { IExecutionContext } from '@teable/v2-core';
 import type { IDeleteRecordsPayload } from '../undo-redo/operations/delete-records.operation';

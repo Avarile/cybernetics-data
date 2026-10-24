@@ -1,5 +1,4 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { Injectable } from '@nestjs/common';
 import type {
   ISnapshotBase,
   IViewRo,
@@ -19,7 +18,7 @@ import type {
   ICalendarViewOptions,
   IColumn,
   IGridColumnMeta,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   getUniqName,
   IdPrefix,
@@ -31,10 +30,11 @@ import {
   FieldType,
   CellValueType,
   HttpErrorCode,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import type { Prisma } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
-import { DataPrismaService } from '@teable/db-data-prisma';
 import { Knex } from 'knex';
 import { isEmpty, isNull, isString, merge, snakeCase, uniq } from 'lodash';
 import { InjectModel } from 'nest-knexjs';

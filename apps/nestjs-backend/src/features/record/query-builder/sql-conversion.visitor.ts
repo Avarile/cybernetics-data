@@ -38,7 +38,7 @@ import {
   FUNCTIONS,
   Relationship,
   TimeFormatting,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   FormulaVisitor,
   ExprContext,
@@ -54,8 +54,8 @@ import type {
   IFormulaParamFieldMetadata,
   FormulaParamType,
   IDatetimeFormatting,
-  ITeableToDbFunctionConverter,
-} from '@teable/core';
+  ICyberneticsToDbFunctionConverter,
+} from '@cybernetics/core';
 import type { RootContext, UnaryOpContext } from '@teable/formula';
 import type { Knex } from 'knex';
 import { match } from 'ts-pattern';
@@ -235,7 +235,7 @@ export interface IFormulaConversionResult {
  * are converted to immutable SQL expressions suitable for generated columns.
  */
 export interface IGeneratedColumnQueryInterface
-  extends ITeableToDbFunctionConverter<string, IFormulaConversionContext> {}
+  extends ICyberneticsToDbFunctionConverter<string, IFormulaConversionContext> {}
 
 /**
  * Interface for database-specific SELECT query implementations
@@ -245,7 +245,7 @@ export interface IGeneratedColumnQueryInterface
  * expressions can use mutable functions and have different optimization strategies.
  */
 export interface ISelectQueryInterface
-  extends ITeableToDbFunctionConverter<string, IFormulaConversionContext> {}
+  extends ICyberneticsToDbFunctionConverter<string, IFormulaConversionContext> {}
 
 /**
  * Interface for validating whether Teable formula functions convert to generated column are supported
@@ -253,7 +253,7 @@ export interface ISelectQueryInterface
  * whether the corresponding function can be converted to a valid database expression.
  */
 export interface IGeneratedColumnQuerySupportValidator
-  extends ITeableToDbFunctionConverter<boolean, IFormulaConversionContext> {}
+  extends ICyberneticsToDbFunctionConverter<boolean, IFormulaConversionContext> {}
 
 /**
  * Get should expand field reference
@@ -278,7 +278,7 @@ function shouldExpandFieldReference(
  * Abstract base visitor that contains common functionality for SQL conversion
  */
 abstract class BaseSqlConversionVisitor<
-    TFormulaQuery extends ITeableToDbFunctionConverter<string, IFormulaConversionContext>,
+    TFormulaQuery extends ICyberneticsToDbFunctionConverter<string, IFormulaConversionContext>,
   >
   extends AbstractParseTreeVisitor<string>
   implements FormulaVisitor<IFieldSelectName>

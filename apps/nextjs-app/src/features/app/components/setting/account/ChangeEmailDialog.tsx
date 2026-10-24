@@ -1,7 +1,7 @@
+import type { HttpError } from '@cybernetics/core';
+import { HttpErrorCode } from '@cybernetics/core';
 import { useSession } from '@cybernetics/sdk/hooks';
 import { useMutation } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
-import { HttpErrorCode } from '@teable/core';
 import { Check } from '@teable/icons';
 import type { ISendChangeEmailCodeRo } from '@teable/openapi';
 import { changeEmail, sendChangeEmailCode } from '@teable/openapi';

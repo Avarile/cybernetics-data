@@ -1,6 +1,6 @@
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { HttpErrorCode } from '@teable/core';
 import { CreateRecordAction, type IInplaceImportOptionRo } from '@teable/openapi';
 import {
   v2CoreTokens,

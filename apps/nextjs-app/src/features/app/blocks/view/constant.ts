@@ -1,4 +1,4 @@
-import { ViewType } from '@teable/core';
+import { ViewType } from '@cybernetics/core';
 import {
   Sheet,
   ClipboardList as Form,

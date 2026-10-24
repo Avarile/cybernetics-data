@@ -1,10 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { IDsn } from '@cybernetics/core';
+import { DriverClient, HttpErrorCode, parseDsn } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { IDsn } from '@teable/core';
-import { DriverClient, HttpErrorCode, parseDsn } from '@teable/core';
-import { PrismaService, getDatabaseUrl } from '@teable/db-main-prisma';
 import { DataPrismaService } from '@teable/db-data-prisma';
+import { PrismaService, getDatabaseUrl } from '@teable/db-main-prisma';
 import type { IDbConnectionVo } from '@teable/openapi';
 import { Knex } from 'knex';
 import { nanoid } from 'nanoid';

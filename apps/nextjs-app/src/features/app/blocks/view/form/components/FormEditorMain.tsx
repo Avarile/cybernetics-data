@@ -1,10 +1,10 @@
+import { generateAttachmentId } from '@cybernetics/core';
 import type { IFile } from '@cybernetics/sdk/components';
 import { AttachmentManager } from '@cybernetics/sdk/components';
 import { useIsHydrated, useView } from '@cybernetics/sdk/hooks';
 import type { FormView, IFieldInstance } from '@cybernetics/sdk/model';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { generateAttachmentId } from '@teable/core';
 import { Pencil, Plus, Undo2 } from '@teable/icons';
 import type { INotifyVo } from '@teable/openapi';
 import { UploadType } from '@teable/openapi';

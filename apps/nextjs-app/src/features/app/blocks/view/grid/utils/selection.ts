@@ -1,7 +1,7 @@
+import { FieldType } from '@cybernetics/core';
 import type { CombinedSelection } from '@cybernetics/sdk/components';
 import { SelectionRegionType } from '@cybernetics/sdk/components';
 import type { Field } from '@cybernetics/sdk/model';
-import { FieldType } from '@teable/core';
 import { isEqual, range } from 'lodash';
 
 export const DELETE_SELECTION_STREAM_ROW_THRESHOLD = 200;

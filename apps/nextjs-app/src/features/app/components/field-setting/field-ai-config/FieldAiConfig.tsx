@@ -1,8 +1,8 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
+import type { IFieldAIConfig } from '@cybernetics/core';
+import { FieldType } from '@cybernetics/core';
 import { useBaseId } from '@cybernetics/sdk/hooks';
 import { useQuery } from '@tanstack/react-query';
-import type { IFieldAIConfig } from '@teable/core';
-import { FieldType } from '@teable/core';
 import { ChevronDown, ChevronRight, HelpCircle, MagicAi } from '@teable/icons';
 import { BillingProductLevel, getAIConfig } from '@teable/openapi';
 import {

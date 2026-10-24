@@ -1,4 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
 import {
   getValidFilterOperators,
   FieldType,
@@ -6,7 +5,7 @@ import {
   FieldOpBuilder,
   getValidStatisticFunc,
   ViewType,
-} from '@teable/core';
+} from '@cybernetics/core';
 import type {
   IFilterSet,
   ISelectFieldOptionsRo,
@@ -17,7 +16,8 @@ import type {
   ILinkFieldOptions,
   IOtOperation,
   IColumn,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { isEqual, differenceBy, find, isEmpty } from 'lodash';
 import { ViewService } from '../../view/view.service';

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { Action } from '@teable/core';
-import { ActionPrefix } from '@teable/core';
+import type { Action } from '@cybernetics/core';
+import { ActionPrefix } from '@cybernetics/core';
 import { useMemo } from 'react';
 import { useTranslation } from '../context/app/i18n';
 import type { TKey } from '../context/app/i18n';

@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import { HttpErrorCode } from '@teable/core';
 import { PrismaService } from '@teable/db-main-prisma';
 import { EmailVerifyCodeType, MailTransporterType, MailType } from '@teable/openapi';
 import type {

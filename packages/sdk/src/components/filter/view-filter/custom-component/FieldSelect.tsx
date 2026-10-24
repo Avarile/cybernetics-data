@@ -1,4 +1,4 @@
-import { getValidFilterOperators, isFieldReferenceValue } from '@teable/core';
+import { getValidFilterOperators, isFieldReferenceValue } from '@cybernetics/core';
 import { cn } from '@teable/ui-lib';
 import { useCallback, useMemo } from 'react';
 import { useFieldStaticGetter, useTables } from '../../../../hooks';

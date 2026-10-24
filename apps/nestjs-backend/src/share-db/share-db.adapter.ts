@@ -1,10 +1,3 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  Optional,
-  UnauthorizedException,
-} from '@nestjs/common';
 import type {
   IFieldPropertyKey,
   IFieldVo,
@@ -12,14 +5,21 @@ import type {
   IRecord,
   ISnapshotBase,
   ITablePropertyKey,
-} from '@teable/core';
+} from '@cybernetics/core';
 import {
   FieldOpBuilder,
   getRandomString,
   IdPrefix,
   RecordOpBuilder,
   TableOpBuilder,
-} from '@teable/core';
+} from '@cybernetics/core';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  Optional,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { ITableVo } from '@teable/openapi';
 import { omit } from 'lodash';
 import { ClsService } from 'nestjs-cls';

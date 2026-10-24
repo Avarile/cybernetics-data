@@ -1,11 +1,11 @@
-import { useBaseId } from '@cybernetics/sdk/hooks';
-import { useQuery } from '@tanstack/react-query';
 import type {
   IAttachmentFieldAIConfig,
   IAttachmentFieldCustomizeAIConfig,
   IAttachmentFieldGenerateImageAIConfig,
-} from '@teable/core';
-import { FieldAIActionType, FieldType } from '@teable/core';
+} from '@cybernetics/core';
+import { FieldAIActionType, FieldType } from '@cybernetics/core';
+import { useBaseId } from '@cybernetics/sdk/hooks';
+import { useQuery } from '@tanstack/react-query';
 import { ImageGeneration, Pencil } from '@teable/icons';
 import { getAIConfig } from '@teable/openapi';
 import { Selector } from '@teable/ui-lib/base';

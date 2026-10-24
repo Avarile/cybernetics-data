@@ -1,4 +1,4 @@
-import { getActionTriggerChannel } from '@teable/core';
+import { getActionTriggerChannel } from '@cybernetics/core';
 import { useEffect, useMemo, useState } from 'react';
 import type { Presence } from 'sharedb/lib/sharedb';
 import { useConnection } from './use-connection';
