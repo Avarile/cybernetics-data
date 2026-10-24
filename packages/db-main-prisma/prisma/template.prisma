@@ -734,7 +734,7 @@ model UserIntegration {
 
   @@unique([userId, provider, address])
   @@index([userId])
-  @@map("user_integration")
+  @@map("connected_account")
 }
 
 model EmailSource {

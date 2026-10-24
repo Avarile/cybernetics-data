@@ -47,7 +47,7 @@ and the API all keep working.
 ## 4. Data model (main DB, postgres + sqlite migrations)
 
 ```prisma
-model UserIntegration {          // prefix uin
+model UserIntegration {          // prefix uin; table `connected_account` (Teable EE databases already have a different `user_integration`)
   id, userId, provider (gmail|outlook|imap), name
   address        String          // lower-cased mailbox address, for D3 uniqueness
   secret         String?         // AES-256-GCM JSON: OAuth tokens | {password, smtpPassword}

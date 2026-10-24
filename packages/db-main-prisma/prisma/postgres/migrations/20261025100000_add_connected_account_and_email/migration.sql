@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "user_integration" (
+CREATE TABLE "connected_account" (
     "id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE "user_integration" (
     "created_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "last_modified_time" TIMESTAMP(3),
 
-    CONSTRAINT "user_integration_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "connected_account_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -66,10 +66,10 @@ CREATE TABLE "email_message" (
 );
 
 -- CreateIndex
-CREATE INDEX "user_integration_user_id_idx" ON "user_integration"("user_id");
+CREATE INDEX "connected_account_user_id_idx" ON "connected_account"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "user_integration_user_id_provider_address_key" ON "user_integration"("user_id", "provider", "address");
+CREATE UNIQUE INDEX "connected_account_user_id_provider_address_key" ON "connected_account"("user_id", "provider", "address");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "email_source_table_id_key" ON "email_source"("table_id");
