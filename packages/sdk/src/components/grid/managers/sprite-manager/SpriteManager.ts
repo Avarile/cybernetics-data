@@ -6,6 +6,9 @@ export type ISprite = (props: ISpriteProps) => string;
 export type ISpriteMap = Record<string | GridInnerIcon, ISprite>;
 export type ISpriteVariant = 'normal' | 'selected';
 
+// A sprite whose SVG fails to decode is retried on later draws, up to this many attempts
+const maxDecodeAttempts = 3;
+
 interface ISpriteDrawerProps {
   x: number;
   y: number;
@@ -24,6 +27,7 @@ const getColors = (variant: ISpriteVariant, theme: IGridTheme): [string, string]
 
 export class SpriteManager {
   private spriteMap: Map<string, HTMLCanvasElement> = new Map();
+  private failedDecodeCount: Map<string, number> = new Map();
   private icons: ISpriteMap;
   private inFlight = 0;
 
@@ -52,6 +56,7 @@ export class SpriteManager {
       const spriteCb = this.icons[sprite];
 
       if (spriteCb === undefined) return;
+      if ((this.failedDecodeCount.get(key) ?? 0) >= maxDecodeAttempts) return;
 
       spriteCanvas = document.createElement('canvas');
       spriteCanvas.width = rSize;
@@ -73,6 +78,12 @@ export class SpriteManager {
       promise
         .then(() => {
           spriteCtx.drawImage(imgSource, 0, 0, rSize, rSize);
+          this.failedDecodeCount.delete(key);
+        })
+        .catch(() => {
+          // Drop the blank canvas so a later draw can decode it again
+          this.spriteMap.delete(key);
+          this.failedDecodeCount.set(key, (this.failedDecodeCount.get(key) ?? 0) + 1);
         })
         .finally(() => {
           this.inFlight--;

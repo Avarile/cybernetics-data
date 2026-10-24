@@ -110,7 +110,7 @@ export const useSelection = (props: IUseSelectionProps) => {
       let newSelection;
 
       if (
-        isPrevRowSelection &&
+        selection.type === type &&
         (isMultiSelectionEnable ||
           (!isMultiSelectionEnable && prevSelectionRanges[0][0] === colOrRowIndex))
       ) {
@@ -118,7 +118,7 @@ export const useSelection = (props: IUseSelectionProps) => {
       } else {
         newSelection = selection.set(type, [range]);
       }
-      if (newSelection.includes(range)) {
+      if (type === SelectionRegionType.Rows && newSelection.includes(range)) {
         prevSelectedRowIndex.current = colOrRowIndex;
       }
       setActiveCell(null);

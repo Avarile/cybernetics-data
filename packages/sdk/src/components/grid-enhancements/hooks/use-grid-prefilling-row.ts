@@ -42,15 +42,17 @@ export const useGridPrefillingRow = (columns: (IGridColumn & { id: string })[]) 
       id: '',
       fields: prefillingFieldValueMap,
     });
+    // read from record.fields, which updateCell keeps current between re-renders
     record.getCellValue = (fieldId: string) => {
-      return prefillingFieldValueMap[fieldId];
+      return record.fields[fieldId];
     };
     record.updateCell = (fieldId: string, newValue: unknown) => {
       record.fields[fieldId] = newValue;
-      setPrefillingFieldValueMap({
-        ...prefillingFieldValueMap,
+      // functional update, so several edits before a re-render (e.g. paste) are all kept
+      setPrefillingFieldValueMap((prev) => ({
+        ...prev,
         [fieldId]: newValue,
-      });
+      }));
       return Promise.resolve();
     };
 

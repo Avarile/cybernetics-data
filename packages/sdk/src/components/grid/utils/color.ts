@@ -71,18 +71,24 @@ export const toRgbaString = ({ r, g, b, a }: IRgba) =>
 /**
  * Same result as CSS `color-mix(in srgb, a <weight>, b)`: `weight` is the share of `a` (0..1).
  * Canvas cannot evaluate `color-mix`, so the grid theme pre-computes its mixes with this.
+ * Like `color-mix`, channels are premultiplied by alpha, so a translucent side (e.g. a tinted
+ * column's `cellBg`) does not wash out the opaque side.
  */
 export const mixColor = (a: string, b: string, weight: number) => {
   const ca = parseColor(a);
   const cb = parseColor(b);
   if (!ca || !cb) return a;
   const t = clamp(weight, 0, 1);
-  const mix = (x: number, y: number) => Math.round(x * t + y * (1 - t));
+  const alpha = ca.a * t + cb.a * (1 - t);
+  const mix = (x: number, y: number) =>
+    alpha === 0
+      ? Math.round(x * t + y * (1 - t))
+      : Math.round((x * ca.a * t + y * cb.a * (1 - t)) / alpha);
   return toRgbaString({
     r: mix(ca.r, cb.r),
     g: mix(ca.g, cb.g),
     b: mix(ca.b, cb.b),
-    a: ca.a * t + cb.a * (1 - t),
+    a: alpha,
   });
 };
 

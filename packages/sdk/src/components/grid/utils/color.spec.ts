@@ -35,6 +35,13 @@ describe('mixColor', () => {
     expect(mixColor('#1961ed', '#ffffff', 0.07)).toBe('rgb(239, 244, 254)');
   });
 
+  it('premultiplies alpha like color-mix, so a translucent surface keeps the hue', () => {
+    // 24% red over a 10% blue tint: the visible colour is mostly red, not mostly blue
+    expect(mixColor('#f00', 'rgba(0, 0, 255, 0.1)', 0.24)).toBe('rgba(194, 0, 61, 0.316)');
+    const transparent = 'rgba(0, 0, 0, 0)';
+    expect(mixColor(transparent, transparent, 0.5)).toBe(transparent);
+  });
+
   it('clamps the weight and passes through unparseable input', () => {
     expect(mixColor('#000000', '#ffffff', 2)).toBe('rgb(0, 0, 0)');
     expect(mixColor('nope', '#ffffff', 0.5)).toBe('nope');

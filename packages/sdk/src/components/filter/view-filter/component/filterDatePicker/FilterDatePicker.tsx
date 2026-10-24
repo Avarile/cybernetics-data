@@ -160,7 +160,7 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
   const previousOperatorRef = useRef<string>(operator);
   const onModeChangeRef = useRef(onModeChange);
   const onSelectRef = useRef(onSelect);
-  // set when clearing the days input emits null, so the echoed null keeps the selected mode
+  // set when we emit null for an incomplete mode, so the echoed null keeps the selected mode
   const keepModeOnClearRef = useRef(false);
 
   useEffect(() => {
@@ -222,37 +222,52 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
     onModeChangeRef.current?.(defaultConfig.mode);
   }, [defaultConfig, initValue, operator]);
 
-  const mergedOnSelect = useCallback((val: string | null) => {
-    if (val === null) {
-      setInnerValue(null);
-      onModeChangeRef.current?.(null);
-      return;
+  // the selected mode still needs input, so clear a stale external value without resetting the mode
+  const clearValueKeepMode = useCallback(() => {
+    if (previousInitRef.current) {
+      keepModeOnClearRef.current = true;
+      onSelectRef.current(null);
     }
+  }, []);
 
-    setInnerValue((currentValue) => {
+  const mergedOnSelect = useCallback(
+    (val: string | null) => {
+      if (val === null) {
+        setInnerValue(null);
+        onModeChangeRef.current?.(null);
+        return;
+      }
+
+      const currentValue = innerValue;
       if (val === currentValue?.mode) {
-        return currentValue;
+        return;
       }
 
       const mergedValue = {
         mode: val as IDateFilter['mode'],
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone as ITimeZoneString,
       };
 
-      onModeChangeRef.current?.(val as IDateFilter['mode']);
+      // update local state first, then notify outside of a state updater
+      setInnerValue(mergedValue);
+      onModeChangeRef.current?.(mergedValue.mode);
 
       if (INPUTOPTIONS.includes(val)) {
         if (currentValue?.numberOfDays) {
           onSelectRef.current({ ...mergedValue, numberOfDays: currentValue.numberOfDays });
+        } else {
+          clearValueKeepMode();
         }
-        return mergedValue as IDateFilter;
+        return;
       }
 
       if (DATEPICKEROPTIONS.includes(val)) {
         if (currentValue?.exactDate) {
           onSelectRef.current({ ...mergedValue, exactDate: currentValue.exactDate });
+        } else {
+          clearValueKeepMode();
         }
-        return mergedValue as IDateFilter;
+        return;
       }
 
       if (DATERANGEOPTIONS.includes(val)) {
@@ -262,14 +277,16 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
             exactDate: currentValue.exactDate,
             exactDateEnd: currentValue.exactDateEnd,
           });
+        } else {
+          clearValueKeepMode();
         }
-        return mergedValue as IDateFilter;
+        return;
       }
 
-      onSelectRef.current(mergedValue as IDateFilter);
-      return mergedValue as IDateFilter;
-    });
-  }, []);
+      onSelectRef.current(mergedValue);
+    },
+    [innerValue, clearValueKeepMode]
+  );
 
   const datePickerSelect = useCallback((val: string | null | undefined, mode?: ISubOperator) => {
     const mergedValue = val
@@ -313,12 +330,9 @@ function FilterDatePicker(props: IFilerDatePickerProps) {
         return;
       }
       // a days mode without numberOfDays is invalid, so clear the filter value instead
-      if (previousInitRef.current) {
-        keepModeOnClearRef.current = true;
-        onSelectRef.current(null);
-      }
+      clearValueKeepMode();
     },
-    [innerValue]
+    [innerValue, clearValueKeepMode]
   );
 
   const selectOptions = useMemo(() => {

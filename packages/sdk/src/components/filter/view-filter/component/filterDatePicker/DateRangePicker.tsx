@@ -410,8 +410,11 @@ export function DateRangePicker({ value, onChange, options, className }: IDateRa
 
   const timeFormatting = options?.formatting?.time ?? TimeFormatting.None;
   const hasTimeFormat = timeFormatting !== TimeFormatting.None;
-  const timeZone =
+  const fieldTimeZone =
     options?.formatting?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // A saved range keeps the timezone it was picked in, so opening, display and confirm all
+  // convert with it; otherwise confirming without edits shifts the range when the field timezone changed
+  const timeZone = value?.timeZone || fieldTimeZone;
 
   // Internal state uses timezone-converted local time for calendar display and user interaction
   const [fromDate, setFromDate] = useState<Date | undefined>();
@@ -426,20 +429,12 @@ export function DateRangePicker({ value, onChange, options, className }: IDateRa
   // External display value: formatted directly from value prop (UTC → timezone display)
   const displayValue = useMemo(() => {
     if (!value?.exactDate) return '';
-    const tz = value.timeZone || timeZone;
     const timeFormat = timeFormatting === TimeFormatting.Hour12 ? 'hh:mm a' : 'HH:mm';
     const dateFormatStr = hasTimeFormat ? `yyyy-MM-dd ${timeFormat}` : 'yyyy-MM-dd';
-    const fromStr = formatInTimeZone(value.exactDate, tz, dateFormatStr);
+    const fromStr = formatInTimeZone(value.exactDate, timeZone, dateFormatStr);
     if (!value.exactDateEnd) return fromStr;
-    return `${fromStr} ~ ${formatInTimeZone(value.exactDateEnd, tz, dateFormatStr)}`;
-  }, [
-    value?.exactDate,
-    value?.exactDateEnd,
-    value?.timeZone,
-    hasTimeFormat,
-    timeFormatting,
-    timeZone,
-  ]);
+    return `${fromStr} ~ ${formatInTimeZone(value.exactDateEnd, timeZone, dateFormatStr)}`;
+  }, [value?.exactDate, value?.exactDateEnd, hasTimeFormat, timeFormatting, timeZone]);
 
   // Temporary display value during selection (fromDate/toDate are already local time)
   const tempDisplayValue = useMemo(
@@ -489,16 +484,19 @@ export function DateRangePicker({ value, onChange, options, className }: IDateRa
       setOpen(isOpen);
       if (!isOpen) return;
 
-      const tz = value?.timeZone || timeZone;
       // UTC → local time (for calendar display and user interaction)
-      const from = value?.exactDate ? toZonedTime(value.exactDate, tz) : undefined;
-      const to = value?.exactDateEnd ? toZonedTime(value.exactDateEnd, tz) : undefined;
-      const left = from ?? toZonedTime(new Date(), tz);
+      const from = value?.exactDate ? toZonedTime(value.exactDate, timeZone) : undefined;
+      const to = value?.exactDateEnd ? toZonedTime(value.exactDateEnd, timeZone) : undefined;
+      const left = from ?? toZonedTime(new Date(), timeZone);
 
       setFromDate(from);
       setToDate(to);
-      setFromTime(value?.exactDate ? formatTimeInZone(value.exactDate, tz) : START_DEFAULT_TIME);
-      setToTime(value?.exactDateEnd ? formatTimeInZone(value.exactDateEnd, tz) : END_DEFAULT_TIME);
+      setFromTime(
+        value?.exactDate ? formatTimeInZone(value.exactDate, timeZone) : START_DEFAULT_TIME
+      );
+      setToTime(
+        value?.exactDateEnd ? formatTimeInZone(value.exactDateEnd, timeZone) : END_DEFAULT_TIME
+      );
       setLeftMonth(left);
 
       // Right calendar shows month after left, or end date's month if later

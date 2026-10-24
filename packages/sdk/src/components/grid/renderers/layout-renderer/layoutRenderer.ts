@@ -1710,7 +1710,7 @@ export const drawColumnDraggingRegion = (
   ctx: CanvasRenderingContext2D,
   props: ILayoutDrawerProps
 ) => {
-  const { columns, theme, mouseState, scrollState, dragState, coordInstance } = props;
+  const { theme, mouseState, scrollState, dragState, coordInstance } = props;
   const { columnDraggingPlaceholderBg, interactionLineColorHighlight } = theme;
   const { type, isDragging, ranges: draggingRanges, delta } = dragState;
   const { containerHeight } = coordInstance;
@@ -1723,7 +1723,7 @@ export const drawColumnDraggingRegion = (
   drawRect(ctx, {
     x: x - delta,
     y: 0.5,
-    width: columns[draggingColIndex].width as number,
+    width: coordInstance.getColumnWidth(draggingColIndex),
     height: containerHeight,
     fill: columnDraggingPlaceholderBg,
   });

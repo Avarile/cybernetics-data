@@ -58,8 +58,10 @@ export const QueryEditor = ({
           className="w-16 text-[13px]"
           size="sm"
           type="number"
-          value={query[type]}
-          onChange={(e) => onChange(type, Number(e.target.value))}
+          value={query[type] ?? ''}
+          onChange={(e) =>
+            onChange(type, e.target.value === '' ? undefined : Number(e.target.value))
+          }
         />
       );
     }

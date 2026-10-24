@@ -138,7 +138,11 @@ export class AttachmentManager {
         data: fileInstance,
         signal: uploadTask.abortController?.signal,
         onUploadProgress: (progressEvent) => {
-          const progress = Math.round((progressEvent.loaded * 100) / (progressEvent.total || 0));
+          // `total` is missing when the length is not computable, so fall back to the file size
+          const total = progressEvent.total || fileInstance.size;
+          const progress = total
+            ? Math.min(100, Math.round((progressEvent.loaded * 100) / total))
+            : 0;
           uploadTask.progress = progress;
           uploadTask.progressCallback(uploadTask.file, progress); // Update progress
         },

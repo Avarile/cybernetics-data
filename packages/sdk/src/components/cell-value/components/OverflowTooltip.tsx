@@ -18,33 +18,31 @@ interface IOverflowTooltipProps {
 }
 
 export const OverflowTooltip = (props: IOverflowTooltipProps) => {
-  const { text = '', ellipsis = false, className, tooltipClassName, onClick } = props;
+  const { text = '', ellipsis = false, className, tooltipClassName, style, onClick } = props;
   const [isOverflow, setOverflow] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Both branches attach contentRef: the wrapped content overflows vertically,
+  // the single-line tooltip trigger overflows horizontally.
   const checkOverflow = useCallback(() => {
     if (contentRef.current && ellipsis) {
       const element = contentRef.current;
       const lineHeight = parseInt(window.getComputedStyle(element).lineHeight);
-      const isOverflow = element.scrollHeight > lineHeight;
+      const isOverflow =
+        element.scrollHeight > lineHeight || element.scrollWidth > element.clientWidth;
       setOverflow(isOverflow);
     }
   }, [ellipsis]);
 
   useEffect(() => {
+    const element = contentRef.current;
+    if (!element) return;
+
     const observer = new ResizeObserver(checkOverflow);
-
-    if (contentRef.current) {
-      observer.observe(contentRef.current);
-    }
-
-    return () => {
-      if (contentRef.current) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        observer.unobserve(contentRef.current);
-      }
-    };
-  }, [checkOverflow]);
+    observer.observe(element);
+    return () => observer.disconnect();
+    // Re-observe when switching branches, since each renders its own element
+  }, [checkOverflow, isOverflow]);
 
   useEffect(() => {
     checkOverflow();
@@ -68,6 +66,7 @@ export const OverflowTooltip = (props: IOverflowTooltipProps) => {
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       title={text}
+      style={style}
     >
       {text}
     </div>
@@ -90,8 +89,10 @@ export const OverflowTooltip = (props: IOverflowTooltipProps) => {
           className="w-full text-left"
         >
           <div
+            ref={contentRef}
             className={cn(className, 'overflow-hidden')}
             style={{
+              ...style,
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
             }}

@@ -101,11 +101,11 @@ const DateEditorMainBase: ForwardRefRenderFunction<IEditorRef<string>, IDateEdit
     onChange?.(val);
   };
 
-  const now = () => fromZonedTime(new Date(), timeZone);
+  // Current wall-clock time in the field timezone, as a Date whose local fields hold it
+  const now = () => toZonedTime(new Date(), timeZone);
 
   const defaultTimeValue = useMemo(
-    () => formatInTimeZone(now().toISOString(), timeZone, 'HH:mm'),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    () => formatInTimeZone(new Date(), timeZone, 'HH:mm'),
     [timeZone]
   );
 
@@ -151,7 +151,7 @@ const DateEditorMainBase: ForwardRefRenderFunction<IEditorRef<string>, IDateEdit
               variant="outline"
               size="sm"
               onClick={() => {
-                const todayZoned = toZonedTime(now().toISOString(), timeZone);
+                const todayZoned = now();
                 if (date) {
                   // Preserve existing time, only change the date part
                   const existingZoned = toZonedTime(date, timeZone);

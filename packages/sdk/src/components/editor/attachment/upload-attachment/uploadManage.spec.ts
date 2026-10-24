@@ -103,3 +103,37 @@ describe('AttachmentManager cancel', () => {
     expect(callbacks.cancelCallback).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('AttachmentManager progress', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getSignature.mockResolvedValue({
+      data: { url: 'u', uploadMethod: 'PUT', token: 't', requestHeaders: {} },
+    });
+    notify.mockResolvedValue({ data: { token: 't', size: 1 } });
+  });
+
+  it('falls back to the file size when the total length is unknown', async () => {
+    axiosRequest.mockImplementation(
+      async (
+        _url: string,
+        { onUploadProgress }: { onUploadProgress: (e: { loaded: number; total?: number }) => void }
+      ) => {
+        // File content 'xx' is 2 bytes
+        onUploadProgress({ loaded: 1 });
+        onUploadProgress({ loaded: 2, total: 0 });
+        onUploadProgress({ loaded: 3, total: 2 });
+        return {};
+      }
+    );
+    const manager = new AttachmentManager(1);
+    const progressCallback = vi.fn();
+
+    manager.upload([{ id: 'a', instance: new File(['xx'], 'a.txt') }], UploadType.Table, {
+      progressCallback,
+    });
+    await flush();
+
+    expect(progressCallback.mock.calls.map(([, progress]) => progress)).toEqual([50, 100, 100]);
+  });
+});

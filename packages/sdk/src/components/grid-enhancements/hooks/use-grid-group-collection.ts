@@ -57,7 +57,7 @@ const useGenerateGroupCellFn = () => {
         if (field == null) return { type: CellType.Loading };
 
         const { id: fieldId, type, isMultipleCellValue: isMultiple, cellValueType } = field;
-        const emptyStr = '(Empty)';
+        const emptyStr = `(${t('common.empty')})`;
 
         const validateCellValue =
           field.cellValueType === CellValueType.DateTime

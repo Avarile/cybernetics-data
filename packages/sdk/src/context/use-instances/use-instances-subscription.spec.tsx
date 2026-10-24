@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import type { Connection } from 'sharedb/lib/client';
 import { vi } from 'vitest';
 import { createAppContext } from '../__tests__/createAppContext';
@@ -37,8 +37,17 @@ const createMockQuery = (collection: string, queryParams: unknown) => {
 };
 
 // Mirrors sharedb 5.2.2: `subscribed` only flips once the server acks, `wantSubscribe` immediately
+const createMockDoc = (id: string) => ({
+  id,
+  data: { id },
+  on: vi.fn(),
+  removeListener: vi.fn(),
+  listenerCount: vi.fn(() => 0),
+  destroy: vi.fn(),
+});
+
 const createMockPresence = () => {
-  const listeners = new Set<unknown>();
+  const listeners = new Set<any>();
   const presence = {
     wantSubscribe: false,
     subscribed: false,
@@ -52,6 +61,7 @@ const createMockPresence = () => {
     addListener: vi.fn((_event: string, cb: unknown) => listeners.add(cb)),
     removeListener: vi.fn((_event: string, cb: unknown) => listeners.delete(cb)),
     listenerCount: vi.fn(() => listeners.size),
+    emitReceive: (batch: unknown) => listeners.forEach((cb) => cb('presence-id', batch)),
   };
   return presence;
 };
@@ -138,5 +148,51 @@ describe('useInstances subscriptions', () => {
     expect(queries[0].destroy).not.toHaveBeenCalled();
     b.unmount();
     expect(queries[0].destroy).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps server diff indexes aligned after a projected record delete', () => {
+    const { connection, presence, queries } = createMockConnection();
+    const collection = 'rec_tblDiffAlign';
+    const docs = ['rec1', 'rec2', 'rec3'].map(createMockDoc);
+    vi.mocked(connection.createSubscribeQuery).mockImplementationOnce(
+      (queryCollection: string, queryParams: unknown) => {
+        const query = { ...createMockQuery(queryCollection, queryParams), results: [...docs] };
+        queries.push(query as any);
+        return query as any;
+      }
+    );
+    const { result } = renderHook(
+      () => useInstances({ collection, factory, queryParams: { viewId: 'viwDiff' } }),
+      { wrapper: createWrapper(connection) }
+    );
+    const query = queries[0];
+    const ids = () => result.current.instances.map((instance: any) => instance.id);
+    expect(ids()).toEqual(['rec1', 'rec2', 'rec3']);
+
+    act(() =>
+      presence.emitReceive([
+        {
+          actionKey: 'deleteRecord',
+          payload: { tableId: 'tblDiffAlign', recordIds: ['rec2'], skipRealtime: true },
+        },
+      ])
+    );
+    expect(ids()).toEqual(['rec1', 'rec3']);
+    // The server still has rec2 in its result set, so the client must keep it there too
+    expect(query.results.map((doc: any) => doc.id)).toEqual(['rec1', 'rec2', 'rec3']);
+
+    // Simulate sharedb applying the server diffs: remove rec2 at 1, then insert rec4 at 1
+    act(() => {
+      const removed = (query.results as any[]).splice(1, 1);
+      query.emit('remove', removed, 1);
+    });
+    expect(ids()).toEqual(['rec1', 'rec3']);
+
+    act(() => {
+      const inserted = [createMockDoc('rec4')];
+      (query.results as any[]).splice(1, 0, ...inserted);
+      query.emit('insert', inserted, 1);
+    });
+    expect(ids()).toEqual(['rec1', 'rec4', 'rec3']);
   });
 });

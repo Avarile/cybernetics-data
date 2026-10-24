@@ -26,7 +26,8 @@ export const useGridRowOrder = (recordMap: IRecordIndexMap) => {
       let fieldValueMap = {};
 
       if (group?.length) {
-        const groupAnchorRecord = newRowIndex === 0 ? recordMap[1] : recordMap[newRowIndex - 1];
+        // dropping at the top places the record before recordMap[0], so it joins that record's group
+        const groupAnchorRecord = newRowIndex === 0 ? recordMap[0] : recordMap[newRowIndex - 1];
 
         if (!groupAnchorRecord) {
           throw new Error("Can't find the group anchor record by index: " + newRowIndex);

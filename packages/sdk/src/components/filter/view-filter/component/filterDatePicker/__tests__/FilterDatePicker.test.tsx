@@ -62,4 +62,21 @@ describe('FilterDatePicker days input', () => {
     fireEvent.change(getDaysInput(), { target: { value: '5' } });
     expect(onSelect).toHaveBeenLastCalledWith(daysAgo(5));
   });
+
+  it('switching to a days mode without a number clears the stale value and keeps the mode', () => {
+    const onSelect = vi.fn();
+    const today: IDateFilter = { mode: 'today', timeZone };
+    const { rerender } = render(
+      <FilterDatePicker value={today} field={field} operator="is" onSelect={onSelect} />,
+      { wrapper: createAppContext() }
+    );
+
+    fireEvent.click(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByText(defaultLocale.filter.component.date.daysAgo));
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+
+    // parent echoes the cleared value back
+    rerender(<FilterDatePicker value={null} field={field} operator="is" onSelect={onSelect} />);
+    expect(getDaysInput().value).toBe('');
+  });
 });

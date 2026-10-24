@@ -80,9 +80,9 @@ export const drawMultiLineText = (ctx: CanvasRenderingContext2D, props: IMultiLi
           if (currentLineWidth + ellipsisWidth > maxWidth) {
             let tempLine = currentLine;
             let tempLineWidth = currentLineWidth;
-            while (tempLineWidth + ellipsisWidth > maxWidth) {
-              tempLine = tempLine.substring(0, tempLine.length - 1);
+            while (tempLineWidth + ellipsisWidth > maxWidth && tempLine.length > 0) {
               tempLineWidth -= ctx.measureText(tempLine[tempLine.length - 1]).width;
+              tempLine = tempLine.substring(0, tempLine.length - 1);
             }
             currentLine = tempLine;
             currentLineWidth = tempLineWidth;
@@ -146,7 +146,8 @@ export const drawSingleLineText = (ctx: CanvasRenderingContext2D, props: ISingle
   let width = 0;
   let displayText = '';
 
-  const cacheKey = `${text}-${fontSize}-${maxWidth}`;
+  const fontKey = ctx.font || '';
+  const cacheKey = `${fontKey}-${text}-${fontSize}-${maxWidth}`;
   const cachedTextInfo = singleLineTextInfoCache.get(cacheKey);
 
   if (cachedTextInfo) {
@@ -169,8 +170,8 @@ export const drawSingleLineText = (ctx: CanvasRenderingContext2D, props: ISingle
     const isDisplayEllipsis = displayText.length < text.length;
     if (isDisplayEllipsis) {
       while (width + ellipsisWidth > maxWidth && displayText.length > 0) {
-        displayText = displayText.slice(0, -1);
         width -= ctx.measureText(displayText[displayText.length - 1]).width;
+        displayText = displayText.slice(0, -1);
       }
       displayText = ctx.direction === 'rtl' ? ellipsis + displayText : displayText + ellipsis;
       width = Math.min(width + ellipsisWidth, maxWidth);

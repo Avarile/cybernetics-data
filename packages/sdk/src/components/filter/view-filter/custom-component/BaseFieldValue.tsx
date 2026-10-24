@@ -285,11 +285,14 @@ export function BaseFieldValue(props: IBaseFieldValue) {
     props;
   const { t } = useTranslation();
 
-  const showEmptyComponent = useMemo(() => {
-    const showEmpty = EMPTY_OPERATORS.includes(operator);
-    showEmpty && onSelect?.(null);
-    return showEmpty;
-  }, [operator, onSelect]);
+  const showEmptyComponent = EMPTY_OPERATORS.includes(operator);
+
+  // empty operators take no value; clear a leftover one after render, not during it
+  useEffect(() => {
+    if (showEmptyComponent && value !== null) {
+      onSelect?.(null);
+    }
+  }, [showEmptyComponent, value, onSelect]);
 
   if (showEmptyComponent) {
     return null;

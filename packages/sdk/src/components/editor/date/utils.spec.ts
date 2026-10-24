@@ -1,6 +1,8 @@
+import { TimeFormatting } from '@teable/core';
+import type { IDatetimeFormatting } from '@teable/core';
 import { fromZonedTime } from 'date-fns-tz';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { combineZonedDateAndTime } from './utils';
+import { combineZonedDateAndTime, convertZonedInputToUtc } from './utils';
 
 const tokyo = 'Asia/Tokyo';
 
@@ -39,5 +41,24 @@ describe('combineZonedDateAndTime', () => {
     expect(combineZonedDateAndTime(pickedDay('2024-03-20', newYork), null, newYork)).toBe(
       '2024-03-21T01:15:00.000Z'
     );
+  });
+});
+
+describe('convertZonedInputToUtc', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('uses the current time in the field timezone for a date-only input', () => {
+    vi.useFakeTimers();
+    // 21:15 in New York
+    vi.setSystemTime(new Date('2024-03-02T02:15:00.000Z'));
+    const formatting = {
+      date: 'YYYY-MM-DD',
+      time: TimeFormatting.None,
+      timeZone: 'America/New_York',
+    } as IDatetimeFormatting;
+
+    expect(convertZonedInputToUtc('2024-03-20', formatting)).toBe('2024-03-21T01:15:00.000Z');
   });
 });

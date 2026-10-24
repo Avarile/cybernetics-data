@@ -253,7 +253,7 @@ const InfiniteScrollerBase: ForwardRefRenderFunction<ScrollerRef, ScrollerProps>
 
   useEffect(() => {
     if (scrollerRef.current) {
-      scrollTo({});
+      // setDimensions re-clamps the current scroll position itself
       scrollerRef.current.setDimensions(containerWidth, containerHeight, scrollWidth, scrollHeight);
     }
   }, [containerHeight, containerWidth, scrollWidth, scrollHeight]);

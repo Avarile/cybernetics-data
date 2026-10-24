@@ -60,14 +60,23 @@ export const useConnection = (path?: string) => {
     const connection = new Connection(socket as Socket);
     setConnection(connection);
 
-    let pingInterval: ReturnType<typeof setInterval>;
+    let pingInterval: ReturnType<typeof setInterval> | undefined;
+    const stopPing = () => {
+      pingInterval && clearInterval(pingInterval);
+      pingInterval = undefined;
+    };
     const onConnected = () => {
       setConnected(true);
-      pingInterval = setInterval(() => connection.ping(), 1000 * 10);
+      // Reconnects emit 'connected' again, keep a single interval
+      stopPing();
+      pingInterval = setInterval(() => {
+        // ping() throws when the socket is not usable
+        connection.canSend ? connection.ping() : stopPing();
+      }, 1000 * 10);
     };
     const onDisconnected = () => {
       setConnected(false);
-      pingInterval && clearInterval(pingInterval);
+      stopPing();
     };
     const onReceive = (request: ConnectionReceiveRequest) => {
       if (request.data.error) {
@@ -78,14 +87,16 @@ export const useConnection = (path?: string) => {
     connection.on('connected', onConnected);
     connection.on('disconnected', onDisconnected);
     connection.on('closed', onDisconnected);
+    connection.on('stopped', onDisconnected);
     connection.on('error', shareDbErrorHandler);
     connection.on('receive', onReceive);
 
     return () => {
-      pingInterval && clearInterval(pingInterval);
+      stopPing();
       connection.removeListener('connected', onConnected);
       connection.removeListener('disconnected', onDisconnected);
       connection.removeListener('closed', onDisconnected);
+      connection.removeListener('stopped', onDisconnected);
       connection.removeListener('error', shareDbErrorHandler);
       connection.removeListener('receive', onReceive);
       if (connection) {

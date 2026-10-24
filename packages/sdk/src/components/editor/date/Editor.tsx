@@ -76,8 +76,13 @@ const DateEditorBase: ForwardRefRenderFunction<IEditorRef<string>, IDateEditorMa
     if (inputValue === originalInputValue) return;
     if (relatedTarget && popoverContentRef.current?.contains(relatedTarget)) return;
 
-    const value = convertZonedInputToUtc(inputValue, formatting);
-    onChange?.(value);
+    const newValue = convertZonedInputToUtc(inputValue, formatting);
+    // Only an emptied input clears the date; an unparseable one restores the previous value.
+    if (newValue == null && inputValue.trim()) {
+      setInputValue(formatDisplayValue(value || '', formatting));
+    } else {
+      onChange?.(newValue);
+    }
     setEditing(false);
   };
 

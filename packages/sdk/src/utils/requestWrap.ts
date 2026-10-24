@@ -1,4 +1,4 @@
-import { errorRequestHandler } from '../context';
+import { errorRequestHandler } from '../context/app/queryClient';
 
 type IRequestFunction<T extends unknown[], R> = (...args: T) => R;
 

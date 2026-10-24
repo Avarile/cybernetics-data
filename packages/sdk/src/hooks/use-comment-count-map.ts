@@ -78,20 +78,25 @@ export const useCommentCountMap = (query?: IGetRecordsRo) => {
       const remoteData = get(remotePresences, presenceKey);
       if (remoteData) {
         const remoteRecordId = remoteData.data.recordId;
+        // `pre` can be the react-query cache data, so never mutate it
         setCommentCount((pre) => {
           const index = pre.findIndex((com) => com.recordId === remoteRecordId);
-          if (index > -1) {
-            remoteData.type === CommentPatchType.CreateComment && pre[index].count++;
-            remoteData.type === CommentPatchType.DeleteComment && pre[index].count--;
-            pre?.[index].count === 0 && pre.splice(index, 1);
-          } else {
-            remoteData.type === CommentPatchType.CreateComment &&
-              pre.push({
-                recordId: remoteRecordId,
-                count: 1,
-              });
+          if (index === -1) {
+            return remoteData.type === CommentPatchType.CreateComment
+              ? [...pre, { recordId: remoteRecordId, count: 1 }]
+              : pre;
           }
-          return [...pre];
+          const delta =
+            remoteData.type === CommentPatchType.CreateComment
+              ? 1
+              : remoteData.type === CommentPatchType.DeleteComment
+                ? -1
+                : 0;
+          const count = pre[index].count + delta;
+          if (count === 0) {
+            return pre.filter((_, i) => i !== index);
+          }
+          return pre.map((com, i) => (i === index ? { ...com, count } : com));
         });
       }
     };

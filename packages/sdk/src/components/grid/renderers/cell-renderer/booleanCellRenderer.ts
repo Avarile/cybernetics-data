@@ -12,6 +12,17 @@ import type {
 
 const { cellHorizontalPadding } = GRID_DEFAULT;
 
+// Left edge of the single checkbox inside the cell, shared by draw and checkRegion
+export const getCheckboxOffsetX = (
+  width: number,
+  iconSize: number,
+  contentAlign: IBooleanCell['contentAlign'] = 'center'
+) => {
+  if (contentAlign === 'left') return cellHorizontalPadding;
+  if (contentAlign === 'right') return width - cellHorizontalPadding - iconSize;
+  return width / 2 - iconSize / 2;
+};
+
 export const booleanCellRenderer: IInternalCellRenderer<IBooleanCell> = {
   type: CellType.Boolean,
   needsHover: true,
@@ -24,13 +35,7 @@ export const booleanCellRenderer: IInternalCellRenderer<IBooleanCell> = {
     const halfIconSize = iconSizeSM / 2;
 
     if (!isMultiple) {
-      let textOffsetX = width / 2 - halfIconSize;
-
-      if (contentAlign === 'left') {
-        textOffsetX = cellHorizontalPadding;
-      } else if (contentAlign === 'right') {
-        textOffsetX = width - cellHorizontalPadding - iconSizeSM;
-      }
+      const textOffsetX = getCheckboxOffsetX(width, iconSizeSM, contentAlign);
 
       // 16px box with 3px corners drawn inside the unchanged 20px click target
       return drawCheckbox(ctx, {
@@ -70,15 +75,16 @@ export const booleanCellRenderer: IInternalCellRenderer<IBooleanCell> = {
     }
   },
   checkRegion: (cell: IBooleanCell, props: ICellClickProps, _shouldCalculate?: boolean) => {
-    const { data, readonly } = cell;
+    const { data, readonly, contentAlign } = cell;
     if (readonly) return { type: CellRegionType.Blank };
     const { hoverCellPosition, width, height, theme } = props;
     const [x, y] = hoverCellPosition;
     const { iconSizeSM } = theme;
     const halfIconSize = iconSizeSM / 2;
+    const offsetX = getCheckboxOffsetX(width, iconSizeSM, contentAlign);
 
     if (
-      inRange(x, width / 2 - halfIconSize, width / 2 + halfIconSize) &&
+      inRange(x, offsetX, offsetX + iconSizeSM) &&
       inRange(y, height / 2 - halfIconSize, height / 2 + halfIconSize)
     ) {
       return {

@@ -16,7 +16,8 @@ export const useGridPopupPosition = (rect: IEditorProps['rect'], maxHeight?: num
 
     const screenH = window.innerHeight;
     const { y: gridY } = gridBound;
-    const spaceAbove = Math.max(y, gridY);
+    // rect.y is relative to the grid, so add the grid offset to get the viewport position
+    const spaceAbove = gridY + y;
     const spaceBelow = screenH - gridY - y - height;
     const isAbove = spaceAbove > spaceBelow;
     const finalHeight = Math.min(

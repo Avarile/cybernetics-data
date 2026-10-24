@@ -26,8 +26,9 @@ const RatingEditorBase: ForwardRefRenderFunction<
     if (isNumberKey(e.keyCode)) {
       const currentTime = Date.now();
       let newValue: number | null = Number(e.key);
-      if (value === 1 && newValue === 0 && currentTime - lastTime <= 500) {
-        newValue = Number(`${value}${newValue}`);
+      // "1" then "0" quickly means 10, only when the rating goes that high
+      if (value === 1 && newValue === 0 && cell.max >= 10 && currentTime - lastTime <= 500) {
+        newValue = Math.min(Number(`${value}${newValue}`), cell.max);
       } else {
         newValue =
           newValue === value || newValue === 0 || Number.isNaN(newValue)

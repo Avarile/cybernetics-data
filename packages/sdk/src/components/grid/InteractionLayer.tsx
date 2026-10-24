@@ -584,7 +584,8 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
     isColumnResizable && onColumnResizeStart(mouseState);
   };
 
-  const onCellPosition = (mouseState: IMouseState) => {
+  // Takes the hover position computed for this mouse move; the state value is one move behind
+  const onCellPosition = (mouseState: IMouseState, hoverCellPosition: ICellPosition | null) => {
     const { columnIndex, rowIndex, type } = mouseState;
     const { realIndex } = getLinearRow(rowIndex);
     const cell = getCellContent([columnIndex, realIndex]);
@@ -638,7 +639,7 @@ export const InteractionLayerBase: ForwardRefRenderFunction<
     setHoverCellPosition(() => hoverCellPosition);
     setMouseState(() => mouseState);
     setCursorStyle(mouseState.type);
-    onCellPosition(mouseState);
+    onCellPosition(mouseState, hoverCellPosition);
     if (isFillingRef.current) onAutoScroll(mouseState);
     if (isSelecting) onAutoScroll(mouseState);
     if (isDragging) onAutoScroll(mouseState, dragType);

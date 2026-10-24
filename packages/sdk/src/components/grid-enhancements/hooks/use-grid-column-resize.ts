@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import { useDebounce } from 'react-use';
 import type { IGridColumn } from '../..';
 import { useView } from '../../../hooks';
@@ -9,8 +9,9 @@ export function useGridColumnResize<T extends { id: string }>(_columns: T[]) {
   const fields = useFields();
   const view = useView();
   const viewId = useViewId();
-  const [newSize, setNewSize] = useState<number>();
-  const [index, setIndex] = useState<number>();
+  // widths waiting for the debounced save, keyed by field id so resizing several columns keeps them all
+  const pendingWidthsRef = useRef<Record<string, number>>({});
+  const [resizeCount, setResizeCount] = useState(0);
   const [columns, setColumns] = useState(_columns);
 
   useEffect(() => setColumns(_columns), [_columns]);
@@ -21,18 +22,21 @@ export function useGridColumnResize<T extends { id: string }>(_columns: T[]) {
         return;
       }
 
-      if (index == null || newSize == null) {
+      const pendingWidths = pendingWidthsRef.current;
+      const fieldIds = Object.keys(pendingWidths);
+      if (!fieldIds.length) {
         return;
       }
-      view.updateColumnMeta([
-        {
-          fieldId: fields[index].id,
-          columnMeta: { width: newSize },
-        },
-      ]);
+      pendingWidthsRef.current = {};
+      view.updateColumnMeta(
+        fieldIds.map((fieldId) => ({
+          fieldId,
+          columnMeta: { width: pendingWidths[fieldId] },
+        }))
+      );
     },
     300,
-    [index, newSize]
+    [resizeCount]
   );
 
   const onColumnResize = useCallback(
@@ -60,8 +64,8 @@ export function useGridColumnResize<T extends { id: string }>(_columns: T[]) {
       newColumns.splice(index, 1, newColumn);
 
       setColumns(newColumns);
-      setNewSize(newSize);
-      setIndex(colIndex);
+      pendingWidthsRef.current[field.id] = newSize;
+      setResizeCount((count) => count + 1);
     },
     [columns, fields, setColumns, viewId]
   );

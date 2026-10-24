@@ -1,5 +1,6 @@
 import { difference } from 'lodash';
 import React, { useMemo } from 'react';
+import { useTranslation } from '../../context/app/i18n';
 import { useViewId, useFields, useView } from '../../hooks';
 import type { KanbanView } from '../../model';
 import { swapReorder } from '../../utils';
@@ -9,6 +10,7 @@ export const VisibleFields: React.FC<{
   footer?: React.ReactNode;
   children: (text: string, isActive: boolean) => React.ReactNode;
 }> = ({ footer, children }) => {
+  const { t } = useTranslation();
   const activeViewId = useViewId();
   const totalFields = useFields({ withHidden: true, withDenied: true });
   const view = useView() as KanbanView | undefined;
@@ -82,7 +84,7 @@ export const VisibleFields: React.FC<{
       onOrderChange={onOrderChange}
     >
       {children(
-        hiddenCount ? `${hiddenCount} hidden field(s)` : 'Hide fields',
+        hiddenCount ? t('hidden.configLabel_other', { count: hiddenCount }) : t('hidden.label'),
         Boolean(hiddenCount)
       )}
     </HideFieldsBase>

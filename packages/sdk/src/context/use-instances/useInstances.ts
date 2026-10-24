@@ -48,6 +48,30 @@ type CachedQuery = {
 };
 const subscribeQueryCaches = new WeakMap<Connection, Map<string, CachedQuery>>();
 
+// Docs removed locally (projected deletes) that may still sit in the server-aligned
+// `query.results`. Shared by every hook instance using the query; results are never mutated
+// so sharedb diff indexes stay aligned with the server.
+const hiddenQueryDocIds = new WeakMap<Query, Set<string>>();
+
+const getHiddenDocIds = (query: Query) => {
+  let ids = hiddenQueryDocIds.get(query);
+  if (!ids) {
+    ids = new Set();
+    hiddenQueryDocIds.set(query, ids);
+  }
+  return ids;
+};
+
+const getVisibleResults = <T>(query: Query<T>): Doc<T>[] => {
+  const hiddenIds = hiddenQueryDocIds.get(query);
+  const results = query.results ?? [];
+  return hiddenIds?.size ? results.filter((doc) => !hiddenIds.has(doc.id)) : results;
+};
+
+// Ids of the docs before `index` in `query.results`, used to map server indexes onto instances
+const getPrecedingIds = <T>(query: Query<T>, index: number) =>
+  (query.results ?? []).slice(0, index).map((doc) => doc.id);
+
 type ActionTriggerPayload = {
   tableId?: string;
   fieldIds?: unknown;
@@ -456,7 +480,8 @@ export function useInstances<T, R extends { id: string }>({
         return false;
       }
 
-      const currentDocs = (preQueryRef.current?.results ?? []) as Doc<IRecord>[];
+      const currentQuery = preQueryRef.current;
+      const currentDocs = (currentQuery ? getVisibleResults(currentQuery) : []) as Doc<IRecord>[];
       const currentDocIds = currentDocs.map((doc) => doc.id);
       const refreshSeq = ++projectedRefreshSeqRef.current;
 
@@ -535,19 +560,18 @@ export function useInstances<T, R extends { id: string }>({
 
       const deletedIds = new Set(recordIds);
       const currentQuery = preQueryRef.current;
-      const currentDocs = (currentQuery?.results ?? []) as Doc<IRecord>[];
+      const currentDocs = (currentQuery ? getVisibleResults(currentQuery) : []) as Doc<IRecord>[];
       const hasDocsInQuery = currentDocs.some((doc) => deletedIds.has(doc.id));
       // The query can be shared with other hook instances, and the first one to handle the
-      // delete strips it from `results`. Each instance still removes the records it tracks.
+      // delete hides it for all of them. Each instance still removes the records it tracks.
       const ownedIds = recordIds.filter((id) => opListeners.current.has(id));
       if (!hasDocsInQuery && !ownedIds.length) {
         return false;
       }
 
       if (currentQuery && hasDocsInQuery) {
-        currentQuery.results = currentDocs.filter(
-          (doc) => !deletedIds.has(doc.id)
-        ) as unknown as Doc<T>[];
+        const hiddenIds = getHiddenDocIds(currentQuery);
+        currentDocs.forEach((doc) => deletedIds.has(doc.id) && hiddenIds.add(doc.id));
       }
       ownedIds.forEach((id) => opListeners.current.removeById(id));
       dispatch({ type: 'removeByIds', ids: [...deletedIds] });
@@ -633,8 +657,9 @@ export function useInstances<T, R extends { id: string }>({
     if (!query.results) {
       return;
     }
-    dispatch({ type: 'ready', results: query.results, extra: query.extra });
-    query.results.forEach((doc) => {
+    const results = getVisibleResults(query);
+    dispatch({ type: 'ready', results, extra: query.extra });
+    results.forEach((doc) => {
       opListeners.current.add(doc, (op) => {
         console.log(`${query.collection} on op:`, op, doc);
         dispatch({ type: 'update', doc });
@@ -642,13 +667,15 @@ export function useInstances<T, R extends { id: string }>({
     });
   }, []);
 
-  const handleInsert = useCallback((docs: Doc<T>[], index: number) => {
+  const handleInsert = useCallback((query: Query<T>, insertedDocs: Doc<T>[], index: number) => {
     console.log(
-      `${docs[0]?.collection}:insert:`,
-      docs.map((doc) => doc.id),
+      `${insertedDocs[0]?.collection}:insert:`,
+      insertedDocs.map((doc) => doc.id),
       index
     );
-    dispatch({ type: 'insert', docs, index });
+    const hiddenIds = hiddenQueryDocIds.get(query);
+    const docs = hiddenIds ? insertedDocs.filter((doc) => !hiddenIds.has(doc.id)) : insertedDocs;
+    dispatch({ type: 'insert', docs, index, precedingIds: getPrecedingIds(query, index) });
 
     docs.forEach((doc) => {
       opListeners.current.add(doc, (op) => {
@@ -658,26 +685,28 @@ export function useInstances<T, R extends { id: string }>({
     });
   }, []);
 
-  const handleRemove = useCallback((docs: Doc<T>[], index: number) => {
+  const handleRemove = useCallback((query: Query<T>, docs: Doc<T>[], index: number) => {
     console.log(
       `${docs[0]?.collection}:remove:`,
       docs.map((doc) => doc.id),
       index
     );
     dispatch({ type: 'remove', docs, index });
+    const hiddenIds = hiddenQueryDocIds.get(query);
     docs.forEach((doc) => {
+      hiddenIds?.delete(doc.id);
       opListeners.current.remove(doc);
     });
   }, []);
 
-  const handleMove = useCallback((docs: Doc<T>[], from: number, to: number) => {
+  const handleMove = useCallback((query: Query<T>, docs: Doc<T>[], from: number, to: number) => {
     console.log(
       `${docs[0]?.collection}:move:`,
       docs.map((doc) => doc.id),
       from,
       to
     );
-    dispatch({ type: 'move', docs, from, to });
+    dispatch({ type: 'move', docs, from, to, precedingIds: getPrecedingIds(query, to) });
   }, []);
 
   const handleExtra = useCallback((extra: unknown) => {
@@ -797,20 +826,25 @@ export function useInstances<T, R extends { id: string }>({
 
     query.on('changed', changedListener);
 
-    query.on('insert', handleInsert);
+    const insertListener = (docs: Doc<T>[], index: number) => handleInsert(query, docs, index);
+    const removeListener = (docs: Doc<T>[], index: number) => handleRemove(query, docs, index);
+    const moveListener = (docs: Doc<T>[], from: number, to: number) =>
+      handleMove(query, docs, from, to);
 
-    query.on('remove', handleRemove);
+    query.on('insert', insertListener);
 
-    query.on('move', handleMove);
+    query.on('remove', removeListener);
+
+    query.on('move', moveListener);
 
     query.on('extra', handleExtra);
 
     return () => {
       query.removeListener('ready', readyListener);
       query.removeListener('changed', changedListener);
-      query.removeListener('insert', handleInsert);
-      query.removeListener('remove', handleRemove);
-      query.removeListener('move', handleMove);
+      query.removeListener('insert', insertListener);
+      query.removeListener('remove', removeListener);
+      query.removeListener('move', moveListener);
       query.removeListener('extra', handleExtra);
     };
   }, [query, handleInsert, handleRemove, handleMove, handleReady, handleExtra]);

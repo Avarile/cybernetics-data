@@ -47,13 +47,15 @@ export const UserEditor = (props: IUserEditorProps) => {
           name={title}
           avatar={avatarUrl}
           suffix={
-            <X
-              className="size-3 cursor-pointer opacity-50 hover:opacity-100"
-              onClick={(e) => {
-                e.preventDefault();
-                onDelete(id);
-              }}
-            />
+            !readonly && (
+              <X
+                className="size-3 cursor-pointer opacity-50 hover:opacity-100"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onDelete(id);
+                }}
+              />
+            )
           }
         />
       ))}

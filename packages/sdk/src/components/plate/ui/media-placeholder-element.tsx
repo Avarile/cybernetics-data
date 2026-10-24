@@ -1,7 +1,7 @@
 'use client';
 
 import { CommentNodeType } from '@teable/openapi';
-import { cn } from '@teable/ui-lib';
+import { cn, sonner } from '@teable/ui-lib';
 import type { PlateElementProps } from '@udecode/plate/react';
 import { PlateElement, useEditorPlugin, withHOC } from '@udecode/plate/react';
 import type { TPlaceholderElement } from '@udecode/plate-media';
@@ -18,7 +18,10 @@ import { AudioLines, FileUp, Film, ImageIcon, Loader2Icon } from 'lucide-react';
 import * as React from 'react';
 
 import { useFilePicker } from 'use-file-picker';
+import { useTranslation } from '../../../context/app/i18n';
 import { useUploadFile } from './hooks/useUploadFile';
+
+const { toast } = sonner;
 
 const CONTENT: Record<
   string,
@@ -56,6 +59,7 @@ const MediaPlaceholderElement = withHOC(
     const { editor, element } = props;
 
     const { api } = useEditorPlugin(PlaceholderPlugin);
+    const { t } = useTranslation();
 
     const { isUploading, progress, uploadedFile, uploadFile, uploadingFile } = useUploadFile();
 
@@ -84,10 +88,14 @@ const MediaPlaceholderElement = withHOC(
 
     const replaceCurrentPlaceholder = React.useCallback(
       (file: File) => {
-        void uploadFile(file);
+        uploadFile(file).catch((error?: string) => {
+          // Reset the placeholder so another file can be picked
+          api.placeholder.removeUploadingFile(element.id as string);
+          toast.error(error || t('common.uploadFailed'));
+        });
         api.placeholder.addUploadingFile(element.id as string, file);
       },
-      [api.placeholder, element.id, uploadFile]
+      [api.placeholder, element.id, t, uploadFile]
     );
 
     React.useEffect(() => {
