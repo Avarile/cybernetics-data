@@ -26,7 +26,7 @@ module.exports = function (options, webpack) {
     devtool: 'source-map',
     externals: [
       nodeExternals({
-        allowlist: ['webpack/hot/poll?100', /^@teable/],
+        allowlist: ['webpack/hot/poll?100', /^@teable/, /^@cybernetics/],
       }),
     ],
     // ignore tests hot reload
