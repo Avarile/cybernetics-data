@@ -467,14 +467,26 @@ export class RecordOpenApiService {
       });
   }
 
-  async buttonClick(tableId: string, recordId: string, fieldId: string) {
-    const fieldRaw = await this.prismaService.txClient().field.findFirstOrThrow({
+  private async getButtonFieldRaw(tableId: string, fieldId: string) {
+    const fieldRaw = await this.prismaService.txClient().field.findFirst({
       where: {
         id: fieldId,
+        tableId,
         type: FieldType.Button,
         deletedTime: null,
       },
     });
+    if (!fieldRaw) {
+      throw new CustomHttpException(
+        `Field ${fieldId} is not a button field of table ${tableId}`,
+        HttpErrorCode.VALIDATION_ERROR
+      );
+    }
+    return fieldRaw;
+  }
+
+  async buttonClick(tableId: string, recordId: string, fieldId: string) {
+    const fieldRaw = await this.getButtonFieldRaw(tableId, fieldId);
 
     const fieldInstance = createFieldInstanceByRaw(fieldRaw);
     const options = fieldInstance.options as IButtonFieldOptions;
@@ -525,13 +537,7 @@ export class RecordOpenApiService {
   }
 
   async resetButton(tableId: string, recordId: string, fieldId: string) {
-    const fieldRaw = await this.prismaService.txClient().field.findFirstOrThrow({
-      where: {
-        id: fieldId,
-        type: FieldType.Button,
-        deletedTime: null,
-      },
-    });
+    const fieldRaw = await this.getButtonFieldRaw(tableId, fieldId);
 
     const fieldInstance = createFieldInstanceByRaw(fieldRaw);
     const fieldOptions = fieldInstance.options as IButtonFieldOptions;

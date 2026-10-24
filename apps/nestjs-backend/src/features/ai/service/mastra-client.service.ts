@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { HttpErrorCode } from '@teable/core';
 import axios from 'axios';
+import { CustomHttpException } from '../../../custom.exception';
 
 export interface IMastraThread {
   id: string;
@@ -32,12 +34,39 @@ export class MastraClientService {
     return this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {};
   }
 
+  /**
+   * Turn Mastra transport failures and rejected requests into HTTP errors, so an
+   * unreachable service is not reported as a bare 500. Other errors pass through.
+   */
+  private toHttpError(err: unknown): unknown {
+    if (!axios.isAxiosError(err)) return err;
+    if (!err.response) {
+      this.logger.error(`[mastra] ${this.baseUrl} unreachable: ${err.code ?? err.message}`);
+      return new CustomHttpException('AI service is unavailable', HttpErrorCode.GATEWAY_TIMEOUT);
+    }
+    const status = err.response.status;
+    if (status === 404) {
+      return new CustomHttpException('AI resource not found', HttpErrorCode.NOT_FOUND);
+    }
+    if (status === 400 || status === 422) {
+      return new CustomHttpException(
+        'AI service rejected the request',
+        HttpErrorCode.VALIDATION_ERROR
+      );
+    }
+    return err;
+  }
+
   async createThread(resourceId: string, agentId: string, title?: string): Promise<IMastraThread> {
-    const { data } = await axios.post<IMastraThread>(
-      `${this.baseUrl}/api/memory/threads`,
-      { resourceId, ...(title ? { title } : {}) },
-      { params: { agentId }, timeout: 10_000, headers: this.authHeaders() }
-    );
+    const { data } = await axios
+      .post<IMastraThread>(
+        `${this.baseUrl}/api/memory/threads`,
+        { resourceId, ...(title ? { title } : {}) },
+        { params: { agentId }, timeout: 10_000, headers: this.authHeaders() }
+      )
+      .catch((err) => {
+        throw this.toHttpError(err);
+      });
     return data;
   }
 
@@ -52,23 +81,32 @@ export class MastraClientService {
       return data;
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) return null;
-      throw err;
+      throw this.toHttpError(err);
     }
   }
 
   async deleteThread(threadId: string, agentId?: string): Promise<void> {
-    await axios.delete(`${this.baseUrl}/api/memory/threads/${threadId}`, {
-      params: agentId ? { agentId } : undefined,
-      timeout: 10_000,
-      headers: this.authHeaders(),
-    });
+    await axios
+      .delete(`${this.baseUrl}/api/memory/threads/${threadId}`, {
+        params: agentId ? { agentId } : undefined,
+        timeout: 10_000,
+        headers: this.authHeaders(),
+      })
+      .catch((err) => {
+        throw this.toHttpError(err);
+      });
   }
 
   async listThreads(resourceId: string): Promise<IMastraThread[]> {
-    const { data } = await axios.get<IMastraThread[] | { threads: IMastraThread[] }>(
-      `${this.baseUrl}/api/memory/threads`,
-      { params: { resourceId }, timeout: 10_000, headers: this.authHeaders() }
-    );
+    const { data } = await axios
+      .get<IMastraThread[] | { threads: IMastraThread[] }>(`${this.baseUrl}/api/memory/threads`, {
+        params: { resourceId },
+        timeout: 10_000,
+        headers: this.authHeaders(),
+      })
+      .catch((err) => {
+        throw this.toHttpError(err);
+      });
     return Array.isArray(data) ? data : data.threads ?? [];
   }
 
@@ -89,7 +127,7 @@ export class MastraClientService {
       return this.normalizeMessages(data);
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) return [];
-      throw err;
+      throw this.toHttpError(err);
     }
   }
 

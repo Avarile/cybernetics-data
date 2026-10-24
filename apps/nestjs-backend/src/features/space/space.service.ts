@@ -692,8 +692,9 @@ export class SpaceService {
     if (config) {
       updateData.config = JSON.stringify(config);
     }
+    // Scope to the space the caller was authorised on, not just the integration id.
     const res = await this.prismaService.integration.update({
-      where: { id: integrationId },
+      where: { id: integrationId, resourceId: spaceId },
       data: updateData,
     });
     await this.performanceCacheService.del(generateIntegrationCacheKey(spaceId));
@@ -702,7 +703,7 @@ export class SpaceService {
 
   async deleteIntegration(integrationId: string, spaceId: string) {
     await this.prismaService.integration.delete({
-      where: { id: integrationId },
+      where: { id: integrationId, resourceId: spaceId },
     });
     await this.performanceCacheService.del(generateIntegrationCacheKey(spaceId));
   }

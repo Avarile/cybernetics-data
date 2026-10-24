@@ -27,6 +27,7 @@ import type { IClsStore } from '../../types/cls';
 import { updateOrder } from '../../utils/update-order';
 import { AttachmentsStorageService } from '../attachments/attachments-storage.service';
 import { getPublicFullStorageUrl } from '../attachments/plugins/utils';
+import { PermissionService } from '../auth/permission.service';
 import { BaseDuplicateService } from '../base/base-duplicate.service';
 
 @Injectable()
@@ -39,7 +40,8 @@ export class TemplateOpenApiService {
     private readonly cls: ClsService<IClsStore>,
     private readonly attachmentsStorageService: AttachmentsStorageService,
     @ThresholdConfig() private readonly thresholdConfig: IThresholdConfig,
-    private readonly performanceCacheService: PerformanceCacheService
+    private readonly performanceCacheService: PerformanceCacheService,
+    private readonly permissionService: PermissionService
   ) {}
 
   async createTemplate(createTemplateRo: ICreateTemplateRo) {
@@ -189,6 +191,31 @@ export class TemplateOpenApiService {
         await this.performanceCacheService.del(generateTemplatePermalinkCacheKey(templateId));
         return res;
       });
+  }
+
+  // Unpublish from a base's publish dialog: admins, or anyone who can update the template's base.
+  async unpublishTemplate(templateId: string) {
+    const template = await this.prismaService.txClient().template.findUnique({
+      where: { id: templateId },
+      select: { baseId: true },
+    });
+    if (!template) {
+      throw new CustomHttpException('Template not found', HttpErrorCode.NOT_FOUND);
+    }
+    if (!this.cls.get('user.isAdmin')) {
+      if (!template.baseId) {
+        throw new CustomHttpException(
+          'Not allowed to unpublish this template',
+          HttpErrorCode.RESTRICTED_RESOURCE
+        );
+      }
+      await this.permissionService.validPermissions(
+        template.baseId,
+        ['base|update'],
+        this.cls.get('accessTokenId')
+      );
+    }
+    return this.deleteTemplate(templateId);
   }
 
   async updateTemplate(templateId: string, updateTemplateRo: IUpdateTemplateRo) {

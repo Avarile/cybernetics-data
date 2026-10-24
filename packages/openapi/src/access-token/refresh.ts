@@ -1,12 +1,13 @@
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';
+import { accessTokenExpiredTimeSchema } from './create';
 
 export const REFRESH_ACCESS_TOKEN = '/access-token/{id}/refresh';
 
 export const refreshAccessTokenRoSchema = z
   .object({
-    expiredTime: z.string(),
+    expiredTime: accessTokenExpiredTimeSchema,
   })
   .optional();
 

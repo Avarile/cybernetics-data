@@ -43,6 +43,21 @@ export class PluginService {
     return getPublicFullStorageUrl(logo);
   }
 
+  // Plugins the caller may manage: their own, plus system plugins for admins.
+  private manageableWhere(id: string) {
+    const userId = this.cls.get('user.id');
+    const isAdmin = this.cls.get('user.isAdmin');
+    return { id, createdBy: isAdmin ? { in: ['system', userId] } : userId };
+  }
+
+  private pluginNotFound() {
+    return new CustomHttpException('Plugin not found', HttpErrorCode.NOT_FOUND, {
+      localization: {
+        i18nKey: 'httpErrors.plugin.notFound',
+      },
+    });
+  }
+
   private convertToVo<
     T extends {
       positions: string;
@@ -323,7 +338,9 @@ export class PluginService {
 
   async delete(id: string) {
     await this.prismaService.$tx(async (prisma) => {
-      const res = await prisma.plugin.delete({ where: { id } });
+      const res = await prisma.plugin.delete({ where: this.manageableWhere(id) }).catch(() => {
+        throw this.pluginNotFound();
+      });
       if (res.pluginUser) {
         await prisma.user.delete({ where: { id: res.pluginUser } });
       }
@@ -332,17 +349,21 @@ export class PluginService {
 
   async regenerateSecret(id: string): Promise<IPluginRegenerateSecretVo> {
     const { secret, hashedSecret, maskedSecret } = await generateSecret();
-    await this.prismaService.plugin.update({
-      select: {
-        id: true,
-        secret: true,
-      },
-      where: { id },
-      data: {
-        secret: hashedSecret,
-        maskedSecret,
-      },
-    });
+    await this.prismaService.plugin
+      .update({
+        select: {
+          id: true,
+          secret: true,
+        },
+        where: this.manageableWhere(id),
+        data: {
+          secret: hashedSecret,
+          maskedSecret,
+        },
+      })
+      .catch(() => {
+        throw this.pluginNotFound();
+      });
     return { secret, id };
   }
 
@@ -410,16 +431,24 @@ export class PluginService {
 
   async submitPlugin(id: string) {
     const userId = this.cls.get('user.id');
-    await this.prismaService.plugin.update({
-      where: { id, createdBy: userId },
-      data: { status: PluginStatus.Reviewing },
-    });
+    await this.prismaService.plugin
+      .update({
+        where: { id, createdBy: userId },
+        data: { status: PluginStatus.Reviewing },
+      })
+      .catch(() => {
+        throw this.pluginNotFound();
+      });
   }
 
   async unpublishPlugin(id: string) {
-    await this.prismaService.plugin.update({
-      where: { id, status: PluginStatus.Published },
-      data: { status: PluginStatus.Developing },
-    });
+    await this.prismaService.plugin
+      .update({
+        where: { ...this.manageableWhere(id), status: PluginStatus.Published },
+        data: { status: PluginStatus.Developing },
+      })
+      .catch(() => {
+        throw this.pluginNotFound();
+      });
   }
 }

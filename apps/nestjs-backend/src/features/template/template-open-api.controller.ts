@@ -1,6 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { Controller, Get, Post, Body, Param, Patch, Delete, Query, Put } from '@nestjs/common';
 import {
+  createTemplateCategoryRoSchema,
   createTemplateRoSchema,
   ICreateTemplateCategoryRo,
   ICreateTemplateRo,
@@ -90,7 +91,10 @@ export class TemplateOpenApiController {
 
   @Post('/category/create')
   @Permissions('instance|update')
-  async createTemplateCategory(@Body() createTemplateCategoryRo: ICreateTemplateCategoryRo) {
+  async createTemplateCategory(
+    @Body(new ZodValidationPipe(createTemplateCategoryRoSchema))
+    createTemplateCategoryRo: ICreateTemplateCategoryRo
+  ) {
     return this.templateOpenApiService.createTemplateCategory(createTemplateCategoryRo);
   }
 
@@ -131,13 +135,15 @@ export class TemplateOpenApiController {
   }
 
   @Get('/by-base/:baseId')
+  @Permissions('base|read')
   async getTemplateByBaseId(@Param('baseId') baseId: string) {
     return this.templateOpenApiService.getTemplateByBaseId(baseId);
   }
 
+  // Permission is checked against the template's base in the service.
   @Delete('/unpublish/:templateId')
   async unpublishTemplate(@Param('templateId') templateId: string) {
-    return this.templateOpenApiService.deleteTemplate(templateId);
+    return this.templateOpenApiService.unpublishTemplate(templateId);
   }
 
   @Public()

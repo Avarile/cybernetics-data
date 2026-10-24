@@ -10,6 +10,17 @@ const isValidDateString = (dateString: string) => {
   return !isNaN(date.getTime());
 };
 
+// A token whose expiry is not in the future is rejected on use, so refuse to issue one.
+export const accessTokenExpiredTimeSchema = z
+  .string()
+  .refine(isValidDateString, {
+    message: 'expiredTime: Invalid Date ',
+  })
+  .refine((dateString) => new Date(dateString).getTime() > Date.now(), {
+    message: 'expiredTime must be in the future',
+  })
+  .meta({ type: 'string', example: '2024-03-25' });
+
 export const createAccessTokenRoSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
@@ -17,12 +28,7 @@ export const createAccessTokenRoSchema = z.object({
   spaceIds: z.array(z.string()).min(1).nullable().optional(),
   baseIds: z.array(z.string()).min(1).nullable().optional(),
   hasFullAccess: z.boolean().optional(),
-  expiredTime: z
-    .string()
-    .refine(isValidDateString, {
-      message: 'expiredTime: Invalid Date ',
-    })
-    .meta({ type: 'string', example: '2024-03-25' }),
+  expiredTime: accessTokenExpiredTimeSchema,
 });
 
 type CreateAccessTokenRoSchema = z.infer<typeof createAccessTokenRoSchema>;
