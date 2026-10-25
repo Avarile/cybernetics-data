@@ -1,4 +1,4 @@
-import type { IAttachmentItem } from '@teable/core';
+import type { IAttachmentItem } from '@cybernetics/core';
 import type { IEmailFieldKey, IEmailFieldMap } from '../email-table.template';
 import type { IParsedEmail } from './email-parser';
 

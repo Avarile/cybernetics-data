@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { IFieldRo, IFilter, IViewRo } from '@teable/core';
-import { FieldType, generateFieldId, SortFunc, ViewType } from '@teable/core';
+import type { IFieldRo, IFilter, IViewRo } from '@cybernetics/core';
+import { FieldType, generateFieldId, SortFunc, ViewType } from '@cybernetics/core';
 
 export type IEmailFieldKey =
   | 'subject'

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { FieldKeyType, generateEmailSourceId, getUniqName, HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { FieldKeyType, generateEmailSourceId, getUniqName, HttpErrorCode } from '@teable/core';
 import type { EmailSource } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {

@@ -1,5 +1,5 @@
+import type { HttpError } from '@cybernetics/core';
 import { useMutation } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
 import { ChevronDown } from '@teable/icons';
 import type { ICreateImapIntegrationRo, IImapServerRo } from '@teable/openapi';
 import { createImapIntegration, testUserIntegrationConnection } from '@teable/openapi';

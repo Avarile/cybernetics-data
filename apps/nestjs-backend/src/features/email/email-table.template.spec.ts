@@ -1,4 +1,4 @@
-import { FieldType } from '@teable/core';
+import { FieldType } from '@cybernetics/core';
 import {
   buildEmailTableTemplate,
   EMAIL_FIELD_TYPES,

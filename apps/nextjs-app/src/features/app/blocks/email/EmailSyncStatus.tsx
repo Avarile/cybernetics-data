@@ -1,6 +1,6 @@
+import type { HttpError } from '@cybernetics/core';
 import { useLanDayjs, useSession, useTablePermission } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
 import { AlertCircle, Loader2, Mail, RefreshCcw, Settings } from '@teable/icons';
 import type { IEmailSourceVo, UserIntegrationProvider } from '@teable/openapi';
 import {

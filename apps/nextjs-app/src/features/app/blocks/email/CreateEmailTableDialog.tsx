@@ -1,7 +1,7 @@
+import type { HttpError } from '@cybernetics/core';
 import { useBase } from '@cybernetics/sdk';
 import { ReactQueryKeys } from '@cybernetics/sdk/config';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
 import type { IEmailFolder, IUserIntegrationItemVo } from '@teable/openapi';
 import {
   BaseNodeResourceType,

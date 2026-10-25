@@ -1,6 +1,6 @@
+import type { HttpError } from '@cybernetics/core';
 import { useSession } from '@cybernetics/sdk/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { HttpError } from '@teable/core';
 import type { IEmailFolder, IEmailSourceVo } from '@teable/openapi';
 import { updateEmailSource } from '@teable/openapi';
 import {

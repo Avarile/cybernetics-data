@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { createHash, randomBytes } from 'crypto';
+import { generateUserIntegrationId, HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { generateUserIntegrationId, HttpErrorCode } from '@teable/core';
 import type { UserIntegration } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import type {

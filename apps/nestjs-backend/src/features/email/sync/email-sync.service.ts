@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { Injectable, Logger } from '@nestjs/common';
-import type { IAttachmentItem } from '@teable/core';
+import type { IAttachmentItem } from '@cybernetics/core';
 import {
   FieldKeyType,
   generateEmailMessageId,
   generateEmailSyncCursorId,
   generateRecordId,
-} from '@teable/core';
+} from '@cybernetics/core';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import type { EmailSource, UserIntegration } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
