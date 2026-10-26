@@ -51,3 +51,4 @@ export * from './user-integration';
 export * from './email';
 export * from './base-graph';
 export * from './schema-pack';
+export * from './agent';
