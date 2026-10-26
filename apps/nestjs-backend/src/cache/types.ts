@@ -6,7 +6,6 @@ import type {
   IViewVo,
 } from '@cybernetics/core';
 import type { IBaseGraphVo, IRecord, MailType } from '@teable/openapi';
-import type { IAiDataContextClaims } from '../features/ai-data/ai-data-context';
 import type { ICellContext } from '../features/calculation/utils/changes';
 import type { IOpsMap } from '../features/calculation/utils/compose-maps';
 import type { ISendMailOptions } from '../features/mail-sender/mail-helpers';
@@ -41,8 +40,6 @@ export interface ICacheStore {
   // purpose:token -> hashed emailed code (see VerificationCodeService)
   [key: `verify-code:${string}:${string}`]: IVerificationCodeCache;
   [key: `query-params:${string}`]: Record<string, unknown>;
-  // sha256 of a live AI data context token -> who it acts as (absent = revoked or expired)
-  [key: `ai-data:context:${string}`]: IAiDataContextClaims;
   // userId:minute-window -> AI data calls in that window
   [key: `ai-data:rate:${string}:${number}`]: number;
   // baseId:etag — the etag already covers the query, the data and the schema

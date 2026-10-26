@@ -1,5 +1,13 @@
 /* eslint-disable sonarjs/no-duplicate-string, @typescript-eslint/naming-convention, @typescript-eslint/no-explicit-any */
 /**
+ * AI data access (AiDataService), acting as a user: the read-as-user semantics the MCP server
+ * relies on. Covers permission enforcement per role (owner, editor, viewer, outsider), base
+ * scoping, soft-delete filtering, and a two-round title/context search (CYBERDATA-9, -13).
+ * The Mastra internal endpoint this suite used to drive was removed with Mastra (design §14.4).
+ *
+ * Runs on the e2e test database (seeded by pre-test-e2e), never on a working database.
+ */
+/**
  * AI data access, end to end over HTTP through the global guards:
  * the internal endpoint the Mastra service calls (POST /api/internal/ai-data/:op),
  * acting as the chatting user via a per-turn context token.
@@ -17,15 +25,20 @@
  */
 import { FieldType, Role } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 import type { ITableFullVo } from '@teable/openapi';
 import { emailBaseInvitation, USER_ME } from '@teable/openapi';
-import { AiDataContextService } from '../src/features/ai-data/ai-data-context.service';
+import { ClsService } from 'nestjs-cls';
+import { AiDataService } from '../src/features/ai-data/ai-data.service';
+import type { IClsStore } from '../src/types/cls';
 import { createNewUserAxios } from './utils/axios-instance/new-user';
-import { createBase, createTable, initApp, permanentDeleteBase } from './utils/init-app';
-
-// The internal endpoint only exists when the Mastra service key is configured.
-const SERVICE_KEY = 'e2e-mastra-service-key';
-process.env.MASTRA_API_KEY = SERVICE_KEY;
+import {
+  createBase,
+  createTable,
+  initApp,
+  permanentDeleteBase,
+  runWithTestUser,
+} from './utils/init-app';
 
 const KNOWLEDGE = [
   { title: 'TypeScript generics', context: 'Generic types let functions keep type information.' },
@@ -40,40 +53,38 @@ const KNOWLEDGE = [
 
 describe('AI data access (e2e)', () => {
   let app: INestApplication;
-  let url: string;
-  let contexts: AiDataContextService;
+  let data: AiDataService;
+  let cls: ClsService<IClsStore>;
   let baseA: string;
   let baseB: string;
   let knowledge: ITableFullVo;
   let secret: ITableFullVo;
   const users = { owner: '', editor: '', viewer: '', outsider: '' };
 
-  const call = async (op: string, body: unknown, headers: Record<string, string>) => {
-    const res = await fetch(`${url}/api/internal/ai-data/${op}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', ...headers },
-      body: JSON.stringify(body),
-    });
-    const text = await res.text();
-    let json: any = text;
+  /** One operation as a user in a base, with the HTTP status it would answer. */
+  const call = async (userId: string, baseId: string, op: string, body: any) => {
+    const run = (): Promise<unknown> => {
+      switch (op) {
+        case 'list-tables':
+          return data.listTables(baseId);
+        case 'describe-table':
+          return data.describeTable(baseId, body.tableId);
+        case 'query-records':
+          return data.queryRecords(baseId, body);
+        case 'get-records':
+          return data.getRecords(baseId, body.tableId, body.recordIds, {
+            fieldKeyType: body.fieldKeyType,
+          });
+        default:
+          throw new Error(op);
+      }
+    };
     try {
-      json = JSON.parse(text);
-    } catch {
-      /* not JSON */
-    }
-    return { status: res.status, json };
-  };
-  const auth = (token?: string) => ({
-    authorization: `Bearer ${SERVICE_KEY}`,
-    ...(token ? { 'x-ai-data-context': token } : {}),
-  });
-  /** Issue a context for one call sequence and always revoke it. */
-  const as = async <T>(userId: string, baseId: string, fn: (token: string) => Promise<T>) => {
-    const { token } = await contexts.issue(userId, baseId);
-    try {
-      return await fn(token);
-    } finally {
-      await contexts.revoke(token);
+      const json: any = await runWithTestUser(cls, run, { id: userId });
+      return { status: 200, json };
+    } catch (error) {
+      if (!(error instanceof HttpException)) throw error;
+      return { status: error.getStatus(), json: { message: error.message } };
     }
   };
 
@@ -83,10 +94,9 @@ describe('AI data access (e2e)', () => {
   };
 
   beforeAll(async () => {
-    const ctx = await initApp();
-    app = ctx.app;
-    url = ctx.appUrl;
-    contexts = app.get(AiDataContextService);
+    app = (await initApp()).app;
+    data = app.get(AiDataService);
+    cls = app.get<ClsService<IClsStore>>(ClsService);
     users.owner = globalThis.testConfig.userId;
 
     baseA = (await createBase({ spaceId: globalThis.testConfig.spaceId, name: 'ai-data A' })).id;
@@ -135,9 +145,10 @@ describe('AI data access (e2e)', () => {
     it.each(['owner', 'editor', 'viewer'] as const)(
       'the %s of base A can read it',
       async (role) => {
-        const result = await as(users[role], baseA, (t) =>
-          call('query-records', { tableId: 'knowledges', fieldKeyType: 'name' }, auth(t))
-        );
+        const result = await call(users[role], baseA, 'query-records', {
+          tableId: 'knowledges',
+          fieldKeyType: 'name',
+        });
         expect(result.status).toBe(200);
         expect(result.json.records.map((r: any) => r.fields.title).sort()).toEqual(
           KNOWLEDGE.filter((k) => !k.deleted_at)
@@ -148,100 +159,48 @@ describe('AI data access (e2e)', () => {
     );
 
     it('a user with no role on base A is refused, for any table name', async () => {
-      const existing = await as(users.outsider, baseA, (t) =>
-        call('describe-table', { tableId: 'knowledges' }, auth(t))
-      );
-      const missing = await as(users.outsider, baseA, (t) =>
-        call('describe-table', { tableId: 'nope' }, auth(t))
-      );
-      const list = await as(users.outsider, baseA, (t) => call('list-tables', {}, auth(t)));
+      const existing = await call(users.outsider, baseA, 'describe-table', {
+        tableId: 'knowledges',
+      });
+      const missing = await call(users.outsider, baseA, 'describe-table', { tableId: 'nope' });
+      const list = await call(users.outsider, baseA, 'list-tables', {});
       expect([existing.status, missing.status, list.status]).toEqual([403, 403, 403]);
     });
 
     it('base A members cannot read base B', async () => {
-      const result = await as(users.editor, baseB, (t) => call('list-tables', {}, auth(t)));
+      const result = await call(users.editor, baseB, 'list-tables', {});
       expect(result.status).toBe(403);
     });
   });
 
   describe('base scoping', () => {
     it("a table name resolves inside the context's base, even when another base has it", async () => {
-      const desc = await as(users.owner, baseA, (t) =>
-        call('describe-table', { tableId: 'knowledges' }, auth(t))
-      );
+      const desc = await call(users.owner, baseA, 'describe-table', { tableId: 'knowledges' });
       expect(desc.json.id).toBe(knowledge.id);
       expect(desc.json.id).not.toBe(secret.id);
     });
 
     it("another base's table id is not found, whatever the user may read elsewhere", async () => {
       // The owner can read base B, but this context is for base A.
-      const byId = await as(users.owner, baseA, (t) =>
-        call('query-records', { tableId: secret.id }, auth(t))
-      );
-      const byRecords = await as(users.owner, baseA, (t) =>
-        call('get-records', { tableId: secret.id, recordIds: [secret.records[0].id] }, auth(t))
-      );
+      const byId = await call(users.owner, baseA, 'query-records', { tableId: secret.id });
+      const byRecords = await call(users.owner, baseA, 'get-records', {
+        tableId: secret.id,
+        recordIds: [secret.records[0].id],
+      });
       expect([byId.status, byRecords.status]).toEqual([404, 404]);
       expect(byId.json.message).toBe('Table not found');
-    });
-
-    it('a base id in the body is rejected', async () => {
-      const result = await as(users.owner, baseA, (t) =>
-        call('query-records', { tableId: 'knowledges', baseId: baseB }, auth(t))
-      );
-      expect(result.status).toBe(400);
-    });
-  });
-
-  describe('context token', () => {
-    it('requires the Mastra service key and a live token issued by this backend', async () => {
-      const { token } = await contexts.issue(users.owner, baseA);
-      const results = {
-        noBearer: (await call('list-tables', {}, { 'x-ai-data-context': token })).status,
-        wrongBearer: (
-          await call(
-            'list-tables',
-            {},
-            {
-              authorization: 'Bearer wrong',
-              'x-ai-data-context': token,
-            }
-          )
-        ).status,
-        noToken: (await call('list-tables', {}, auth())).status,
-        malformed: (await call('list-tables', {}, auth('not-a-token'))).status,
-        unknown: (await call('list-tables', {}, auth('A'.repeat(43)))).status,
-        genuine: (await call('list-tables', {}, auth(token))).status,
-      };
-      await contexts.revoke(token);
-      const replayed = (await call('list-tables', {}, auth(token))).status;
-      expect(results).toEqual({
-        noBearer: 401,
-        wrongBearer: 401,
-        noToken: 401,
-        malformed: 401,
-        unknown: 401,
-        genuine: 200,
-      });
-      expect(replayed).toBe(401);
-    });
-
-    it('a token for a user that does not exist is refused', async () => {
-      const result = await as('usrDoesNotExist001', baseA, (t) => call('list-tables', {}, auth(t)));
-      expect(result.status).toBe(401);
     });
   });
 
   describe('soft delete', () => {
     it('leaves deleted_at rows out by default and returns them on request', async () => {
       const titles = async (includeDeleted: boolean) => {
-        const r = await as(users.viewer, baseA, (t) =>
-          call(
-            'query-records',
-            { tableId: 'knowledges', fieldKeyType: 'name', includeDeleted, projection: ['title'] },
-            auth(t)
-          )
-        );
+        const r = await call(users.viewer, baseA, 'query-records', {
+          tableId: 'knowledges',
+          fieldKeyType: 'name',
+          includeDeleted,
+          projection: ['title'],
+        });
         expect(r.status).toBe(200);
         return {
           excluded: r.json.softDeletedExcluded,
@@ -257,8 +216,7 @@ describe('AI data access (e2e)', () => {
     });
   });
 
-  describe("knowledge agent's two-round search (Mastra payloads)", () => {
-    // These are the exact bodies the Mastra search-*-titles / get-*-contexts tools send.
+  describe('two-round search: titles first, then their context', () => {
     const searchTitles = (keyword: string) => ({
       tableId: 'knowledges',
       take: 20,
@@ -277,8 +235,13 @@ describe('AI data access (e2e)', () => {
     it.each(['viewer', 'owner'] as const)(
       'as the %s: round 1 finds matching live titles, round 2 returns their context',
       async (role) => {
-        await as(users[role], baseA, async (t) => {
-          const round1 = await call('query-records', searchTitles('TypeScript'), auth(t));
+        {
+          const round1 = await call(
+            users[role],
+            baseA,
+            'query-records',
+            searchTitles('TypeScript')
+          );
           expect(round1.status).toBe(200);
           const found = round1.json.records.map((r: any) => ({ id: r.id, title: r.fields.title }));
           expect(found.map((f: any) => f.title).sort()).toEqual([
@@ -287,9 +250,10 @@ describe('AI data access (e2e)', () => {
           ]);
 
           const round2 = await call(
+            users[role],
+            baseA,
             'get-records',
-            getContexts(found.map((f: any) => f.id)),
-            auth(t)
+            getContexts(found.map((f: any) => f.id))
           );
           expect(round2.status).toBe(200);
           expect(round2.json.missingIds).toEqual([]);
@@ -301,14 +265,12 @@ describe('AI data access (e2e)', () => {
           )) {
             expect(contextByTitle[k.title]).toBe(k.context);
           }
-        });
+        }
       }
     );
 
     it('round 1 with no match returns nothing rather than failing', async () => {
-      const result = await as(users.viewer, baseA, (t) =>
-        call('query-records', searchTitles('Kubernetes'), auth(t))
-      );
+      const result = await call(users.viewer, baseA, 'query-records', searchTitles('Kubernetes'));
       expect(result.status).toBe(200);
       expect(result.json.records).toEqual([]);
     });

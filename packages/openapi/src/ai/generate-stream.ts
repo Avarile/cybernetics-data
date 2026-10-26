@@ -35,17 +35,6 @@ export const aiGenerateRoSchema = z
     fileTokens: z.array(z.string()).optional().meta({
       description: 'Tokens of uploaded chat files to include as context',
     }),
-    agentId: z.string().optional().meta({
-      description:
-        'Mastra agent ID to route to (e.g. knowledge-manager-non-rag). Enables Mastra path.',
-    }),
-    threadId: z.string().optional().meta({
-      description:
-        'Resume an existing Mastra thread. Omit to start a new one (returned in X-Thread-Id header).',
-    }),
-    resourceId: z.string().optional().meta({
-      description: 'Per-user resource ID for memory scoping. Required when agentId is set.',
-    }),
   })
   .refine((data) => data.prompt !== undefined || (data.messages && data.messages.length > 0), {
     message: 'Either prompt or messages must be provided',

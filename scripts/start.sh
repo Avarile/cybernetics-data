@@ -26,5 +26,4 @@ esac
 
 node ./apps/nestjs-backend/dist/index.js &
 node ./plugins/server.js &
-node ./apps/mastra-ai/.mastra/output/index.mjs &
 wait -n

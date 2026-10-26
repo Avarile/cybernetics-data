@@ -182,9 +182,6 @@ COPY --from=post-builder --link --chown=1001:1001 /app/package.json ./package.js
 COPY --from=post-builder --link --chown=1001:1001 /app/plugins/.next/standalone/plugins ./plugins
 COPY --from=post-builder --link --chown=1001:1001 /app/apps/nestjs-backend/static ./static
 
-COPY --from=post-builder --link --chown=1001:1001 /app/apps/mastra-ai/.mastra ./apps/mastra-ai/.mastra
-COPY --from=post-builder --link --chown=1001:1001 /app/apps/mastra-ai/node_modules ./apps/mastra-ai/node_modules
-
 # --chmod is explicit because COPY otherwise preserves the host file mode, and
 # start.sh is the ENTRYPOINT: a checkout that loses the exec bit (a stray chmod
 # sweep, a Windows clone, a tarball export) builds a perfectly good image that

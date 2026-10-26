@@ -21,13 +21,6 @@ export const aiDataConfig = registerAs('aiData', () => ({
   maxCellChars: toPositiveInt(process.env.AI_DATA_MAX_CELL_CHARS, 2000),
   /** Budget for the whole serialized record payload of one call. */
   maxResponseChars: toPositiveInt(process.env.AI_DATA_MAX_RESPONSE_CHARS, 60000),
-  /**
-   * Bearer key the Mastra service presents when it calls the internal ai-data endpoint.
-   * The endpoint is disabled (404) while it is unset.
-   */
-  serviceKey: process.env.MASTRA_API_KEY || undefined,
-  /** Hard expiry of a context. It is also revoked as soon as the chat turn ends. */
-  contextTtlSeconds: toPositiveInt(process.env.AI_DATA_CONTEXT_TTL_SECONDS, 180),
   /** Data calls one user may make per minute, across all agents and replicas. 0 turns it off. */
   rateLimitPerMinute: toNonNegativeInt(process.env.AI_DATA_RATE_LIMIT_PER_MINUTE, 120),
 }));

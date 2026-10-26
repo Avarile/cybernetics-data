@@ -9,11 +9,9 @@ import { useTranslation } from 'next-i18next';
 import { Resizable } from 're-resizable';
 import { useState } from 'react';
 import { useChatPanelStore } from '../../components/sidebar/useChatPanelStore';
-import { countSelectedRows } from '../table/chat-panel/helpers';
-import type { IGridSelection } from '../table/chat-panel/types';
-import { PANEL_DEFAULT_WIDTH } from '../table/chat-panel/types';
 import { AgentChatView } from './AgentChatView';
 import { ContextChip } from './components/ContextChip';
+import { countSelectedRows, PANEL_DEFAULT_WIDTH, type IGridSelection } from './panel-selection';
 import { useAgentSkills, useAgentStatus, useThreadMessages } from './useAgentData';
 
 const threadKey = (baseId: string) => `agent-thread:${baseId}`;

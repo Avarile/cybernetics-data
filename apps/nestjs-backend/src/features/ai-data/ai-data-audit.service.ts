@@ -9,7 +9,7 @@ export interface IAiDataAuditEntry {
   userId: string;
   baseId: string;
   table?: string;
-  /** "internal-api" for the Mastra service, "session" for in-process agents. */
+  /** "internal-api" for API-origin callers (MCP, the agent), "session" for a signed-in user. */
   via: string;
   ok: boolean;
   /** Records returned, when the operation returns records. */
