@@ -1,5 +1,10 @@
 import { join, resolve, extname } from 'path';
-import { AUTOMATION_ROBOT_ID, APP_ROBOT_ID, ANONYMOUS_USER_ID } from '@cybernetics/core';
+import {
+  AGENT_ROBOT_ID,
+  AUTOMATION_ROBOT_ID,
+  APP_ROBOT_ID,
+  ANONYMOUS_USER_ID,
+} from '@cybernetics/core';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@teable/db-main-prisma';
@@ -207,6 +212,11 @@ export class BuiltinAssetsInitService implements OnModuleInit {
       },
       {
         id: 'aiRobot',
+        filePath: AUTOMATION_ROBOT_AVATAR_PATH,
+        uploadType: UploadType.Avatar,
+      },
+      {
+        id: AGENT_ROBOT_ID,
         filePath: AUTOMATION_ROBOT_AVATAR_PATH,
         uploadType: UploadType.Avatar,
       },
