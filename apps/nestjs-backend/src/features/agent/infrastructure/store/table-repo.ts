@@ -6,6 +6,7 @@ import type { RecordService } from '../../../record/record.service';
 import type { IAgentLayout } from '../../domain/ports';
 import type { IEntitySpec } from './entity-specs';
 import { projectionOf, readEntity, writeEntity } from './entity-specs';
+import { retryOnConflict } from './retry';
 
 const pageSize = 500;
 
@@ -102,12 +103,14 @@ export class TableRepo<E extends { id: string }> {
   async create(rows: Partial<Omit<E, 'id'>>[]): Promise<E[]> {
     if (!rows.length) return [];
     const { tableId, fields } = await this.ids();
-    const created = await this.deps.scoped(() =>
-      this.deps.recordsApi.createRecords(tableId, {
-        fieldKeyType: FieldKeyType.Id,
-        typecast: true,
-        records: rows.map((row) => ({ fields: writeEntity(this.spec, fields, row) })),
-      })
+    const created = await retryOnConflict(() =>
+      this.deps.scoped(() =>
+        this.deps.recordsApi.createRecords(tableId, {
+          fieldKeyType: FieldKeyType.Id,
+          typecast: true,
+          records: rows.map((row) => ({ fields: writeEntity(this.spec, fields, row) })),
+        })
+      )
     );
     // read back: computed fields (created_at, counts) are filled in by now
     return Promise.all(created.records.map((r) => this.get(r.id)));
@@ -117,12 +120,14 @@ export class TableRepo<E extends { id: string }> {
     const { tableId, fields } = await this.ids();
     const cells = writeEntity(this.spec, fields, patch);
     if (Object.keys(cells).length) {
-      await this.deps.scoped(() =>
-        this.deps.recordsApi.updateRecord(tableId, id, {
-          fieldKeyType: FieldKeyType.Id,
-          typecast: true,
-          record: { fields: cells },
-        })
+      await retryOnConflict(() =>
+        this.deps.scoped(() =>
+          this.deps.recordsApi.updateRecord(tableId, id, {
+            fieldKeyType: FieldKeyType.Id,
+            typecast: true,
+            record: { fields: cells },
+          })
+        )
       );
     }
     return this.get(id);
@@ -131,6 +136,8 @@ export class TableRepo<E extends { id: string }> {
   async delete(ids: string[]): Promise<void> {
     if (!ids.length) return;
     const { tableId } = await this.ids();
-    await this.deps.scoped(() => this.deps.recordsApi.deleteRecords(tableId, ids));
+    await retryOnConflict(() =>
+      this.deps.scoped(() => this.deps.recordsApi.deleteRecords(tableId, ids))
+    );
   }
 }

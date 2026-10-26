@@ -7,8 +7,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { AGENT_CHAT, getAgentThreadMessages, listAgentThreads } from '@teable/openapi';
-import type { UIMessageChunk } from 'ai';
-import { MockLanguageModelV3 } from 'ai/test';
 import type { AxiosInstance } from 'axios';
 import { ClsService } from 'nestjs-cls';
 import { z } from 'zod';
@@ -28,110 +26,10 @@ import {
 import { ToolkitRegistry } from '../src/features/agent/toolkits/toolkit.registry';
 import type { IToolkit } from '../src/features/agent/toolkits/toolkit.types';
 import type { IClsStore } from '../src/types/cls';
+import { call, drain, say, scriptedModel, type IScript } from './utils/agent-script';
 import { createNewUserAxios } from './utils/axios-instance/new-user';
 import { getError } from './utils/get-error';
 import { initApp, runWithTestUser } from './utils/init-app';
-
-type IScript = unknown[] | 'throw' | 'slow';
-const usage = {
-  inputTokens: { total: 10, noCache: 10, cacheRead: 0, cacheWrite: 0 },
-  outputTokens: { total: 5, text: 5, reasoning: 0 },
-};
-const say = (text: string): unknown[] => [
-  { type: 'stream-start', warnings: [] },
-  { type: 'text-start', id: 't' },
-  { type: 'text-delta', id: 't', delta: text },
-  { type: 'text-end', id: 't' },
-  { type: 'finish', finishReason: { unified: 'stop', raw: 'stop' }, usage },
-];
-const call = (toolName: string, input: object, toolCallId = `call-${toolName}`): unknown[] => [
-  { type: 'stream-start', warnings: [] },
-  { type: 'tool-call', toolCallId, toolName, input: JSON.stringify(input) },
-  { type: 'finish', finishReason: { unified: 'tool-calls', raw: 'tool_calls' }, usage },
-];
-
-/** A model that plays the scripts in order, one per step. */
-function scriptedModel(scripts: IScript[]) {
-  const prompts: unknown[] = [];
-  const model = new MockLanguageModelV3({
-    // background jobs: JSON for memory extraction, plain text for titles and summaries
-    doGenerate: async (options) => ({
-      content: [
-        {
-          type: 'text',
-          text:
-            options.responseFormat?.type === 'json'
-              ? JSON.stringify({
-                  items: [
-                    {
-                      title: 'Invoices are approved by Dana',
-                      content: 'Dana in finance approves every invoice',
-                      kind: 'fact',
-                      scope: 'global',
-                    },
-                  ],
-                })
-              : 'Invoice approvals',
-        },
-      ],
-      finishReason: { unified: 'stop', raw: 'stop' },
-      usage,
-      warnings: [],
-    }),
-    doStream: async (options) => {
-      prompts.push(options.prompt);
-      const script = scripts.shift() ?? say('(no more script)');
-      if (script === 'throw') throw new Error('provider is down');
-      if (script === 'slow') {
-        let i = 0;
-        let timer: NodeJS.Timeout;
-        const stream = new ReadableStream({
-          start(controller) {
-            controller.enqueue({ type: 'stream-start', warnings: [] });
-            controller.enqueue({ type: 'text-start', id: 't' });
-            const tick = () => {
-              if (options.abortSignal?.aborted) {
-                controller.error(options.abortSignal.reason ?? new Error('aborted'));
-                return;
-              }
-              controller.enqueue({ type: 'text-delta', id: 't', delta: `w${i++} ` });
-              timer = setTimeout(tick, 20);
-            };
-            tick();
-          },
-          cancel() {
-            clearTimeout(timer);
-          },
-        });
-        return { stream };
-      }
-      return {
-        stream: new ReadableStream({
-          start(controller) {
-            for (const chunk of script) controller.enqueue(chunk as never);
-            controller.close();
-          },
-        }),
-      };
-    },
-  });
-  return { model, prompts };
-}
-
-async function drain(stream: ReadableStream<UIMessageChunk>, stopAfter?: number) {
-  const chunks: UIMessageChunk[] = [];
-  const reader = stream.getReader();
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-    if (stopAfter && chunks.length >= stopAfter) {
-      reader.releaseLock();
-      return { chunks, rest: stream };
-    }
-  }
-  return { chunks, rest: undefined };
-}
 
 describe('Agent chat (e2e)', () => {
   let app: INestApplication;
