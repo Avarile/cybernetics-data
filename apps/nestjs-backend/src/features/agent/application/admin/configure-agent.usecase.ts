@@ -25,8 +25,6 @@ export const toSetupVo = (p: IAgentProfile): IAgentSetupVo => ({
   persona: p.persona,
   model: p.model,
   smallModel: p.smallModel,
-  embeddingModel: p.embeddingModel,
-  rerankModel: p.rerankModel,
   temperature: p.temperature,
   maxSteps: p.maxSteps,
   maxOutputTokens: p.maxOutputTokens,

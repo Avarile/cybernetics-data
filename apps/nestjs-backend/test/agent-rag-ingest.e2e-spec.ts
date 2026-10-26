@@ -1,9 +1,8 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /**
- * Knowledge ingest and derived sync (design §11.3, §11.5): queued ingest that comes back ready,
- * unchanged content skipped, atomic replace, the first embedding space built and activated, URL
- * ingest through the outbound guard, and knowledge-table and agent_memory records kept in sync.
- * Uses the disposable agent_rag_test database.
+ * Knowledge ingest and derived sync (design §11.3): queued ingest that comes back ready,
+ * unchanged content skipped, atomic replace, URL ingest through the outbound guard, and
+ * knowledge-table and agent_memory records kept in sync. Uses the disposable e2e database.
  */
 import { createServer, type Server } from 'http';
 import type { AddressInfo } from 'net';
@@ -16,16 +15,14 @@ import { EnsureInstallation } from '../src/features/agent/application/installati
 import { KnowledgeIngest } from '../src/features/agent/application/knowledge/knowledge-ingest';
 import {
   AGENT_STORE_PORT,
-  MODEL_PORT,
   RAG_STORE_PORT,
   type IAgentStorePort,
-  type IModelPort,
   type IRagStorePort,
 } from '../src/features/agent/domain/ports';
 import { KnowledgeSyncListener } from '../src/features/agent/infrastructure/knowledge/knowledge-sync.listener';
 import { documentIdFor } from '../src/features/agent/infrastructure/knowledge/pg-rag-store';
 import type { IClsStore } from '../src/types/cls';
-import { fakeEmbeddingModel, fakeVector, freshRagTestDb, until } from './utils/agent-rag';
+import { freshRagSchema, until } from './utils/agent-rag';
 import {
   createRecords,
   createTable,
@@ -45,13 +42,12 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
   let ingest: KnowledgeIngest;
   let server: Server;
   let pageUrl: string;
-  const embedded: string[] = [];
   const baseId = () => globalThis.testConfig.baseId;
   const adminId = () => globalThis.testConfig.userId;
   const doc = (collection: string, ref: string) => rag.getDocument(documentIdFor(collection, ref));
 
   beforeAll(async () => {
-    process.env.AGENT_RAG_DATABASE_URL = await freshRagTestDb();
+    await freshRagSchema();
     process.env.AGENT_HTTP_ALLOWED_HOSTS = '127.0.0.1';
     process.env.AGENT_HTTP_ALLOW_PRIVATE_NETWORKS = 'true';
 
@@ -75,15 +71,6 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
     rag = app.get<IRagStorePort>(RAG_STORE_PORT);
     store = app.get<IAgentStorePort>(AGENT_STORE_PORT);
     ingest = app.get(KnowledgeIngest);
-    const profile = await store.getDefaultProfile();
-    await store.updateProfile(profile!.id, { embeddingModel: 'mock/emb' });
-
-    const model = fakeEmbeddingModel(embedded);
-    vi.spyOn(app.get<IModelPort>(MODEL_PORT), 'embedder').mockImplementation(async (ref) => ({
-      ref,
-      modelKey: `openai@${ref}@mock`,
-      model,
-    }));
     app.get(KnowledgeSyncListener).invalidate();
   });
 
@@ -94,7 +81,7 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
     await app.close();
   });
 
-  it('ingests text within the wait, builds and activates the first embedding space', async () => {
+  it('ingests text within the wait and finds it by its words', async () => {
     const text =
       '# Handbook\n\n## Leave\n\nAnnual leave is 25 days.\n\n## Expenses\n\nTravel is refunded.';
     const result = await ingest.request({
@@ -104,35 +91,21 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
       actorUserId: adminId(),
     });
     expect(result).toMatchObject({ status: 'ready', chunkCount: 2, error: null });
-    expect(embedded).toContain('Staff handbook › Handbook › Leave\n\nAnnual leave is 25 days.');
-
-    const spaces = await until(
-      () => rag.listSpaces(),
-      (s) => s[0]?.status === 'active'
-    );
-    expect(spaces).toEqual([expect.objectContaining({ model: 'mock/emb', status: 'active' })]);
-    expect(await rag.hasAllEmbeddings(result.documentId, spaces[0].slug)).toBe(true);
-
-    const hits = await rag.query({
-      text: 'leave',
-      collections: ['knowledge'],
-      vector: fakeVector('annual leave days'),
-      space: spaces[0].slug,
-    });
+    const hits = await rag.query({ text: 'annual leave days', collections: ['knowledge'] });
     expect(hits[0]).toMatchObject({ headingPath: 'Handbook › Leave', title: 'Staff handbook' });
   });
 
-  it('skips unchanged content without embedding, and replaces changed content', async () => {
+  it('skips unchanged content, and replaces changed content', async () => {
     const text =
       '# Handbook\n\n## Leave\n\nAnnual leave is 25 days.\n\n## Expenses\n\nTravel is refunded.';
-    const before = embedded.length;
+    const replace = vi.spyOn(rag, 'replaceChunks');
     const same = await ingest.request({
       collectionId: 'knowledge',
       source: { kind: 'text', text, slug: 'handbook' },
       actorUserId: adminId(),
     });
     expect(same).toMatchObject({ status: 'ready', chunkCount: 2 });
-    expect(embedded.length).toBe(before);
+    expect(replace).not.toHaveBeenCalled();
 
     const changed = await ingest.request({
       collectionId: 'knowledge',
@@ -140,6 +113,8 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
       actorUserId: adminId(),
     });
     expect(changed).toMatchObject({ documentId: same.documentId, status: 'ready', chunkCount: 1 });
+    expect(replace).toHaveBeenCalledTimes(1);
+    replace.mockRestore();
     const read = await rag.readDocument(same.documentId);
     expect(read?.title).toBe('Staff handbook');
     expect(read?.sections.map((s) => s.content)).toEqual(['Annual leave is now 28 days.']);

@@ -27,7 +27,7 @@ import {
 } from '../src/features/agent/domain/ports';
 import { KnowledgeSyncListener } from '../src/features/agent/infrastructure/knowledge/knowledge-sync.listener';
 import type { IClsStore } from '../src/types/cls';
-import { fakeEmbeddingModel, freshRagTestDb } from './utils/agent-rag';
+import { freshRagSchema } from './utils/agent-rag';
 import { call, drain, say, scriptedModel, type IScript } from './utils/agent-script';
 import {
   createRecords,
@@ -82,7 +82,7 @@ describe('Agent prompt-injection suite (e2e)', () => {
     chunks.find((c) => c.type === 'tool-approval-request')?.approvalId;
 
   beforeAll(async () => {
-    process.env.AGENT_RAG_DATABASE_URL = await freshRagTestDb();
+    await freshRagSchema();
     app = (await initApp()).app;
     prisma = app.get(PrismaService);
     await prisma.agentInstallation.deleteMany({});
@@ -92,18 +92,12 @@ describe('Agent prompt-injection suite (e2e)', () => {
     });
     store = app.get<IAgentStorePort>(AGENT_STORE_PORT);
     profile = (await store.getDefaultProfile())!;
-    await store.updateProfile(profile.id, { model: 'mock/scripted', embeddingModel: 'mock/emb' });
+    await store.updateProfile(profile.id, { model: 'mock/scripted' });
     const models = app.get<IModelPort>(MODEL_PORT);
     vi.spyOn(models, 'resolve').mockImplementation(async (ref) => ({
       ref,
       modelKey: `openai@${ref}@mock`,
       model: current.model,
-    }));
-    const embedder = fakeEmbeddingModel();
-    vi.spyOn(models, 'embedder').mockImplementation(async (ref) => ({
-      ref,
-      modelKey: `openai@${ref}@mock`,
-      model: embedder,
     }));
     app.get(KnowledgeSyncListener).invalidate();
 
@@ -251,7 +245,7 @@ describe('Agent prompt-injection suite (e2e)', () => {
       source: { kind: 'text', text: `# Printer guide\n\n${injection}`, slug: 'printer' },
       actorUserId: adminId(),
     });
-    play([call('rag_search', { query: 'printer maintenance mode' }), say('Found the guide.')]);
+    play([call('search', { query: 'printer maintenance mode' }), say('Found the guide.')]);
     const t = await turn('How do I fix the printer?');
     const out = outputs(t.chunks)[0];
     expect(out).toContain('untrusted_data');

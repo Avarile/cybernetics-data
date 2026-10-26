@@ -14,12 +14,7 @@ import { AGENT_TABLES } from '../../pack/agent-pack';
 import type { IAgentInstallationView } from '../installation/ensure-installation.usecase';
 import { EnsureInstallation } from '../installation/ensure-installation.usecase';
 
-export const MODEL_SLOTS: IAgentModelSlot[] = [
-  'model',
-  'small_model',
-  'embedding_model',
-  'rerank_model',
-];
+export const MODEL_SLOTS: IAgentModelSlot[] = ['model', 'small_model'];
 
 type ISetupRow = Record<string, unknown>;
 

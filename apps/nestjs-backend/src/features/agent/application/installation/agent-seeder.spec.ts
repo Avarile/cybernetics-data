@@ -8,7 +8,11 @@ describe('planSkillSeeds', () => {
   });
 
   it('is a no-op when the skills are there, edited or not', () => {
-    const existing = BUILTIN_SKILLS.map((s) => ({ name: s.name, source: 'builtin', version: 1 }));
+    const existing = BUILTIN_SKILLS.map((s) => ({
+      name: s.name,
+      source: 'builtin',
+      version: s.version,
+    }));
     expect(planSkillSeeds(existing)).toEqual([]);
   });
 

@@ -73,12 +73,7 @@ describe('Agent lifecycle routes (e2e)', () => {
     spaces.push(status.spaceId!);
     expect(status).toMatchObject({ enabled: true, status: 'ok' });
     expect(Object.keys(status.tables)).toHaveLength(6);
-    expect(status.models.map((m) => m.slot)).toEqual([
-      'model',
-      'small_model',
-      'embedding_model',
-      'rerank_model',
-    ]);
+    expect(status.models.map((m) => m.slot)).toEqual(['model', 'small_model']);
     expect(status.warnings.map((w) => w.code)).toContain('no_chat_model');
   });
 

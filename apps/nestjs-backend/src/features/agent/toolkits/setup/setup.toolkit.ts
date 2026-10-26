@@ -21,8 +21,6 @@ const profileView = (p: IAgentProfile) => ({
   persona: p.persona,
   model: p.model,
   smallModel: p.smallModel,
-  embeddingModel: p.embeddingModel,
-  rerankModel: p.rerankModel,
   knowledgeTables: p.knowledgeTables,
   temperature: p.temperature,
   maxSteps: p.maxSteps,
@@ -76,8 +74,6 @@ export class SetupToolkit implements IToolkit, OnModuleInit {
           persona: z.string().max(20_000).optional(),
           model: modelRef.optional(),
           smallModel: modelRef.optional(),
-          embeddingModel: modelRef.optional(),
-          rerankModel: modelRef.optional(),
           knowledgeTables: z
             .array(z.string().regex(/^tbl\w+$/, 'a table id'))
             .max(200)

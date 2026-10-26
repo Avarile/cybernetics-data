@@ -2112,7 +2112,6 @@ export type I18nTranslations = {
                 "chatModel": string;
                 "credentials": string;
                 "disable": string;
-                "embeddingModel": string;
                 "enable": string;
                 "filterRun": string;
                 "lastCheck": string;
@@ -2130,7 +2129,6 @@ export type I18nTranslations = {
                 "off": string;
                 "openBase": string;
                 "persona": string;
-                "rerankModel": string;
                 "reset": string;
                 "restore": string;
                 "result": string;

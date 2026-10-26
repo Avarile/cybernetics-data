@@ -17,8 +17,6 @@ const profile = (over: Partial<IAgentProfile> = {}): IAgentProfile => ({
   persona: 'You are Ada.',
   model: 'openai/gpt-4.1',
   smallModel: null,
-  embeddingModel: null,
-  rerankModel: null,
   knowledgeTables: [],
   temperature: null,
   maxSteps: 25,
@@ -163,8 +161,8 @@ describe('ToolAssembler', () => {
   const knowledgeKit: IToolkit = {
     id: 'knowledge',
     title: 'Knowledge',
-    tools: [{ name: 'rag_search', description: 'd', input: z.object({}), execute: async () => [] }],
-    unavailable: (p) => (p.embeddingModel ? undefined : 'no embedding model'),
+    tools: [{ name: 'search', description: 'd', input: z.object({}), execute: async () => [] }],
+    unavailable: (p) => (p.smallModel ? undefined : 'no small model'),
   };
 
   it('wraps the enabled toolkits and reports the ones it skipped', () => {
@@ -182,7 +180,7 @@ describe('ToolAssembler', () => {
     expect(Object.keys(out.tools)).toEqual(['memory_search']);
     expect(out.toolkits).toEqual([{ id: 'memory', title: 'Memory' }]);
     expect(out.skipped).toEqual([
-      { id: 'knowledge', reason: 'no embedding model' },
+      { id: 'knowledge', reason: 'no small model' },
       { id: 'http', reason: 'not available in this version' },
       { id: 'bogus', reason: 'unknown toolkit' },
     ]);

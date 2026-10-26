@@ -1,7 +1,6 @@
 import { AGENT_ROBOT_ID } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { AgentConfig, type IAgentConfig } from '../../../../configs/agent.config';
 import {
   Events,
   RecordCreateEvent,
@@ -23,7 +22,6 @@ export class KnowledgeSyncListener {
   private readonly logger = new Logger(KnowledgeSyncListener.name);
 
   constructor(
-    @AgentConfig() private readonly config: IAgentConfig,
     private readonly ingest: KnowledgeIngest,
     private readonly tables: KnowledgeTables
   ) {}
@@ -41,10 +39,6 @@ export class KnowledgeSyncListener {
   @OnEvent(Events.TABLE_RECORD_UPDATE, { async: true })
   async onUpdate(event: RecordUpdateEvent) {
     const { tableId, record } = event.payload;
-    if (await this.embeddingModelChanged(tableId, asArray(record))) {
-      await this.ingest.enqueueSpaceCheck(event.context.user?.id ?? AGENT_ROBOT_ID);
-      return;
-    }
     await this.sync(tableId, asArray(record), event.context.user?.id);
   }
 
@@ -59,27 +53,13 @@ export class KnowledgeSyncListener {
     this.tables.invalidate();
   }
 
-  /** agent_setup.embedding_model changed (design §11.5): build the new model's space now. */
-  private async embeddingModelChanged(tableId: string, records: { fields: object }[]) {
-    if (!this.config.ragDatabaseUrl) return false;
-    try {
-      const settings = await this.tables.currentSettings();
-      if (!settings?.embeddingFieldId || tableId !== settings.setupTableId) return false;
-      const changed = records.some((r) => settings.embeddingFieldId! in r.fields);
-      if (changed) this.invalidate();
-      return changed;
-    } catch {
-      return false;
-    }
-  }
-
   private async sync(
     tableId: string,
     records: (string | { id: string; fields: Record<string, unknown> })[],
     actorUserId: string | undefined,
     removed = false
   ) {
-    if (!this.config.ragDatabaseUrl || !records.length) return;
+    if (!records.length) return;
     try {
       const target = await this.tables.targetFor(tableId);
       if (!target) return;

@@ -12,7 +12,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type {
-  IImportLegacyKnowledgeVo,
   ISyncKnowledgeVo,
   IAgentAuditListVo,
   IAgentCredentialListVo,
@@ -21,8 +20,6 @@ import type {
   ITestAgentCredentialVo,
 } from '@teable/openapi';
 import {
-  importLegacyKnowledgeRoSchema,
-  IImportLegacyKnowledgeRo,
   agentAuditQuerySchema,
   IAgentAuditQuery,
   ISetAgentSecretRo,
@@ -36,7 +33,6 @@ import { ZodValidationPipe } from '../../../zod.validation.pipe';
 import { ConfigureAgent } from '../application/admin/configure-agent.usecase';
 import { ManageCredentials } from '../application/admin/manage-credentials.usecase';
 import { KnowledgeIngest } from '../application/knowledge/knowledge-ingest';
-import { LegacyKnowledgeImport } from '../application/knowledge/legacy-import';
 import { AgentExecutionContext } from '../infrastructure/execution-context';
 import { AgentAdminGuard } from './agent-admin.guard';
 
@@ -47,7 +43,6 @@ export class AgentSettingsController {
   constructor(
     private readonly configure: ConfigureAgent,
     private readonly credentialsAdmin: ManageCredentials,
-    private readonly legacyImport: LegacyKnowledgeImport,
     private readonly ingest: KnowledgeIngest,
     private readonly execution: AgentExecutionContext,
     private readonly cls: ClsService<IClsStore>
@@ -61,18 +56,6 @@ export class AgentSettingsController {
     return this.execution.run({ runId: 'admin:knowledge-sync', actorUserId }, () =>
       this.ingest.syncAll(actorUserId)
     );
-  }
-
-  /** One-off import of the old Mastra vectors (design §14.3). */
-  @Post('admin/knowledge/import-legacy')
-  @HttpCode(200)
-  async importLegacyKnowledge(
-    @Body(new ZodValidationPipe(importLegacyKnowledgeRoSchema)) ro: IImportLegacyKnowledgeRo
-  ): Promise<IImportLegacyKnowledgeVo> {
-    return this.legacyImport.run({
-      dryRun: Boolean(ro.dryRun),
-      actorUserId: this.cls.get('user.id'),
-    });
   }
 
   @Get('setup')

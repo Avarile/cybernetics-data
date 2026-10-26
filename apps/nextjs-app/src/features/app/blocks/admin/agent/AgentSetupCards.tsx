@@ -24,7 +24,7 @@ import { useAiProviders } from '../ai-setting/providers/useProviders';
 import { keyToRef, refToKey, toggle } from './agent-admin.helpers';
 
 type ISave = (patch: IUpdateAgentSetupRo) => void;
-const slots = ['model', 'smallModel', 'embeddingModel', 'rerankModel'] as const;
+const slots = ['model', 'smallModel'] as const;
 
 /** The four model slots, picked from the provider registry (design §13). */
 export const AgentModelsCard = ({
@@ -45,8 +45,6 @@ export const AgentModelsCard = ({
   const labels: Record<(typeof slots)[number], string> = {
     model: t('agent.admin.chatModel', 'Chat model (needs tool use)'),
     smallModel: t('agent.admin.smallModel', 'Small model (titles, summaries, memory)'),
-    embeddingModel: t('agent.admin.embeddingModel', 'Embedding model (knowledge search)'),
-    rerankModel: t('agent.admin.rerankModel', 'Rerank model'),
   };
   return (
     <Card>

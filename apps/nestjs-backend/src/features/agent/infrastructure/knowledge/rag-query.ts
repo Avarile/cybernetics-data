@@ -1,10 +1,11 @@
 import type { IRagQuery } from '../../domain/ports';
-import { RAG_SCHEMA, spaceTable } from './rag-schema';
+import { RAG_SCHEMA } from './rag-schema';
 
-export const RRF_K = 60;
 export const DEFAULT_POOL = 40;
+/** At most this many terms go into one query. */
+const maxTerms = 32;
 
-/** Words that say nothing about a topic; a question's keyword pass leaves them out. */
+/** Words that say nothing about a topic; a question's search leaves them out. */
 const stopwords = new Set(
   (
     'a an and are as at be but by can could did do does for from had has have how i if in into is ' +
@@ -14,101 +15,103 @@ const stopwords = new Set(
   ).split(' ')
 );
 
-/**
- * The keyword pass of a question (design §11.4): its meaningful terms joined with `or`, so a
- * chunk ranks by how many it contains instead of needing every word. Quoted text keeps
- * websearch syntax (phrases, `-exclusions`).
- */
-export function keywordQuery(text: string): string {
-  if (text.includes('"')) return text;
-  const terms = text.toLowerCase().match(/[\p{L}\p{N}](?:[\p{L}\p{N}_.-]*[\p{L}\p{N}])?/gu) ?? [];
-  const kept = terms.filter((t) => !stopwords.has(t) && (t.length > 1 || /\p{N}/u.test(t)));
-  return [...new Set(kept.length ? kept : terms)].join(' or ');
+const cjkRun = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]+/gu;
+
+/** Character pairs of each CJK run ("春节值班" → 春节 节值 值班); a lone character stays. */
+export function cjkBigrams(text: string): string[] {
+  const out: string[] = [];
+  for (const run of text.match(cjkRun) ?? []) {
+    const chars = [...run];
+    if (chars.length === 1) out.push(run);
+    for (let i = 0; i + 1 < chars.length; i++) out.push(chars[i] + chars[i + 1]);
+  }
+  return out;
 }
 
-export const toVectorLiteral = (v: number[]) =>
-  `[${v.map((x) => (Number.isFinite(x) ? x : 0)).join(',')}]`;
+/**
+ * Text as indexed: the 'simple' parser keeps a CJK run as one token, so its character pairs are
+ * appended to make Chinese and Japanese text findable by any part of a phrase.
+ */
+export function searchableText(text: string): string {
+  const pairs = cjkBigrams(text);
+  return pairs.length ? `${text} ${pairs.join(' ')}` : text;
+}
+
+export interface ISearchTerms {
+  /** Each term is matched on its own; a chunk ranks by how many it contains. */
+  terms: string[];
+  /** The last word, matched as a prefix ("kube" finds "kubernetes"). */
+  prefix: string | null;
+  /** Quoted input: websearch syntax (phrases, -exclusions) is used as is. */
+  websearch: string | null;
+}
 
 /**
- * Hybrid retrieval in one statement (design §11.4): a vector pass and a keyword pass over level-1
- * chunks, fused with Reciprocal Rank Fusion (k = 60), joined to the parent section and document.
- * Returns SQL and its bindings (knex `?` placeholders); nothing user-supplied is spliced in.
+ * The search terms of a question: its meaningful words (stopwords dropped) and the character
+ * pairs of its CJK runs. The last word also matches as a prefix while it is being typed.
  */
-export function buildHybridQuery(q: IRagQuery): { sql: string; bindings: unknown[] } {
+export function searchTerms(text: string): ISearchTerms {
+  if (text.includes('"')) return { terms: [], prefix: null, websearch: text };
+  const lower = text.toLowerCase();
+  const words = (
+    lower.replace(cjkRun, ' ').match(/[\p{L}\p{N}](?:[\p{L}\p{N}_.-]*[\p{L}\p{N}])?/gu) ?? []
+  ).filter((t) => t.length > 1 || /\p{N}/u.test(t));
+  const meaningful = words.filter((t) => !stopwords.has(t));
+  const terms = [...new Set([...(meaningful.length ? meaningful : words), ...cjkBigrams(lower)])];
+  const last = meaningful.at(-1);
+  const prefix =
+    last && /^[\p{L}\p{N}]{3,}$/u.test(last) && !/\s$/.test(text) && lower.trimEnd().endsWith(last)
+      ? last
+      : null;
+  return { terms: terms.slice(0, maxTerms), prefix, websearch: null };
+}
+
+/** The tsquery expression for the terms, with its bindings. Null when nothing is searchable. */
+function tsqueryOf(t: ISearchTerms): { sql: string; bindings: unknown[] } | null {
+  if (t.websearch) return { sql: `websearch_to_tsquery('simple', ?)`, bindings: [t.websearch] };
+  const parts = t.terms.map(() => `plainto_tsquery('simple', ?)`);
+  const bindings: unknown[] = [...t.terms];
+  if (t.prefix) {
+    parts.push(`to_tsquery('simple', ?)`);
+    bindings.push(`${t.prefix}:*`);
+  }
+  return parts.length ? { sql: parts.join(' || '), bindings } : null;
+}
+
+/**
+ * Full-text retrieval in one statement (design §11.4): level-1 chunks matching any term, ranked
+ * by cover density with titles and headings weighted above the text, joined to their section
+ * and document. Returns SQL and its bindings (knex `?` placeholders); nothing user-supplied is
+ * spliced in.
+ */
+export function buildSearchQuery(q: IRagQuery): { sql: string; bindings: unknown[] } | null {
+  const ts = tsqueryOf(searchTerms(q.text));
+  if (!ts || !q.collections.length) return null;
   const pool = Math.min(Math.max(q.pool ?? DEFAULT_POOL, 1), 200);
-  const mode = q.mode ?? 'hybrid';
-  const useVector = mode !== 'keyword' && q.vector && q.space;
-  const useKeyword = mode !== 'vector';
-  const bindings: unknown[] = [];
-
-  const docFilter = (alias: string) => {
-    const parts: string[] = [];
-    if (q.baseIds?.length) {
-      parts.push(`${alias}.base_id = ANY(?)`);
-      bindings.push(q.baseIds);
-    }
-    if (q.tableIds?.length) {
-      parts.push(`${alias}.table_id = ANY(?)`);
-      bindings.push(q.tableIds);
-    }
-    return parts.length ? ` AND ${parts.join(' AND ')}` : '';
-  };
-
-  const passes: string[] = [];
-  let vecCte = '';
-  if (useVector) {
-    const table = spaceTable(q.space!);
-    bindings.push(toVectorLiteral(q.vector!), q.collections);
-    const filter = docFilter('vd');
-    bindings.push(toVectorLiteral(q.vector!), toVectorLiteral(q.vector!), pool);
-    // a collection's min_score (cosine similarity) cuts weak vector matches (design §11.1)
-    vecCte = `vec AS (
-      SELECT e.chunk_id, row_number() OVER (ORDER BY e.embedding <=> ?::vector) AS r
-      FROM ${table} e
-      JOIN ${RAG_SCHEMA}.chunk vc ON vc.id = e.chunk_id
-      JOIN ${RAG_SCHEMA}.document vd ON vd.id = vc.document_id
-      JOIN ${RAG_SCHEMA}.collection vcol ON vcol.id = e.collection_id
-      WHERE e.collection_id = ANY(?)${filter}
-        AND (vcol.min_score IS NULL OR 1 - (e.embedding <=> ?::vector) >= vcol.min_score)
-      ORDER BY e.embedding <=> ?::vector LIMIT ?)`;
-    passes.push(`SELECT chunk_id, r, 'v' AS pass FROM vec`);
+  const bindings: unknown[] = [...ts.bindings, q.collections];
+  const filters: string[] = [];
+  if (q.baseIds?.length) {
+    filters.push(`d.base_id = ANY(?)`);
+    bindings.push(q.baseIds);
   }
-  let kwCte = '';
-  if (useKeyword) {
-    const terms = keywordQuery(q.text);
-    bindings.push(terms, q.collections, terms);
-    const filter = docFilter('kd');
-    bindings.push(terms, pool);
-    kwCte = `kw AS (
-      SELECT c.id AS chunk_id,
-             row_number() OVER (ORDER BY ts_rank_cd(c.tsv, websearch_to_tsquery('simple', ?)) DESC) AS r
-      FROM ${RAG_SCHEMA}.chunk c
-      JOIN ${RAG_SCHEMA}.document kd ON kd.id = c.document_id
-      WHERE c.level = 1 AND c.collection_id = ANY(?) AND c.tsv @@ websearch_to_tsquery('simple', ?)${filter}
-      ORDER BY ts_rank_cd(c.tsv, websearch_to_tsquery('simple', ?)) DESC LIMIT ?)`;
-    passes.push(`SELECT chunk_id, r, 'k' AS pass FROM kw`);
+  if (q.tableIds?.length) {
+    filters.push(`d.table_id = ANY(?)`);
+    bindings.push(q.tableIds);
   }
-  if (!passes.length) return { sql: 'SELECT 1 WHERE false', bindings: [] };
-
   bindings.push(pool);
-  const ctes = [vecCte, kwCte].filter(Boolean).join(',\n');
-  const sql = `WITH ${ctes},
-    fused AS (
-      SELECT chunk_id,
-             sum(1.0 / (${RRF_K} + r)) AS score,
-             min(r) FILTER (WHERE pass = 'v') AS vector_rank,
-             min(r) FILTER (WHERE pass = 'k') AS keyword_rank
-      FROM (${passes.join(' UNION ALL ')}) u
-      GROUP BY chunk_id)
-    SELECT f.score, f.vector_rank, f.keyword_rank,
+  const sql = `WITH q AS (SELECT (${ts.sql}) AS q)
+    SELECT ts_rank_cd(c.tsv, q.q) AS score,
            c.id AS chunk_id, c.content AS chunk, c.collection_id,
            p.id AS section_id, p.content AS section, p.heading_path,
            d.id AS document_id, d.title, d.source_ref, d.record_id, d.base_id, d.table_id
-    FROM fused f
-    JOIN ${RAG_SCHEMA}.chunk c ON c.id = f.chunk_id
+    FROM ${RAG_SCHEMA}.chunk c
+    CROSS JOIN q
     JOIN ${RAG_SCHEMA}.chunk p ON p.id = c.parent_id
     JOIN ${RAG_SCHEMA}.document d ON d.id = c.document_id
-    ORDER BY f.score DESC, c.id
+    WHERE c.level = 1 AND c.collection_id = ANY(?) AND c.tsv @@ q.q${
+      filters.length ? ` AND ${filters.join(' AND ')}` : ''
+    }
+    ORDER BY score DESC, c.id
     LIMIT ?`;
   return { sql, bindings };
 }

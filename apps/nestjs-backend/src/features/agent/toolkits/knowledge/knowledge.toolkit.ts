@@ -2,9 +2,7 @@ import { HttpErrorCode } from '@cybernetics/core';
 import type { OnModuleInit } from '@nestjs/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { z } from 'zod';
-import { AgentConfig, type IAgentConfig } from '../../../../configs/agent.config';
 import { CustomHttpException } from '../../../../custom.exception';
-import { EmbeddingSpaces } from '../../application/knowledge/embedding-spaces';
 import { KnowledgeIngest } from '../../application/knowledge/knowledge-ingest';
 import { KnowledgeSearch, MAX_TOP_K } from '../../application/knowledge/knowledge-search';
 import {
@@ -69,7 +67,7 @@ const sourceOf = (i: z.infer<typeof ingestInput>): IRagSource => {
 };
 
 /**
- * Knowledge search and documents (design §8 knowledge, §11): hybrid search with snippets,
+ * Knowledge search and documents (design §8 knowledge, §11): full-text search with snippets,
  * section reads, background ingest, and collections.
  */
 @Injectable()
@@ -82,13 +80,10 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     private readonly registry: ToolkitRegistry,
     private readonly searcher: KnowledgeSearch,
     private readonly ingest: KnowledgeIngest,
-    private readonly spaces: EmbeddingSpaces,
-    @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort,
-    @AgentConfig() private readonly config: IAgentConfig
+    @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort
   ) {
     this.tools = [
-      this.knowledgeSearch(),
-      this.ragSearch(),
+      this.search(),
       this.ragRead(),
       this.ragIngest(),
       this.ingestStatus(),
@@ -100,12 +95,6 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
 
   onModuleInit() {
     this.registry.register(this);
-  }
-
-  unavailable() {
-    return this.config.ragDatabaseUrl
-      ? undefined
-      : 'No knowledge database is configured (AGENT_RAG_DATABASE_URL or VECTOR_DATABASE_URL)';
   }
 
   /** Searches wait (briefly) for the first full sync of the knowledge tables in this process. */
@@ -123,43 +112,24 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     return result;
   }
 
-  private knowledgeSearch() {
+  private search() {
     return defineTool({
-      name: 'knowledge_search',
+      name: 'search',
       description:
-        'Search knowledge records (every knowledge table, kept in sync) by meaning and exact words. ' +
-        'Returns snippets with recordRef; read the full record with get_records.',
+        'Full-text search over knowledge records (every knowledge table, kept in sync), documents ' +
+        'and memories: matches words and word beginnings, titles weigh most. Default: every active ' +
+        'collection; use collections ["kb_records"] for knowledge records only, and baseIds/tables ' +
+        'to narrow them. Returns snippets: call rag_read with a sectionId for the full text, or ' +
+        'get_records with a recordRef for a record.',
       input: z.object({
-        query: z.string().min(1).max(1000).describe("The question, in the user's words"),
+        query: z
+          .string()
+          .min(1)
+          .max(1000)
+          .describe('Key words; "quoted phrase" for an exact phrase, -word to exclude'),
+        collections: z.array(z.string()).max(50).optional(),
         baseIds: z.array(z.string()).max(50).optional(),
         tables: z.array(z.string()).max(50).optional().describe('Table ids to search in'),
-        topK,
-      }),
-      untrusted: true,
-      execute: async (input, ctx) =>
-        this.afterSync(ctx.actorUserId, () =>
-          this.searcher.search({
-            query: input.query,
-            collections: ['kb_records'],
-            baseIds: input.baseIds,
-            tableIds: input.tables,
-            topK: input.topK,
-            rerankModel: ctx.profile.rerankModel,
-            abortSignal: ctx.abortSignal,
-          })
-        ),
-    });
-  }
-
-  private ragSearch() {
-    return defineTool({
-      name: 'rag_search',
-      description:
-        'Search documents and memories by meaning and exact words. Default: every active collection. ' +
-        'Returns snippets; call rag_read with a sectionId for the full text.',
-      input: z.object({
-        query: z.string().min(1).max(1000),
-        collections: z.array(z.string()).max(50).optional(),
         topK,
       }),
       untrusted: true,
@@ -171,9 +141,9 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
           this.searcher.search({
             query: input.query,
             collections,
+            baseIds: input.baseIds,
+            tableIds: input.tables,
             topK: input.topK,
-            rerankModel: ctx.profile.rerankModel,
-            abortSignal: ctx.abortSignal,
           })
         );
       },
@@ -249,12 +219,10 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     return defineTool({
       name: 'collection_list',
       description:
-        'The knowledge collections, documents (added by hand) and derived (synced), and the ' +
-        'embedding spaces: which model is active and which is being built.',
+        'The knowledge collections: documents (added by hand) and derived (synced from tables).',
       input: z.object({}),
       execute: async () => ({
         collections: (await this.rag.listCollections()).map(collectionView),
-        embedding: await this.spaces.status(),
       }),
     });
   }

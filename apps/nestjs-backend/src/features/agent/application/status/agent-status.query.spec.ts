@@ -49,7 +49,7 @@ describe('buildWarnings', () => {
     };
     const models = [
       chat({ ref: null, ok: false }),
-      { slot: 'embedding_model' as const, ref: 'gone/x', ok: false, error: 'not configured' },
+      { slot: 'small_model' as const, ref: 'gone/x', ok: false, error: 'not configured' },
     ];
     expect(codes(buildWarnings(view, models, false))).toEqual([
       'secrets_key_missing',

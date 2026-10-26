@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 
-/** Knowledge storage (design §11): collections, documents, sectioned chunks, embedding spaces. */
+/**
+ * Knowledge storage (design §11): collections, documents and sectioned chunks in the main
+ * PostgreSQL, searched with full-text search only.
+ */
 
 export type IRagCollectionKind = 'documents' | 'derived';
 export type IRagDocumentStatus = 'queued' | 'processing' | 'ready' | 'failed';
-export type IRagSpaceStatus = 'building' | 'active' | 'retired';
 
 export interface IRagCollection {
   id: string;
   label: string;
   description: string | null;
   kind: IRagCollectionKind;
-  minScore: number | null;
   isActive: boolean;
 }
 
@@ -29,25 +30,11 @@ export interface IRagDocument {
   recordId: string | null;
 }
 
-export interface IRagSpace {
-  slug: string;
-  model: string;
-  dimension: number;
-  status: IRagSpaceStatus;
-  retiredAt: string | null;
-}
-
 /** A section (what is returned) with its chunks (what is searched). */
 export interface IRagSection {
   headingPath: string | null;
   content: string;
   chunks: string[];
-}
-
-/** Vectors for the chunks of a replace, in section/chunk order, per embedding space. */
-export interface IRagEmbeddings {
-  space: string;
-  vectors: number[][];
 }
 
 export interface IRagHit {
@@ -64,28 +51,20 @@ export interface IRagHit {
   chunk: string;
   section: string;
   score: number;
-  vectorRank: number | null;
-  keywordRank: number | null;
 }
 
 export interface IRagQuery {
   text: string;
   collections: string[];
-  /** Query vector in the active space; without it, the keyword pass only. */
-  vector?: number[];
-  space?: string;
   baseIds?: string[];
   tableIds?: string[];
-  /** Candidates per pass (design §11.4: 40). */
+  /** Candidate chunks before grouping by section (default 40). */
   pool?: number;
-  mode?: 'hybrid' | 'keyword' | 'vector';
 }
 
 export interface IRagStorePort {
   listCollections(): Promise<IRagCollection[]>;
-  createCollection(
-    input: Omit<IRagCollection, 'isActive' | 'minScore'> & { minScore?: number | null }
-  ): Promise<IRagCollection>;
+  createCollection(input: Omit<IRagCollection, 'isActive'>): Promise<IRagCollection>;
   deleteCollection(id: string): Promise<void>;
 
   /** Insert or update by (collection, sourceRef); the id is derived from both. */
@@ -95,26 +74,8 @@ export interface IRagStorePort {
   deleteDocument(id: string): Promise<void>;
   listDocuments(collectionId: string, limit?: number): Promise<IRagDocument[]>;
 
-  /** One transaction: drop the old chunks (and their vectors), write the new ones, mark ready. */
-  replaceChunks(
-    documentId: string,
-    sections: IRagSection[],
-    embeddings: IRagEmbeddings[]
-  ): Promise<number>;
-  /** True when every level-1 chunk of the document has a vector in the space. */
-  hasAllEmbeddings(documentId: string, space: string): Promise<boolean>;
-
-  listSpaces(): Promise<IRagSpace[]>;
-  activeSpace(): Promise<IRagSpace | undefined>;
-  /** Create the space and its table if needed; a retired space is revived with `status`. */
-  ensureSpace(model: string, dimension: number, status: IRagSpaceStatus): Promise<IRagSpace>;
-  /** Make one space active; the previous active one is retired. */
-  activateSpace(slug: string): Promise<void>;
-  /** Drop the tables of spaces retired before the date; returns their slugs. */
-  dropRetiredSpaces(retiredBefore: Date): Promise<string[]>;
-  /** Level-1 chunks without a vector in the space, for backfills. */
-  chunksWithoutEmbedding(space: string, limit: number): Promise<{ id: number; text: string }[]>;
-  writeEmbeddings(space: string, rows: { chunkId: number; vector: number[] }[]): Promise<void>;
+  /** One transaction: drop the old chunks, write the new ones, mark the document ready. */
+  replaceChunks(documentId: string, sections: IRagSection[]): Promise<number>;
 
   query(q: IRagQuery): Promise<IRagHit[]>;
   readSection(sectionId: number): Promise<
@@ -147,9 +108,7 @@ export type IRagSource =
   | { kind: 'text'; text: string; slug?: string }
   | { kind: 'attachment'; token: string }
   | { kind: 'url'; url: string }
-  | { kind: 'record'; baseId: string; tableId: string; recordId: string }
-  /** A document rebuilt from the old Mastra vectors (design §14.3). */
-  | { kind: 'legacy'; index: string; docName: string; text: string };
+  | { kind: 'record'; baseId: string; tableId: string; recordId: string };
 
 export interface IRagSourceText {
   title: string | null;

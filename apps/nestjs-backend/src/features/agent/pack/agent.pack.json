@@ -53,16 +53,6 @@
           "type": "singleLineText"
         },
         {
-          "key": "embedding_model",
-          "name": "embedding_model",
-          "type": "singleLineText"
-        },
-        {
-          "key": "rerank_model",
-          "name": "rerank_model",
-          "type": "singleLineText"
-        },
-        {
           "key": "knowledge_tables",
           "name": "knowledge_tables",
           "type": "longText",

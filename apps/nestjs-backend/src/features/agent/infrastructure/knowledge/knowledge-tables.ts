@@ -1,5 +1,6 @@
 import { AGENT_ROBOT_ID } from '@cybernetics/core';
 import { Inject, Injectable } from '@nestjs/common';
+import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
 import { detectTableProfile } from '../../../ai-data/ai-data.schema';
 import { AGENT_STORE_PORT, type IAgentStorePort } from '../../domain/ports';
@@ -14,8 +15,6 @@ export interface IKnowledgeSettings {
   agentBaseId: string | null;
   memoryTableId: string | null;
   memoryWatch: Set<string>;
-  setupTableId: string | null;
-  embeddingFieldId: string | null;
   /** Configured knowledge tables; empty means detect them. */
   knowledgeTables: Set<string>;
 }
@@ -39,6 +38,7 @@ export class KnowledgeTables {
 
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly dataPrismaService: DataPrismaService,
     private readonly execution: AgentExecutionContext,
     @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort
   ) {}
@@ -87,7 +87,7 @@ export class KnowledgeTables {
     const [schema, table] = dbTableName.split('.');
     const quoted = `"${schema.replace(/"/g, '""')}"."${table.replace(/"/g, '""')}"`;
     for (let offset = 0; ; offset += idPage) {
-      const rows = await this.prismaService.$queryRawUnsafe<{ id: string }[]>(
+      const rows = await this.dataPrismaService.$queryRawUnsafe<{ id: string }[]>(
         `SELECT "__id" AS id FROM ${quoted} ORDER BY "__auto_number" LIMIT ${idPage} OFFSET ${offset}`
       );
       if (rows.length) yield rows.map((r) => r.id);
@@ -103,7 +103,6 @@ export class KnowledgeTables {
     const tableMap = JSON.parse(row.tableMap || '{}') as Record<string, string>;
     const fieldMap = JSON.parse(row.fieldMap || '{}') as Record<string, Record<string, string>>;
     const memoryFields = fieldMap[AGENT_TABLES.memory] ?? {};
-    const setupFields = fieldMap[AGENT_TABLES.setup] ?? {};
     const profile = await this.execution
       .run({ runId: 'knowledge-sync', actorUserId: AGENT_ROBOT_ID }, () =>
         this.store.getDefaultProfile()
@@ -116,8 +115,6 @@ export class KnowledgeTables {
         ['title', 'content', 'is_active'].map((k) => memoryFields[k]).filter(Boolean)
       ),
       knowledgeTables: new Set(profile?.knowledgeTables ?? []),
-      setupTableId: tableMap[AGENT_TABLES.setup] ?? null,
-      embeddingFieldId: setupFields.embedding_model ?? null,
     };
   }
 

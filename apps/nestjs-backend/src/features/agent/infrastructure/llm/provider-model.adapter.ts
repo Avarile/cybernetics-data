@@ -68,22 +68,6 @@ export class ProviderModelAdapter implements IModelPort {
     return { ref, modelKey, model };
   }
 
-  async embedder(ref: IModelRef) {
-    const aiConfig = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
-    const providers = (aiConfig?.llmProviders ?? []).map((p) => ({ ...p, isInstance: true }));
-    const modelKey = modelKeyForRef(ref, providers);
-    const model = await this.aiService.getEmbeddingModelInstance(modelKey, providers);
-    return { ref, modelKey, model };
-  }
-
-  async reranker(ref: IModelRef) {
-    const aiConfig = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
-    const providers = (aiConfig?.llmProviders ?? []).map((p) => ({ ...p, isInstance: true }));
-    const modelKey = modelKeyForRef(ref, providers);
-    const model = await this.aiService.getRerankingModelInstance(modelKey, providers);
-    return { ref, modelKey, model };
-  }
-
   async price(ref: IModelRef): Promise<IModelPrice | undefined> {
     const aiConfig = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
     const { providerId, model } = parseModelRef(ref);

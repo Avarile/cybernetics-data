@@ -1,8 +1,8 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /**
  * The knowledge toolkit (design §8 knowledge, §11.4): hybrid search with snippets and section
- * grouping, exact-code keyword hits, rag_read with ranges, knowledge_search filters, collections,
- * approvals, and the min_score cutoff. Uses the disposable agent_rag_test database.
+ * grouping, exact-code hits, rag_read with ranges, base filters, collections and approvals.
+ * Uses the disposable e2e database.
  */
 import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
@@ -11,20 +11,13 @@ import { ClsService } from 'nestjs-cls';
 import type { IAgentInstallationView } from '../src/features/agent/application/installation/ensure-installation.usecase';
 import { EnsureInstallation } from '../src/features/agent/application/installation/ensure-installation.usecase';
 import type { IAgentProfile } from '../src/features/agent/domain/entities';
-import {
-  AGENT_STORE_PORT,
-  MODEL_PORT,
-  RAG_STORE_PORT,
-  type IAgentStorePort,
-  type IModelPort,
-  type IRagStorePort,
-} from '../src/features/agent/domain/ports';
+import { RAG_STORE_PORT, type IRagStorePort } from '../src/features/agent/domain/ports';
 import { AgentExecutionContext } from '../src/features/agent/infrastructure/execution-context';
 import { KnowledgeSyncListener } from '../src/features/agent/infrastructure/knowledge/knowledge-sync.listener';
 import { KnowledgeToolkit } from '../src/features/agent/toolkits/knowledge/knowledge.toolkit';
 import type { IToolContext } from '../src/features/agent/toolkits/toolkit.types';
 import type { IClsStore } from '../src/types/cls';
-import { fakeEmbeddingModel, fakeVector, freshRagTestDb, until } from './utils/agent-rag';
+import { freshRagSchema, until } from './utils/agent-rag';
 import {
   createRecords,
   createTable,
@@ -36,7 +29,6 @@ import {
 interface ISearchOut {
   searched: string[];
   failed: { collection: string; error: string }[];
-  mode: string;
   results: {
     documentId: string;
     sectionId: number;
@@ -60,7 +52,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
   const ctx = (): IToolContext => ({
     runId: 'e2e-knowledge',
     actorUserId: adminId(),
-    profile: { rerankModel: null, approvalRequired: [] } as unknown as IAgentProfile,
+    profile: { approvalRequired: [] } as unknown as IAgentProfile,
   });
   const tool = (name: string) => app.get(KnowledgeToolkit).tools.find((t) => t.name === name)!;
   const run = async <T = Record<string, unknown>>(name: string, input: unknown) => {
@@ -76,7 +68,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
   };
 
   beforeAll(async () => {
-    process.env.AGENT_RAG_DATABASE_URL = await freshRagTestDb();
+    await freshRagSchema();
     app = (await initApp()).app;
     prisma = app.get(PrismaService);
     await prisma.agentInstallation.deleteMany({});
@@ -85,15 +77,6 @@ describe('Agent knowledge toolkit (e2e)', () => {
       isAdmin: true,
     });
     rag = app.get<IRagStorePort>(RAG_STORE_PORT);
-    const store = app.get<IAgentStorePort>(AGENT_STORE_PORT);
-    const profile = await store.getDefaultProfile();
-    await store.updateProfile(profile!.id, { embeddingModel: 'mock/emb' });
-    const model = fakeEmbeddingModel();
-    vi.spyOn(app.get<IModelPort>(MODEL_PORT), 'embedder').mockImplementation(async (ref) => ({
-      ref,
-      modelKey: `openai@${ref}@mock`,
-      model,
-    }));
     app.get(KnowledgeSyncListener).invalidate();
 
     const handbook = [
@@ -111,10 +94,6 @@ describe('Agent knowledge toolkit (e2e)', () => {
       title: 'Staff handbook',
     });
     expect(added.status).toBe('ready');
-    await until(
-      () => rag.activeSpace(),
-      (s) => Boolean(s)
-    );
   });
 
   afterAll(async () => {
@@ -130,13 +109,12 @@ describe('Agent knowledge toolkit (e2e)', () => {
       category: 'knowledge_write',
       always: true,
     });
-    expect(tool('rag_search').untrusted).toBe(true);
-    expect(tool('rag_search').approval).toBeUndefined();
+    expect(tool('search').untrusted).toBe(true);
+    expect(tool('search').approval).toBeUndefined();
   });
 
-  it('rag_search returns one result per section, with snippets', async () => {
-    const out = await run<ISearchOut>('rag_search', { query: 'leave detail explained' });
-    expect(out.mode).toBe('hybrid');
+  it('search returns one result per section, with snippets', async () => {
+    const out = await run<ISearchOut>('search', { query: 'leave detail explained' });
     expect(out.searched).toEqual(['agent_memory', 'kb_records', 'knowledge']);
     const sections = out.results.map((r) => r.sectionId);
     expect(new Set(sections).size).toBe(sections.length);
@@ -148,7 +126,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
   });
 
   it('finds an exact code by keyword', async () => {
-    const out = await run<ISearchOut>('rag_search', {
+    const out = await run<ISearchOut>('search', {
       query: 'INV-2041',
       collections: ['knowledge'],
     });
@@ -157,7 +135,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
   });
 
   it('rag_read reads a section, and a document in ranges', async () => {
-    const hit = (await run<ISearchOut>('rag_search', { query: 'INV-2041' })).results[0];
+    const hit = (await run<ISearchOut>('search', { query: 'INV-2041' })).results[0];
     const section = await run<{ content: string; title: string }>('rag_read', {
       sectionId: hit.sectionId,
     });
@@ -182,7 +160,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
     expect(rest.nextFrom).toBeNull();
   });
 
-  it('knowledge_search searches synced records, filtered by base', async () => {
+  it('search finds synced records, filtered by base', async () => {
     const kb = await createTable(baseId(), {
       name: 'Knowledges',
       fields: [
@@ -196,7 +174,12 @@ describe('Agent knowledge toolkit (e2e)', () => {
         records: [{ fields: { [title]: 'VPN setup', [context]: 'Install the VPN client first.' } }],
       });
       const found = await until(
-        () => run<ISearchOut>('knowledge_search', { query: 'VPN client', baseIds: [baseId()] }),
+        () =>
+          run<ISearchOut>('search', {
+            query: 'VPN client',
+            collections: ['kb_records'],
+            baseIds: [baseId()],
+          }),
         (o) => o.results.length > 0
       );
       expect(found.searched).toEqual(['kb_records']);
@@ -204,8 +187,9 @@ describe('Agent knowledge toolkit (e2e)', () => {
         title: 'VPN setup',
         recordRef: { recordId: records[0].id },
       });
-      const elsewhere = await run<ISearchOut>('knowledge_search', {
+      const elsewhere = await run<ISearchOut>('search', {
         query: 'VPN client',
+        collections: ['kb_records'],
         baseIds: ['bseNoSuchBase'],
       });
       expect(elsewhere.results).toEqual([]);
@@ -225,29 +209,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
     expect(await run('collection_delete', { id: 'work' })).toEqual({ deleted: 'work' });
     expect(await rag.listDocuments('work')).toEqual([]);
     await expect(run('collection_delete', { id: 'knowledge' })).rejects.toThrow(/built in/);
-    const out = await run<ISearchOut>('rag_search', { query: 'Falcon', collections: ['work'] });
+    const out = await run<ISearchOut>('search', { query: 'Falcon', collections: ['work'] });
     expect(out.failed).toEqual([{ collection: 'work', error: 'no such collection' }]);
-  });
-
-  it('applies a collection min_score to vector matches', async () => {
-    await rag.createCollection({
-      id: 'strict',
-      label: 'Strict',
-      description: null,
-      kind: 'documents',
-      minScore: 0.99,
-    });
-    await run('rag_ingest', { collection: 'strict', text: 'Quarterly revenue grew in EMEA.' });
-    const space = (await rag.activeSpace())!;
-    const query = (text: string) =>
-      rag.query({
-        text,
-        collections: ['strict'],
-        vector: fakeVector(text),
-        space: space.slug,
-        mode: 'vector',
-      });
-    expect(await query('weather tomorrow')).toEqual([]);
-    expect((await query('Quarterly revenue grew in EMEA.')).length).toBe(1);
   });
 });

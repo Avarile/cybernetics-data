@@ -61,9 +61,8 @@ export class RagSourceReader implements IRagSourceReaderPort {
   async read(source: IRagSource): Promise<IRagSourceText | undefined> {
     switch (source.kind) {
       case 'text':
-      case 'legacy':
         return {
-          title: source.kind === 'legacy' ? source.docName : null,
+          title: null,
           text: source.text,
           format: looksMarkdown(source.text) ? 'markdown' : 'text',
         };

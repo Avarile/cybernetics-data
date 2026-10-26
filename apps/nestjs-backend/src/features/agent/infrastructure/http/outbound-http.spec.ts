@@ -90,8 +90,6 @@ describe('OutboundHttp guard', () => {
         httpAllowPrivateNetworks: false,
         httpTimeoutMs: 2000,
         httpMaxResponseBytes: 1000,
-        ragDatabaseUrl: undefined,
-        legacyVectorDatabaseUrl: undefined,
         ...config,
       },
       {

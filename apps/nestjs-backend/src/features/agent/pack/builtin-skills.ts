@@ -21,11 +21,12 @@ export const BUILTIN_SKILLS: IBuiltinSkill[] = [
     invocation: 'auto',
     toolkits: ['knowledge', 'data_read'],
     category: 'knowledge',
-    version: 1,
+    version: 2,
     body: `# Knowledge search
 
-1. Call \`knowledge_search\` with the user's question in their own words. It combines keyword and
-   meaning matches across every knowledge table.
+1. Call \`search\` with the key words of the question and \`collections: ["kb_records"]\`. It is a
+   full-text search over every knowledge table: it matches words and word beginnings, not
+   meaning, so try synonyms or a shorter query when nothing comes back.
 2. Read the snippets. When one looks right, open the record with \`get_records\` for full text.
 3. Answer from the records and name each one you used (title and base).
 4. If nothing matches, say so plainly and offer to search with other words or to create a record.
@@ -38,11 +39,12 @@ export const BUILTIN_SKILLS: IBuiltinSkill[] = [
     invocation: 'auto',
     toolkits: ['knowledge'],
     category: 'knowledge',
-    version: 1,
+    version: 2,
     body: `# Document search
 
 1. \`collection_list\` to see which document collections exist.
-2. \`rag_search\` with the question; pass collections when the topic is clear.
+2. \`search\` with the key words; pass collections when the topic is clear. It matches words, not
+   meaning: try synonyms when nothing comes back.
 3. Use \`rag_read\` on the best hits for the full section before quoting.
 4. Cite document title and heading. Report collections that failed to search.`,
   },

@@ -13,8 +13,7 @@ import {
 } from '../../domain/ports';
 import { chunkDocument, chunkRecord } from '../../infrastructure/knowledge/chunker';
 import { KnowledgeTables } from '../../infrastructure/knowledge/knowledge-tables';
-import { documentIdFor, embeddingText } from '../../infrastructure/knowledge/pg-rag-store';
-import { EmbeddingSpaces } from './embedding-spaces';
+import { documentIdFor } from '../../infrastructure/knowledge/pg-rag-store';
 import { RAG_JOBS_QUEUE, sha256, sourceRefOf, type IRagJobData } from './rag-jobs';
 
 /** Larger extracted texts are refused rather than chunked into thousands of pieces. */
@@ -55,8 +54,8 @@ const recordIds = (source: IRagSource) =>
     : { baseId: null, tableId: null, recordId: null };
 
 /**
- * Background, idempotent, atomic ingest (design §11.3): extract → hash → skip when unchanged and
- * fully embedded → chunk → embed for every target space → one transaction replaces the chunks.
+ * Background, idempotent, atomic ingest (design §11.3): extract → hash → skip when unchanged →
+ * chunk → one transaction replaces the chunks (with their full-text index).
  */
 @Injectable()
 export class KnowledgeIngest {
@@ -67,7 +66,6 @@ export class KnowledgeIngest {
   constructor(
     @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort,
     @Inject(RAG_SOURCE_READER_PORT) private readonly reader: IRagSourceReaderPort,
-    private readonly spaces: EmbeddingSpaces,
     private readonly tables: KnowledgeTables,
     @InjectQueue(RAG_JOBS_QUEUE) private readonly queue: Queue<IRagJobData>
   ) {}
@@ -232,11 +230,6 @@ export class KnowledgeIngest {
     );
   }
 
-  /** The embedding model may have changed: build its space in the background. */
-  async enqueueSpaceCheck(actorUserId: string) {
-    await this.queue.add('ensure-space', { actorUserId }, jobOptions);
-  }
-
   async status(documentId: string) {
     return this.rag.getDocument(documentId);
   }
@@ -287,16 +280,14 @@ export class KnowledgeIngest {
     const existing = await this.rag.getDocument(documentId);
     const title = data.title ?? existing?.title ?? read.title;
     const hash = sha256(`${title ?? ''}\n${read.text}`);
-    const spaces = await this.spaces.targets(data.actorUserId);
 
-    if (existing?.contentHash === hash && existing.chunkCount > 0) {
-      const embedded = await Promise.all(
-        spaces.map((s) => this.rag.hasAllEmbeddings(documentId, s.slug))
-      );
-      if (embedded.every(Boolean)) {
-        if (existing.status !== 'ready') await this.rag.setDocumentStatus(documentId, 'ready');
-        return { status: 'ready', chunkCount: existing.chunkCount, unchanged: true };
-      }
+    // indexed before with the same content: nothing to do (a queued re-ingest just turns ready)
+    if (
+      existing?.contentHash === hash &&
+      (existing.status === 'ready' || existing.chunkCount > 0)
+    ) {
+      if (existing.status !== 'ready') await this.rag.setDocumentStatus(documentId, 'ready');
+      return { status: 'ready', chunkCount: existing.chunkCount, unchanged: true };
     }
 
     await this.rag.upsertDocument({
@@ -311,14 +302,7 @@ export class KnowledgeIngest {
       read.format === 'record'
         ? chunkRecord(title, read.text)
         : chunkDocument(read.text, read.format);
-    const texts = sections.flatMap((s) =>
-      s.chunks.map((chunk) => embeddingText(title, s.headingPath, chunk))
-    );
-    const embeddings = [];
-    for (const space of spaces) {
-      embeddings.push({ space: space.slug, vectors: await this.spaces.embed(space.model, texts) });
-    }
-    const chunkCount = await this.rag.replaceChunks(documentId, sections, embeddings);
+    const chunkCount = await this.rag.replaceChunks(documentId, sections);
     return { status: 'ready', chunkCount, unchanged: false };
   }
 }

@@ -14,12 +14,7 @@ export const agentInstallationStatusSchema = z.enum([
 export type IAgentInstallationStatus = z.infer<typeof agentInstallationStatusSchema>;
 
 /** The model slots of the default `agent_setup` row. */
-export const agentModelSlotSchema = z.enum([
-  'model',
-  'small_model',
-  'embedding_model',
-  'rerank_model',
-]);
+export const agentModelSlotSchema = z.enum(['model', 'small_model']);
 export type IAgentModelSlot = z.infer<typeof agentModelSlotSchema>;
 
 export const agentModelStatusSchema = z.object({

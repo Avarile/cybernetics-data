@@ -1,7 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
-import { EmbeddingSpaces } from '../../application/knowledge/embedding-spaces';
 import { KnowledgeIngest } from '../../application/knowledge/knowledge-ingest';
 import {
   RAG_JOBS_QUEUE,
@@ -10,7 +9,7 @@ import {
 } from '../../application/knowledge/rag-jobs';
 import { AgentExecutionContext } from '../execution-context';
 
-/** Runs knowledge jobs (design §11.3, §11.5) as the agent, so every base can be read. */
+/** Runs knowledge jobs (design §11.3) as the agent, so every base can be read. */
 @Injectable()
 @Processor(RAG_JOBS_QUEUE, {
   removeOnComplete: { count: 1000 },
@@ -21,7 +20,6 @@ export class RagJobsProcessor extends WorkerHost {
 
   constructor(
     private readonly ingest: KnowledgeIngest,
-    private readonly spaces: EmbeddingSpaces,
     private readonly execution: AgentExecutionContext
   ) {
     super();
@@ -37,10 +35,8 @@ export class RagJobsProcessor extends WorkerHost {
             return this.ingest.ingest(job.data);
           case 'remove':
             return job.data.documentId ? this.ingest.remove(job.data.documentId) : undefined;
-          case 'backfill':
-            return job.data.space ? this.spaces.backfill(job.data.space) : undefined;
-          case 'ensure-space':
-            return this.spaces.ensure(job.data.actorUserId);
+          case 'sync':
+            return this.ingest.syncAll(job.data.actorUserId);
           default:
             this.logger.warn(`unknown knowledge job ${String(name)}`);
             return undefined;

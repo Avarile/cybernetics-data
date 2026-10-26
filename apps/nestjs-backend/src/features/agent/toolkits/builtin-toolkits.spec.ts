@@ -32,8 +32,6 @@ function fakeStore() {
     persona: 'p',
     model: 'openai/gpt-4.1',
     smallModel: null,
-    embeddingModel: null,
-    rerankModel: null,
     knowledgeTables: [],
     temperature: null,
     maxSteps: 25,

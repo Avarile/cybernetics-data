@@ -570,6 +570,32 @@ POST /api/agent/chat  {threadId?, message, context?{baseId,tableId,viewId,record
 
 ## 11. Knowledge search and RAG, redesigned (Feature 5 follow-up)
 
+> **Revised 2026-10-27: full-text search only.** Vector search, embedding models, embedding
+> spaces, reranking and the legacy Mastra import were removed (decision by the project owner).
+> What remains of this section:
+>
+> - `agent_rag` (collections, documents, sectioned chunks) lives in the **main PostgreSQL**,
+>   reached through Prisma. There is no separate vector database, no pgvector, and no
+>   `AGENT_RAG_DATABASE_URL`.
+> - Chunking (§11.2), ingest and derived sync (§11.3), snippets and small-to-big (§11.4) and the
+>   eval runner (§11.6) are unchanged. A full sync of the knowledge tables also runs on the first
+>   search after each start (`POST /api/agent/admin/knowledge/sync` reruns it).
+> - Search is PostgreSQL full-text search:
+>   - each chunk's `tsv` weights the document title and heading path (A) above the text (D);
+>   - query words are matched individually (stopwords dropped) and ranked by `ts_rank_cd`;
+>   - the last word also matches as a prefix;
+>   - `"quoted"` input uses websearch syntax;
+>   - CJK runs are indexed and queried as character pairs.
+> - Tools: `search` (replaces `rag_search` and `knowledge_search`; filter with `collections`,
+>   `baseIds`, `tables`), `rag_read`, `rag_ingest`, `rag_ingest_status`,
+>   `collection_list/create/delete`.
+> - `agent_setup.embedding_model` and `rerank_model` are gone.
+> - Eval: recall@5 0.969 and MRR@5 0.914 on the golden set (keyword-only before: 0.938 and 0.897;
+>   CJK 1.0, was 0).
+>
+> The text below is the original design, kept for the record. §11.1's embedding tables, §11.4's
+> vector pass and rerank, and §11.5 no longer apply.
+
 Everything below lives in the existing pgvector database (`VECTOR_DATABASE_URL`) in a new schema,
 `agent_rag`, behind `RagStorePort` (§5.3). The Mastra schemas are left alone until P4 removes them
 (§14).
@@ -711,7 +737,7 @@ JOIN agent_rag.document d ON d.id = c.document_id ORDER BY score DESC LIMIT 40;
   calls `rag_read(sectionId | documentId, range?)` for the full text, or `get_records` for a record.
 - Every result says which collections were searched and which failed (no `allSettled` hiding).
 
-### 11.5 Changing the embedding model, without taking search down
+### 11.5 Changing the embedding model, without taking search down (removed 2026-10-27)
 
 Setting a new `agent_setup.embedding_model` creates a new `embedding_space` (`building`) and its
 table, then backfills every level-1 chunk in the background (resumable, in batches). New ingests write
@@ -900,7 +926,7 @@ BYOK integration UI is untouched.
    with its model pool as that provider's `models`.
 2. Old Mastra threads (`store_schema`) are **not migrated**. Those were per-user knowledge chats, and
    the new agent is admin only. They stay in the vector DB until it is cleaned up.
-3. Vector data: a one-off P4 script imports whatever exists in Mastra's `vector_schema`. For each
+3. (Removed 2026-10-27: production had no Mastra vectors, so the import was dropped with vector search.) Vector data: a one-off P4 script imports whatever exists in Mastra's `vector_schema`. For each
    table it groups rows by `metadata.materialId`, orders them by `chunkIndex`, joins the text back
    together with the 400-character overlap removed, and ingests the result into a collection of the
    same name with `source_ref = legacy:<index>/<docName>`. Re-chunking and re-embedding are needed

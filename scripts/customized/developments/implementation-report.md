@@ -24,9 +24,10 @@ took out another 13,500 lines.
 2. **Leftover Redis keys.** Early in the work, about 50 `bull:agent-jobs:*` keys went to your
    platform Redis (127.0.0.1:30490), before the test environment was pinned. They are harmless.
    Say the word and I'll delete them; I left them alone.
-3. **Legacy knowledge import on the real vector DB.** By rule, nothing ran against :30898.
-   Procedure (§8): dry run first, then the real run, check the result, and only then drop the
-   Mastra schemas by hand.
+3. **Knowledge search is now full-text only** (changed after delivery, §12). The vector store,
+   embedding and rerank models, and the legacy Mastra import are gone. The Mastra schemas in the
+   vector database (`vector_schema`, `index_schema`, `store_schema`, `job_schema`) are no longer
+   read by anything and can be dropped by hand.
 4. **`BACKEND_SECRETS_ENCRYPTION_KEY`** is not set in dev. Secrets then use a key derived from
    `SECRET_KEY`, and the status page warns about it. Set a dedicated key before production.
 5. **Existing installations** keep their seeded approval list. The new `knowledge_write` category
@@ -217,34 +218,25 @@ Scripted model, in-process jobs, local disposable Postgres.
 
 | Env var | Meaning |
 |---|---|
-| `AGENT_RAG_DATABASE_URL` | Knowledge store; falls back to `VECTOR_DATABASE_URL` |
-| `VECTOR_DATABASE_URL` | Also the source of the legacy Mastra import |
 | `AGENT_HTTP_ALLOWED_HOSTS` | Hosts `http_request` may reach without a credential |
 | `AGENT_HTTP_ALLOW_PRIVATE_NETWORKS` | Dev and test only |
 | `AGENT_HTTP_TIMEOUT_MS`, `AGENT_HTTP_MAX_RESPONSE_BYTES` | Outbound limits |
 | `BACKEND_SECRETS_ENCRYPTION_KEY` | Key for provider keys and agent secrets |
 | `AI_GATEWAY_API_KEY` | Default `apiKeyEnv` of the `vercel-gateway` provider (kept, §9) |
-| `RAG_EVAL_EMBEDDING`, `RAG_EVAL_RERANK`, `RAG_EVAL_RECORD`, `RAG_EVAL_DATABASE_URL` | Eval runner only |
+| `RAG_EVAL_RECORD`, `RAG_EVAL_DATABASE_URL` | Eval runner only |
 
-Removed: `MASTRA_URL`, `MASTRA_API_KEY`, `AI_DATA_CONTEXT_TTL_SECONDS`.
+Removed: `MASTRA_URL`, `MASTRA_API_KEY`, `AI_DATA_CONTEXT_TTL_SECONDS`, and (§12) the agent's use
+of `AGENT_RAG_DATABASE_URL` and `VECTOR_DATABASE_URL`.
 
-**Legacy import.**
-1. As an admin: `POST /api/agent/admin/knowledge/import-legacy {"dryRun": true}`. It reports per
-   index: documents, chunks, and whether it would import, is empty, was skipped as a secret, or
-   has an invalid name.
-2. Run it without `dryRun` and watch the documents become `ready` (`rag_ingest_status`, or
-   `collection_list`).
-3. After checking, drop `vector_schema`, `index_schema`, `store_schema` and `job_schema` by hand.
-
-**Embedding model.** Set `embedding_model` in Admin ▸ Agent (or with `setup_update`). The new
-space builds in the background, and `collection_list` shows its progress. Without an embedding
-model, search is keyword-only and says so in its warnings.
+**Knowledge index.** It lives in the `agent_rag` schema of the main database and is created on
+first use. The first search after each start indexes the knowledge tables and memories that
+aren't indexed yet. `POST /api/agent/admin/knowledge/sync` reruns that sync.
 
 **Knowledge tables.** Every table with a primary field and a text field named `context` syncs
 automatically. List table ids in `agent_setup.knowledge_tables` to choose them yourself.
 
-**Eval.** `AI_GATEWAY_API_KEY=… pnpm -F @teable/backend rag-eval`. It uses the local disposable
-`agent_rag_eval` database; `RAG_EVAL_RECORD=1` records a new baseline.
+**Eval.** `pnpm -F @teable/backend rag-eval`, with no model or key needed. It uses the local
+disposable `agent_rag_eval` database; `RAG_EVAL_RECORD=1` records a new baseline.
 
 ## 9. Deviations from the design
 
@@ -258,18 +250,17 @@ automatically. List table ids in `agent_setup.knowledge_tables` to choose them y
 | Approval categories (§7.2) | Plus `knowledge_write` | Design §8 wants ingest and collection delete to ask |
 | §14.4 removes `AI_GATEWAY_API_KEY` | Kept | P0 made it the `vercel-gateway` provider's key |
 | Golden set from real records (§11.6) | Synthetic corpus | Keeps personal data out of the repo; extend it with real questions |
-| Legacy import as a "script" | Admin route with a dry run | Runs inside the app with its ingest pipeline and audit |
+| Legacy import as a "script" | Built, then removed (§12) | Production had no Mastra vectors to import |
+| Hybrid vector + keyword search (§11) | Full-text only, in the main database (§12) | Owner's decision after delivery; better recall on the eval than the old keyword pass |
 | `agent_setup` | Plus `knowledge_tables`; `agent_threads` plus `summary_through_seq` | §11.3 "admin can edit the list"; bug 7.2 |
 
 ## 10. Known limitations and next steps
 
-- **Retrieval.** Extend the golden set with real questions (harder ones, near-duplicates,
-  multi-document answers) before changing chunk sizes, RRF k or `min_score`. Consider CJK
-  bigrams for the keyword pass.
+- **Retrieval.** Full text matches words, not meaning: "lost my laptop" doesn't find "lost or
+  stolen device". Extend the golden set with real questions from your knowledge tables before
+  tuning chunk sizes or term weighting.
 - **Search scope.** Search is per instance. Knowledge-table sync follows record events, so data
   written with raw SQL isn't seen until the record changes.
-- **Stale builds.** A space left in `building` for a model that is no longer configured stops
-  receiving writes but keeps its table; only retired spaces are dropped.
 - **URL ingest** reads text and HTML. Binary files over HTTP (for example PDF) aren't parsed;
   upload them as files instead.
 - **Live check with a real model.** Run the injection suite's scenarios once against a real model
@@ -281,13 +272,13 @@ automatically. List table ids in `agent_setup.knowledge_tables` to choose them y
 
 ## 11. Verification summary
 
-- **Backend unit:** 128 agent tests, and 247 across agent, ai, ai-data, setting and ai-provider.
-- **Agent e2e:** 17 suites, 100 tests, run against the disposable Postgres container
+- **Backend unit:** 127 agent tests.
+- **Agent e2e:** 16 suites, 96 tests (after §12), run against the disposable Postgres container
   `agent-e2e-pg`.
   - installation, lifecycle and lock-down: 22;
   - store 6, chat 10, admin 4;
   - data-read 6, data-write 4, sql-read 3, credentials 4;
-  - rag-store 6, rag-ingest 6, knowledge-toolkit 7, rag-spaces 4, legacy-import 3;
+  - rag-store 7, rag-ingest 6, knowledge-toolkit 6, knowledge-sync 3;
   - injection 10, load 5.
 - **Other e2e:** ai-data 11/11 (rewritten).
 - **Other unit:** openapi 127/127, frontend agent and admin 29/29.
@@ -303,3 +294,49 @@ automatically. List table ids in `agent_setup.knowledge_tables` to choose them y
   and `agent_rag_eval` databases.
 - Dev server on :3000 and scripted fake models on :18080 to :18082.
 - Your k3s databases and Redis were not used, apart from the stray keys in §1.
+
+## 12. Change after delivery: full-text search only (2026-10-27)
+
+Testing on a copy of the K3s data showed two problems:
+- knowledge records that existed before the agent was enabled were never indexed;
+- the embedding slot held a chat model.
+
+Fixes `890e9a3` and `6c61ea4` cover the first: a full sync on first search, and reads that avoid
+the per-user rate limit.
+
+The owner then chose to drop vector search altogether. Decisions:
+- PostgreSQL built-in full-text search.
+- Rerank removed.
+- `rag_search` renamed to `search`, with `knowledge_search` merged into it.
+- `embedding_model` and `rerank_model` removed everywhere.
+- The separate vector database and the legacy import removed.
+
+**What changed**
+
+| Area | Now |
+|---|---|
+| Storage | `agent_rag` in the main database through Prisma (knex builds the SQL); no pgvector, no embedding tables, no `min_score` |
+| Index | Each chunk's `tsv` = title and heading path (weight A) + text (weight D), with CJK runs added as character pairs |
+| Query | Meaningful words matched individually (stopwords dropped); the last word also as a prefix; `"quoted"` input in websearch syntax; ranked by `ts_rank_cd`, one result per section |
+| Ingest | Extract → hash → skip unchanged → chunk → one transaction; no embedding step |
+| Tools | `search(query, collections?, baseIds?, tables?, topK?)`, `rag_read`, `rag_ingest`, `rag_ingest_status`, `collection_list/create/delete`; built-in knowledge skills updated to v2 |
+| Removed | Embedding spaces, backfill and model-switch jobs, rerank, the `embedding_model`/`rerank_model` slots (pack, entity, setup tool, admin UI, status), AI-service embedding and rerank resolvers, the legacy Mastra import (route, reader, tests) |
+
+**Eval (32 questions, synthetic corpus)**
+
+| | Keyword pass before | Full text now |
+|---|---|---|
+| recall@5 | 0.938 | **0.969** |
+| MRR@5 | 0.897 | **0.914** |
+| CJK | 0 | **1.0** |
+| p50 / p95 | 2 / 4 ms | 2 / 4 ms |
+
+The one miss needs meaning, not words ("lost my laptop" vs "lost or stolen device").
+
+**For existing installations**
+- The old `embedding_model` and `rerank_model` columns stay in the Agent base (repair never
+  deletes fields) and are ignored; delete them by hand if you like.
+- The built-in knowledge skills arrive as inactive `-v2` copies; activate them, or edit the
+  originals to call `search`.
+- The old `agent_rag` schema in the vector database, if any, is unused.
+

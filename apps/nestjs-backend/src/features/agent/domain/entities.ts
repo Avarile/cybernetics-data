@@ -27,8 +27,6 @@ export interface IAgentProfile {
   persona: string | null;
   model: string | null;
   smallModel: string | null;
-  embeddingModel: string | null;
-  rerankModel: string | null;
   /** Tables synced into kb_records; empty means detect them (design §11.3). */
   knowledgeTables: string[];
   temperature: number | null;

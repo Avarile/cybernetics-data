@@ -2,8 +2,7 @@
 /**
  * Full sync of knowledge tables (design §11.3): records that existed before the agent was enabled
  * (or changed while the server was down) are indexed on the first knowledge search, documents of
- * vanished records are removed, and an embedding slot holding a chat model does not stop keyword
- * indexing. Uses the disposable agent_rag_test database.
+ * vanished records are removed. Uses the disposable e2e database.
  */
 import { FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
@@ -14,24 +13,16 @@ import type { IAgentInstallationView } from '../src/features/agent/application/i
 import { EnsureInstallation } from '../src/features/agent/application/installation/ensure-installation.usecase';
 import { KnowledgeIngest } from '../src/features/agent/application/knowledge/knowledge-ingest';
 import type { IAgentProfile } from '../src/features/agent/domain/entities';
-import {
-  AGENT_STORE_PORT,
-  MODEL_PORT,
-  RAG_STORE_PORT,
-  type IAgentStorePort,
-  type IModelPort,
-  type IRagStorePort,
-} from '../src/features/agent/domain/ports';
+import { RAG_STORE_PORT, type IRagStorePort } from '../src/features/agent/domain/ports';
 import { AgentExecutionContext } from '../src/features/agent/infrastructure/execution-context';
 import { KnowledgeSyncListener } from '../src/features/agent/infrastructure/knowledge/knowledge-sync.listener';
 import { KnowledgeToolkit } from '../src/features/agent/toolkits/knowledge/knowledge.toolkit';
 import type { IToolContext } from '../src/features/agent/toolkits/toolkit.types';
 import type { IClsStore } from '../src/types/cls';
-import { freshRagTestDb, until } from './utils/agent-rag';
+import { freshRagSchema, until } from './utils/agent-rag';
 import { createTable, initApp, permanentDeleteTable, runWithTestUser } from './utils/init-app';
 
 interface ISearchOut {
-  mode: string;
   warnings: string[];
   results: { title: string | null; recordRef?: { recordId: string } }[];
 }
@@ -47,7 +38,7 @@ describe('Agent knowledge full sync (e2e)', () => {
   const ctx = (): IToolContext => ({
     runId: 'e2e-sync',
     actorUserId: adminId(),
-    profile: { rerankModel: null, approvalRequired: [] } as unknown as IAgentProfile,
+    profile: { approvalRequired: [] } as unknown as IAgentProfile,
   });
   const run = async <T>(name: string, input: unknown) => {
     const t = app.get(KnowledgeToolkit).tools.find((x) => x.name === name)!;
@@ -62,7 +53,7 @@ describe('Agent knowledge full sync (e2e)', () => {
   };
 
   beforeAll(async () => {
-    process.env.AGENT_RAG_DATABASE_URL = await freshRagTestDb();
+    await freshRagSchema();
     app = (await initApp()).app;
     prisma = app.get(PrismaService);
     rag = app.get<IRagStorePort>(RAG_STORE_PORT);
@@ -90,13 +81,6 @@ describe('Agent knowledge full sync (e2e)', () => {
     home = await runWithTestUser(cls, () => app.get(EnsureInstallation).enable(adminId()), {
       isAdmin: true,
     });
-    const store = app.get<IAgentStorePort>(AGENT_STORE_PORT);
-    const profile = await store.getDefaultProfile();
-    // a chat model in the embedding slot, as found on a real installation
-    await store.updateProfile(profile!.id, { embeddingModel: 'gateway/minimax-chat' });
-    vi.spyOn(app.get<IModelPort>(MODEL_PORT), 'embedder').mockImplementation(async () => {
-      throw new Error('Model minimax-chat does not support embeddings');
-    });
     app.get(KnowledgeSyncListener).invalidate();
   });
 
@@ -108,14 +92,15 @@ describe('Agent knowledge full sync (e2e)', () => {
   });
 
   it(
-    'the first knowledge search indexes existing records, by keyword when embedding fails',
+    'the first knowledge search indexes the records that existed before',
     { timeout: 40_000 },
     async () => {
       expect(await rag.listDocuments('kb_records')).toEqual([]);
-      const out = await run<ISearchOut>('knowledge_search', { query: 'K3S cheatsheet' });
+      const out = await run<ISearchOut>('search', {
+        query: 'K3S cheatsheet',
+        collections: ['kb_records'],
+      });
       expect(out.results[0]).toMatchObject({ title: 'K3S - Cheatsheet' });
-      expect(out.mode).toBe('keyword');
-      expect(out.warnings.join(' ')).toMatch(/cannot embed text/);
       // the sync goes on in the background after the first search returns
       const indexed = await until(
         () => rag.listDocuments('kb_records', 1000),
