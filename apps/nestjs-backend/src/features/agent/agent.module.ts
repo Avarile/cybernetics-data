@@ -35,6 +35,7 @@ import {
   DATA_GATEWAY_PORT,
   HTTP_PORT,
   MODEL_PORT,
+  RAG_STORE_PORT,
   RUN_STORE_PORT,
   SECRET_VAULT_PORT,
 } from './domain/ports';
@@ -44,6 +45,7 @@ import { UnrestrictedDataWriter } from './infrastructure/data/unrestricted-data-
 import { AgentExecutionContext } from './infrastructure/execution-context';
 import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
+import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
@@ -132,6 +134,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
     { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
     { provide: HTTP_PORT, useClass: OutboundHttp },
+    { provide: RAG_STORE_PORT, useClass: PgRagStore },
   ],
   exports: [
     AgentExecutionContext,

@@ -9,7 +9,7 @@ import {
   SettingKey,
 } from '@teable/openapi';
 import type { LLMProvider } from '@teable/openapi';
-import type { ImageModel, LanguageModel } from 'ai';
+import type { EmbeddingModel, ImageModel, LanguageModel } from 'ai';
 import { createGateway } from 'ai';
 import { CustomHttpException } from '../../../custom.exception';
 import { ProviderSecretService } from '../../setting/provider-secret.service';
@@ -30,6 +30,8 @@ const keylessProviderTypes: LLMProviderType[] = [
   LLMProviderType.OLLAMA,
   LLMProviderType.OPENAI_COMPATIBLE,
 ];
+
+const aiNotSetMessage = 'AI configuration is not set';
 
 @Injectable()
 export class ModelResolverService {
@@ -157,15 +159,11 @@ export class ModelResolverService {
 
     if (type === LLMProviderType.AI_GATEWAY) {
       if (!apiKey) {
-        throw new CustomHttpException(
-          'AI configuration is not set',
-          HttpErrorCode.VALIDATION_ERROR,
-          {
-            localization: {
-              i18nKey: configurationNotSetKey,
-            },
-          }
-        );
+        throw new CustomHttpException(aiNotSetMessage, HttpErrorCode.VALIDATION_ERROR, {
+          localization: {
+            i18nKey: configurationNotSetKey,
+          },
+        });
       }
       const gatewayProvider = createGateway({
         apiKey,
@@ -177,7 +175,7 @@ export class ModelResolverService {
     // Local and self-hosted OpenAI-compatible endpoints may run without a key.
     const keyless = keylessProviderTypes.includes(type as LLMProviderType);
     if (!baseUrl || (!apiKey && !keyless)) {
-      throw new CustomHttpException('AI configuration is not set', HttpErrorCode.VALIDATION_ERROR, {
+      throw new CustomHttpException(aiNotSetMessage, HttpErrorCode.VALIDATION_ERROR, {
         localization: {
           i18nKey: configurationNotSetKey,
         },
@@ -214,5 +212,58 @@ export class ModelResolverService {
     return isImageGeneration
       ? (modelProvider.image(model) as ReturnType<OpenAIProvider['image']>)
       : modelProvider(model);
+  }
+
+  /**
+   * An embedding model for a model key (the agent's knowledge search). Uses the same provider
+   * settings as chat models; providers without an embedding API are refused.
+   */
+  async getEmbeddingModelInstance(
+    modelKey: string,
+    llmProviders: LLMProvider[] = []
+  ): Promise<EmbeddingModel> {
+    const config = await this.getModelConfig(modelKey, llmProviders);
+    const { type, model, baseUrl, apiKey } = config;
+    const headers = 'headers' in config ? config.headers : undefined;
+    type IEmbeddingCapable = {
+      embeddingModel?: (id: string) => EmbeddingModel;
+      textEmbeddingModel?: (id: string) => EmbeddingModel;
+    };
+    let instance: IEmbeddingCapable;
+    if (type === LLMProviderType.AI_GATEWAY) {
+      if (!apiKey) {
+        throw new CustomHttpException(aiNotSetMessage, HttpErrorCode.VALIDATION_ERROR);
+      }
+      instance = createGateway({ apiKey, ...(baseUrl && { baseURL: baseUrl }) }) as never;
+    } else {
+      const keyless = keylessProviderTypes.includes(type as LLMProviderType);
+      if (!baseUrl || (!apiKey && !keyless)) {
+        throw new CustomHttpException(aiNotSetMessage, HttpErrorCode.VALIDATION_ERROR);
+      }
+      const provider = Object.entries(modelProviders).find(
+        ([key]) => type.toLowerCase() === key.toLowerCase()
+      )?.[1];
+      if (!provider) {
+        throw new CustomHttpException(
+          `Unsupported AI provider: ${type}`,
+          HttpErrorCode.VALIDATION_ERROR
+        );
+      }
+      const options = getAdaptedProviderOptions(type as LLMProviderType, {
+        name: model,
+        baseURL: baseUrl,
+        apiKey: apiKey ?? '',
+        headers,
+      });
+      instance = provider(options as never) as unknown as IEmbeddingCapable;
+    }
+    const make = instance.embeddingModel ?? instance.textEmbeddingModel;
+    if (!make) {
+      throw new CustomHttpException(
+        `Provider type ${type} has no embedding models`,
+        HttpErrorCode.VALIDATION_ERROR
+      );
+    }
+    return make.call(instance, model);
   }
 }

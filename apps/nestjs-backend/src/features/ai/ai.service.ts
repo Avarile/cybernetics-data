@@ -87,6 +87,10 @@ export class AiService {
     return this.modelResolverService.getModelConfig(modelKey, llmProviders);
   }
 
+  getEmbeddingModelInstance(modelKey: string, llmProviders?: LLMProvider[]) {
+    return this.modelResolverService.getEmbeddingModelInstance(modelKey, llmProviders);
+  }
+
   getModelInstance(
     modelKey: string,
     llmProviders: LLMProvider[],

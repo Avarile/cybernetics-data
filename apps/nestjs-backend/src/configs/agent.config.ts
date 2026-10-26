@@ -19,6 +19,9 @@ export const agentConfig = registerAs('agent', () => ({
   httpTimeoutMs: positive(process.env.AGENT_HTTP_TIMEOUT_MS, 20_000),
   /** Response bodies are cut after this many bytes before the model sees them. */
   httpMaxResponseBytes: positive(process.env.AGENT_HTTP_MAX_RESPONSE_BYTES, 200_000),
+  /** The pgvector database of the knowledge store (schema agent_rag, design §11). */
+  ragDatabaseUrl:
+    process.env.AGENT_RAG_DATABASE_URL || process.env.VECTOR_DATABASE_URL || undefined,
 }));
 
 export const AgentConfig = () => Inject(agentConfig.KEY);
