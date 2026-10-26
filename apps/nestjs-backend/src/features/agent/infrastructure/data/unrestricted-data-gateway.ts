@@ -7,7 +7,14 @@ import { AggregationOpenApiService } from '../../../aggregation/open-api/aggrega
 import type { IAiDataFieldSummary } from '../../../ai-data/ai-data.schema';
 import { resolveFieldRef, translateFilter } from '../../../ai-data/ai-data.schema';
 import { AiDataService } from '../../../ai-data/ai-data.service';
-import type { IDataGatewayPort, IDataMetric, IDataQuery, IDataTableRef } from '../../domain/ports';
+import type {
+  IDataFieldSpec,
+  IDataGatewayPort,
+  IDataMetric,
+  IDataQuery,
+  IDataTableRef,
+} from '../../domain/ports';
+import { UnrestrictedDataWriter } from './unrestricted-data-writer';
 
 const listCap = 500;
 const searchTables = 10;
@@ -24,8 +31,43 @@ export class UnrestrictedDataGateway implements IDataGatewayPort {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly aiData: AiDataService,
-    private readonly aggregation: AggregationOpenApiService
+    private readonly aggregation: AggregationOpenApiService,
+    private readonly writer: UnrestrictedDataWriter
   ) {}
+
+  createRecords(ref: IDataTableRef & { records: Record<string, unknown>[] }) {
+    return this.writer.createRecords(ref);
+  }
+
+  updateRecords(
+    ref: IDataTableRef & { records: { id: string; fields: Record<string, unknown> }[] }
+  ) {
+    return this.writer.updateRecords(ref);
+  }
+
+  deleteRecords(ref: IDataTableRef & { recordIds: string[] }) {
+    return this.writer.deleteRecords(ref);
+  }
+
+  createTable(input: { baseId: string; name: string; fields: IDataFieldSpec[] }) {
+    return this.writer.createTable(input);
+  }
+
+  createField(ref: IDataTableRef & { field: IDataFieldSpec }) {
+    return this.writer.createField(ref);
+  }
+
+  updateField(ref: IDataTableRef & { field: string; patch: Partial<IDataFieldSpec> }) {
+    return this.writer.updateField(ref);
+  }
+
+  deleteField(ref: IDataTableRef & { field: string }) {
+    return this.writer.deleteField(ref);
+  }
+
+  deleteTable(ref: IDataTableRef) {
+    return this.writer.deleteTable(ref);
+  }
 
   async listSpaces() {
     return this.prismaService.space.findMany({

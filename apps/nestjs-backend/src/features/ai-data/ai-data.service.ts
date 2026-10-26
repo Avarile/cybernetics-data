@@ -211,6 +211,12 @@ export class AiDataService {
     });
   }
 
+  /** Forget cached table and field lists after a schema change (the agent's schema tools). */
+  invalidate(baseId: string, tableId?: string) {
+    this.schemaCache.delete(`tables:${baseId}`);
+    if (tableId) this.schemaCache.delete(`fields:${tableId}`);
+  }
+
   // ── helpers ────────────────────────────────────────────────────────────────
 
   /**

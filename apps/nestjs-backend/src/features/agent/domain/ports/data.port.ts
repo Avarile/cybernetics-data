@@ -17,6 +17,14 @@ export interface IDataQuery extends IDataTableRef {
   includeDeleted?: boolean;
 }
 
+/** A field to create: Teable field type and options. */
+export interface IDataFieldSpec {
+  name: string;
+  type: string;
+  options?: Record<string, unknown>;
+  description?: string | null;
+}
+
 export interface IDataMetric {
   field: string;
   func: string;
@@ -37,6 +45,20 @@ export interface IDataGatewayPort {
     ref: IDataTableRef & { metrics: IDataMetric[]; filter?: unknown }
   ): Promise<{ rowCount: number; values: { field: string; func: string; value: unknown }[] }>;
   searchEverywhere(query: string, options?: { baseId?: string; limit?: number }): Promise<unknown>;
+
+  // writes (design §8 data_write, schema); deletes go to the trash
+  createRecords(ref: IDataTableRef & { records: Record<string, unknown>[] }): Promise<unknown>;
+  updateRecords(
+    ref: IDataTableRef & { records: { id: string; fields: Record<string, unknown> }[] }
+  ): Promise<unknown>;
+  deleteRecords(ref: IDataTableRef & { recordIds: string[] }): Promise<unknown>;
+  createTable(input: { baseId: string; name: string; fields: IDataFieldSpec[] }): Promise<unknown>;
+  createField(ref: IDataTableRef & { field: IDataFieldSpec }): Promise<unknown>;
+  updateField(
+    ref: IDataTableRef & { field: string; patch: Partial<IDataFieldSpec> }
+  ): Promise<unknown>;
+  deleteField(ref: IDataTableRef & { field: string }): Promise<unknown>;
+  deleteTable(ref: IDataTableRef): Promise<unknown>;
 }
 
 export const DATA_GATEWAY_PORT = Symbol('AGENT_DATA_GATEWAY_PORT');

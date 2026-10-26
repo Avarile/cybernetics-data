@@ -10,6 +10,7 @@ import { RecordModule } from '../record/record.module';
 import { SchemaPackModule } from '../schema-pack/schema-pack.module';
 import { SettingModule } from '../setting/setting.module';
 import { SpaceModule } from '../space/space.module';
+import { TableOpenApiModule } from '../table/open-api/table-open-api.module';
 import { TrashModule } from '../trash/trash.module';
 import { ViewOpenApiModule } from '../view/open-api/view-open-api.module';
 import { ConfigureAgent } from './application/admin/configure-agent.usecase';
@@ -35,6 +36,7 @@ import {
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
 import { UnrestrictedDataGateway } from './infrastructure/data/unrestricted-data-gateway';
+import { UnrestrictedDataWriter } from './infrastructure/data/unrestricted-data-writer';
 import { AgentExecutionContext } from './infrastructure/execution-context';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
@@ -50,6 +52,7 @@ import { ContextBuilder } from './runtime/context-builder';
 import { ToolAssembler } from './runtime/tool-assembler';
 import { CredentialsToolkit } from './toolkits/credentials/credentials.toolkit';
 import { DataReadToolkit } from './toolkits/data-read/data-read.toolkit';
+import { DataWriteToolkit, SchemaToolkit } from './toolkits/data-write/data-write.toolkits';
 import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
 import { SetupToolkit } from './toolkits/setup/setup.toolkit';
 import { SkillsToolkit } from './toolkits/skills/skills.toolkit';
@@ -74,6 +77,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     RecordOpenApiModule,
     ViewOpenApiModule,
     TrashModule,
+    TableOpenApiModule,
     AiDataModule,
     AggregationOpenApiModule,
   ],
@@ -91,6 +95,9 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     SetupToolkit,
     CredentialsToolkit,
     DataReadToolkit,
+    DataWriteToolkit,
+    SchemaToolkit,
+    UnrestrictedDataWriter,
     ToolAssembler,
     ContextBuilder,
     AgentRuntime,
