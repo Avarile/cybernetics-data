@@ -4,7 +4,7 @@ import type {
   ISchemaPackPlanVo,
   ISchemaPackTable,
   ISchemaPackView,
-  SchemaPackId,
+  AnySchemaPackId,
 } from '@teable/openapi';
 import type { ICatalogField, ISchemaPackCatalog } from './schema-pack.catalog';
 import { dependenciesOf, isLinkSpec, linkTarget } from './schema-pack.catalog';
@@ -18,7 +18,7 @@ export interface IExistingField {
 }
 
 export interface IPlanInput {
-  packs: SchemaPackId[];
+  packs: AnySchemaPackId[];
   optionalTables: string[];
   starterRows: boolean;
   /** Tables already in the target base, by name, with their fields by name. */
@@ -28,7 +28,7 @@ export interface IPlanInput {
 export interface IPlannedTable {
   key: string;
   name: string;
-  pack: SchemaPackId;
+  pack: AnySchemaPackId;
   icon?: string;
   /** Already in the base: not created, but new fields may still be added to it. */
   existing: boolean;
@@ -90,7 +90,7 @@ export const planInstall = (catalog: ISchemaPackCatalog, input: IPlanInput): IIn
     );
   }
 
-  const selected: { pack: SchemaPackId; table: ISchemaPackTable }[] = catalog.packs
+  const selected: { pack: AnySchemaPackId; table: ISchemaPackTable }[] = catalog.packs
     .filter((p) => input.packs.includes(p.id))
     .flatMap((p) =>
       p.tables
@@ -273,7 +273,9 @@ export const toPlanVo = (catalog: ISchemaPackCatalog, plan: IInstallPlan): ISche
         ...(f.spec?.isLookup ? { isLookup: true } : {}),
         ...(f.bridge ? { bridge: f.bridge.find((p) => p !== pack) ?? pack } : {}),
       }));
-    return { key, name: table.name, pack, existing: planned ? planned.existing : true, fields };
+    // Plan VOs are only built for user packs.
+    const vo = { key, name: table.name, pack, existing: planned ? planned.existing : true, fields };
+    return vo as ISchemaPackPlanVo['tables'][number];
   });
   const fieldCount = [...plan.created.values()].reduce((n, fields) => n + fields.length, 0);
   return {

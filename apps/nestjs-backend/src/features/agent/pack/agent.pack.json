@@ -1,0 +1,1197 @@
+{
+  "id": "agent",
+  "version": 1,
+  "tables": [
+    {
+      "key": "agent_setup",
+      "name": "agent_setup",
+      "icon": "⚙️",
+      "description": "Agent profiles. Exactly one row has is_default.",
+      "fields": [
+        {
+          "key": "name",
+          "name": "name",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "is_default",
+          "name": "is_default",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": false
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "persona",
+          "name": "persona",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "description": "System prompt body"
+        },
+        {
+          "key": "model",
+          "name": "model",
+          "type": "singleLineText",
+          "description": "providerId/model, e.g. vllm-gpu01/qwen3-32b"
+        },
+        {
+          "key": "small_model",
+          "name": "small_model",
+          "type": "singleLineText"
+        },
+        {
+          "key": "embedding_model",
+          "name": "embedding_model",
+          "type": "singleLineText"
+        },
+        {
+          "key": "rerank_model",
+          "name": "rerank_model",
+          "type": "singleLineText"
+        },
+        {
+          "key": "temperature",
+          "name": "temperature",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 2
+            }
+          }
+        },
+        {
+          "key": "max_steps",
+          "name": "max_steps",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "max_output_tokens",
+          "name": "max_output_tokens",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "context_budget_tokens",
+          "name": "context_budget_tokens",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "toolkits",
+          "name": "toolkits",
+          "type": "multipleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "memory",
+                "color": "blueLight2"
+              },
+              {
+                "name": "skills",
+                "color": "greenLight2"
+              },
+              {
+                "name": "threads",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "setup",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "credentials",
+                "color": "redLight2"
+              },
+              {
+                "name": "data_read",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "data_write",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "schema",
+                "color": "grayLight2"
+              },
+              {
+                "name": "sql_read",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "knowledge",
+                "color": "tealLight2"
+              },
+              {
+                "name": "http",
+                "color": "indigoLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "approval_required",
+          "name": "approval_required",
+          "type": "multipleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "delete_records",
+                "color": "blueLight2"
+              },
+              {
+                "name": "bulk_write",
+                "color": "greenLight2"
+              },
+              {
+                "name": "schema_change",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "delete_schema",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "http_write",
+                "color": "redLight2"
+              },
+              {
+                "name": "setup_change",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "skill_change",
+                "color": "cyanLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "memory_mode",
+          "name": "memory_mode",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "off",
+                "color": "blueLight2"
+              },
+              {
+                "name": "explicit",
+                "color": "greenLight2"
+              },
+              {
+                "name": "auto",
+                "color": "yellowLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "always_skills",
+          "name": "always_skills",
+          "type": "link",
+          "link": {
+            "table": "agent_skills",
+            "relationship": "manyMany",
+            "symmetric": {
+              "key": "always_in_setups",
+              "name": "always_in_setups"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "agent_memory",
+      "name": "agent_memory",
+      "icon": "🧠",
+      "description": "What the agent remembers.",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "content",
+          "name": "content",
+          "type": "longText"
+        },
+        {
+          "key": "kind",
+          "name": "kind",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "fact",
+                "color": "blueLight2"
+              },
+              {
+                "name": "preference",
+                "color": "greenLight2"
+              },
+              {
+                "name": "instruction",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "entity",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "episode",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "scope",
+          "name": "scope",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "global",
+                "color": "blueLight2"
+              },
+              {
+                "name": "user",
+                "color": "greenLight2"
+              },
+              {
+                "name": "base",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "thread",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "scope_ref",
+          "name": "scope_ref",
+          "type": "singleLineText",
+          "description": "user id, base id or thread record id; empty for global"
+        },
+        {
+          "key": "pinned",
+          "name": "pinned",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": false
+          }
+        },
+        {
+          "key": "importance",
+          "name": "importance",
+          "type": "rating",
+          "options": {
+            "icon": "star",
+            "color": "yellowBright",
+            "max": 5
+          }
+        },
+        {
+          "key": "source",
+          "name": "source",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "user_said",
+                "color": "blueLight2"
+              },
+              {
+                "name": "agent_inferred",
+                "color": "greenLight2"
+              },
+              {
+                "name": "admin",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "imported",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "tags",
+          "name": "tags",
+          "type": "multipleSelect",
+          "options": {
+            "choices": []
+          }
+        },
+        {
+          "key": "use_count",
+          "name": "use_count",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "last_used_at",
+          "name": "last_used_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "expires_at",
+          "name": "expires_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "embedded_at",
+          "name": "embedded_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "source_thread",
+          "name": "source_thread",
+          "type": "link",
+          "link": {
+            "table": "agent_threads",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "memories",
+              "name": "memories"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "agent_threads",
+      "name": "agent_threads",
+      "icon": "💬",
+      "description": "Conversations with the agent.",
+      "fields": [
+        {
+          "key": "title",
+          "name": "title",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "owner",
+          "name": "owner",
+          "type": "user",
+          "options": {
+            "isMultiple": false,
+            "shouldNotify": false
+          }
+        },
+        {
+          "key": "status",
+          "name": "status",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "active",
+                "color": "blueLight2"
+              },
+              {
+                "name": "archived",
+                "color": "greenLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "focus_base_id",
+          "name": "focus_base_id",
+          "type": "singleLineText"
+        },
+        {
+          "key": "focus_table_id",
+          "name": "focus_table_id",
+          "type": "singleLineText"
+        },
+        {
+          "key": "summary",
+          "name": "summary",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          },
+          "description": "Rolling summary of turns that no longer fit the history window"
+        },
+        {
+          "key": "message_count",
+          "name": "message_count",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "tokens_in",
+          "name": "tokens_in",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "tokens_out",
+          "name": "tokens_out",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "cost_usd",
+          "name": "cost_usd",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 4
+            }
+          }
+        },
+        {
+          "key": "last_message_at",
+          "name": "last_message_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "profile",
+          "name": "profile",
+          "type": "link",
+          "link": {
+            "table": "agent_setup",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "threads",
+              "name": "threads"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "agent_messages",
+      "name": "agent_messages",
+      "icon": "🗨️",
+      "description": "Messages of agent threads.",
+      "fields": [
+        {
+          "key": "summary",
+          "name": "summary",
+          "type": "singleLineText",
+          "isPrimary": true
+        },
+        {
+          "key": "seq",
+          "name": "seq",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "role",
+          "name": "role",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "user",
+                "color": "blueLight2"
+              },
+              {
+                "name": "assistant",
+                "color": "greenLight2"
+              },
+              {
+                "name": "tool",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "system",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "content",
+          "name": "content",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "parts",
+          "name": "parts",
+          "type": "longText",
+          "description": "AI SDK UIMessage parts (JSON), capped at 64 KB"
+        },
+        {
+          "key": "model",
+          "name": "model",
+          "type": "singleLineText"
+        },
+        {
+          "key": "tokens_in",
+          "name": "tokens_in",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "tokens_out",
+          "name": "tokens_out",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "attachments",
+          "name": "attachments",
+          "type": "attachment"
+        },
+        {
+          "key": "error",
+          "name": "error",
+          "type": "longText"
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "thread",
+          "name": "thread",
+          "type": "link",
+          "link": {
+            "table": "agent_threads",
+            "relationship": "manyOne",
+            "symmetric": {
+              "key": "messages",
+              "name": "messages"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "agent_skills",
+      "name": "agent_skills",
+      "icon": "🛠️",
+      "description": "Instructions the agent can load.",
+      "fields": [
+        {
+          "key": "name",
+          "name": "name",
+          "type": "singleLineText",
+          "isPrimary": true,
+          "description": "kebab-case; also the /name command"
+        },
+        {
+          "key": "description",
+          "name": "description",
+          "type": "longText",
+          "description": "When to use this skill"
+        },
+        {
+          "key": "body",
+          "name": "body",
+          "type": "longText",
+          "options": {
+            "showAs": {
+              "type": "markdown"
+            }
+          }
+        },
+        {
+          "key": "invocation",
+          "name": "invocation",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "auto",
+                "color": "blueLight2"
+              },
+              {
+                "name": "manual",
+                "color": "greenLight2"
+              },
+              {
+                "name": "always",
+                "color": "yellowLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "toolkits",
+          "name": "toolkits",
+          "type": "multipleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "memory",
+                "color": "blueLight2"
+              },
+              {
+                "name": "skills",
+                "color": "greenLight2"
+              },
+              {
+                "name": "threads",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "setup",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "credentials",
+                "color": "redLight2"
+              },
+              {
+                "name": "data_read",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "data_write",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "schema",
+                "color": "grayLight2"
+              },
+              {
+                "name": "sql_read",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "knowledge",
+                "color": "tealLight2"
+              },
+              {
+                "name": "http",
+                "color": "indigoLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "category",
+          "name": "category",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "knowledge",
+                "color": "blueLight2"
+              },
+              {
+                "name": "data",
+                "color": "greenLight2"
+              },
+              {
+                "name": "schema",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "integration",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "memory",
+                "color": "redLight2"
+              },
+              {
+                "name": "general",
+                "color": "purpleLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "source",
+          "name": "source",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "builtin",
+                "color": "blueLight2"
+              },
+              {
+                "name": "admin",
+                "color": "greenLight2"
+              },
+              {
+                "name": "agent",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "imported",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "version",
+          "name": "version",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          }
+        },
+        {
+          "key": "is_active",
+          "name": "is_active",
+          "type": "checkbox",
+          "options": {
+            "defaultValue": true
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        },
+        {
+          "key": "credentials",
+          "name": "credentials",
+          "type": "link",
+          "link": {
+            "table": "agent_credentials",
+            "relationship": "manyMany",
+            "symmetric": {
+              "key": "skills",
+              "name": "skills"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "agent_credentials",
+      "name": "agent_credentials",
+      "icon": "🔑",
+      "description": "Credential metadata only; secret values live encrypted outside this table.",
+      "fields": [
+        {
+          "key": "name",
+          "name": "name",
+          "type": "singleLineText",
+          "isPrimary": true,
+          "description": "slug used by tools, e.g. github"
+        },
+        {
+          "key": "description",
+          "name": "description",
+          "type": "longText"
+        },
+        {
+          "key": "auth_kind",
+          "name": "auth_kind",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "bearer",
+                "color": "blueLight2"
+              },
+              {
+                "name": "header",
+                "color": "greenLight2"
+              },
+              {
+                "name": "query_param",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "basic",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "oauth2_client_credentials",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "header_name",
+          "name": "header_name",
+          "type": "singleLineText"
+        },
+        {
+          "key": "query_param",
+          "name": "query_param",
+          "type": "singleLineText"
+        },
+        {
+          "key": "allowed_hosts",
+          "name": "allowed_hosts",
+          "type": "longText",
+          "description": "One host per line; the secret is only sent to these"
+        },
+        {
+          "key": "allowed_methods",
+          "name": "allowed_methods",
+          "type": "multipleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "GET",
+                "color": "blueLight2"
+              },
+              {
+                "name": "POST",
+                "color": "greenLight2"
+              },
+              {
+                "name": "PUT",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "PATCH",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "DELETE",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "status",
+          "name": "status",
+          "type": "singleSelect",
+          "options": {
+            "choices": [
+              {
+                "name": "missing",
+                "color": "blueLight2"
+              },
+              {
+                "name": "set",
+                "color": "greenLight2"
+              },
+              {
+                "name": "invalid",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "expired",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "key": "preview",
+          "name": "preview",
+          "type": "singleLineText"
+        },
+        {
+          "key": "expires_at",
+          "name": "expires_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "last_used_at",
+          "name": "last_used_at",
+          "type": "date",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "created_at",
+          "name": "created_at",
+          "type": "createdTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "updated_at",
+          "name": "updated_at",
+          "type": "lastModifiedTime",
+          "options": {
+            "formatting": {
+              "date": "YYYY-MM-DD",
+              "time": "HH:mm",
+              "timeZone": "{{timezone}}"
+            }
+          }
+        },
+        {
+          "key": "id",
+          "name": "id",
+          "type": "autoNumber"
+        }
+      ]
+    }
+  ]
+}

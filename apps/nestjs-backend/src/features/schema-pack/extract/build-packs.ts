@@ -287,8 +287,8 @@ export const buildPacks = (
     const count = pack.tables.reduce((n, t) => n + t.fields.length, 0);
     report.push(`pack ${pack.id}: ${pack.tables.length} tables, ${count} fields`);
   }
-  const rank = (b: ISchemaPackBridge) =>
-    SCHEMA_PACK_IDS.indexOf(b.packs[0]) * 10 + SCHEMA_PACK_IDS.indexOf(b.packs[1]);
+  const ids: readonly string[] = SCHEMA_PACK_IDS;
+  const rank = (b: ISchemaPackBridge) => ids.indexOf(b.packs[0]) * 10 + ids.indexOf(b.packs[1]);
   const sortedBridges = [...bridges.values()].sort((a, b) => rank(a) - rank(b));
   for (const bridge of sortedBridges) {
     const names = bridge.fields.map((f) => `${f.table}.${f.field.name}`).join(', ');

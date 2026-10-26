@@ -8,8 +8,14 @@ import { z } from '../zod';
  * apps/nestjs-backend/src/features/schema-pack/extract/build-packs.ts.
  */
 export const SCHEMA_PACK_IDS = ['progress', 'people', 'knowledge', 'finance'] as const;
+/** Packs a user can choose. */
 export const schemaPackIdSchema = z.enum(SCHEMA_PACK_IDS);
 export type SchemaPackId = z.infer<typeof schemaPackIdSchema>;
+/** The admin-only agent's own pack: installed by the agent, never offered in the pack wizard. */
+export const AGENT_SCHEMA_PACK_ID = 'agent' as const;
+/** Any pack the backend can build a catalog from (user packs and the agent pack). */
+export const anySchemaPackIdSchema = z.enum([...SCHEMA_PACK_IDS, AGENT_SCHEMA_PACK_ID]);
+export type AnySchemaPackId = z.infer<typeof anySchemaPackIdSchema>;
 
 /** Placeholders substituted at install time (whole-string match only). */
 export const SCHEMA_PACK_PLACEHOLDER = {
@@ -98,7 +104,7 @@ export type ISchemaPackTable = z.infer<typeof schemaPackTableSchema>;
 
 export const schemaPackSchema = z
   .object({
-    id: schemaPackIdSchema,
+    id: anySchemaPackIdSchema,
     version: z.number().int().min(1),
     tables: schemaPackTableSchema.array().min(1),
   })
@@ -108,7 +114,7 @@ export type ISchemaPack = z.infer<typeof schemaPackSchema>;
 /** Link fields that only exist when every listed pack is installed. */
 export const schemaPackBridgeSchema = z
   .object({
-    packs: z.tuple([schemaPackIdSchema, schemaPackIdSchema]),
+    packs: z.tuple([anySchemaPackIdSchema, anySchemaPackIdSchema]),
     fields: z
       .object({ table: schemaPackKeySchema, field: schemaPackFieldSchema })
       .strict()
@@ -128,7 +134,7 @@ export const schemaPackSeedRowSchema = z
 
 export const schemaPackSeedSchema = z
   .object({
-    pack: schemaPackIdSchema,
+    pack: anySchemaPackIdSchema,
     tables: z
       .object({ table: schemaPackKeySchema, rows: schemaPackSeedRowSchema.array().min(1) })
       .strict()

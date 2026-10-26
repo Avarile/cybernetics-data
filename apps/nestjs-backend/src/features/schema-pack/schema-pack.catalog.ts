@@ -6,6 +6,7 @@ import type {
   ISchemaPackField,
   ISchemaPackSeed,
   ISchemaPackTable,
+  AnySchemaPackId,
   SchemaPackId,
 } from '@teable/openapi';
 import {
@@ -37,11 +38,11 @@ export interface ICatalogField {
   /** For a symmetric field: the owning link. */
   symmetricOf?: { table: string; key: string };
   /** Both packs, when the field only exists if both are installed. */
-  bridge?: [SchemaPackId, SchemaPackId];
+  bridge?: [AnySchemaPackId, AnySchemaPackId];
 }
 
 export interface ICatalogTable {
-  pack: SchemaPackId;
+  pack: AnySchemaPackId;
   table: ISchemaPackTable;
   /** Every field the table can hold, in display order. */
   fields: Map<string, ICatalogField>;
@@ -103,14 +104,17 @@ export const linkTarget = (
  * Validates the shipped JSON and cross-checks every reference, so a broken pack fails at boot
  * (and in CI) rather than at a user's first login.
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
-export const buildCatalog = (raw: IRawCatalog = RAW): ISchemaPackCatalog => {
+export const buildCatalog = (
+  raw: IRawCatalog = RAW,
+  expectedIds: readonly AnySchemaPackId[] = SCHEMA_PACK_IDS
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+): ISchemaPackCatalog => {
   const problems: string[] = [];
   const packs = raw.packs.map((p) => schemaPackSchema.parse(p));
   const bridges = schemaPackBridgeSchema.array().parse(raw.bridges);
   const seeds = raw.seeds.map((s) => schemaPackSeedSchema.parse(s));
-  if (packs.map((p) => p.id).join() !== SCHEMA_PACK_IDS.join()) {
-    problems.push(`packs must be exactly ${SCHEMA_PACK_IDS.join(', ')} in that order`);
+  if (packs.map((p) => p.id).join() !== expectedIds.join()) {
+    problems.push(`packs must be exactly ${expectedIds.join(', ')} in that order`);
   }
 
   const tables = new Map<string, ICatalogTable>();
@@ -132,7 +136,7 @@ export const buildCatalog = (raw: IRawCatalog = RAW): ISchemaPackCatalog => {
   const declare = (
     tableKey: string,
     spec: ISchemaPackField,
-    bridge?: [SchemaPackId, SchemaPackId]
+    bridge?: [AnySchemaPackId, AnySchemaPackId]
   ) => {
     add({ table: tableKey, key: spec.key, name: spec.name, type: spec.type, spec, bridge });
     if (spec.link?.symmetric) {
@@ -243,7 +247,8 @@ export const toCatalogVo = (catalog: ISchemaPackCatalog): ISchemaPackCatalogVo =
   });
   return {
     packs: catalog.packs.map((pack) => ({
-      id: pack.id,
+      // Only user catalogs are turned into wizard VOs.
+      id: pack.id as SchemaPackId,
       version: pack.version,
       tables: pack.tables.map((t) => ({
         key: t.key,
@@ -256,7 +261,7 @@ export const toCatalogVo = (catalog: ISchemaPackCatalog): ISchemaPackCatalogVo =
       })),
     })),
     bridges: catalog.bridges.map((b) => ({
-      packs: b.packs,
+      packs: b.packs as [SchemaPackId, SchemaPackId],
       fields: [...catalog.tables.values()].flatMap(({ fields }) =>
         [...fields.values()]
           .filter((f) => f.bridge?.join() === b.packs.join())
