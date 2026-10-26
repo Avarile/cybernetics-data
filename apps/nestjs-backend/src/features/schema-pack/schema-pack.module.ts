@@ -22,5 +22,6 @@ import { SchemaPackInstallerService } from './schema-pack.installer';
   ],
   controllers: [SchemaPackController, SchemaPackBaseController],
   providers: [SchemaPackInstallerService],
+  exports: [SchemaPackInstallerService],
 })
 export class SchemaPackModule {}

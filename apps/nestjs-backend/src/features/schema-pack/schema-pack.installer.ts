@@ -15,7 +15,7 @@ import type {
   ISchemaPackInstallVo,
   ISchemaPackPlanRo,
   ISchemaPackPlanVo,
-  SchemaPackId,
+  AnySchemaPackId,
 } from '@teable/openapi';
 import { SCHEMA_PACK_CURRENCIES } from '@teable/openapi';
 import { ClsService } from 'nestjs-cls';
@@ -32,20 +32,20 @@ import { TableOpenApiService } from '../table/open-api/table-open-api.service';
 import { prepareCreateTableRo } from '../table/open-api/table.pipe.helper';
 import { UserService } from '../user/user.service';
 import { ViewOpenApiService } from '../view/open-api/view-open-api.service';
-import type { ICatalogField } from './schema-pack.catalog';
+import type { ICatalogField, ISchemaPackCatalog } from './schema-pack.catalog';
 import { getSchemaPackCatalog, linkTarget } from './schema-pack.catalog';
 import { toFieldRo } from './schema-pack.field-ro';
 import { SchemaPackInstallLock } from './schema-pack.lock';
 import type { IInstallPlan } from './schema-pack.planner';
 import { isSameField, planInstall, SchemaPackPlanError, toPlanVo } from './schema-pack.planner';
 
-interface IExistingFieldRef {
+export interface IExistingFieldRef {
   id: string;
   type: FieldType;
   isLookup?: boolean;
 }
 
-interface IExistingBase {
+export interface IExistingBase {
   tableIds: Map<string, string>;
   /** Fields by table name, then field name. */
   fields: Map<string, Map<string, IExistingFieldRef>>;
@@ -55,6 +55,12 @@ interface IExistingBase {
 type IInstallTarget =
   | { kind: 'new'; spaceId: string; name: string; icon?: string }
   | { kind: 'existing'; baseId: string; base: IExistingBase };
+
+/** The ids an install ended with: table key -> id, and `table.field` key -> id. */
+export interface IInstalledIds {
+  tableIds: Record<string, string>;
+  fieldIds: Record<string, string>;
+}
 
 /** What one install created, so a failure can remove exactly that. */
 interface IUndoLog {
@@ -133,14 +139,51 @@ export class SchemaPackInstallerService {
     }
   }
 
+  /**
+   * Install packs of another catalog (the agent pack) into an existing base, adding only what is
+   * missing. `existing` lets the caller describe the base by pack names when tables or fields were
+   * renamed (it maps them back by id); by default the base is read by name. Returns the ids of every
+   * pack table and field afterwards.
+   */
+  async installCatalog(input: {
+    baseId: string;
+    catalog: ISchemaPackCatalog;
+    packs: AnySchemaPackId[];
+    options: ISchemaPackAddOptions;
+    existing?: IExistingBase;
+  }): Promise<{ result: ISchemaPackInstallVo; ids: IInstalledIds }> {
+    await this.assertBaseExists(input.baseId);
+    const release = await this.lock.acquire(input.baseId);
+    try {
+      const target: IInstallTarget = {
+        kind: 'existing',
+        baseId: input.baseId,
+        base: input.existing ?? (await this.loadBase(input.baseId)),
+      };
+      const ids: IInstalledIds = { tableIds: {}, fieldIds: {} };
+      const result = await this.run(target, input.packs, input.options, false, input.catalog, ids);
+      return { result, ids };
+    } finally {
+      await release();
+    }
+  }
+
   private async run(
     target: IInstallTarget,
-    packs: SchemaPackId[],
+    packs: AnySchemaPackId[],
     options: ISchemaPackAddOptions,
-    completeOnboarding?: boolean
+    completeOnboarding?: boolean,
+    catalog: ISchemaPackCatalog = getSchemaPackCatalog(),
+    idsOut?: IInstalledIds
   ): Promise<ISchemaPackInstallVo> {
     const existing = target.kind === 'existing' ? target.base : undefined;
-    const plan = this.makePlan(packs, options.optionalTables, options.starterRows, existing);
+    const plan = this.makePlan(
+      packs,
+      options.optionalTables,
+      options.starterRows,
+      existing,
+      catalog
+    );
     const createsSomething =
       plan.tables.some((t) => !t.existing || t.fields.length) ||
       plan.links.length > 0 ||
@@ -154,7 +197,7 @@ export class SchemaPackInstallerService {
 
     const undo: IUndoLog = { tableIds: [], fields: [] };
     try {
-      const result = await this.execute(target, options, plan, undo);
+      const result = await this.execute(target, options, plan, undo, catalog, idsOut);
       if (completeOnboarding) {
         await this.userService.updateOnboarding(this.cls.get('user.id'), 'completed');
       }
@@ -166,16 +209,17 @@ export class SchemaPackInstallerService {
   }
 
   private makePlan(
-    packs: SchemaPackId[],
+    packs: AnySchemaPackId[],
     optionalTables: string[],
     starterRows: boolean,
-    existing?: IExistingBase
+    existing?: IExistingBase,
+    catalog: ISchemaPackCatalog = getSchemaPackCatalog()
   ): IInstallPlan {
     const fields = existing
       ? new Map([...existing.fields].map(([table, byName]) => [table, new Map(byName)]))
       : undefined;
     try {
-      return planInstall(getSchemaPackCatalog(), {
+      return planInstall(catalog, {
         packs,
         optionalTables,
         starterRows,
@@ -226,9 +270,10 @@ export class SchemaPackInstallerService {
     target: IInstallTarget,
     options: ISchemaPackAddOptions,
     plan: IInstallPlan,
-    undo: IUndoLog
+    undo: IUndoLog,
+    catalog: ISchemaPackCatalog,
+    idsOut?: IInstalledIds
   ): Promise<ISchemaPackInstallVo> {
-    const catalog = getSchemaPackCatalog();
     const existing = target.kind === 'existing' ? target.base : undefined;
     const nameOf = (tableKey: string) => catalog.tables.get(tableKey)!.table.name;
 
@@ -349,7 +394,11 @@ export class SchemaPackInstallerService {
       }
     }
 
-    const records = await this.insertSeeds(plan, tableIds, ctx.fieldId);
+    const records = await this.insertSeeds(plan, tableIds, ctx.fieldId, catalog);
+    if (idsOut) {
+      idsOut.tableIds = Object.fromEntries(tableIds);
+      idsOut.fieldIds = Object.fromEntries(fieldIds);
+    }
     return {
       baseId,
       tables: plan.tables
@@ -367,7 +416,8 @@ export class SchemaPackInstallerService {
   private async insertSeeds(
     plan: IInstallPlan,
     tableIds: Map<string, string>,
-    fieldId: (table: string, key: string) => string
+    fieldId: (table: string, key: string) => string,
+    catalog: ISchemaPackCatalog
   ) {
     const recordIds = new Map<string, string>();
     let count = 0;
@@ -390,7 +440,6 @@ export class SchemaPackInstallerService {
       });
       count += records.length;
     }
-    const catalog = getSchemaPackCatalog();
     for (const { table, recordId, links } of linkUpdates) {
       const fields: Record<string, unknown> = {};
       for (const [key, targets] of Object.entries(links)) {
