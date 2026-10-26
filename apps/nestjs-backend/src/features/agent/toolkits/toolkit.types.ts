@@ -53,3 +53,6 @@ export interface IToolkit {
   /** Why the toolkit cannot run with this profile (e.g. no embedding model), or undefined. */
   unavailable?(profile: IAgentProfile): string | undefined;
 }
+
+/** Identity helper so a tool's `execute` gets its input type from the zod schema. */
+export const defineTool = <I, O>(def: IAgentToolDef<I, O>): IAgentToolDef<I, O> => def;

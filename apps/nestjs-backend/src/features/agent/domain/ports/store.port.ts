@@ -68,6 +68,7 @@ export interface IAgentStorePort {
 
   listCredentials(): Promise<ICredentialRef[]>;
   getCredentialByName(name: string): Promise<ICredentialRef | undefined>;
+  createCredential(input: IPatch<ICredentialRef> & { name: string }): Promise<ICredentialRef>;
   updateCredential(id: string, patch: IPatch<ICredentialRef>): Promise<ICredentialRef>;
 }
 

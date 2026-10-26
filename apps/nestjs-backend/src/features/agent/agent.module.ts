@@ -37,6 +37,11 @@ import { AgentLifecycleController } from './interface/agent-lifecycle.controller
 import { AgentRuntime } from './runtime/agent-runtime';
 import { ContextBuilder } from './runtime/context-builder';
 import { ToolAssembler } from './runtime/tool-assembler';
+import { CredentialsToolkit } from './toolkits/credentials/credentials.toolkit';
+import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
+import { SetupToolkit } from './toolkits/setup/setup.toolkit';
+import { SkillsToolkit } from './toolkits/skills/skills.toolkit';
+import { ThreadsToolkit } from './toolkits/threads/threads.toolkit';
 import { ToolkitRegistry } from './toolkits/toolkit.registry';
 
 /**
@@ -64,6 +69,11 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     EnsureInstallation,
     AgentStatusQuery,
     ToolkitRegistry,
+    MemoryToolkit,
+    SkillsToolkit,
+    ThreadsToolkit,
+    SetupToolkit,
+    CredentialsToolkit,
     ToolAssembler,
     ContextBuilder,
     AgentRuntime,

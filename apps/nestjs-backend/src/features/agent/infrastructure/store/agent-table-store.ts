@@ -269,6 +269,13 @@ export class AgentTableStore implements IAgentStorePort {
     return credential;
   }
 
+  async createCredential(input: IPatch<ICredentialRef> & { name: string }) {
+    const [credential] = await this.credentials.create([
+      { status: 'missing', allowedMethods: ['GET'], ...input },
+    ]);
+    return credential;
+  }
+
   updateCredential(id: string, patch: IPatch<ICredentialRef>) {
     return this.credentials.update(id, patch);
   }
