@@ -11,6 +11,7 @@ import {
   type IAgentRun,
   type IAgentStorePort,
   type IModelPort,
+  type IRunStatus,
   type IRunStorePort,
 } from '../domain/ports';
 import type { IToolContext } from '../toolkits/toolkit.types';
@@ -48,7 +49,7 @@ export interface ITurnInput {
   userText: string;
   controller: AbortController;
   /** Called once the stream is over, whatever happened (releases the thread lock). */
-  onSettled: () => Promise<void> | void;
+  onSettled: (outcome: { status: IRunStatus; droppedMessages: number }) => Promise<void> | void;
 }
 
 /**
@@ -136,11 +137,12 @@ export class AgentRuntime {
       onStepFinish: ({ responseMessage, isContinuation }) =>
         recorder.saveAssistant(responseMessage, isContinuation),
       onFinish: async (event) => {
+        let status: IRunStatus = 'failed';
         try {
-          await recorder.finish(event);
+          status = await recorder.finish(event);
         } finally {
           dispose();
-          await input.onSettled();
+          await input.onSettled({ status, droppedMessages: built.droppedMessages });
         }
       },
       onError: (error) => this.onError(recorder, error, signal),

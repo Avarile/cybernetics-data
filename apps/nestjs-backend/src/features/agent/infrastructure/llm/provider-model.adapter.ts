@@ -1,12 +1,12 @@
 import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
-import type { IAIConfig, LLMProvider } from '@teable/openapi';
+import type { IAIConfig, IModelConfig, LLMProvider } from '@teable/openapi';
 import { LLMProviderType, SettingKey } from '@teable/openapi';
 import { CustomHttpException } from '../../../../custom.exception';
 import { AiService } from '../../../ai/ai.service';
 import { GATEWAY_PROVIDER_ID } from '../../../setting/provider-secret.service';
 import { SettingService } from '../../../setting/setting.service';
-import type { IModelPort, IModelRef, IResolvedModel } from '../../domain/ports';
+import type { IModelPort, IModelPrice, IModelRef, IResolvedModel } from '../../domain/ports';
 
 /** Split `providerId/model`; the model part may itself contain `/` (gateway ids). */
 export function parseModelRef(ref: IModelRef): { providerId: string; model: string } {
@@ -34,6 +34,24 @@ export function modelKeyForRef(ref: IModelRef, providers: LLMProvider[]): string
   return `${provider.type}@${model}@${providerId}`;
 }
 
+const usdPerCredit = 0.01;
+const tokensPerRateUnit = 1_000_000;
+
+/** USD per token from a model config: `pricing` (USD strings), else legacy credits per 1M. */
+export function priceOf(config: IModelConfig | undefined): IModelPrice | undefined {
+  if (!config) return undefined;
+  const fromPricing = (v?: string) => (v !== undefined && v !== '' ? Number(v) : undefined);
+  const fromRate = (r?: number) =>
+    r !== undefined ? (r * usdPerCredit) / tokensPerRateUnit : undefined;
+  const input = fromPricing(config.pricing?.input) ?? fromRate(config.inputRate);
+  const output = fromPricing(config.pricing?.output) ?? fromRate(config.outputRate);
+  if (input === undefined && output === undefined) return undefined;
+  return {
+    input: Number.isFinite(input) ? input! : 0,
+    output: Number.isFinite(output) ? output! : 0,
+  };
+}
+
 /** ModelPort backed by the instance provider registry (Admin > AI Settings). */
 @Injectable()
 export class ProviderModelAdapter implements IModelPort {
@@ -48,5 +66,12 @@ export class ProviderModelAdapter implements IModelPort {
     const modelKey = modelKeyForRef(ref, providers);
     const model = await this.aiService.getModelInstance(modelKey, providers);
     return { ref, modelKey, model };
+  }
+
+  async price(ref: IModelRef): Promise<IModelPrice | undefined> {
+    const aiConfig = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
+    const { providerId, model } = parseModelRef(ref);
+    const provider = (aiConfig?.llmProviders ?? []).find((p) => p.id === providerId);
+    return priceOf(provider?.modelConfigs?.[model]);
   }
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventJobModule } from '../../event-emitter/event-job/event-job.module';
 import { AiModule } from '../ai/ai.module';
 import { BaseModule } from '../base/base.module';
 import { FieldOpenApiModule } from '../field/open-api/field-open-api.module';
@@ -16,6 +17,8 @@ import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
 import { AgentExposureService } from './application/installation/exposure';
 import { AgentMembershipService } from './application/installation/membership';
+import { AGENT_JOBS_QUEUE, AgentJobs } from './application/jobs/agent-jobs';
+import { TurnJobs } from './application/jobs/turn-jobs';
 import { AgentStatusQuery } from './application/status/agent-status.query';
 import { ManageThreads } from './application/threads/manage-threads.usecase';
 import {
@@ -27,6 +30,7 @@ import {
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
 import { AgentExecutionContext } from './infrastructure/execution-context';
+import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
@@ -51,6 +55,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
 @Module({
   controllers: [AgentLifecycleController, AgentChatController],
   imports: [
+    EventJobModule.registerQueue(AGENT_JOBS_QUEUE),
     AiModule,
     SettingModule,
     SchemaPackModule,
@@ -79,6 +84,9 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     AgentRuntime,
     RunRegistry,
     TurnGate,
+    AgentJobs,
+    TurnJobs,
+    AgentJobsProcessor,
     RunTurn,
     ResumeTurn,
     CancelRun,

@@ -6,10 +6,16 @@ import type { UIMessageChunk } from 'ai';
 import { CacheService } from '../../../../cache/cache.service';
 import { CustomHttpException } from '../../../../custom.exception';
 import type { IAgentProfile, IThread } from '../../domain/entities';
-import { AGENT_STORE_PORT, type IAgentRun, type IAgentStorePort } from '../../domain/ports';
+import {
+  AGENT_STORE_PORT,
+  type IAgentRun,
+  type IAgentStorePort,
+  type IRunStatus,
+} from '../../domain/ports';
 import { RunRegistry } from '../../infrastructure/runs/run-registry';
 import { AgentRuntime, TURN_TIMEOUT_MS } from '../../runtime/agent-runtime';
 import { EnsureInstallation } from '../installation/ensure-installation.usecase';
+import { AgentJobs } from '../jobs/agent-jobs';
 
 export interface ITurn {
   threadId: string;
@@ -30,6 +36,7 @@ export class TurnGate {
     private readonly cacheService: CacheService,
     private readonly registry: RunRegistry,
     private readonly runtime: AgentRuntime,
+    private readonly jobs: AgentJobs,
     @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort
   ) {}
 
@@ -83,12 +90,20 @@ export class TurnGate {
     actorUserId: string;
     userText: string;
     context?: IAgentChatContext;
+    /** The thread had no reply before this turn (title job). */
+    firstTurn?: boolean;
     release: () => Promise<void>;
   }): Promise<ITurn> {
     const controller = this.registry.open(input.run.id);
-    const settle = async () => {
+    const settle = async (outcome?: { status: IRunStatus; droppedMessages: number }) => {
       this.registry.close(input.run.id);
       await input.release();
+      if (outcome) {
+        await this.jobs.afterTurn(
+          { threadId: input.thread.id, runId: input.run.id, actorUserId: input.actorUserId },
+          { ...outcome, firstTurn: Boolean(input.firstTurn), memoryMode: input.profile.memoryMode }
+        );
+      }
     };
     try {
       const stream = await this.runtime.start({

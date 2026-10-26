@@ -64,6 +64,7 @@ export class RunTurn {
         actorUserId,
         userText: text,
         context: ro.context,
+        firstTurn: !ro.threadId,
         release,
       });
     } catch (error) {

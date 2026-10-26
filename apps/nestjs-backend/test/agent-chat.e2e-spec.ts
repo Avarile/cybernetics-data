@@ -54,6 +54,30 @@ const call = (toolName: string, input: object, toolCallId = `call-${toolName}`):
 function scriptedModel(scripts: IScript[]) {
   const prompts: unknown[] = [];
   const model = new MockLanguageModelV3({
+    // background jobs: JSON for memory extraction, plain text for titles and summaries
+    doGenerate: async (options) => ({
+      content: [
+        {
+          type: 'text',
+          text:
+            options.responseFormat?.type === 'json'
+              ? JSON.stringify({
+                  items: [
+                    {
+                      title: 'Invoices are approved by Dana',
+                      content: 'Dana in finance approves every invoice',
+                      kind: 'fact',
+                      scope: 'global',
+                    },
+                  ],
+                })
+              : 'Invoice approvals',
+        },
+      ],
+      finishReason: { unified: 'stop', raw: 'stop' },
+      usage,
+      warnings: [],
+    }),
     doStream: async (options) => {
       prompts.push(options.prompt);
       const script = scripts.shift() ?? say('(no more script)');
@@ -331,6 +355,35 @@ describe('Agent chat (e2e)', () => {
     expect(error?.status).toBe(409);
     await app.get(CancelRun).execute(adminId(), t.runId);
     await drain(t.stream);
+  });
+
+  it('runs the title and memory jobs after a turn', async () => {
+    const profile = await store.getDefaultProfile();
+    await store.updateProfile(profile!.id, { memoryMode: 'auto' });
+    play([say('Noted: Dana approves invoices.')]);
+    const t = await turn('Remember that Dana in finance approves every invoice');
+    await drain(t.stream);
+    const waitFor = async <T>(read: () => Promise<T>, ok: (v: T) => boolean) => {
+      for (let i = 0; i < 50; i++) {
+        const v = await read();
+        if (ok(v)) return v;
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      return read();
+    };
+    const thread = await waitFor(
+      () => store.getThread(t.threadId),
+      (th) => th.title === 'Invoice approvals'
+    );
+    expect(thread.title).toBe('Invoice approvals');
+    const memories = await waitFor(
+      () => store.listMemories({ text: 'Dana' }),
+      (m) => m.length > 0
+    );
+    expect(memories.map((m) => [m.title, m.source, m.sourceThreadId])).toEqual([
+      ['Invoices are approved by Dana', 'agent_inferred', t.threadId],
+    ]);
+    await store.updateProfile(profile!.id, { memoryMode: 'explicit' });
   });
 
   describe('over HTTP', () => {
