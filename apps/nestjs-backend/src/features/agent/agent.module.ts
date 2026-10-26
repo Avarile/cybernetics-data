@@ -13,10 +13,11 @@ import { EnsureInstallation } from './application/installation/ensure-installati
 import { AgentExposureService } from './application/installation/exposure';
 import { AgentMembershipService } from './application/installation/membership';
 import { AgentStatusQuery } from './application/status/agent-status.query';
-import { AUDIT_PORT, MODEL_PORT } from './domain/ports';
+import { AGENT_LAYOUT_PORT, AGENT_STORE_PORT, AUDIT_PORT, MODEL_PORT } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
 import { AgentExecutionContext } from './infrastructure/execution-context';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
+import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
 
@@ -47,7 +48,16 @@ import { AgentLifecycleController } from './interface/agent-lifecycle.controller
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },
+    { provide: AGENT_LAYOUT_PORT, useExisting: EnsureInstallation },
+    { provide: AGENT_STORE_PORT, useClass: AgentTableStore },
   ],
-  exports: [AgentExecutionContext, AgentAdminGuard, EnsureInstallation, MODEL_PORT, AUDIT_PORT],
+  exports: [
+    AgentExecutionContext,
+    AgentAdminGuard,
+    EnsureInstallation,
+    MODEL_PORT,
+    AUDIT_PORT,
+    AGENT_STORE_PORT,
+  ],
 })
 export class AgentModule {}

@@ -10,7 +10,12 @@ import { BaseService } from '../../../base/base.service';
 import { FieldOpenApiService } from '../../../field/open-api/field-open-api.service';
 import { SchemaPackInstallerService } from '../../../schema-pack/schema-pack.installer';
 import { SpaceService } from '../../../space/space.service';
-import { AUDIT_PORT, type IAuditPort } from '../../domain/ports';
+import {
+  AUDIT_PORT,
+  type IAgentLayout,
+  type IAgentLayoutPort,
+  type IAuditPort,
+} from '../../domain/ports';
 import { AGENT_INSTALLATION_ID } from '../../infrastructure/agent-home';
 import { AgentExecutionContext } from '../../infrastructure/execution-context';
 import { AGENT_SEED_VERSION } from '../../pack/agent-defaults';
@@ -73,7 +78,7 @@ const notReady = (view: IAgentInstallationView) =>
  * Repairs are additive only: nothing is deleted or retyped, and admin-added columns are kept.
  */
 @Injectable()
-export class EnsureInstallation implements OnApplicationBootstrap {
+export class EnsureInstallation implements OnApplicationBootstrap, IAgentLayoutPort {
   private readonly logger = new Logger(EnsureInstallation.name);
 
   constructor(
@@ -112,6 +117,12 @@ export class EnsureInstallation implements OnApplicationBootstrap {
     const view = fresh ? toInstallationView(row) : await this.ensure('lazy');
     if (!view.enabled || view.status !== 'ok') throw notReady(view);
     return view;
+  }
+
+  /** AgentLayoutPort: where the tables and fields are, for a healthy installation. */
+  async layout(): Promise<IAgentLayout> {
+    const { tableMap, fieldMap } = await this.ensureFresh();
+    return { tableMap, fieldMap };
   }
 
   /**
