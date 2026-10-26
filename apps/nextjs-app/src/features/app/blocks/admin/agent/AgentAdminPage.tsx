@@ -3,7 +3,8 @@ import type { IAgentStatusVo, IUpdateAgentSetupRo } from '@teable/openapi';
 import { getAgentSetup, getAgentStatus, getSetting, updateAgentSetup } from '@teable/openapi';
 import { toast } from '@teable/ui-lib/shadcn/ui/sonner';
 import { useTranslation } from 'next-i18next';
-import { AgentAuditCard, AgentCredentialsCard } from './AgentRecordsCards';
+import { AgentCredentialsCard } from './AgentCredentialsCard';
+import { AgentAuditCard } from './AgentRecordsCards';
 import { AgentBehaviourCard, AgentModelsCard } from './AgentSetupCards';
 import { AgentStatusCard } from './AgentStatusCard';
 

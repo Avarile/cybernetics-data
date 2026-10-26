@@ -1,8 +1,28 @@
-import { Body, Controller, Get, Patch, Query, UseGuards } from '@nestjs/common';
-import type { IAgentAuditListVo, IAgentCredentialListVo, IAgentSetupVo } from '@teable/openapi';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import type {
+  IAgentAuditListVo,
+  IAgentCredentialListVo,
+  IAgentCredentialVo,
+  IAgentSetupVo,
+  ITestAgentCredentialVo,
+} from '@teable/openapi';
 import {
   agentAuditQuerySchema,
   IAgentAuditQuery,
+  ISetAgentSecretRo,
+  setAgentSecretRoSchema,
   IUpdateAgentSetupRo,
   updateAgentSetupRoSchema,
 } from '@teable/openapi';
@@ -10,6 +30,7 @@ import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';
 import { ConfigureAgent } from '../application/admin/configure-agent.usecase';
+import { ManageCredentials } from '../application/admin/manage-credentials.usecase';
 import { AgentAdminGuard } from './agent-admin.guard';
 
 /** Admin ▸ Agent: the default setup, credentials metadata, the audit log (design §12, §13). */
@@ -18,6 +39,7 @@ import { AgentAdminGuard } from './agent-admin.guard';
 export class AgentSettingsController {
   constructor(
     private readonly configure: ConfigureAgent,
+    private readonly credentialsAdmin: ManageCredentials,
     private readonly cls: ClsService<IClsStore>
   ) {}
 
@@ -36,6 +58,27 @@ export class AgentSettingsController {
   @Get('credentials')
   async credentials(): Promise<IAgentCredentialListVo> {
     return this.configure.listCredentials();
+  }
+
+  @Put('credentials/:credentialId/secret')
+  async setSecret(
+    @Param('credentialId') credentialId: string,
+    @Body(new ZodValidationPipe(setAgentSecretRoSchema)) ro: ISetAgentSecretRo
+  ): Promise<IAgentCredentialVo> {
+    return this.credentialsAdmin.setSecret(this.cls.get('user.id'), credentialId, ro);
+  }
+
+  @Delete('credentials/:credentialId/secret')
+  async deleteSecret(@Param('credentialId') credentialId: string): Promise<IAgentCredentialVo> {
+    return this.credentialsAdmin.deleteSecret(this.cls.get('user.id'), credentialId);
+  }
+
+  @Post('credentials/:credentialId/test')
+  @HttpCode(200)
+  async testCredential(
+    @Param('credentialId') credentialId: string
+  ): Promise<ITestAgentCredentialVo> {
+    return this.credentialsAdmin.test(this.cls.get('user.id'), credentialId);
   }
 
   @Get('audit')

@@ -1839,7 +1839,12 @@
       "description": "An assistant for instance admins that can work with all data. Its conversations, memory and skills live in the Agent base.",
       "enableHelp": "This creates an Agent space and base. Every instance admin becomes an owner of it and can read every conversation, memory and skill there.",
       "resetHelp": "This starts over with a new, empty Agent base. The old base stays in the Agent space with all its data.",
-      "credentialsHelp": "The agent asks for a credential with credential_request; the secret is entered here and is only ever sent to the listed hosts."
+      "credentialsHelp": "The agent asks for a credential with credential_request; the secret is entered here and is only ever sent to the listed hosts.",
+      "setSecret": "Set secret",
+      "setSecretHelp": "Stored encrypted and only ever sent to",
+      "secret": "Secret",
+      "test": "Test",
+      "removeSecret": "Remove"
     }
   }
 }

@@ -9,7 +9,7 @@ import type {
   IUpdateAgentSetupRo,
 } from '@teable/openapi';
 import { CustomHttpException } from '../../../../custom.exception';
-import type { IAgentProfile } from '../../domain/entities';
+import type { IAgentProfile, ICredentialRef } from '../../domain/entities';
 import {
   AGENT_STORE_PORT,
   AUDIT_PORT,
@@ -34,6 +34,19 @@ export const toSetupVo = (p: IAgentProfile): IAgentSetupVo => ({
   toolkits: p.toolkits,
   approvalRequired: p.approvalRequired,
   memoryMode: p.memoryMode,
+});
+
+export const toCredentialVo = (c: ICredentialRef) => ({
+  id: c.id,
+  name: c.name,
+  description: c.description,
+  authKind: c.authKind,
+  allowedHosts: c.allowedHosts,
+  allowedMethods: c.allowedMethods,
+  status: c.status,
+  preview: c.preview,
+  expiresAt: c.expiresAt,
+  lastUsedAt: c.lastUsedAt,
 });
 
 /** Admin ▸ Agent (design §13): the default setup, credentials metadata, the audit log. */
@@ -75,18 +88,7 @@ export class ConfigureAgent {
   async listCredentials(): Promise<IAgentCredentialListVo> {
     const credentials = await this.store.listCredentials();
     return {
-      credentials: credentials.map((c) => ({
-        id: c.id,
-        name: c.name,
-        description: c.description,
-        authKind: c.authKind,
-        allowedHosts: c.allowedHosts,
-        allowedMethods: c.allowedMethods,
-        status: c.status,
-        preview: c.preview,
-        expiresAt: c.expiresAt,
-        lastUsedAt: c.lastUsedAt,
-      })),
+      credentials: credentials.map(toCredentialVo),
     };
   }
 

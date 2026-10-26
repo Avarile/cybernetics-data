@@ -44,7 +44,8 @@ export function buildWarnings(
   if (!secretsKeyConfigured) {
     warnings.push({
       code: 'secrets_key_missing',
-      message: 'BACKEND_SECRETS_ENCRYPTION_KEY is not set, so credential secrets cannot be stored.',
+      message:
+        'BACKEND_SECRETS_ENCRYPTION_KEY is not set: secrets are encrypted with a key derived from SECRET_KEY. Set a dedicated key.',
     });
   }
   const mismatched = (view.health?.mismatched ?? []) as { field: string; expected: string }[];

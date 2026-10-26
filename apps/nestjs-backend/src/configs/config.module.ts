@@ -3,6 +3,7 @@ import path from 'path';
 import type { DynamicModule } from '@nestjs/common';
 import { Logger, Module } from '@nestjs/common';
 import { ConfigModule as BaseConfigModule } from '@nestjs/config';
+import { agentConfig } from './agent.config';
 import { aiDataConfig } from './ai-data.config';
 import { aiProviderConfig } from './ai-provider.config';
 import { authConfig } from './auth.config';
@@ -34,6 +35,7 @@ const configurations = [
   trashConfig,
   baseGraphConfig,
   mcpConfig,
+  agentConfig,
   aiDataConfig,
   integrationConfig,
   secretsConfig,

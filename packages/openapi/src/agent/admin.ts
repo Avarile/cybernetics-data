@@ -1,6 +1,6 @@
 import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
 import { axios } from '../axios';
-import { registerRoute } from '../utils';
+import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';
 import { agentStatusVoSchema, type IAgentStatusVo } from './lifecycle';
 
@@ -91,6 +91,22 @@ export const agentCredentialListVoSchema = z.object({
 });
 export type IAgentCredentialListVo = z.infer<typeof agentCredentialListVoSchema>;
 
+/** The only way a secret gets in (design D4); it is never returned. */
+export const setAgentSecretRoSchema = z
+  .object({
+    value: z.string().min(1).max(10_000),
+    expiresAt: z.string().datetime().nullable().optional(),
+  })
+  .strict();
+export type ISetAgentSecretRo = z.infer<typeof setAgentSecretRoSchema>;
+
+export const testAgentCredentialVoSchema = z.object({
+  ok: z.boolean(),
+  status: z.number().optional(),
+  error: z.string().optional(),
+});
+export type ITestAgentCredentialVo = z.infer<typeof testAgentCredentialVoSchema>;
+
 export const agentAuditItemSchema = z.object({
   id: z.string(),
   runId: z.string(),
@@ -121,6 +137,8 @@ export const AGENT_SETUP = '/agent/setup';
 export const AGENT_CREDENTIALS = '/agent/credentials';
 export const AGENT_AUDIT = '/agent/audit';
 export const AGENT_RESTORE = '/agent/admin/restore';
+export const AGENT_CREDENTIAL_SECRET = '/agent/credentials/{credentialId}/secret';
+export const AGENT_CREDENTIAL_TEST = '/agent/credentials/{credentialId}/test';
 
 const json = <T extends z.ZodTypeAny>(schema: T) => ({
   content: { 'application/json': { schema } },
@@ -168,6 +186,47 @@ export const AgentRestoreRoute: RouteConfig = registerRoute({
   responses: { 200: { description: 'Agent status after restoring', ...json(agentStatusVoSchema) } },
   tags,
 });
+
+const credentialParams = z.object({ credentialId: z.string() });
+
+export const AgentSecretSetRoute: RouteConfig = registerRoute({
+  method: 'put',
+  path: AGENT_CREDENTIAL_SECRET,
+  description: 'Set the secret of a credential (stored encrypted; never returned)',
+  request: { params: credentialParams, body: json(setAgentSecretRoSchema) },
+  responses: { 200: { description: 'Credential metadata', ...json(agentCredentialVoSchema) } },
+  tags,
+});
+
+export const AgentSecretDeleteRoute: RouteConfig = registerRoute({
+  method: 'delete',
+  path: AGENT_CREDENTIAL_SECRET,
+  description: 'Remove the secret of a credential',
+  request: { params: credentialParams },
+  responses: { 200: { description: 'Credential metadata', ...json(agentCredentialVoSchema) } },
+  tags,
+});
+
+export const AgentCredentialTestRoute: RouteConfig = registerRoute({
+  method: 'post',
+  path: AGENT_CREDENTIAL_TEST,
+  description: 'Try the credential against its first allowed host',
+  request: { params: credentialParams },
+  responses: { 200: { description: 'Result', ...json(testAgentCredentialVoSchema) } },
+  tags,
+});
+
+export const setAgentCredentialSecret = async (credentialId: string, ro: ISetAgentSecretRo) =>
+  (await axios.put<IAgentCredentialVo>(urlBuilder(AGENT_CREDENTIAL_SECRET, { credentialId }), ro))
+    .data;
+
+export const deleteAgentCredentialSecret = async (credentialId: string) =>
+  (await axios.delete<IAgentCredentialVo>(urlBuilder(AGENT_CREDENTIAL_SECRET, { credentialId })))
+    .data;
+
+export const testAgentCredential = async (credentialId: string) =>
+  (await axios.post<ITestAgentCredentialVo>(urlBuilder(AGENT_CREDENTIAL_TEST, { credentialId })))
+    .data;
 
 export const getAgentSetup = async () => (await axios.get<IAgentSetupVo>(AGENT_SETUP)).data;
 

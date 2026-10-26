@@ -1836,7 +1836,12 @@
       "description": "面向实例管理员、可处理所有数据的助手。它的对话、记忆和技能都保存在智能体数据库中。",
       "enableHelp": "这将创建智能体空间和数据库。每位实例管理员都会成为其所有者，并可以查看其中所有对话、记忆和技能。",
       "resetHelp": "这将使用一个新的空智能体数据库重新开始。旧数据库及其全部数据仍保留在智能体空间中。",
-      "credentialsHelp": "智能体通过 credential_request 申请凭据；密钥在此处填写，且只会发送到列出的主机。"
+      "credentialsHelp": "智能体通过 credential_request 申请凭据；密钥在此处填写，且只会发送到列出的主机。",
+      "setSecret": "设置密钥",
+      "setSecretHelp": "加密保存，只会发送到",
+      "secret": "密钥",
+      "test": "测试",
+      "removeSecret": "移除"
     }
   }
 }

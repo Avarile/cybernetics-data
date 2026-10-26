@@ -15,6 +15,7 @@ import { TableOpenApiModule } from '../table/open-api/table-open-api.module';
 import { TrashModule } from '../trash/trash.module';
 import { ViewOpenApiModule } from '../view/open-api/view-open-api.module';
 import { ConfigureAgent } from './application/admin/configure-agent.usecase';
+import { ManageCredentials } from './application/admin/manage-credentials.usecase';
 import { CancelRun } from './application/chat/cancel-run.usecase';
 import { ResumeTurn } from './application/chat/resume-turn.usecase';
 import { RunTurn } from './application/chat/run-turn.usecase';
@@ -32,17 +33,21 @@ import {
   AGENT_STORE_PORT,
   AUDIT_PORT,
   DATA_GATEWAY_PORT,
+  HTTP_PORT,
   MODEL_PORT,
   RUN_STORE_PORT,
+  SECRET_VAULT_PORT,
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
 import { UnrestrictedDataGateway } from './infrastructure/data/unrestricted-data-gateway';
 import { UnrestrictedDataWriter } from './infrastructure/data/unrestricted-data-writer';
 import { AgentExecutionContext } from './infrastructure/execution-context';
+import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
+import { PrismaSecretVault } from './infrastructure/secrets/prisma-secret-vault';
 import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentChatController } from './interface/agent-chat.controller';
@@ -54,6 +59,7 @@ import { ToolAssembler } from './runtime/tool-assembler';
 import { CredentialsToolkit } from './toolkits/credentials/credentials.toolkit';
 import { DataReadToolkit } from './toolkits/data-read/data-read.toolkit';
 import { DataWriteToolkit, SchemaToolkit } from './toolkits/data-write/data-write.toolkits';
+import { HttpToolkit } from './toolkits/http/http.toolkit';
 import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
 import { SetupToolkit } from './toolkits/setup/setup.toolkit';
 import { SkillsToolkit } from './toolkits/skills/skills.toolkit';
@@ -101,6 +107,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     DataWriteToolkit,
     SchemaToolkit,
     SqlReadToolkit,
+    HttpToolkit,
     UnrestrictedDataWriter,
     ToolAssembler,
     ContextBuilder,
@@ -115,6 +122,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     CancelRun,
     ManageThreads,
     ConfigureAgent,
+    ManageCredentials,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },
@@ -122,6 +130,8 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: AGENT_STORE_PORT, useClass: AgentTableStore },
     { provide: RUN_STORE_PORT, useClass: PrismaRunStore },
     { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
+    { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
+    { provide: HTTP_PORT, useClass: OutboundHttp },
   ],
   exports: [
     AgentExecutionContext,

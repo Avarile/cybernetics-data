@@ -2147,6 +2147,11 @@ export type I18nTranslations = {
                 "enableHelp": string;
                 "resetHelp": string;
                 "credentialsHelp": string;
+                "setSecret": string;
+                "setSecretHelp": string;
+                "secret": string;
+                "test": string;
+                "removeSecret": string;
             };
         };
         "clickToCopyTooltip": string;
