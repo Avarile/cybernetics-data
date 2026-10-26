@@ -997,3 +997,81 @@ model ChatFile {
   @@index([baseId])
   @@map("chat_file")
 }
+
+// ── Admin-only agent (design §7.3). JSON columns are text so sqlite works too. ──
+
+model AgentInstallation {
+  id               String    @id @default(cuid())
+  // The Agent space and base, created on first enable; found by id, never by name.
+  spaceId          String?   @map("space_id")
+  baseId           String?   @map("base_id")
+  enabled          Boolean   @default(false)
+  // needs_setup | ok | repairing | error
+  status           String    @default("needs_setup")
+  packVersion      Int       @default(0) @map("pack_version")
+  seededVersion    Int       @default(0) @map("seeded_version")
+  // table key -> table id, and table key -> field key -> field id (rename-safe)
+  tableMap         String    @default("{}") @map("table_map")
+  fieldMap         String    @default("{}") @map("field_map")
+  // last health report (JSON)
+  health           String?
+  lastVerifiedTime DateTime? @map("last_verified_time")
+  lastError        String?   @map("last_error")
+  createdBy        String    @map("created_by")
+  createdTime      DateTime  @default(now()) @map("created_time")
+  lastModifiedTime DateTime? @updatedAt @map("last_modified_time")
+
+  @@map("agent_installation")
+}
+
+model AgentSecret {
+  id                 String    @id @default(cuid())
+  // The agent_credentials record the secret belongs to (also the encryption AAD).
+  credentialRecordId String    @unique @map("credential_record_id")
+  ciphertext         String
+  keyVersion         Int       @default(1) @map("key_version")
+  createdBy          String    @map("created_by")
+  createdTime        DateTime  @default(now()) @map("created_time")
+  lastModifiedTime   DateTime? @updatedAt @map("last_modified_time")
+  lastUsedTime       DateTime? @map("last_used_time")
+
+  @@map("agent_secret")
+}
+
+model AgentRun {
+  id              String    @id @default(cuid())
+  threadRecordId  String    @map("thread_record_id")
+  actorUserId     String    @map("actor_user_id")
+  // running | awaiting_approval | done | failed | cancelled
+  status          String    @default("running")
+  model           String?
+  // approval the run is waiting for (JSON)
+  pendingApproval String?   @map("pending_approval")
+  // token and cost totals (JSON)
+  usage           String?
+  error           String?
+  startedTime     DateTime  @default(now()) @map("started_time")
+  finishedTime    DateTime? @map("finished_time")
+
+  @@index([threadRecordId])
+  @@index([actorUserId])
+  @@map("agent_run")
+}
+
+model AgentAuditLog {
+  id            String   @id @default(cuid())
+  runId         String   @map("run_id")
+  actorUserId   String   @map("actor_user_id")
+  tool          String
+  // redacted and capped arguments (JSON)
+  args          String
+  resultSummary String?  @map("result_summary")
+  // ok | error | denied | approved | rejected
+  status        String
+  durationMs    Int      @map("duration_ms")
+  createdTime   DateTime @default(now()) @map("created_time")
+
+  @@index([runId])
+  @@index([createdTime])
+  @@map("agent_audit_log")
+}
