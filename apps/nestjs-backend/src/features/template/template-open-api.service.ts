@@ -25,6 +25,7 @@ import {
 } from '../../performance-cache/generate-keys';
 import type { IClsStore } from '../../types/cls';
 import { updateOrder } from '../../utils/update-order';
+import { assertNotAgentHome } from '../agent/infrastructure/agent-home';
 import { AttachmentsStorageService } from '../attachments/attachments-storage.service';
 import { getPublicFullStorageUrl } from '../attachments/plugins/utils';
 import { PermissionService } from '../auth/permission.service';
@@ -219,6 +220,9 @@ export class TemplateOpenApiService {
   }
 
   async updateTemplate(templateId: string, updateTemplateRo: IUpdateTemplateRo) {
+    if (updateTemplateRo.baseId) {
+      await assertNotAgentHome(this.prismaService, { baseId: updateTemplateRo.baseId });
+    }
     const prisma = this.prismaService.txClient();
     const newCover = updateTemplateRo?.cover
       ? JSON.stringify(updateTemplateRo.cover)
@@ -277,6 +281,7 @@ export class TemplateOpenApiService {
         },
       });
     }
+    await assertNotAgentHome(this.prismaService, { baseId: templateRaw.baseId });
 
     const templateSpaceId = await prisma.space.findFirstOrThrow({
       where: {

@@ -11,15 +11,16 @@ import { FieldOpenApiService } from '../../../field/open-api/field-open-api.serv
 import { SchemaPackInstallerService } from '../../../schema-pack/schema-pack.installer';
 import { SpaceService } from '../../../space/space.service';
 import { AUDIT_PORT, type IAuditPort } from '../../domain/ports';
+import { AGENT_INSTALLATION_ID } from '../../infrastructure/agent-home';
 import { AgentExecutionContext } from '../../infrastructure/execution-context';
 import { AGENT_SEED_VERSION } from '../../pack/agent-defaults';
 import { AGENT_PACK_VERSION, getAgentPackCatalog } from '../../pack/agent-pack';
 import { AgentSeeder } from './agent-seeder';
+import { AgentExposureService, type IRevokedExposure } from './exposure';
 import { AgentMembershipService } from './membership';
 import type { IActualTable, IFieldMap, ITableMap, IVerifyResult } from './pack-verify';
 import { needsRepair, verifyAgainstPack } from './pack-verify';
 
-const installationId = 'agent';
 const freshMs = 5 * 60 * 1000;
 const lockKey = 'lock:agent-installation' as const;
 const lockTtlSeconds = 300;
@@ -80,6 +81,7 @@ export class EnsureInstallation implements OnApplicationBootstrap {
     private readonly cacheService: CacheService,
     private readonly membership: AgentMembershipService,
     private readonly seeder: AgentSeeder,
+    private readonly exposure: AgentExposureService,
     private readonly installer: SchemaPackInstallerService,
     private readonly spaceService: SpaceService,
     private readonly baseService: BaseService,
@@ -122,7 +124,7 @@ export class EnsureInstallation implements OnApplicationBootstrap {
       await this.createHome(actorUserId, row);
     }
     await this.prismaService.agentInstallation.update({
-      where: { id: installationId },
+      where: { id: AGENT_INSTALLATION_ID },
       data: { enabled: true },
     });
     return this.ensure('enable', actorUserId);
@@ -130,7 +132,7 @@ export class EnsureInstallation implements OnApplicationBootstrap {
 
   async disable(actorUserId: string): Promise<IAgentInstallationView> {
     await this.prismaService.agentInstallation.updateMany({
-      where: { id: installationId },
+      where: { id: AGENT_INSTALLATION_ID },
       data: { enabled: false },
     });
     await this.auditEvent(actorUserId, 'installation.disable', {}, 'disabled');
@@ -149,13 +151,13 @@ export class EnsureInstallation implements OnApplicationBootstrap {
     if (row && spaceAlive) {
       const base = await this.baseService.createBase({ spaceId: row.spaceId!, name: 'Agent' });
       await this.prismaService.agentInstallation.update({
-        where: { id: installationId },
+        where: { id: AGENT_INSTALLATION_ID },
         data: { baseId: base.id, tableMap: '{}', fieldMap: '{}', seededVersion: 0, enabled: true },
       });
     } else {
       await this.createHome(actorUserId, row);
       await this.prismaService.agentInstallation.update({
-        where: { id: installationId },
+        where: { id: AGENT_INSTALLATION_ID },
         data: { enabled: true },
       });
     }
@@ -198,13 +200,14 @@ export class EnsureInstallation implements OnApplicationBootstrap {
   ): Promise<IAgentInstallationView> {
     const spaceId = row.spaceId!;
     const baseId = row.baseId!;
+    const runScope = { runId: `installation-${started}`, actorUserId };
     const members = await this.membership.reconcile(spaceId, baseId);
+    const revoked = await this.execution.run(runScope, () => this.exposure.revoke(spaceId));
     const catalog = getAgentPackCatalog();
     const stored = { tableMap: parse(row.tableMap, {}), fieldMap: parse(row.fieldMap, {}) };
 
     let verified = verifyAgainstPack(catalog, await this.readBase(baseId), stored);
     const repaired = { tables: verified.missingTables, fields: verified.missingFields };
-    const runScope = { runId: `installation-${started}`, actorUserId };
     if (needsRepair(verified)) {
       if (verified.detached.length) {
         // Move the dead columns aside (their data stays) so the planner can rebuild the link.
@@ -240,12 +243,15 @@ export class EnsureInstallation implements OnApplicationBootstrap {
       );
     }
 
-    const health = this.health(verified, members, repaired, seeded);
+    const health = this.health(verified, members, repaired, revoked, seeded);
     const changed =
       members.added.length +
       members.removed.length +
       repaired.tables.length +
-      repaired.fields.length;
+      repaired.fields.length +
+      revoked.invitations +
+      revoked.baseShares +
+      revoked.viewShares;
     if (changed || seeded?.skills || seeded?.setup) {
       await this.auditEvent(actorUserId, 'installation.ensure', { reason }, JSON.stringify(health));
     }
@@ -265,6 +271,7 @@ export class EnsureInstallation implements OnApplicationBootstrap {
     verified: IVerifyResult,
     members: { admins: string[]; added: string[]; removed: string[] },
     repaired: { tables: string[]; fields: string[] },
+    revoked: IRevokedExposure,
     seeded?: { setup: number; skills: number }
   ) {
     return {
@@ -272,6 +279,7 @@ export class EnsureInstallation implements OnApplicationBootstrap {
       admins: members.admins.length,
       membership: { added: members.added, removed: members.removed },
       repaired,
+      revoked,
       renamed: verified.renamed,
       mismatched: verified.mismatched,
       seeded: seeded ?? null,
@@ -324,8 +332,8 @@ export class EnsureInstallation implements OnApplicationBootstrap {
       status: 'needs_setup',
     };
     await this.prismaService.agentInstallation.upsert({
-      where: { id: installationId },
-      create: { id: installationId, createdBy: actorUserId, ...data },
+      where: { id: AGENT_INSTALLATION_ID },
+      create: { id: AGENT_INSTALLATION_ID, createdBy: actorUserId, ...data },
       update: data,
     });
     if (row) this.logger.warn(`Agent home recreated (previous base ${row.baseId} is not usable)`);
@@ -333,12 +341,14 @@ export class EnsureInstallation implements OnApplicationBootstrap {
   }
 
   private load() {
-    return this.prismaService.agentInstallation.findUnique({ where: { id: installationId } });
+    return this.prismaService.agentInstallation.findUnique({
+      where: { id: AGENT_INSTALLATION_ID },
+    });
   }
 
   private async save(data: Partial<AgentInstallation>) {
     const row = await this.prismaService.agentInstallation.update({
-      where: { id: installationId },
+      where: { id: AGENT_INSTALLATION_ID },
       data,
     });
     return toInstallationView(row);

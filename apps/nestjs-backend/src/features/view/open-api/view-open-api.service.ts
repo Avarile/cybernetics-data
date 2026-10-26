@@ -57,6 +57,7 @@ import { DATA_KNEX } from '../../../global/knex/knex.module';
 import type { IClsStore } from '../../../types/cls';
 import { Timing } from '../../../utils/timing';
 import { updateMultipleOrders, updateOrder } from '../../../utils/update-order';
+import { assertNotAgentHome } from '../../agent/infrastructure/agent-home';
 import { FieldViewSyncService } from '../../field/field-calculate/field-view-sync.service';
 import { FieldService } from '../../field/field.service';
 import type { IFieldInstance } from '../../field/model/factory';
@@ -835,6 +836,7 @@ export class ViewOpenApiService {
   }
 
   async enableShare(tableId: string, viewId: string) {
+    await assertNotAgentHome(this.prismaService, { tableId });
     const view = await this.prismaService.view.findUnique({
       where: { id: viewId, tableId, deletedTime: null },
     });

@@ -37,6 +37,7 @@ import { IDbProvider } from '../../db-provider/db.provider.interface';
 import type { IClsStore } from '../../types/cls';
 import { getMaxLevelRole } from '../../utils/get-max-level-role';
 import { updateOrder } from '../../utils/update-order';
+import { assertNotAgentHome } from '../agent/infrastructure/agent-home';
 import { AttachmentsStorageService } from '../attachments/attachments-storage.service';
 import { ATTACHMENT_LG_THUMBNAIL_HEIGHT } from '../attachments/constant';
 import StorageAdapter from '../attachments/plugins/adapter';
@@ -683,6 +684,8 @@ export class BaseService {
 
   async moveBase(baseId: string, moveBaseRo: IMoveBaseRo) {
     const { spaceId } = moveBaseRo;
+    // in or out: the Agent space holds the agent's base and nothing else
+    await assertNotAgentHome(this.prismaService, { baseId }, { spaceId });
     // check if has the permission to create base in the target space
     await this.checkBaseCreatePermission(spaceId);
     await this.prismaService.base.update({

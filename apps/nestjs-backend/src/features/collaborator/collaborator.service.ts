@@ -34,6 +34,7 @@ import {
 } from '../../event-emitter/events';
 import type { IClsStore } from '../../types/cls';
 import { getMaxLevelRole } from '../../utils/get-max-level-role';
+import { assertNotAgentHome } from '../agent/infrastructure/agent-home';
 import { getPublicFullStorageUrl } from '../attachments/plugins/utils';
 
 @Injectable()
@@ -877,6 +878,7 @@ export class CollaboratorService {
   }
 
   async addSpaceCollaborators(spaceId: string, collaborator: AddSpaceCollaboratorRo) {
+    await assertNotAgentHome(this.prismaService, { spaceId });
     const departmentIds = this.cls.get('organization.departments')?.map((d) => d.id);
     await this.validateUserAddRole({
       departmentIds,
@@ -899,6 +901,7 @@ export class CollaboratorService {
   }
 
   async addBaseCollaborators(baseId: string, collaborator: AddBaseCollaboratorRo) {
+    await assertNotAgentHome(this.prismaService, { baseId });
     const departmentIds = this.cls.get('organization.departments')?.map((d) => d.id);
     await this.validateUserAddRole({
       departmentIds,

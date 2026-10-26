@@ -7,8 +7,10 @@ import { RecordModule } from '../record/record.module';
 import { SchemaPackModule } from '../schema-pack/schema-pack.module';
 import { SettingModule } from '../setting/setting.module';
 import { SpaceModule } from '../space/space.module';
+import { ViewOpenApiModule } from '../view/open-api/view-open-api.module';
 import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
+import { AgentExposureService } from './application/installation/exposure';
 import { AgentMembershipService } from './application/installation/membership';
 import { AUDIT_PORT, MODEL_PORT } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
@@ -30,11 +32,13 @@ import { AgentAdminGuard } from './interface/agent-admin.guard';
     FieldOpenApiModule,
     RecordModule,
     RecordOpenApiModule,
+    ViewOpenApiModule,
   ],
   providers: [
     AgentExecutionContext,
     AgentMembershipService,
     AgentSeeder,
+    AgentExposureService,
     EnsureInstallation,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },

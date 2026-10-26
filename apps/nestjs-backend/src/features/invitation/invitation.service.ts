@@ -23,6 +23,7 @@ import { CustomHttpException } from '../../custom.exception';
 import { Events } from '../../event-emitter/events';
 import type { IClsStore } from '../../types/cls';
 import { generateInvitationCode } from '../../utils/code-generate';
+import { assertNotAgentHome } from '../agent/infrastructure/agent-home';
 import { CollaboratorService } from '../collaborator/collaborator.service';
 import { MailSenderService } from '../mail-sender/mail-sender.service';
 import { SettingOpenApiService } from '../setting/open-api/setting-open-api.service';
@@ -194,6 +195,7 @@ export class InvitationService {
 
   async emailInvitationBySpace(spaceId: string, data: EmailSpaceInvitationRo) {
     await this.checkSpaceInvitation();
+    await assertNotAgentHome(this.prismaService, { spaceId });
 
     const space = await this.prismaService.space.findFirst({
       select: { name: true },
@@ -218,6 +220,7 @@ export class InvitationService {
 
   async emailInvitationByBase(baseId: string, data: EmailSpaceInvitationRo) {
     await this.checkSpaceInvitation();
+    await assertNotAgentHome(this.prismaService, { baseId });
 
     const base = await this.prismaService.base.findFirst({
       select: { spaceId: true, name: true },
@@ -249,6 +252,10 @@ export class InvitationService {
     resourceId: string;
     resourceType: CollaboratorType;
   }): Promise<ItemSpaceInvitationLinkVo> {
+    await assertNotAgentHome(
+      this.prismaService,
+      resourceType === CollaboratorType.Space ? { spaceId: resourceId } : { baseId: resourceId }
+    );
     const departmentIds = this.cls.get('organization.departments')?.map((d) => d.id);
     await this.collaboratorService.validateUserAddRole({
       departmentIds,
@@ -405,6 +412,7 @@ export class InvitationService {
     }
 
     const { expiredTime, baseId, spaceId, role, createdBy, type } = linkInvitation;
+    await assertNotAgentHome(this.prismaService, { spaceId, baseId });
 
     if (expiredTime && expiredTime < new Date()) {
       throw new CustomHttpException('Invitation link has expired', HttpErrorCode.VALIDATION_ERROR, {

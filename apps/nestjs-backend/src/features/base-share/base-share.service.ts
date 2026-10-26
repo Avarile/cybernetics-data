@@ -8,6 +8,7 @@ import { CustomHttpException } from '../../custom.exception';
 import { PerformanceCache, PerformanceCacheService } from '../../performance-cache';
 import { generateBaseShareListCacheKey } from '../../performance-cache/generate-keys';
 import type { IClsStore } from '../../types/cls';
+import { assertNotAgentHome } from '../agent/infrastructure/agent-home';
 
 const baseShareNotFoundMessage = 'Base share not found';
 const baseShareNotFoundKey = 'httpErrors.baseShare.notFound';
@@ -76,6 +77,7 @@ export class BaseShareService {
   }
 
   async createBaseShare(baseId: string, data: ICreateBaseShareRo): Promise<IBaseShareVo> {
+    await assertNotAgentHome(this.prismaService, { baseId });
     const nodeId = data.nodeId ?? null;
 
     const existingShare = await this.prismaService.baseShare.findFirst({
