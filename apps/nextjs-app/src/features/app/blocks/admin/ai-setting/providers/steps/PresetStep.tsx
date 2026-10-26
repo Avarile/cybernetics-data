@@ -1,7 +1,7 @@
 import { useTranslation } from 'next-i18next';
+import { ProviderIcon } from '../../../../../components/ai/ProviderIcon';
 import type { IProviderPreset } from '../presets';
 import { PROVIDER_PRESETS } from '../presets';
-import { ProviderIcon } from '../ProviderIcon';
 
 /** Step 1 of "Add provider": pick a starting point. */
 export const PresetStep = ({ onPick }: { onPick: (preset: IProviderPreset) => void }) => {

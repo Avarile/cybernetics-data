@@ -2,18 +2,13 @@ import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { IGatewayModel, ISettingVo, IUpdateSettingRo } from '@teable/openapi';
 import { getSetting, updateSetting } from '@teable/openapi';
-import { Card, CardContent, CardHeader, CardTitle } from '@teable/ui-lib/shadcn';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { AIConfigurationStatus } from '../setting/components/ai-config/AIConfigurationStatus';
 import { AIControlCard } from '../setting/components/ai-config/AIControlCard';
-import { DefaultModelsStep } from '../setting/components/ai-config/DefaultModelsStep';
-import {
-  generateGatewayModelKeyList,
-  generateModelKeyList,
-} from '../setting/components/ai-config/utils';
 import { AppBuilderConfig } from './AppBuilderConfig';
+import { DefaultModelsCard } from './DefaultModelsCard';
 import { ProvidersCard } from './providers/ProvidersCard';
 
 export interface IAiSettingPageProps {
@@ -54,15 +49,6 @@ export const AiSettingPage = ({ settingServerData }: IAiSettingPageProps) => {
   }, []);
 
   const aiConfig = setting?.aiConfig;
-  // Models the default pickers offer: every enabled provider's models plus the Gateway pool.
-  const models = useMemo(
-    () => [
-      ...generateModelKeyList((aiConfig?.llmProviders ?? []).filter((p) => p.enabled !== false)),
-      ...generateGatewayModelKeyList(aiConfig?.gatewayModels),
-    ],
-    [aiConfig?.llmProviders, aiConfig?.gatewayModels]
-  );
-
   if (!setting || !isHydrated) return null;
 
   // Providers and keys are saved through the provider routes; this PATCH carries the rest.
@@ -103,27 +89,11 @@ export const AiSettingPage = ({ settingServerData }: IAiSettingPageProps) => {
         </div>
 
         <div ref={modelsRef}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                {t('admin.setting.ai.providers.defaultModels', 'Default models')}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  'admin.setting.ai.providers.defaultModelsHelp',
-                  'Used by field AI and other AI features unless they choose their own model.'
-                )}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <DefaultModelsStep
-                chatModel={aiConfig?.chatModel ?? undefined}
-                models={models}
-                onChange={(chatModel) => patchAiConfig({ chatModel })}
-                disabled={models.length === 0}
-              />
-            </CardContent>
-          </Card>
+          <DefaultModelsCard
+            chatModel={aiConfig?.chatModel}
+            gatewayModels={aiConfig?.gatewayModels ?? []}
+            onChange={(chatModel) => patchAiConfig({ chatModel })}
+          />
         </div>
 
         <AIControlCard

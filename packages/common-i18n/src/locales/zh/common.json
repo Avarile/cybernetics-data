@@ -1020,7 +1020,11 @@
           "addModel": "添加",
           "keepInSync": "与 /models 保持同步",
           "saveToTest": "保存服务商后才能测试其模型",
-          "testSelected": "测试所选"
+          "testSelected": "测试所选",
+          "modelLarge": "主模型（大）",
+          "modelMedium": "中等任务",
+          "modelSmall": "小任务",
+          "sameAsMain": "与主模型相同"
         }
       },
       "app": {

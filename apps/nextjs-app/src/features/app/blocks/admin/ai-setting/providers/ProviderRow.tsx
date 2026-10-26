@@ -9,8 +9,8 @@ import {
 } from '@teable/ui-lib/shadcn';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
+import { ProviderIcon } from '../../../../components/ai/ProviderIcon';
 import { ProviderHealthChip } from './ProviderHealthChip';
-import { ProviderIcon } from './ProviderIcon';
 
 export interface IProviderRowActions {
   onEdit: (p: IAiProviderVo) => void;

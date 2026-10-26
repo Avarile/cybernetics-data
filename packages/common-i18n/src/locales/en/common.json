@@ -1023,7 +1023,11 @@
           "addModel": "Add",
           "keepInSync": "Keep in sync with /models",
           "saveToTest": "Save the provider to test its models",
-          "testSelected": "Test selected"
+          "testSelected": "Test selected",
+          "modelLarge": "Main model (large)",
+          "modelMedium": "Medium tasks",
+          "modelSmall": "Small tasks",
+          "sameAsMain": "Same as main model"
         }
       },
       "app": {

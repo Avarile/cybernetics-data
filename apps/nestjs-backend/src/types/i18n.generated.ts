@@ -1317,6 +1317,10 @@ export type I18nTranslations = {
                         "keepInSync": string;
                         "saveToTest": string;
                         "testSelected": string;
+                        "modelLarge": string;
+                        "modelMedium": string;
+                        "modelSmall": string;
+                        "sameAsMain": string;
                     };
                 };
                 "webSearch": {

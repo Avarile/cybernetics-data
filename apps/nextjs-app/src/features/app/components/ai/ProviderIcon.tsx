@@ -1,6 +1,6 @@
 import type { LLMProviderType } from '@teable/openapi';
 import { cn } from '@teable/ui-lib/shadcn';
-import { LLM_PROVIDER_ICONS } from '../../setting/components/ai-config/constant';
+import { LLM_PROVIDER_ICONS } from '../../blocks/admin/setting/components/ai-config/constant';
 
 export const ProviderIcon = ({
   type,
