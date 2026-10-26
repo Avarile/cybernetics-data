@@ -3,12 +3,13 @@ import { axios } from '../../axios';
 import { registerRoute } from '../../utils';
 import { z } from '../../zod';
 import { chatModelAbilitySchema, chatModelAbilityType } from './model-ability';
-import { llmProviderSchema } from './update';
+import { llmProviderRegistryFields, llmProviderSchema } from './update';
 
 export const testLLMRoSchema = llmProviderSchema
   .omit({
     isInstance: true,
     modelConfigs: true,
+    ...llmProviderRegistryFields,
   })
   .required()
   .extend({

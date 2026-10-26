@@ -3,7 +3,7 @@ import { axios } from '../../axios';
 import { registerRoute } from '../../utils';
 import { z } from '../../zod';
 import { chatModelAbilitySchema } from './model-ability';
-import { LLMProviderType, llmProviderSchema } from './update';
+import { LLMProviderType, llmProviderRegistryFields, llmProviderSchema } from './update';
 
 /**
  * Request schema for batch testing all LLM models
@@ -11,7 +11,11 @@ import { LLMProviderType, llmProviderSchema } from './update';
  */
 export const batchTestLLMRoSchema = z
   .object({
-    providers: z.array(llmProviderSchema.omit({ modelConfigs: true }).required()).optional(),
+    providers: z
+      .array(
+        llmProviderSchema.omit({ modelConfigs: true, ...llmProviderRegistryFields }).required()
+      )
+      .optional(),
   })
   .optional();
 

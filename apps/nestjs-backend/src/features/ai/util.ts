@@ -106,6 +106,8 @@ export const modelProviders = {
   [LLMProviderType.OPENROUTER]: createOpenRouter,
   [LLMProviderType.OPENAI_COMPATIBLE]: createOpenAICompatibleWrapper,
   [LLMProviderType.CLAUDE_CODE]: createAnthropic,
+  // Native /v1/messages client pointed at the provider's baseUrl
+  [LLMProviderType.ANTHROPIC_COMPATIBLE]: createAnthropic,
   // AI_GATEWAY is handled separately in ai.service.ts using createGateway from 'ai'
 } as const;
 

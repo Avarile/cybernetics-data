@@ -55,6 +55,7 @@ export const LLM_PROVIDER_ICONS = {
   [LLMProviderType.AMAZONBEDROCK]: AmazonBedrock,
   [LLMProviderType.OPENROUTER]: OpenRouter,
   [LLMProviderType.OPENAI_COMPATIBLE]: Openai,
+  [LLMProviderType.ANTHROPIC_COMPATIBLE]: Anthropic,
   [LLMProviderType.AI_GATEWAY]: Zap, // AI Gateway uses Zap icon
   [LLMProviderType.CLAUDE_CODE]: Anthropic,
 };
@@ -172,6 +173,13 @@ export const LLM_PROVIDERS = [
     baseUrlPlaceholder: 'https://api.openai.com/v1',
     modelsPlaceholder: 'gpt-4.1,o3,gpt-4.1-mini',
     Icon: LLM_PROVIDER_ICONS[LLMProviderType.OPENAI_COMPATIBLE],
+  },
+  {
+    value: LLMProviderType.ANTHROPIC_COMPATIBLE,
+    label: 'Anthropic Compatible',
+    baseUrlPlaceholder: 'https://api.anthropic.com/v1',
+    modelsPlaceholder: 'claude-sonnet-4-5,claude-haiku-4-5',
+    Icon: LLM_PROVIDER_ICONS[LLMProviderType.ANTHROPIC_COMPATIBLE],
   },
 ] as const;
 

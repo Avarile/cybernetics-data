@@ -15,6 +15,15 @@ import {
   modelAbilitySchema,
 } from './model-ability';
 import { pricingSchema } from './pricing';
+import {
+  checkProviderEnvName,
+  FORBIDDEN_HEADER_NAMES,
+  HEADER_NAME_PATTERN,
+  isProviderIdAllowed,
+  MAX_HEADER_VALUE_LENGTH,
+  MAX_PROVIDER_HEADERS,
+  parseEnvRef,
+} from './provider-rules';
 
 export enum LLMProviderType {
   OPENAI = 'openai',
@@ -33,6 +42,8 @@ export enum LLMProviderType {
   AMAZONBEDROCK = 'amazonBedrock',
   OPENROUTER = 'openRouter',
   OPENAI_COMPATIBLE = 'openaiCompatible',
+  // Any endpoint speaking Anthropic's /v1/messages (proxies, gateways)
+  ANTHROPIC_COMPATIBLE = 'anthropicCompatible',
   // Vercel AI Gateway - unified model access via modelId
   AI_GATEWAY = 'aiGateway',
   // Claude Code
@@ -77,16 +88,64 @@ export const modelConfigSchema = z.object({
 
 export type IModelConfig = z.infer<typeof modelConfigSchema>;
 
+export const providerIdSchema = z
+  .string()
+  .refine(
+    isProviderIdAllowed,
+    'Lowercase letters, digits and dashes (max 48); "teable" is reserved'
+  );
+
+/** Env-var name syntax and the app-secret denylist; the server also applies its allow pattern. */
+export const providerEnvNameSchema = z
+  .string()
+  .refine((name) => checkProviderEnvName(name, '.*').ok, 'Env var not allowed for provider keys');
+
+export const providerHeadersSchema = z
+  .record(
+    z
+      .string()
+      .regex(HEADER_NAME_PATTERN)
+      .refine((name) => !FORBIDDEN_HEADER_NAMES.includes(name.toLowerCase()), 'Header not allowed'),
+    z
+      .string()
+      .max(MAX_HEADER_VALUE_LENGTH)
+      .refine((value) => {
+        const env = parseEnvRef(value);
+        return env === undefined || checkProviderEnvName(env, '.*').ok;
+      }, 'Env var not allowed in header values')
+  )
+  .refine((headers) => Object.keys(headers).length <= MAX_PROVIDER_HEADERS, 'Too many headers');
+
 export const llmProviderSchema = z.object({
+  // Stable id used in model keys (type@model@<id>). Optional only for configs saved before ids
+  // existed; the backend assigns one when it reads them.
+  id: providerIdSchema.optional(),
   type: z.enum(LLMProviderType),
   name: z.string(),
+  // Write-only. Stored encrypted; reads return apiKeyPreview instead (see aiProviderVoSchema).
   apiKey: z.string().optional(),
+  // Read the key from this env var at call time instead of storing it.
+  apiKeyEnv: providerEnvNameSchema.optional(),
   baseUrl: z.string().url().optional(),
+  // Static headers sent with every request; a value may be `env:VAR`.
+  headers: providerHeadersSchema.optional(),
   models: z.string().default(''),
+  // Also list models from {baseUrl}/models.
+  fetchModels: z.boolean().optional(),
+  enabled: z.boolean().optional(),
   isInstance: z.boolean().optional(),
   // Model-specific configurations keyed by model name
   modelConfigs: z.record(z.string(), modelConfigSchema).optional(),
 });
+
+/** Fields of a provider that are about its registry entry rather than how to call it. */
+export const llmProviderRegistryFields = {
+  id: true,
+  apiKeyEnv: true,
+  headers: true,
+  fetchModels: true,
+  enabled: true,
+} as const;
 
 export type LLMProvider = z.infer<typeof llmProviderSchema>;
 
