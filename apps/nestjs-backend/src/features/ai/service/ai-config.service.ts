@@ -129,7 +129,8 @@ export class AiConfigService {
       return {
         ...config,
         llmProviders: config.llmProviders.map(
-          ({ type, name, models, isInstance, modelConfigs }) => ({
+          ({ id, type, name, models, isInstance, modelConfigs }) => ({
+            id,
             type,
             name,
             models,

@@ -6,6 +6,7 @@ export * from './get';
 export * from './get-public';
 export * from './update';
 export * from './provider-rules';
+export * from './provider-match';
 export * from './upload-logo';
 export * from './test-llm';
 export * from './batch-test-llm';

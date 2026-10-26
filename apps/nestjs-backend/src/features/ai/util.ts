@@ -117,9 +117,11 @@ export const getAdaptedProviderOptions = (
     name: string;
     baseURL: string;
     apiKey: string;
+    /** Extra headers configured on the provider (env references already resolved). */
+    headers?: Record<string, string>;
   }
 ) => {
-  const { name, baseURL: originalBaseURL, apiKey: originalApiKey } = originalOptions;
+  const { name, baseURL: originalBaseURL, apiKey: originalApiKey, headers } = originalOptions;
   switch (type) {
     case LLMProviderType.AMAZONBEDROCK: {
       const [region, accessKeyId, secretAccessKey] = originalApiKey.split('.');
@@ -132,9 +134,14 @@ export const getAdaptedProviderOptions = (
       };
     }
     case LLMProviderType.OLLAMA:
-      return { name, baseURL: originalBaseURL };
+      return { name, baseURL: originalBaseURL, ...(headers ? { headers } : {}) };
     case LLMProviderType.OPENAI_COMPATIBLE:
-      return { ...originalOptions, includeUsage: true };
+      // A keyless endpoint gets no Authorization header rather than "Bearer ".
+      return {
+        ...originalOptions,
+        apiKey: originalApiKey || undefined,
+        includeUsage: true,
+      };
     case LLMProviderType.AI_GATEWAY:
       // AI Gateway - use official gateway provider options
       // Gateway handles provider routing via modelId format (e.g., "google/gemini-3-pro-image")

@@ -7,6 +7,7 @@ import { settingVoSchema } from './get';
 import { chatModelSchema, llmProviderSchema } from './update';
 
 export const simpleLLMProviderSchema = llmProviderSchema.pick({
+  id: true,
   type: true,
   name: true,
   models: true,

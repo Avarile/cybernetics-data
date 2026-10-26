@@ -1,5 +1,5 @@
 import type { IAIConfig, LLMProvider } from '@teable/openapi';
-import { isProviderIdAllowed, suggestProviderId } from '@teable/openapi';
+import { isProviderIdAllowed, providerTypeLabel, suggestProviderId } from '@teable/openapi';
 
 /**
  * Pure transforms over the stored aiConfig: give providers ids, encrypt their keys, merge an
@@ -53,9 +53,37 @@ export function assignProviderIds(providers: LLMProvider[]): {
   return { providers: out, changed };
 }
 
+/** Legacy name every instance provider was forced to before providers had ids. */
+const legacyName = 'teable';
+
 /**
- * One-off, idempotent migration of a stored aiConfig: ids for every provider, every plain key
- * (providers and the Gateway key) encrypted.
+ * Real display names for providers saved under the legacy name (or none): the type's label, made
+ * unique per type ("OpenAI-compatible", "OpenAI-compatible 2"). Model keys do not change: legacy
+ * `@teable` keys keep resolving through the alias in provider-match.
+ */
+export function relabelProviders(providers: LLMProvider[]): {
+  providers: LLMProvider[];
+  changed: boolean;
+} {
+  const used = new Set(
+    providers.filter((p) => p.name && p.name !== legacyName).map((p) => p.name.toLowerCase())
+  );
+  let changed = false;
+  const out = providers.map((p) => {
+    if (p.name && p.name !== legacyName) return p;
+    changed = true;
+    const base = providerTypeLabel(p.type);
+    let name = base;
+    for (let n = 2; used.has(name.toLowerCase()); n++) name = `${base} ${n}`;
+    used.add(name.toLowerCase());
+    return { ...p, name };
+  });
+  return { providers: out, changed };
+}
+
+/**
+ * One-off, idempotent migration of a stored aiConfig: ids and real names for every provider, every
+ * plain key (providers and the Gateway key) encrypted.
  */
 export function migrateAiConfig(
   aiConfig: IAIConfig,
@@ -63,8 +91,9 @@ export function migrateAiConfig(
   gatewayProviderId: string
 ): { aiConfig: IAIConfig; changed: boolean } {
   const withIds = assignProviderIds(aiConfig.llmProviders ?? []);
-  let changed = withIds.changed;
-  const llmProviders = withIds.providers.map((p) => {
+  const named = relabelProviders(withIds.providers);
+  let changed = withIds.changed || named.changed;
+  const llmProviders = named.providers.map((p) => {
     if (!p.apiKey || crypto.isEncrypted(p.apiKey)) return p;
     changed = true;
     return { ...p, apiKey: crypto.encrypt(p.id!, p.apiKey) };
@@ -106,7 +135,7 @@ export function mergeIncomingAiConfig(
     const match = findStored(storedProviders, rest);
     return { ...rest, id: rest.id ?? match?.id, apiKey: rest.apiKey || match?.apiKey };
   });
-  const { providers } = assignProviderIds(incomingProviders);
+  const { providers } = relabelProviders(assignProviderIds(incomingProviders).providers);
   const llmProviders = providers.map((p) =>
     p.apiKey && !crypto.isEncrypted(p.apiKey)
       ? { ...p, apiKey: crypto.encrypt(p.id!, p.apiKey) }

@@ -38,10 +38,11 @@ describe('ProviderMigrationService', () => {
     expect(await svc.migrate()).toBe(true);
     const migrated = JSON.parse(prisma.store.content!);
     expect(migrated.llmProviders[0].id).toBe('openai');
+    expect(migrated.llmProviders[0].name).toBe('OpenAI');
     expect(migrated.llmProviders[0].apiKey).not.toContain('sk-plain');
     expect(secrets.resolveKey(migrated.llmProviders[0])).toBe('sk-plain');
     expect(secrets.resolveGatewayKey(migrated)).toBe('gw-plain');
-    // model keys are not rewritten in this step
+    // stored model keys are not rewritten: @teable keeps resolving through the alias
     expect(migrated.chatModel.lg).toBe('openai@gpt-4.1@teable');
     expect(prisma.setting.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { name: SettingKey.AI_CONFIG } })

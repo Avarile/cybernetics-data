@@ -1,7 +1,13 @@
 import type { OpenAIProvider } from '@ai-sdk/openai';
 import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable, Logger } from '@nestjs/common';
-import { LLMProviderType, SettingKey } from '@teable/openapi';
+import {
+  findProviderForModelKey,
+  LLMProviderType,
+  parseModelKey,
+  providerListsModelKey,
+  SettingKey,
+} from '@teable/openapi';
 import type { LLMProvider } from '@teable/openapi';
 import type { ImageModel, LanguageModel } from 'ai';
 import { createGateway } from 'ai';
@@ -17,6 +23,14 @@ export const INSTANCE_PROVIDER_NAME = 'teable';
 
 export type ILanguageModelV2 = Exclude<LanguageModel, string>;
 
+const configurationNotSetKey = 'httpErrors.ai.configurationNotSet';
+
+/** Provider types that can be called without an API key (local Ollama, self-hosted endpoints). */
+const keylessProviderTypes: LLMProviderType[] = [
+  LLMProviderType.OLLAMA,
+  LLMProviderType.OPENAI_COMPATIBLE,
+];
+
 @Injectable()
 export class ModelResolverService {
   private readonly logger = new Logger(ModelResolverService.name);
@@ -27,8 +41,8 @@ export class ModelResolverService {
   ) {}
 
   public parseModelKey(modelKey: string) {
-    const [type, model, name] = modelKey.split('@');
-    return { type, model, name };
+    const { type, model, ref } = parseModelKey(modelKey);
+    return { type, model, name: ref };
   }
 
   /**
@@ -57,20 +71,12 @@ export class ModelResolverService {
   }
 
   findModelInProviders(modelKey: string, llmProviders: LLMProvider[]): boolean {
-    const { type, model, name } = this.parseModelKey(modelKey);
-
-    const providerConfig = llmProviders.find(
-      (p) =>
-        p.name.toLowerCase() === name.toLowerCase() &&
-        p.type.toLowerCase() === type.toLowerCase() &&
-        p.models.includes(model)
-    );
-    return !!providerConfig;
+    return providerListsModelKey(modelKey, llmProviders);
   }
 
-  // modelKey -> type@model@name
+  // modelKey -> type@model@<provider id | legacy name | teable>
   async getModelConfig(modelKey: string, llmProviders: LLMProvider[] = []) {
-    const { type, model, name } = this.parseModelKey(modelKey);
+    const { type, model } = this.parseModelKey(modelKey);
 
     if (this.isGatewayModel(modelKey)) {
       const { aiConfig } = await this.settingService.getSetting([SettingKey.AI_CONFIG]);
@@ -96,10 +102,7 @@ export class ModelResolverService {
       };
     }
 
-    const providerConfig = llmProviders.find(
-      (p) =>
-        p.name.toLowerCase() === name.toLowerCase() && p.type.toLowerCase() === type.toLowerCase()
-    );
+    const providerConfig = findProviderForModelKey(modelKey, llmProviders);
 
     if (!providerConfig) {
       throw new CustomHttpException(
@@ -116,12 +119,20 @@ export class ModelResolverService {
     const { baseUrl } = providerConfig;
     // Stored keys are encrypted; env-var keys are read at call time.
     const apiKey = this.providerSecretService.resolveKey(providerConfig);
+    if (!apiKey && providerConfig.apiKeyEnv) {
+      throw new CustomHttpException(
+        `AI provider "${providerConfig.name}" reads its key from ${providerConfig.apiKeyEnv}, which is not set`,
+        HttpErrorCode.VALIDATION_ERROR,
+        { localization: { i18nKey: configurationNotSetKey } }
+      );
+    }
 
     return {
       type,
       model,
       baseUrl,
       apiKey,
+      headers: this.providerSecretService.resolveHeaders(providerConfig),
     };
   }
 
@@ -140,7 +151,9 @@ export class ModelResolverService {
     llmProviders: LLMProvider[] = [],
     isImageGeneration = false
   ): Promise<ILanguageModelV2 | ImageModel> {
-    const { type, model, baseUrl, apiKey } = await this.getModelConfig(modelKey, llmProviders);
+    const config = await this.getModelConfig(modelKey, llmProviders);
+    const { type, model, baseUrl, apiKey } = config;
+    const headers = 'headers' in config ? config.headers : undefined;
 
     if (type === LLMProviderType.AI_GATEWAY) {
       if (!apiKey) {
@@ -149,7 +162,7 @@ export class ModelResolverService {
           HttpErrorCode.VALIDATION_ERROR,
           {
             localization: {
-              i18nKey: 'httpErrors.ai.configurationNotSet',
+              i18nKey: configurationNotSetKey,
             },
           }
         );
@@ -161,10 +174,12 @@ export class ModelResolverService {
       return isImageGeneration ? gatewayProvider.imageModel(model) : gatewayProvider(model);
     }
 
-    if (!baseUrl || !apiKey) {
+    // Local and self-hosted OpenAI-compatible endpoints may run without a key.
+    const keyless = keylessProviderTypes.includes(type as LLMProviderType);
+    if (!baseUrl || (!apiKey && !keyless)) {
       throw new CustomHttpException('AI configuration is not set', HttpErrorCode.VALIDATION_ERROR, {
         localization: {
-          i18nKey: 'httpErrors.ai.configurationNotSet',
+          i18nKey: configurationNotSetKey,
         },
       });
     }
@@ -191,7 +206,8 @@ export class ModelResolverService {
     const providerOptions = getAdaptedProviderOptions(type as LLMProviderType, {
       name: model,
       baseURL: baseUrl,
-      apiKey,
+      apiKey: apiKey ?? '',
+      headers,
     });
     const modelProvider = provider(providerOptions as never) as OpenAIProvider;
 

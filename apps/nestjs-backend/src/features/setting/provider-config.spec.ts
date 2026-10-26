@@ -6,6 +6,7 @@ import {
   maskAiConfig,
   mergeIncomingAiConfig,
   migrateAiConfig,
+  relabelProviders,
 } from './provider-config';
 import type { IKeyCrypto, IKeyPreview } from './provider-config';
 
@@ -46,6 +47,25 @@ describe('assignProviderIds', () => {
     ]);
     expect(new Set(providers.map((p) => p.id)).size).toBe(3);
     expect(providers.map((p) => p.id)).not.toContain('teable');
+  });
+});
+
+describe('relabelProviders', () => {
+  it('replaces the legacy name with unique type labels and keeps real names', () => {
+    const { providers, changed } = relabelProviders([
+      provider({ id: 'a' }),
+      provider({ id: 'b', name: '' }),
+      provider({ id: 'c', name: 'vLLM (gpu-01)' }),
+      provider({ id: 'd', type: LLMProviderType.OPENAI }),
+    ]);
+    expect(changed).toBe(true);
+    expect(providers.map((p) => p.name)).toEqual([
+      'OpenAI-compatible',
+      'OpenAI-compatible 2',
+      'vLLM (gpu-01)',
+      'OpenAI',
+    ]);
+    expect(relabelProviders(providers).changed).toBe(false);
   });
 });
 

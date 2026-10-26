@@ -1,11 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LLMProviderType, supportsImageInputForImageGeneration } from '@teable/openapi';
 import type { GatewayModelTag, IChatModelAbility, LLMProvider } from '@teable/openapi';
+import {
+  LLMProviderType,
+  supportsImageInputForImageGeneration,
+  findProviderForModelKey,
+  SettingKey,
+} from '@teable/openapi';
+import { SettingService } from '../../setting/setting.service';
 import { GatewayModelService } from './gateway-model.service';
 import { ModelResolverService } from './model-resolver.service';
 import type { ILanguageModelV2 } from './model-resolver.service';
-import { SettingService } from '../../setting/setting.service';
-import { SettingKey } from '@teable/openapi';
 
 @Injectable()
 export class ModelCapabilityService {
@@ -26,7 +30,7 @@ export class ModelCapabilityService {
    * 3. Fallback: convert deprecated ability field to tags (backward compatibility)
    */
   async getModelTags(modelKey: string, llmProviders: LLMProvider[]): Promise<GatewayModelTag[]> {
-    const { type, model, name } = this.modelResolverService.parseModelKey(modelKey);
+    const { type, model } = this.modelResolverService.parseModelKey(modelKey);
 
     if (type === LLMProviderType.AI_GATEWAY) {
       try {
@@ -40,7 +44,7 @@ export class ModelCapabilityService {
       return [];
     }
 
-    const provider = llmProviders.find((p) => p.type === type && p.name === name);
+    const provider = findProviderForModelKey(modelKey, llmProviders);
     const modelConfig = provider?.modelConfigs?.[model];
 
     if (modelConfig?.tags?.length) {

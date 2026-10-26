@@ -6,6 +6,7 @@ import type { OpenAIProvider } from '@ai-sdk/openai';
 import { HttpErrorCode } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import type { IAiGenerateRo, IGetAIConfig, GatewayModelTag, LLMProvider } from '@teable/openapi';
+import { findProviderForModelKey } from '@teable/openapi';
 import type { ImageModel } from 'ai';
 import type { Response } from 'express';
 import { BaseConfig, IBaseConfig } from '../../configs/base.config';
@@ -122,13 +123,9 @@ export class AiService {
     if (isGateway) {
       isInstance = true;
     } else {
-      const { type, model, name } = this.modelResolverService.parseModelKey(chatModel.lg);
-      const lgProvider = llmProviders.find(
-        (p) =>
-          p.name.toLowerCase() === name.toLowerCase() &&
-          p.type.toLowerCase() === type.toLowerCase() &&
-          p.models.includes(model)
-      );
+      const lgProvider = this.modelResolverService.findModelInProviders(chatModel.lg, llmProviders)
+        ? findProviderForModelKey(chatModel.lg, llmProviders)
+        : undefined;
       if (!lgProvider) {
         throw new CustomHttpException(
           'AI chat model lg provider is not set',

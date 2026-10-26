@@ -93,11 +93,13 @@ export const generateModelKeyList = (llmProviders: ISimpleLLMProvider[] | LLMPro
   return llmProviders
     .map((provider) => {
       const { models, type, name, isInstance } = provider;
+      // Instance providers are addressed by id; space-level BYOK providers (no id) by name.
+      const ref = ('id' in provider && provider.id) || name;
       const modelConfigs = 'modelConfigs' in provider ? provider.modelConfigs : undefined;
       return parseProviderModels(models).map((model) => {
         const config = modelConfigs?.[model];
         return {
-          modelKey: `${type}@${model}@${name}`,
+          modelKey: `${type}@${model}@${ref}`,
           isInstance,
           isImageModel: config?.isImageModel,
           // Use configured label if available, otherwise use model ID

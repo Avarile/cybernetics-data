@@ -46,7 +46,6 @@ import { type IStorageConfig, StorageConfig } from '../../../configs/storage';
 import { CustomHttpException } from '../../../custom.exception';
 import type { IClsStore } from '../../../types/cls';
 import { resolveBuildVersion } from '../../../utils/build-version';
-import { INSTANCE_PROVIDER_NAME } from '../../ai/ai.service';
 import { getAdaptedProviderOptions, modelProviders } from '../../ai/util';
 import { AttachmentsStorageService } from '../../attachments/attachments-storage.service';
 import StorageAdapter from '../../attachments/plugins/adapter';
@@ -104,9 +103,6 @@ export class SettingOpenApiService {
         this.keyCrypto,
         GATEWAY_PROVIDER_ID
       );
-      // Instance providers must use "teable" as name so modelKeys end with @teable,
-      // allowing a simple suffix check to distinguish instance vs BYOK models.
-      this.normalizeInstanceProviderNames(merged as Record<string, unknown>);
       updateSettingRo = { ...updateSettingRo, aiConfig: merged };
     }
     return this.maskSetting(await this.settingService.updateSetting(updateSettingRo));
@@ -138,32 +134,6 @@ export class SettingOpenApiService {
       (p) => p.type === type && (p.baseUrl ?? '') === (baseUrl ?? '')
     );
     return provider ? this.providerSecretService.resolveKey(provider) : undefined;
-  }
-
-  /**
-   * Rewrite all provider names to "teable" and update chatModel keys accordingly.
-   * Admin-configured providers are always instance-level; the @teable suffix
-   * lets the rest of the system distinguish them from BYOK (space-level) providers.
-   */
-  private normalizeInstanceProviderNames(aiConfig: Record<string, unknown>): void {
-    const name = INSTANCE_PROVIDER_NAME;
-    const providers = aiConfig.llmProviders as Array<Record<string, unknown>> | undefined;
-    if (providers) {
-      for (const provider of providers) {
-        provider.name = name;
-      }
-    }
-    const chatModel = aiConfig.chatModel as Record<string, string | undefined> | undefined;
-    if (chatModel) {
-      for (const tier of ['lg', 'md', 'sm']) {
-        const key = chatModel[tier];
-        if (key && key.includes('@')) {
-          const parts = key.split('@');
-          parts[parts.length - 1] = name;
-          chatModel[tier] = parts.join('@');
-        }
-      }
-    }
   }
 
   async getServerBrand(): Promise<{ brandName: string; brandLogo: string }> {
@@ -219,6 +189,7 @@ export class SettingOpenApiService {
         enable: Boolean(aiConfig?.chatModel?.lg),
         llmProviders:
           aiConfig?.llmProviders?.map((provider) => ({
+            id: provider.id,
             type: provider.type,
             name: provider.name,
             models: provider.models,

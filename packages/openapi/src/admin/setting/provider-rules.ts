@@ -84,3 +84,28 @@ export function suggestProviderId(name: string): string {
   if (!slug) return 'provider';
   return RESERVED_PROVIDER_IDS.includes(slug) ? `${slug}-1` : slug;
 }
+
+/** Display names per provider type, for providers saved without one. Keys are LLMProviderType values. */
+export const PROVIDER_TYPE_LABELS: Record<string, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  google: 'Google',
+  azure: 'Azure OpenAI',
+  cohere: 'Cohere',
+  mistral: 'Mistral',
+  deepseek: 'DeepSeek',
+  qwen: 'Qwen',
+  zhipu: 'Zhipu',
+  lingyiwanwu: 'Lingyiwanwu',
+  xai: 'xAI',
+  togetherai: 'Together AI',
+  ollama: 'Ollama',
+  amazonBedrock: 'Amazon Bedrock',
+  openRouter: 'OpenRouter',
+  openaiCompatible: 'OpenAI-compatible',
+  anthropicCompatible: 'Anthropic-compatible',
+  aiGateway: 'Vercel AI Gateway',
+  claudeCode: 'Claude Code',
+};
+
+export const providerTypeLabel = (type: string) => PROVIDER_TYPE_LABELS[type] ?? type;
