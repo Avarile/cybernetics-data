@@ -32,6 +32,7 @@ function setup(model: MockLanguageModelV3) {
     // the placeholder RunTurn sets: the first 60 characters of the first message
     title: 'Can you clean up the duplicate invoices in the finance base?'.slice(0, 60),
     summary: null,
+    summaryThroughSeq: null,
     costUsd: null,
   } as IThread;
   const messages: IMessage[] = [
@@ -48,8 +49,12 @@ function setup(model: MockLanguageModelV3) {
     getDefaultProfile: async () => ({ smallModel: 'openai/mini', model: 'openai/big' }),
     getThread: async () => thread,
     updateThread: async (_: string, patch: Partial<IThread>) => Object.assign(thread, patch),
-    listMessages: async (_: string, o?: { last?: number }) =>
-      o?.last ? messages.slice(-o.last) : messages,
+    listMessages: async (_: string, o?: { last?: number; after?: number; first?: number }) => {
+      if (o?.after !== undefined) {
+        return messages.filter((m) => m.seq! > o.after!).slice(0, o.first);
+      }
+      return o?.last ? messages.slice(-o.last) : messages;
+    },
     listMemories: async () => [...memories],
     createMemory: async (input: Partial<IMemory>) => {
       const m = {
@@ -118,7 +123,26 @@ describe('TurnJobs', () => {
     expect(s.thread.summary).toBeNull();
     await s.jobs.summary({ ...s.data, droppedMessages: 2 });
     expect(s.thread.summary).toBe('Admin asked to merge duplicate invoices; 12 merged.');
+    expect(s.thread.summaryThroughSeq).toBe(2);
     expect(r.prompts[0]).toContain('merged 12 duplicates');
+    // nothing new since: no second call
+    await s.jobs.summary({ ...s.data, droppedMessages: 2 });
+    expect(r.prompts).toHaveLength(1);
+  });
+
+  it('waits for enough new dropped messages once a summary exists', async () => {
+    const r = replies(['Updated summary.']);
+    const s = setup(r.model);
+    for (let seq = 3; seq <= 30; seq++) {
+      s.messages.push({ id: `m${seq}`, role: 'user', seq, content: `Message ${seq}` } as IMessage);
+    }
+    Object.assign(s.thread, { summary: 'Earlier summary.', summaryThroughSeq: 20 });
+    await s.jobs.summary({ ...s.data, droppedMessages: 25 });
+    expect(r.prompts).toHaveLength(0);
+    await s.jobs.summary({ ...s.data, droppedMessages: 30 });
+    expect(r.prompts[0]).toContain('Message 21');
+    expect(r.prompts[0]).not.toContain('Message 20');
+    expect(s.thread).toMatchObject({ summary: 'Updated summary.', summaryThroughSeq: 30 });
   });
 
   it('extracts memories, updates duplicates instead of adding, and drops secrets', async () => {

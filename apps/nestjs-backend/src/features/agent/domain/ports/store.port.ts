@@ -57,8 +57,13 @@ export interface IAgentStorePort {
 
   /** Appends after the thread's last message; seq and summary are filled in. */
   appendMessages(threadId: string, messages: IMessageInput[]): Promise<IMessage[]>;
-  /** In seq order; `last` keeps only the newest N. */
-  listMessages(threadId: string, options?: { last?: number }): Promise<IMessage[]>;
+  /**
+   * In seq order; `last` keeps only the newest N, `after` + `first` the oldest N after a seq.
+   */
+  listMessages(
+    threadId: string,
+    options?: { last?: number; after?: number; first?: number }
+  ): Promise<IMessage[]>;
   updateMessage(id: string, patch: Omit<IPatch<IMessage>, 'threadId' | 'seq'>): Promise<IMessage>;
 
   listSkills(options?: { activeOnly?: boolean }): Promise<ISkill[]>;

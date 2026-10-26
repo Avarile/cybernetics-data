@@ -70,6 +70,8 @@ export interface IThread {
   focusBaseId: string | null;
   focusTableId: string | null;
   summary: string | null;
+  /** The summary covers messages up to this seq. */
+  summaryThroughSeq: number | null;
   messageCount: number | null;
   tokensIn: number | null;
   tokensOut: number | null;

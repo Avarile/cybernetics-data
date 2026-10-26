@@ -179,9 +179,13 @@ export class AgentTableStore implements IAgentStorePort {
 
   // ── messages ─────────────────────────────────────────────────────────────
 
-  private threadMessages(threadId: string, order: 'asc' | 'desc', take?: number) {
+  private threadMessages(threadId: string, order: 'asc' | 'desc', take?: number, after?: number) {
     return this.messages.find({
-      where: (f) => [{ fieldId: f('thread'), operator: 'is', value: threadId }] as never,
+      where: (f) =>
+        [
+          { fieldId: f('thread'), operator: 'is', value: threadId },
+          ...(after ? [{ fieldId: f('seq'), operator: 'isGreater', value: after }] : []),
+        ] as never,
       orderBy: [['seq', order]],
       take,
     });
@@ -218,7 +222,13 @@ export class AgentTableStore implements IAgentStorePort {
     });
   }
 
-  async listMessages(threadId: string, options: { last?: number } = {}) {
+  async listMessages(
+    threadId: string,
+    options: { last?: number; after?: number; first?: number } = {}
+  ) {
+    if (options.after !== undefined || options.first !== undefined) {
+      return this.threadMessages(threadId, 'asc', options.first, options.after);
+    }
     if (options.last === undefined) return this.threadMessages(threadId, 'asc');
     const newest = await this.threadMessages(threadId, 'desc', options.last);
     return newest.reverse();

@@ -83,6 +83,7 @@ export const threadSpec: IEntitySpec<IThread> = {
     focusBaseId: ['focus_base_id', text],
     focusTableId: ['focus_table_id', text],
     summary: ['summary', text],
+    summaryThroughSeq: ['summary_through_seq', num],
     messageCount: ['message_count', num],
     tokensIn: ['tokens_in', num],
     tokensOut: ['tokens_out', num],

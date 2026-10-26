@@ -25,6 +25,9 @@ export interface ITurnJobData {
 const maxTitle = 80;
 const maxSummaryInput = 30_000;
 const maxExtract = 3;
+/** Fold dropped messages into the summary once this many are new (or there is no summary). */
+export const SUMMARY_MIN_NEW = 10;
+const summaryBatch = 200;
 
 export const cleanTitle = (raw: string) =>
   raw
@@ -125,8 +128,16 @@ export class TurnJobs {
   async summary({ threadId, droppedMessages }: ITurnJobData) {
     if (!droppedMessages) return;
     const thread = await this.store.getThread(threadId);
-    const all = await this.store.listMessages(threadId, { last: 200 });
-    const old = all.slice(0, Math.min(droppedMessages, all.length));
+    const through = thread.summaryThroughSeq ?? 0;
+    const pending = droppedMessages - through;
+    if (pending <= 0 || (pending < SUMMARY_MIN_NEW && thread.summary)) return;
+    // oldest first, a batch at a time: a long thread catches up over a few turns
+    const old = (
+      await this.store.listMessages(threadId, {
+        after: through,
+        first: Math.min(pending, summaryBatch),
+      })
+    ).filter((m) => (m.seq ?? 0) <= droppedMessages);
     if (!old.length) return;
     const { text } = await generateText({
       model: await this.smallModel(),
@@ -134,7 +145,10 @@ export class TurnJobs {
         'Update the running summary of a conversation between an admin and their workspace agent. Keep decisions, facts, names, ids and open questions. At most 300 words. Plain text.',
       prompt: `Summary so far:\n${thread.summary ?? '(none)'}\n\nOlder messages:\n${transcript(old, maxSummaryInput)}`,
     });
-    if (text.trim()) await this.store.updateThread(threadId, { summary: text.trim() });
+    await this.store.updateThread(threadId, {
+      summary: text.trim() || thread.summary,
+      summaryThroughSeq: old.at(-1)!.seq,
+    });
   }
 
   /** memory_mode = auto: at most 3 durable items from the last exchange; duplicates update. */

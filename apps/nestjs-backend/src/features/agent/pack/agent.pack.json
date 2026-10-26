@@ -558,6 +558,18 @@
           "description": "Rolling summary of turns that no longer fit the history window"
         },
         {
+          "key": "summary_through_seq",
+          "name": "summary_through_seq",
+          "type": "number",
+          "options": {
+            "formatting": {
+              "type": "decimal",
+              "precision": 0
+            }
+          },
+          "description": "The summary covers messages up to this seq"
+        },
+        {
           "key": "message_count",
           "name": "message_count",
           "type": "number",

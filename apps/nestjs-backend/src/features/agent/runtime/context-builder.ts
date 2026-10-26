@@ -148,7 +148,8 @@ export class ContextBuilder {
         historyBudget(profile.contextBudgetTokens, estimateTokens(system))
       );
       history = fitted.kept;
-      dropped = fitted.dropped;
+      // everything older than the first message the model sees: outside the window or the budget
+      dropped = (history[0]?.seq ?? (recent.at(-1)?.seq ?? 0) + 1) - 1;
     }
     return {
       system,
