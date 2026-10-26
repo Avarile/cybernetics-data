@@ -27,7 +27,7 @@ import { KnowledgeSyncListener } from '../src/features/agent/infrastructure/know
 import { KnowledgeToolkit } from '../src/features/agent/toolkits/knowledge/knowledge.toolkit';
 import type { IToolContext } from '../src/features/agent/toolkits/toolkit.types';
 import type { IClsStore } from '../src/types/cls';
-import { freshRagTestDb } from './utils/agent-rag';
+import { freshRagTestDb, until } from './utils/agent-rag';
 import { createTable, initApp, permanentDeleteTable, runWithTestUser } from './utils/init-app';
 
 interface ISearchOut {
@@ -77,6 +77,10 @@ describe('Agent knowledge full sync (e2e)', () => {
       records: [
         { fields: { title: 'K3S - Cheatsheet', context: 'kubectl get pods -A lists every pod.' } },
         { fields: { title: 'Tmux guide', context: 'Prefix then d detaches the session.' } },
+        // more than the AI data service's 120 calls a minute: the sync must not go through it
+        ...Array.from({ length: 130 }, (_, i) => ({
+          fields: { title: `Note ${i}`, context: `Filler note number ${i}.` },
+        })),
       ],
     });
     kbTableId = kb.id;
@@ -103,14 +107,24 @@ describe('Agent knowledge full sync (e2e)', () => {
     await app.close();
   });
 
-  it('the first knowledge search indexes existing records, by keyword when embedding fails', async () => {
-    expect(await rag.listDocuments('kb_records')).toEqual([]);
-    const out = await run<ISearchOut>('knowledge_search', { query: 'K3S cheatsheet' });
-    expect(out.results[0]).toMatchObject({ title: 'K3S - Cheatsheet' });
-    expect(out.mode).toBe('keyword');
-    expect(out.warnings.join(' ')).toMatch(/cannot embed text/);
-    expect((await rag.listDocuments('kb_records')).length).toBeGreaterThanOrEqual(2);
-  });
+  it(
+    'the first knowledge search indexes existing records, by keyword when embedding fails',
+    { timeout: 40_000 },
+    async () => {
+      expect(await rag.listDocuments('kb_records')).toEqual([]);
+      const out = await run<ISearchOut>('knowledge_search', { query: 'K3S cheatsheet' });
+      expect(out.results[0]).toMatchObject({ title: 'K3S - Cheatsheet' });
+      expect(out.mode).toBe('keyword');
+      expect(out.warnings.join(' ')).toMatch(/cannot embed text/);
+      // the sync goes on in the background after the first search returns
+      const indexed = await until(
+        () => rag.listDocuments('kb_records', 1000),
+        (docs) => docs.length >= 132,
+        20_000
+      );
+      expect(indexed.length).toBeGreaterThanOrEqual(132);
+    }
+  );
 
   it('the admin sync is idempotent and removes documents of vanished records', async () => {
     await rag.upsertDocument({
@@ -125,7 +139,7 @@ describe('Agent knowledge full sync (e2e)', () => {
     });
     const summary = await syncKnowledge();
     expect(summary).toMatchObject({ failed: 0, indexed: 0, removed: 1 });
-    expect(summary.unchanged).toBeGreaterThanOrEqual(2);
+    expect(summary.unchanged).toBeGreaterThanOrEqual(132);
     expect((await rag.listDocuments('kb_records')).map((d) => d.title)).not.toContain('Gone');
   });
 

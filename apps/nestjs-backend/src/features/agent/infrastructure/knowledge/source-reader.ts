@@ -2,7 +2,8 @@ import type { Readable } from 'stream';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType } from '@teable/openapi';
-import type { IAiDataFieldSummary, IAiDataTableProfile } from '../../../ai-data/ai-data.schema';
+import { detectTableProfile } from '../../../ai-data/ai-data.schema';
+import type { IAiDataFieldSummary } from '../../../ai-data/ai-data.schema';
 import StorageAdapter from '../../../attachments/plugins/adapter';
 import { InjectStorageAdapter } from '../../../attachments/plugins/storage';
 import { ChatFileService } from '../../../chat-file/chat-file.service';
@@ -10,11 +11,9 @@ import { RecordService } from '../../../record/record.service';
 import {
   AGENT_LAYOUT_PORT,
   AGENT_STORE_PORT,
-  DATA_GATEWAY_PORT,
   HTTP_PORT,
   type IAgentLayoutPort,
   type IAgentStorePort,
-  type IDataGatewayPort,
   type IHttpPort,
   type IRagSource,
   type IRagSourceReaderPort,
@@ -22,6 +21,8 @@ import {
 } from '../../domain/ports';
 import { AGENT_TABLES } from '../../pack/agent-pack';
 import { cellText, htmlToText, looksMarkdown } from './text-extract';
+
+const fieldCacheMs = 30_000;
 
 const textTypes = new Set(['singleLineText', 'longText', 'singleSelect', 'multipleSelect']);
 
@@ -40,13 +41,19 @@ const streamToBuffer = (stream: Readable) =>
  */
 @Injectable()
 export class RagSourceReader implements IRagSourceReaderPort {
+  private readonly fieldCache = new Map<
+    string,
+    {
+      at: number;
+      value: { fields: IAiDataFieldSummary[]; profile: ReturnType<typeof detectTableProfile> };
+    }
+  >();
   constructor(
     private readonly prismaService: PrismaService,
     private readonly chatFiles: ChatFileService,
     private readonly recordService: RecordService,
     @InjectStorageAdapter() private readonly storageAdapter: StorageAdapter,
     @Inject(HTTP_PORT) private readonly http: IHttpPort,
-    @Inject(DATA_GATEWAY_PORT) private readonly data: IDataGatewayPort,
     @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort,
     @Inject(AGENT_LAYOUT_PORT) private readonly layout: IAgentLayoutPort
   ) {}
@@ -124,10 +131,7 @@ export class RagSourceReader implements IRagSourceReaderPort {
       return { title: memory.title, text: memory.content ?? '', format: 'record' as const };
     }
 
-    const table = (await this.data.describeTable({ baseId, table: tableId })) as {
-      profile: IAiDataTableProfile;
-      fields: IAiDataFieldSummary[];
-    };
+    const table = await this.tableFields(tableId);
     const record = await this.recordService
       .getRecordsById(tableId, [recordId], false)
       .then((r) => r.records[0])
@@ -147,5 +151,28 @@ export class RagSourceReader implements IRagSourceReaderPort {
           .map(([name, v]) => `${name}: ${v}`)
           .join('\n\n');
     return { title, text, format: 'record' as const };
+  }
+
+  /**
+   * Fields and profile of a table, straight from the schema and cached briefly. Not through the
+   * AI data service: its per-user rate limit is for interactive tools, and a full sync reads
+   * hundreds of records a minute.
+   */
+  private async tableFields(tableId: string) {
+    const hit = this.fieldCache.get(tableId);
+    if (hit && Date.now() - hit.at < fieldCacheMs) return hit.value;
+    const rows = await this.prismaService.field.findMany({
+      where: { tableId, deletedTime: null },
+      select: { id: true, name: true, type: true, isPrimary: true, isComputed: true },
+      orderBy: { order: 'asc' },
+    });
+    const fields: IAiDataFieldSummary[] = rows.map((f) => ({
+      ...f,
+      isPrimary: Boolean(f.isPrimary),
+      isComputed: Boolean(f.isComputed),
+    }));
+    const value = { fields, profile: detectTableProfile(fields) };
+    this.fieldCache.set(tableId, { at: Date.now(), value });
+    return value;
   }
 }

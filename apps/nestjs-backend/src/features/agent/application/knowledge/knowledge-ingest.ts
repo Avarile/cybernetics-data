@@ -108,6 +108,8 @@ export class KnowledgeIngest {
     }
     summary.removed += await this.removeOrphans(seen);
     this.logger.log(`knowledge sync: ${JSON.stringify({ ...summary, errors: undefined })}`);
+    if (summary.errors.length)
+      this.logger.warn(`knowledge sync errors: ${summary.errors.join(' | ')}`);
     return summary;
   }
 
