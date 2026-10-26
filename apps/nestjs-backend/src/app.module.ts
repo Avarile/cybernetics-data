@@ -8,6 +8,7 @@ import Redis from 'ioredis';
 import type { ICacheConfig } from './configs/cache.config';
 import { ConfigModule } from './configs/config.module';
 import { AccessTokenModule } from './features/access-token/access-token.module';
+import { AgentModule } from './features/agent/agent.module';
 import { AggregationOpenApiModule } from './features/aggregation/open-api/aggregation-open-api.module';
 import { AiModule } from './features/ai/ai.module';
 import { AiProviderModule } from './features/ai-provider/ai-provider.module';
@@ -108,6 +109,7 @@ export const appModules = {
     OrganizationModule,
     AiModule,
     AiProviderModule,
+    AgentModule,
     PluginModule,
     PluginPanelModule,
     PluginContextMenuModule,
