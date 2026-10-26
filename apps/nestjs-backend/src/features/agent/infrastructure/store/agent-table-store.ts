@@ -208,6 +208,16 @@ export class AgentTableStore implements IAgentStorePort {
     return created.sort((a, b) => a.seq - b.seq);
   }
 
+  updateMessage(id: string, patch: Omit<IPatch<IMessage>, 'threadId' | 'seq'>) {
+    return this.messages.update(id, {
+      ...patch,
+      ...(patch.parts !== undefined ? { parts: cappedParts(patch.parts) } : {}),
+      ...(patch.content !== undefined && patch.summary === undefined
+        ? { summary: (patch.content ?? '').replace(/\s+/g, ' ').trim().slice(0, summaryLength) }
+        : {}),
+    });
+  }
+
   async listMessages(threadId: string, options: { last?: number } = {}) {
     if (options.last === undefined) return this.threadMessages(threadId, 'asc');
     const newest = await this.threadMessages(threadId, 'desc', options.last);

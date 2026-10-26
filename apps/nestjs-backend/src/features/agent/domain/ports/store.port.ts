@@ -59,6 +59,7 @@ export interface IAgentStorePort {
   appendMessages(threadId: string, messages: IMessageInput[]): Promise<IMessage[]>;
   /** In seq order; `last` keeps only the newest N. */
   listMessages(threadId: string, options?: { last?: number }): Promise<IMessage[]>;
+  updateMessage(id: string, patch: Omit<IPatch<IMessage>, 'threadId' | 'seq'>): Promise<IMessage>;
 
   listSkills(options?: { activeOnly?: boolean }): Promise<ISkill[]>;
   getSkillByName(name: string): Promise<ISkill | undefined>;

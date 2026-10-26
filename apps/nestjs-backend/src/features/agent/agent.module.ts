@@ -8,18 +8,33 @@ import { SchemaPackModule } from '../schema-pack/schema-pack.module';
 import { SettingModule } from '../setting/setting.module';
 import { SpaceModule } from '../space/space.module';
 import { ViewOpenApiModule } from '../view/open-api/view-open-api.module';
+import { CancelRun } from './application/chat/cancel-run.usecase';
+import { ResumeTurn } from './application/chat/resume-turn.usecase';
+import { RunTurn } from './application/chat/run-turn.usecase';
+import { TurnGate } from './application/chat/turn-gate';
 import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
 import { AgentExposureService } from './application/installation/exposure';
 import { AgentMembershipService } from './application/installation/membership';
 import { AgentStatusQuery } from './application/status/agent-status.query';
-import { AGENT_LAYOUT_PORT, AGENT_STORE_PORT, AUDIT_PORT, MODEL_PORT } from './domain/ports';
+import { ManageThreads } from './application/threads/manage-threads.usecase';
+import {
+  AGENT_LAYOUT_PORT,
+  AGENT_STORE_PORT,
+  AUDIT_PORT,
+  MODEL_PORT,
+  RUN_STORE_PORT,
+} from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
 import { AgentExecutionContext } from './infrastructure/execution-context';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
+import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
+import { RunRegistry } from './infrastructure/runs/run-registry';
 import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
+import { AgentChatController } from './interface/agent-chat.controller';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
+import { AgentRuntime } from './runtime/agent-runtime';
 import { ContextBuilder } from './runtime/context-builder';
 import { ToolAssembler } from './runtime/tool-assembler';
 import { ToolkitRegistry } from './toolkits/toolkit.registry';
@@ -29,7 +44,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
  * Layers: interface → application → domain ← infrastructure.
  */
 @Module({
-  controllers: [AgentLifecycleController],
+  controllers: [AgentLifecycleController, AgentChatController],
   imports: [
     AiModule,
     SettingModule,
@@ -51,11 +66,19 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     ToolkitRegistry,
     ToolAssembler,
     ContextBuilder,
+    AgentRuntime,
+    RunRegistry,
+    TurnGate,
+    RunTurn,
+    ResumeTurn,
+    CancelRun,
+    ManageThreads,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },
     { provide: AGENT_LAYOUT_PORT, useExisting: EnsureInstallation },
     { provide: AGENT_STORE_PORT, useClass: AgentTableStore },
+    { provide: RUN_STORE_PORT, useClass: PrismaRunStore },
   ],
   exports: [
     AgentExecutionContext,
