@@ -204,7 +204,13 @@ Scripted model, in-process jobs, local disposable Postgres.
 4. **Keyword search needed every word of the question** (§4).
 5. **A record's title was embedded twice**, and a document's title once more in front of its own
    top heading. Fixed in `embeddingText`.
-6. **A type error introduced in step 36** (`knowledge-search.ts`) was fixed in step 37. Commit
+6. **Records that existed before the agent was enabled were never indexed** (found on the K3s
+   data copy: the 151-record knowledge table was invisible to search). Derived sync only followed
+   record events. A full sync now runs on the first knowledge search in each server process
+   (`POST /api/agent/admin/knowledge/sync` reruns it); it skips unchanged records and removes
+   documents of vanished ones. An embedding slot holding a chat model no longer fails indexing:
+   records are indexed for keyword search and the search says why vectors are missing.
+7. **A type error introduced in step 36** (`knowledge-search.ts`) was fixed in step 37. Commit
    hooks lint but don't typecheck, so it slipped through one commit.
 
 ## 8. Operating notes

@@ -18,6 +18,8 @@ export const EMBED_BATCH = 100;
 /** A retired space's table is dropped this long after it was retired (design §11.5). */
 export const RETIRED_SPACE_DAYS = 7;
 const dayMs = 86_400_000;
+/** After a model fails its probe (not an embedding model, no key…), wait before trying it again. */
+const probeRetryMs = 5 * 60_000;
 const backfillOptions = { attempts: 5, backoff: { type: 'exponential' as const, delay: 5000 } };
 
 /**
@@ -28,6 +30,8 @@ const backfillOptions = { attempts: 5, backoff: { type: 'exponential' as const, 
 @Injectable()
 export class EmbeddingSpaces {
   private readonly logger = new Logger(EmbeddingSpaces.name);
+  /** Model ref -> when its last probe failed, and why. */
+  private readonly unusable = new Map<string, { at: number; error: string }>();
 
   constructor(
     @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort,
@@ -60,7 +64,26 @@ export class EmbeddingSpaces {
       (s) => s.status === 'active' || (s.status === 'building' && s.model === ref)
     );
     if (!ref || live.some((s) => s.model === ref)) return live;
-    return [...live, await this.build(ref, actorUserId)];
+    // an unusable embedding model must not stop indexing: chunks stay searchable by keyword
+    const failed = this.unusable.get(ref);
+    if (failed && Date.now() - failed.at < probeRetryMs) return live;
+    try {
+      return [...live, await this.build(ref, actorUserId)];
+    } catch (error) {
+      const message = (error as Error).message.split('\n')[0].slice(0, 300);
+      this.unusable.set(ref, { at: Date.now(), error: message });
+      this.logger.warn(`embedding model ${ref} is unusable, indexing by keyword only: ${message}`);
+      return live;
+    }
+  }
+
+  /** Why the configured embedding model could not be used, if it recently failed. */
+  async problem(): Promise<string | undefined> {
+    const ref = await this.configuredModel();
+    const failed = ref ? this.unusable.get(ref) : undefined;
+    return failed && Date.now() - failed.at < probeRetryMs
+      ? `The embedding model ${ref} cannot embed text (${failed.error}). Set an embedding model in Admin ▸ Agent; until then search uses keywords only.`
+      : undefined;
   }
 
   /** Create the space of a model (probing its dimension) and queue its backfill. */
@@ -114,6 +137,7 @@ export class EmbeddingSpaces {
   async status() {
     return {
       configuredModel: await this.configuredModel(),
+      problem: (await this.problem()) ?? null,
       spaces: (await this.rag.listSpaces()).map(
         ({ slug, model, dimension, status, retiredAt }) => ({
           slug,

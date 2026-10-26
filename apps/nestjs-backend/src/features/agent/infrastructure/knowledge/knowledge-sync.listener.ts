@@ -1,7 +1,6 @@
 import { AGENT_ROBOT_ID } from '@cybernetics/core';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { PrismaService } from '@teable/db-main-prisma';
 import { AgentConfig, type IAgentConfig } from '../../../../configs/agent.config';
 import {
   Events,
@@ -9,31 +8,8 @@ import {
   RecordDeleteEvent,
   RecordUpdateEvent,
 } from '../../../../event-emitter/events';
-import { detectTableProfile } from '../../../ai-data/ai-data.schema';
 import { KnowledgeIngest } from '../../application/knowledge/knowledge-ingest';
-import { AGENT_STORE_PORT, type IAgentStorePort } from '../../domain/ports';
-import { AGENT_TABLES } from '../../pack/agent-pack';
-import { AGENT_INSTALLATION_ID } from '../agent-home';
-import { AgentExecutionContext } from '../execution-context';
-
-const cacheMs = 30_000;
-
-interface ISyncSettings {
-  agentBaseId: string | null;
-  memoryTableId: string | null;
-  memoryWatch: Set<string>;
-  setupTableId: string | null;
-  embeddingFieldId: string | null;
-  /** Configured knowledge tables; empty means detect them. */
-  knowledgeTables: Set<string>;
-}
-
-interface ISyncTarget {
-  collectionId: 'kb_records' | 'agent_memory';
-  baseId: string;
-  /** Fields whose change matters; null means any field. */
-  watch: Set<string> | null;
-}
+import { KnowledgeTables } from './knowledge-tables';
 
 const asArray = <T>(v: T | T[]) => (Array.isArray(v) ? v : [v]);
 
@@ -45,15 +21,11 @@ const asArray = <T>(v: T | T[]) => (Array.isArray(v) ? v : [v]);
 @Injectable()
 export class KnowledgeSyncListener {
   private readonly logger = new Logger(KnowledgeSyncListener.name);
-  private settings?: { at: number; value: ISyncSettings | null };
-  private readonly targets = new Map<string, { at: number; value: ISyncTarget | null }>();
 
   constructor(
-    private readonly prismaService: PrismaService,
     @AgentConfig() private readonly config: IAgentConfig,
     private readonly ingest: KnowledgeIngest,
-    private readonly execution: AgentExecutionContext,
-    @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort
+    private readonly tables: KnowledgeTables
   ) {}
 
   @OnEvent(Events.TABLE_RECORD_CREATE, { async: true })
@@ -82,11 +54,16 @@ export class KnowledgeSyncListener {
     await this.sync(tableId, asArray(recordId), event.context.user?.id, true);
   }
 
+  /** Forget cached settings and table profiles (setup or schema changed). */
+  invalidate() {
+    this.tables.invalidate();
+  }
+
   /** agent_setup.embedding_model changed (design §11.5): build the new model's space now. */
   private async embeddingModelChanged(tableId: string, records: { fields: object }[]) {
     if (!this.config.ragDatabaseUrl) return false;
     try {
-      const settings = await this.currentSettings();
+      const settings = await this.tables.currentSettings();
       if (!settings?.embeddingFieldId || tableId !== settings.setupTableId) return false;
       const changed = records.some((r) => settings.embeddingFieldId! in r.fields);
       if (changed) this.invalidate();
@@ -94,12 +71,6 @@ export class KnowledgeSyncListener {
     } catch {
       return false;
     }
-  }
-
-  /** Forget cached settings and table profiles (setup or schema changed). */
-  invalidate() {
-    this.settings = undefined;
-    this.targets.clear();
   }
 
   private async sync(
@@ -110,7 +81,7 @@ export class KnowledgeSyncListener {
   ) {
     if (!this.config.ragDatabaseUrl || !records.length) return;
     try {
-      const target = await this.targetFor(tableId);
+      const target = await this.tables.targetFor(tableId);
       if (!target) return;
       const ids = records
         .filter(
@@ -129,84 +100,5 @@ export class KnowledgeSyncListener {
     } catch (error) {
       this.logger.warn(`knowledge sync for ${tableId} skipped: ${(error as Error).message}`);
     }
-  }
-
-  private async loadSettings(): Promise<ISyncSettings | null> {
-    const row = await this.prismaService.agentInstallation.findUnique({
-      where: { id: AGENT_INSTALLATION_ID },
-    });
-    if (!row?.enabled) return null;
-    const tableMap = JSON.parse(row.tableMap || '{}') as Record<string, string>;
-    const fieldMap = JSON.parse(row.fieldMap || '{}') as Record<string, Record<string, string>>;
-    const memoryFields = fieldMap[AGENT_TABLES.memory] ?? {};
-    const setupFields = fieldMap[AGENT_TABLES.setup] ?? {};
-    const profile = await this.execution
-      .run({ runId: 'knowledge-sync', actorUserId: AGENT_ROBOT_ID }, () =>
-        this.store.getDefaultProfile()
-      )
-      .catch(() => undefined);
-    return {
-      agentBaseId: row.baseId,
-      memoryTableId: tableMap[AGENT_TABLES.memory] ?? null,
-      memoryWatch: new Set(
-        ['title', 'content', 'is_active'].map((k) => memoryFields[k]).filter(Boolean)
-      ),
-      knowledgeTables: new Set(profile?.knowledgeTables ?? []),
-      setupTableId: tableMap[AGENT_TABLES.setup] ?? null,
-      embeddingFieldId: setupFields.embedding_model ?? null,
-    };
-  }
-
-  private async currentSettings() {
-    if (!this.settings || Date.now() - this.settings.at > cacheMs) {
-      this.settings = { at: Date.now(), value: await this.loadSettings() };
-    }
-    return this.settings.value;
-  }
-
-  private async targetFor(tableId: string): Promise<ISyncTarget | null> {
-    const settings = await this.currentSettings();
-    if (!settings) return null;
-    const hit = this.targets.get(tableId);
-    if (hit && Date.now() - hit.at < cacheMs) return hit.value;
-    const value = await this.resolve(tableId, settings);
-    this.targets.set(tableId, { at: Date.now(), value });
-    return value;
-  }
-
-  private async resolve(tableId: string, settings: ISyncSettings): Promise<ISyncTarget | null> {
-    const table = await this.prismaService.tableMeta.findFirst({
-      where: { id: tableId, deletedTime: null },
-      select: { baseId: true },
-    });
-    if (!table) return null;
-    if (tableId === settings.memoryTableId) {
-      return { collectionId: 'agent_memory', baseId: table.baseId, watch: settings.memoryWatch };
-    }
-    // the agent's own tables are never knowledge tables
-    if (table.baseId === settings.agentBaseId) return null;
-    const configured = settings.knowledgeTables.size > 0;
-    if (configured && !settings.knowledgeTables.has(tableId)) return null;
-
-    const fields = await this.prismaService.field.findMany({
-      where: { tableId, deletedTime: null },
-      select: { id: true, name: true, type: true, isPrimary: true, isComputed: true },
-    });
-    const profile = detectTableProfile(
-      fields.map((f) => ({
-        ...f,
-        isPrimary: Boolean(f.isPrimary),
-        isComputed: Boolean(f.isComputed),
-      }))
-    );
-    if (!configured && !(profile.titleFieldId && profile.contextFieldId)) return null;
-    const watch = profile.contextFieldId
-      ? new Set(
-          [profile.titleFieldId, profile.contextFieldId, profile.softDeleteFieldId].filter(
-            (id): id is string => Boolean(id)
-          )
-        )
-      : null;
-    return { collectionId: 'kb_records', baseId: table.baseId, watch };
   }
 }

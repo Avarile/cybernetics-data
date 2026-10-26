@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import type {
   IImportLegacyKnowledgeVo,
+  ISyncKnowledgeVo,
   IAgentAuditListVo,
   IAgentCredentialListVo,
   IAgentCredentialVo,
@@ -34,7 +35,9 @@ import type { IClsStore } from '../../../types/cls';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';
 import { ConfigureAgent } from '../application/admin/configure-agent.usecase';
 import { ManageCredentials } from '../application/admin/manage-credentials.usecase';
+import { KnowledgeIngest } from '../application/knowledge/knowledge-ingest';
 import { LegacyKnowledgeImport } from '../application/knowledge/legacy-import';
+import { AgentExecutionContext } from '../infrastructure/execution-context';
 import { AgentAdminGuard } from './agent-admin.guard';
 
 /** Admin ▸ Agent: the default setup, credentials metadata, the audit log (design §12, §13). */
@@ -45,8 +48,20 @@ export class AgentSettingsController {
     private readonly configure: ConfigureAgent,
     private readonly credentialsAdmin: ManageCredentials,
     private readonly legacyImport: LegacyKnowledgeImport,
+    private readonly ingest: KnowledgeIngest,
+    private readonly execution: AgentExecutionContext,
     private readonly cls: ClsService<IClsStore>
   ) {}
+
+  /** Index every record of the knowledge tables and agent memory now (as the agent). */
+  @Post('admin/knowledge/sync')
+  @HttpCode(200)
+  async syncKnowledge(): Promise<ISyncKnowledgeVo> {
+    const actorUserId = this.cls.get('user.id');
+    return this.execution.run({ runId: 'admin:knowledge-sync', actorUserId }, () =>
+      this.ingest.syncAll(actorUserId)
+    );
+  }
 
   /** One-off import of the old Mastra vectors (design §14.3). */
   @Post('admin/knowledge/import-legacy')

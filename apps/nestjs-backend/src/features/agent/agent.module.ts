@@ -55,6 +55,7 @@ import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { RagJobsProcessor } from './infrastructure/jobs/rag-jobs.processor';
 import { KnowledgeSyncListener } from './infrastructure/knowledge/knowledge-sync.listener';
+import { KnowledgeTables } from './infrastructure/knowledge/knowledge-tables';
 import { MastraLegacyReader } from './infrastructure/knowledge/mastra-legacy-reader';
 import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
 import { RagSourceReader } from './infrastructure/knowledge/source-reader';
@@ -143,6 +144,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     MastraLegacyReader,
     RagJobsProcessor,
     KnowledgeSyncListener,
+    KnowledgeTables,
     RunTurn,
     ResumeTurn,
     CancelRun,

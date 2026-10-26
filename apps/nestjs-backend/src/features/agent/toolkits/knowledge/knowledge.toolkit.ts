@@ -108,6 +108,21 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
       : 'No knowledge database is configured (AGENT_RAG_DATABASE_URL or VECTOR_DATABASE_URL)';
   }
 
+  /** Searches wait (briefly) for the first full sync of the knowledge tables in this process. */
+  private async afterSync<T extends { warnings: string[] }>(
+    actorUserId: string,
+    search: () => Promise<T>
+  ): Promise<T> {
+    const { pending } = await this.ingest.ensureSynced(actorUserId);
+    const result = await search();
+    if (pending) {
+      result.warnings.push(
+        'Knowledge tables are still being indexed; results may be incomplete. Search again in a minute.'
+      );
+    }
+    return result;
+  }
+
   private knowledgeSearch() {
     return defineTool({
       name: 'knowledge_search',
@@ -121,16 +136,18 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
         topK,
       }),
       untrusted: true,
-      execute: (input, ctx) =>
-        this.searcher.search({
-          query: input.query,
-          collections: ['kb_records'],
-          baseIds: input.baseIds,
-          tableIds: input.tables,
-          topK: input.topK,
-          rerankModel: ctx.profile.rerankModel,
-          abortSignal: ctx.abortSignal,
-        }),
+      execute: async (input, ctx) =>
+        this.afterSync(ctx.actorUserId, () =>
+          this.searcher.search({
+            query: input.query,
+            collections: ['kb_records'],
+            baseIds: input.baseIds,
+            tableIds: input.tables,
+            topK: input.topK,
+            rerankModel: ctx.profile.rerankModel,
+            abortSignal: ctx.abortSignal,
+          })
+        ),
     });
   }
 
@@ -150,13 +167,15 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
         const collections =
           input.collections ??
           (await this.rag.listCollections()).filter((c) => c.isActive).map((c) => c.id);
-        return this.searcher.search({
-          query: input.query,
-          collections,
-          topK: input.topK,
-          rerankModel: ctx.profile.rerankModel,
-          abortSignal: ctx.abortSignal,
-        });
+        return this.afterSync(ctx.actorUserId, () =>
+          this.searcher.search({
+            query: input.query,
+            collections,
+            topK: input.topK,
+            rerankModel: ctx.profile.rerankModel,
+            abortSignal: ctx.abortSignal,
+          })
+        );
       },
     });
   }

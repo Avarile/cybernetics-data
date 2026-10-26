@@ -54,6 +54,7 @@ describe('knowledge search', () => {
       query: vi.fn(async () => hits),
     } as unknown as IRagStorePort;
     const spaces = {
+      problem: vi.fn(async () => undefined),
       embed: vi.fn(async () => {
         if (options.embedFails) throw new Error('provider down');
         return [[1, 0, 0]];

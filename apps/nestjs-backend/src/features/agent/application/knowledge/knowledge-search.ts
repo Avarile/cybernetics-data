@@ -139,7 +139,9 @@ export class KnowledgeSearch {
   ): Promise<{ vector?: number[]; space?: string }> {
     const active = await this.rag.activeSpace();
     if (!active) {
-      warnings.push('No embedding model is active yet: keyword matches only.');
+      warnings.push(
+        (await this.spaces.problem()) ?? 'No embedding model is active yet: keyword matches only.'
+      );
       return {};
     }
     try {
