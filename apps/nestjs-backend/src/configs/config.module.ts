@@ -15,6 +15,7 @@ import { loggerConfig } from './logger.config';
 import { mailConfig } from './mail.config';
 import { mcpConfig } from './mcp.config';
 import { oauthConfig } from './oauth.config';
+import { secretsConfig } from './secrets.config';
 import { storageConfig } from './storage';
 import { thresholdConfig } from './threshold.config';
 import { trashConfig } from './trash.config';
@@ -34,6 +35,7 @@ const configurations = [
   mcpConfig,
   aiDataConfig,
   integrationConfig,
+  secretsConfig,
 ];
 
 @Module({})
