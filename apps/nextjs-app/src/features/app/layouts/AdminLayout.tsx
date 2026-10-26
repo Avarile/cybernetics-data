@@ -3,6 +3,7 @@ import { SessionProvider } from '@cybernetics/sdk';
 import { AppProvider } from '@cybernetics/sdk/context';
 import type { DehydratedState } from '@tanstack/react-query';
 import { Settings, LayoutTemplate as TemplateIcon, ShieldUser, Zap } from '@teable/icons';
+import { Bot } from 'lucide-react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
@@ -39,6 +40,12 @@ export const AdminLayout: React.FC<{
       label: t('admin.setting.aiSettings'),
       route: '/admin/ai-setting',
       pathTo: '/admin/ai-setting',
+    },
+    {
+      Icon: Bot,
+      label: t('agent.admin.title', 'Agent'),
+      route: '/admin/agent',
+      pathTo: '/admin/agent',
     },
     {
       Icon: TemplateIcon,

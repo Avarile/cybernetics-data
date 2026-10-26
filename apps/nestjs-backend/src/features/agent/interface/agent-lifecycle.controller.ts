@@ -48,6 +48,13 @@ export class AgentLifecycleController {
     return this.statusQuery.get(this.actor);
   }
 
+  @Post('admin/restore')
+  @HttpCode(200)
+  async restore(): Promise<IAgentStatusVo> {
+    await this.installation.restore(this.actor);
+    return this.statusQuery.get(this.actor);
+  }
+
   @Post('admin/reset')
   @HttpCode(200)
   async reset(

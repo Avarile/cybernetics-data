@@ -8,7 +8,9 @@ import { RecordModule } from '../record/record.module';
 import { SchemaPackModule } from '../schema-pack/schema-pack.module';
 import { SettingModule } from '../setting/setting.module';
 import { SpaceModule } from '../space/space.module';
+import { TrashModule } from '../trash/trash.module';
 import { ViewOpenApiModule } from '../view/open-api/view-open-api.module';
+import { ConfigureAgent } from './application/admin/configure-agent.usecase';
 import { CancelRun } from './application/chat/cancel-run.usecase';
 import { ResumeTurn } from './application/chat/resume-turn.usecase';
 import { RunTurn } from './application/chat/run-turn.usecase';
@@ -38,6 +40,7 @@ import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentChatController } from './interface/agent-chat.controller';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
+import { AgentSettingsController } from './interface/agent-settings.controller';
 import { AgentRuntime } from './runtime/agent-runtime';
 import { ContextBuilder } from './runtime/context-builder';
 import { ToolAssembler } from './runtime/tool-assembler';
@@ -53,7 +56,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
  * Layers: interface → application → domain ← infrastructure.
  */
 @Module({
-  controllers: [AgentLifecycleController, AgentChatController],
+  controllers: [AgentLifecycleController, AgentChatController, AgentSettingsController],
   imports: [
     EventJobModule.registerQueue(AGENT_JOBS_QUEUE),
     AiModule,
@@ -65,6 +68,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     RecordModule,
     RecordOpenApiModule,
     ViewOpenApiModule,
+    TrashModule,
   ],
   providers: [
     AgentExecutionContext,
@@ -91,6 +95,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     ResumeTurn,
     CancelRun,
     ManageThreads,
+    ConfigureAgent,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },

@@ -3,6 +3,7 @@ import type { OnApplicationBootstrap } from '@nestjs/common';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { AgentInstallation } from '@teable/db-main-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
+import { TrashType } from '@teable/openapi';
 import { CacheService } from '../../../../cache/cache.service';
 import { SecretsConfig, type ISecretsConfig } from '../../../../configs/secrets.config';
 import { CustomHttpException } from '../../../../custom.exception';
@@ -10,6 +11,7 @@ import { BaseService } from '../../../base/base.service';
 import { FieldOpenApiService } from '../../../field/open-api/field-open-api.service';
 import { SchemaPackInstallerService } from '../../../schema-pack/schema-pack.installer';
 import { SpaceService } from '../../../space/space.service';
+import { TrashService } from '../../../trash/trash.service';
 import {
   AUDIT_PORT,
   type IAgentLayout,
@@ -91,6 +93,7 @@ export class EnsureInstallation implements OnApplicationBootstrap, IAgentLayoutP
     private readonly spaceService: SpaceService,
     private readonly baseService: BaseService,
     private readonly fieldOpenApiService: FieldOpenApiService,
+    private readonly trashService: TrashService,
     private readonly execution: AgentExecutionContext,
     @Inject(AUDIT_PORT) private readonly audit: IAuditPort,
     @SecretsConfig() private readonly secretsConfig: ISecretsConfig
@@ -148,6 +151,35 @@ export class EnsureInstallation implements OnApplicationBootstrap, IAgentLayoutP
     });
     await this.auditEvent(actorUserId, 'installation.disable', {}, 'disabled');
     return this.status();
+  }
+
+  /**
+   * Bring the Agent space and base back from the trash (design §7.1 "Deletion"), then check.
+   * Runs in the admin's request context: the trash checks the caller's permissions.
+   */
+  async restore(actorUserId: string): Promise<IAgentInstallationView> {
+    const row = await this.load();
+    if (!row?.spaceId || !row.baseId) {
+      throw new CustomHttpException('The agent has no home to restore', HttpErrorCode.NOT_FOUND);
+    }
+    for (const [type, id] of [
+      [TrashType.Space, row.spaceId],
+      [TrashType.Base, row.baseId],
+    ] as const) {
+      const trash = await this.prismaService.trash.findFirst({
+        where: { resourceType: type, resourceId: id },
+        select: { id: true },
+      });
+      if (trash) {
+        await this.trashService.restoreTrash(trash.id);
+      } else if (type === TrashType.Space) {
+        await this.prismaService.space.updateMany({ where: { id }, data: { deletedTime: null } });
+      } else {
+        await this.prismaService.base.updateMany({ where: { id }, data: { deletedTime: null } });
+      }
+    }
+    await this.auditEvent(actorUserId, 'installation.restore', {}, `space ${row.spaceId}`);
+    return this.ensure('restore', actorUserId);
   }
 
   /** Start over with a new, empty Agent base (the old one stays in the space or the trash). */
