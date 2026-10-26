@@ -12,6 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type {
+  IImportLegacyKnowledgeVo,
   IAgentAuditListVo,
   IAgentCredentialListVo,
   IAgentCredentialVo,
@@ -19,6 +20,8 @@ import type {
   ITestAgentCredentialVo,
 } from '@teable/openapi';
 import {
+  importLegacyKnowledgeRoSchema,
+  IImportLegacyKnowledgeRo,
   agentAuditQuerySchema,
   IAgentAuditQuery,
   ISetAgentSecretRo,
@@ -31,6 +34,7 @@ import type { IClsStore } from '../../../types/cls';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';
 import { ConfigureAgent } from '../application/admin/configure-agent.usecase';
 import { ManageCredentials } from '../application/admin/manage-credentials.usecase';
+import { LegacyKnowledgeImport } from '../application/knowledge/legacy-import';
 import { AgentAdminGuard } from './agent-admin.guard';
 
 /** Admin ▸ Agent: the default setup, credentials metadata, the audit log (design §12, §13). */
@@ -40,8 +44,21 @@ export class AgentSettingsController {
   constructor(
     private readonly configure: ConfigureAgent,
     private readonly credentialsAdmin: ManageCredentials,
+    private readonly legacyImport: LegacyKnowledgeImport,
     private readonly cls: ClsService<IClsStore>
   ) {}
+
+  /** One-off import of the old Mastra vectors (design §14.3). */
+  @Post('admin/knowledge/import-legacy')
+  @HttpCode(200)
+  async importLegacyKnowledge(
+    @Body(new ZodValidationPipe(importLegacyKnowledgeRoSchema)) ro: IImportLegacyKnowledgeRo
+  ): Promise<IImportLegacyKnowledgeVo> {
+    return this.legacyImport.run({
+      dryRun: Boolean(ro.dryRun),
+      actorUserId: this.cls.get('user.id'),
+    });
+  }
 
   @Get('setup')
   async getSetup(): Promise<IAgentSetupVo> {

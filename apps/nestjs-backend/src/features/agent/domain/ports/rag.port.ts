@@ -147,7 +147,9 @@ export type IRagSource =
   | { kind: 'text'; text: string; slug?: string }
   | { kind: 'attachment'; token: string }
   | { kind: 'url'; url: string }
-  | { kind: 'record'; baseId: string; tableId: string; recordId: string };
+  | { kind: 'record'; baseId: string; tableId: string; recordId: string }
+  /** A document rebuilt from the old Mastra vectors (design §14.3). */
+  | { kind: 'legacy'; index: string; docName: string; text: string };
 
 export interface IRagSourceText {
   title: string | null;

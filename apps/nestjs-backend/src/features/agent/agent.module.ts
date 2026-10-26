@@ -31,6 +31,7 @@ import { TurnJobs } from './application/jobs/turn-jobs';
 import { EmbeddingSpaces } from './application/knowledge/embedding-spaces';
 import { KnowledgeIngest } from './application/knowledge/knowledge-ingest';
 import { KnowledgeSearch } from './application/knowledge/knowledge-search';
+import { LegacyKnowledgeImport } from './application/knowledge/legacy-import';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
 import { AgentStatusQuery } from './application/status/agent-status.query';
 import { ManageThreads } from './application/threads/manage-threads.usecase';
@@ -54,6 +55,7 @@ import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { RagJobsProcessor } from './infrastructure/jobs/rag-jobs.processor';
 import { KnowledgeSyncListener } from './infrastructure/knowledge/knowledge-sync.listener';
+import { MastraLegacyReader } from './infrastructure/knowledge/mastra-legacy-reader';
 import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
 import { RagSourceReader } from './infrastructure/knowledge/source-reader';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
@@ -137,6 +139,8 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     EmbeddingSpaces,
     KnowledgeIngest,
     KnowledgeSearch,
+    LegacyKnowledgeImport,
+    MastraLegacyReader,
     RagJobsProcessor,
     KnowledgeSyncListener,
     RunTurn,

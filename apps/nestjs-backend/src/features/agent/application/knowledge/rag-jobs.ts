@@ -29,5 +29,7 @@ export function sourceRefOf(source: IRagSource): string {
       return `url:${new URL(source.url).href}`;
     case 'record':
       return `record:${source.baseId}/${source.tableId}/${source.recordId}`;
+    case 'legacy':
+      return `legacy:${source.index}/${source.docName}`;
   }
 }

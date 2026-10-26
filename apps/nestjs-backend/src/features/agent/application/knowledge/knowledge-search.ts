@@ -106,7 +106,9 @@ export class KnowledgeSearch {
     if (!searched.length) return { searched, failed, mode: 'none', warnings, results: [] };
 
     const { vector, space } =
-      req.mode === 'keyword' ? {} : await this.queryVector(req.query, warnings);
+      req.mode === 'keyword'
+        ? { vector: undefined, space: undefined }
+        : await this.queryVector(req.query, warnings);
     const hits = await this.rag.query({
       text: req.query,
       collections: searched,
@@ -131,7 +133,10 @@ export class KnowledgeSearch {
   }
 
   /** The query in the active space; without one (or if it fails), keyword search only. */
-  private async queryVector(query: string, warnings: string[]) {
+  private async queryVector(
+    query: string,
+    warnings: string[]
+  ): Promise<{ vector?: number[]; space?: string }> {
     const active = await this.rag.activeSpace();
     if (!active) {
       warnings.push('No embedding model is active yet: keyword matches only.');
