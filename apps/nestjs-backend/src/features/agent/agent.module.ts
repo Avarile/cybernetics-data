@@ -20,6 +20,9 @@ import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapte
 import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
+import { ContextBuilder } from './runtime/context-builder';
+import { ToolAssembler } from './runtime/tool-assembler';
+import { ToolkitRegistry } from './toolkits/toolkit.registry';
 
 /**
  * Composition root of the admin-only agent (design §5): binds the domain ports to their adapters.
@@ -45,6 +48,9 @@ import { AgentLifecycleController } from './interface/agent-lifecycle.controller
     AgentExposureService,
     EnsureInstallation,
     AgentStatusQuery,
+    ToolkitRegistry,
+    ToolAssembler,
+    ContextBuilder,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },
