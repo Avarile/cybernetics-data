@@ -10,6 +10,7 @@ export const APPROVAL_CATEGORIES = [
   'http_write',
   'setup_change',
   'skill_change',
+  'knowledge_write',
 ] as const;
 export type IApprovalCategory = (typeof APPROVAL_CATEGORIES)[number];
 

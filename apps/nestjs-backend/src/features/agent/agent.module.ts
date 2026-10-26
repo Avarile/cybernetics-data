@@ -30,6 +30,7 @@ import { AGENT_JOBS_QUEUE, AgentJobs } from './application/jobs/agent-jobs';
 import { TurnJobs } from './application/jobs/turn-jobs';
 import { EmbeddingSpaces } from './application/knowledge/embedding-spaces';
 import { KnowledgeIngest } from './application/knowledge/knowledge-ingest';
+import { KnowledgeSearch } from './application/knowledge/knowledge-search';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
 import { AgentStatusQuery } from './application/status/agent-status.query';
 import { ManageThreads } from './application/threads/manage-threads.usecase';
@@ -71,6 +72,7 @@ import { CredentialsToolkit } from './toolkits/credentials/credentials.toolkit';
 import { DataReadToolkit } from './toolkits/data-read/data-read.toolkit';
 import { DataWriteToolkit, SchemaToolkit } from './toolkits/data-write/data-write.toolkits';
 import { HttpToolkit } from './toolkits/http/http.toolkit';
+import { KnowledgeToolkit } from './toolkits/knowledge/knowledge.toolkit';
 import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
 import { SetupToolkit } from './toolkits/setup/setup.toolkit';
 import { SkillsToolkit } from './toolkits/skills/skills.toolkit';
@@ -122,6 +124,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     SchemaToolkit,
     SqlReadToolkit,
     HttpToolkit,
+    KnowledgeToolkit,
     UnrestrictedDataWriter,
     ToolAssembler,
     ContextBuilder,
@@ -133,6 +136,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     AgentJobsProcessor,
     EmbeddingSpaces,
     KnowledgeIngest,
+    KnowledgeSearch,
     RagJobsProcessor,
     KnowledgeSyncListener,
     RunTurn,

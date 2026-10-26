@@ -27,6 +27,7 @@ export const AGENT_APPROVAL_CATEGORIES = [
   'http_write',
   'setup_change',
   'skill_change',
+  'knowledge_write',
 ] as const;
 
 /** `providerId/model`, as the model slots store them. */

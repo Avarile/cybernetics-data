@@ -5,15 +5,11 @@
  * ingest through the outbound guard, and knowledge-table and agent_memory records kept in sync.
  * Uses the disposable agent_rag_test database.
  */
-import { readFileSync } from 'fs';
 import { createServer, type Server } from 'http';
 import type { AddressInfo } from 'net';
-import path from 'path';
 import { FieldKeyType, FieldType } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
-import { MockEmbeddingModelV3 } from 'ai/test';
-import knex from 'knex';
 import { ClsService } from 'nestjs-cls';
 import type { IAgentInstallationView } from '../src/features/agent/application/installation/ensure-installation.usecase';
 import { EnsureInstallation } from '../src/features/agent/application/installation/ensure-installation.usecase';
@@ -29,6 +25,7 @@ import {
 import { KnowledgeSyncListener } from '../src/features/agent/infrastructure/knowledge/knowledge-sync.listener';
 import { documentIdFor } from '../src/features/agent/infrastructure/knowledge/pg-rag-store';
 import type { IClsStore } from '../src/types/cls';
+import { fakeEmbeddingModel, fakeVector, freshRagTestDb, until } from './utils/agent-rag';
 import {
   createRecords,
   createTable,
@@ -38,37 +35,6 @@ import {
   runWithTestUser,
   updateRecord,
 } from './utils/init-app';
-
-const ragTestUrl = () => {
-  const env = readFileSync(path.join(__dirname, '../../nextjs-app/.env.test'), 'utf8');
-  const prisma = /^PRISMA_DATABASE_URL=(.*)$/m.exec(env)![1];
-  const url = prisma.replace(/\/[^/?]+(?:\?.*)?$/, '/agent_rag_test');
-  if (!url.includes('@127.0.0.1:5432/'))
-    throw new Error('agent_rag_test must be the local disposable DB');
-  return url;
-};
-
-/** Bag of words hashed into 16 dimensions: texts sharing words point the same way. */
-const fakeVector = (text: string) => {
-  const v = new Array(16).fill(0);
-  for (const w of text.toLowerCase().match(/[a-z0-9]+/g) ?? []) {
-    let h = 0;
-    for (const c of w) h = (h * 31 + c.charCodeAt(0)) % 16;
-    v[h] += 1;
-  }
-  const n = Math.hypot(...v) || 1;
-  return v.map((x) => x / n);
-};
-
-const until = async <T>(fn: () => Promise<T>, ok: (v: T) => boolean, ms = 8_000) => {
-  const end = Date.now() + ms;
-  let value = await fn();
-  while (!ok(value) && Date.now() < end) {
-    await new Promise((r) => setTimeout(r, 200));
-    value = await fn();
-  }
-  return value;
-};
 
 describe('Agent knowledge ingest and sync (e2e)', () => {
   let app: INestApplication;
@@ -85,11 +51,7 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
   const doc = (collection: string, ref: string) => rag.getDocument(documentIdFor(collection, ref));
 
   beforeAll(async () => {
-    const url = ragTestUrl();
-    const admin = knex({ client: 'pg', connection: url });
-    await admin.raw('DROP SCHEMA IF EXISTS agent_rag CASCADE');
-    await admin.destroy();
-    process.env.AGENT_RAG_DATABASE_URL = url;
+    process.env.AGENT_RAG_DATABASE_URL = await freshRagTestDb();
     process.env.AGENT_HTTP_ALLOWED_HOSTS = '127.0.0.1';
     process.env.AGENT_HTTP_ALLOW_PRIVATE_NETWORKS = 'true';
 
@@ -116,13 +78,7 @@ describe('Agent knowledge ingest and sync (e2e)', () => {
     const profile = await store.getDefaultProfile();
     await store.updateProfile(profile!.id, { embeddingModel: 'mock/emb' });
 
-    const model = new MockEmbeddingModelV3({
-      maxEmbeddingsPerCall: 100,
-      doEmbed: async ({ values }) => {
-        embedded.push(...values);
-        return { embeddings: values.map(fakeVector), warnings: [] };
-      },
-    });
+    const model = fakeEmbeddingModel(embedded);
     vi.spyOn(app.get<IModelPort>(MODEL_PORT), 'embedder').mockImplementation(async (ref) => ({
       ref,
       modelKey: `openai@${ref}@mock`,

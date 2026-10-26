@@ -38,13 +38,16 @@ export function buildHybridQuery(q: IRagQuery): { sql: string; bindings: unknown
     const table = spaceTable(q.space!);
     bindings.push(toVectorLiteral(q.vector!), q.collections);
     const filter = docFilter('vd');
-    bindings.push(toVectorLiteral(q.vector!), pool);
+    bindings.push(toVectorLiteral(q.vector!), toVectorLiteral(q.vector!), pool);
+    // a collection's min_score (cosine similarity) cuts weak vector matches (design §11.1)
     vecCte = `vec AS (
       SELECT e.chunk_id, row_number() OVER (ORDER BY e.embedding <=> ?::vector) AS r
       FROM ${table} e
       JOIN ${RAG_SCHEMA}.chunk vc ON vc.id = e.chunk_id
       JOIN ${RAG_SCHEMA}.document vd ON vd.id = vc.document_id
+      JOIN ${RAG_SCHEMA}.collection vcol ON vcol.id = e.collection_id
       WHERE e.collection_id = ANY(?)${filter}
+        AND (vcol.min_score IS NULL OR 1 - (e.embedding <=> ?::vector) >= vcol.min_score)
       ORDER BY e.embedding <=> ?::vector LIMIT ?)`;
     passes.push(`SELECT chunk_id, r, 'v' AS pass FROM vec`);
   }

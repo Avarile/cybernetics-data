@@ -198,6 +198,10 @@
               {
                 "name": "skill_change",
                 "color": "cyanLight2"
+              },
+              {
+                "name": "knowledge_write",
+                "color": "tealLight2"
               }
             ]
           }

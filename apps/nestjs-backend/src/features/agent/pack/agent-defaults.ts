@@ -34,6 +34,7 @@ export const DEFAULT_AGENT_SETUP = {
     'http_write',
     'setup_change',
     'skill_change',
+    'knowledge_write',
   ],
   memory_mode: 'explicit',
 } as const;

@@ -9,7 +9,7 @@ import {
   SettingKey,
 } from '@teable/openapi';
 import type { LLMProvider } from '@teable/openapi';
-import type { EmbeddingModel, ImageModel, LanguageModel } from 'ai';
+import type { EmbeddingModel, ImageModel, LanguageModel, RerankingModel } from 'ai';
 import { createGateway } from 'ai';
 import { CustomHttpException } from '../../../custom.exception';
 import { ProviderSecretService } from '../../setting/provider-secret.service';
@@ -218,18 +218,15 @@ export class ModelResolverService {
    * An embedding model for a model key (the agent's knowledge search). Uses the same provider
    * settings as chat models; providers without an embedding API are refused.
    */
-  async getEmbeddingModelInstance(
+  /** The provider SDK instance of a model key (for embedding and reranking models). */
+  private async providerInstance<T>(
     modelKey: string,
-    llmProviders: LLMProvider[] = []
-  ): Promise<EmbeddingModel> {
+    llmProviders: LLMProvider[]
+  ): Promise<{ instance: T; model: string; type: string }> {
     const config = await this.getModelConfig(modelKey, llmProviders);
     const { type, model, baseUrl, apiKey } = config;
     const headers = 'headers' in config ? config.headers : undefined;
-    type IEmbeddingCapable = {
-      embeddingModel?: (id: string) => EmbeddingModel;
-      textEmbeddingModel?: (id: string) => EmbeddingModel;
-    };
-    let instance: IEmbeddingCapable;
+    let instance: T;
     if (type === LLMProviderType.AI_GATEWAY) {
       if (!apiKey) {
         throw new CustomHttpException(aiNotSetMessage, HttpErrorCode.VALIDATION_ERROR);
@@ -255,12 +252,42 @@ export class ModelResolverService {
         apiKey: apiKey ?? '',
         headers,
       });
-      instance = provider(options as never) as unknown as IEmbeddingCapable;
+      instance = provider(options as never) as unknown as T;
     }
+    return { instance, model, type };
+  }
+
+  async getEmbeddingModelInstance(
+    modelKey: string,
+    llmProviders: LLMProvider[] = []
+  ): Promise<EmbeddingModel> {
+    const { instance, model, type } = await this.providerInstance<{
+      embeddingModel?: (id: string) => EmbeddingModel;
+      textEmbeddingModel?: (id: string) => EmbeddingModel;
+    }>(modelKey, llmProviders);
     const make = instance.embeddingModel ?? instance.textEmbeddingModel;
     if (!make) {
       throw new CustomHttpException(
         `Provider type ${type} has no embedding models`,
+        HttpErrorCode.VALIDATION_ERROR
+      );
+    }
+    return make.call(instance, model);
+  }
+
+  /** A reranking model (AI SDK `rerank`); Cohere, Bedrock and Together AI provide them. */
+  async getRerankingModelInstance(
+    modelKey: string,
+    llmProviders: LLMProvider[] = []
+  ): Promise<RerankingModel> {
+    const { instance, model, type } = await this.providerInstance<{
+      rerankingModel?: (id: string) => RerankingModel;
+      reranking?: (id: string) => RerankingModel;
+    }>(modelKey, llmProviders);
+    const make = instance.rerankingModel ?? instance.reranking;
+    if (!make) {
+      throw new CustomHttpException(
+        `Provider type ${type} has no reranking models`,
         HttpErrorCode.VALIDATION_ERROR
       );
     }
