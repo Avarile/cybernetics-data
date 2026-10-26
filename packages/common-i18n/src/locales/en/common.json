@@ -1757,5 +1757,46 @@
       "save": "Save",
       "saved": "Settings saved"
     }
+  },
+  "agent": {
+    "approval": {
+      "label": "Approval needed",
+      "title": "The agent wants to run",
+      "approve": "Approve",
+      "deny": "Deny"
+    },
+    "composer": {
+      "skills": "Skills",
+      "placeholder": "Ask the agent… type / for skills",
+      "stop": "Stop",
+      "send": "Send"
+    },
+    "context": {
+      "selected": "{{count}} selected",
+      "remove": "Remove context"
+    },
+    "empty": {
+      "title": "Ask the agent",
+      "description": "It can read and change data in every space, remember things and use skills. Changes that matter wait for your approval."
+    },
+    "panel": {
+      "title": "Agent",
+      "new": "New chat",
+      "openPage": "Open the Agent page",
+      "openSettings": "Open Admin ▸ Agent",
+      "notEnabled": "The agent is not enabled yet.",
+      "notReady": "The agent needs setup."
+    },
+    "page": {
+      "title": "Agent",
+      "search": "Search threads",
+      "showActive": "Show active threads",
+      "showArchived": "Show archived threads",
+      "noThreads": "No threads yet",
+      "archive": "Archive",
+      "unarchive": "Restore",
+      "waiting": "waiting for you",
+      "back": "Back"
+    }
   }
 }

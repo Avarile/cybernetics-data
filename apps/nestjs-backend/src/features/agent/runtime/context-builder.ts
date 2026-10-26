@@ -53,7 +53,7 @@ const skillsSection = (catalog: ISkill[]) =>
   catalog.length
     ? [
         '## Skills',
-        'Load a skill with skill_load before you follow it.',
+        'Load a skill with skill_load before you follow it. A message that starts with /name asks for that skill.',
         ...catalog.map((s) => `- ${s.name}: ${s.description ?? ''}`.trim()),
       ].join('\n')
     : undefined;

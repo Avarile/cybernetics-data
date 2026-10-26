@@ -2065,6 +2065,47 @@ export type I18nTranslations = {
                 "saved": string;
             };
         };
+        "agent": {
+            "approval": {
+                "label": string;
+                "title": string;
+                "approve": string;
+                "deny": string;
+            };
+            "composer": {
+                "skills": string;
+                "placeholder": string;
+                "stop": string;
+                "send": string;
+            };
+            "context": {
+                "selected": string;
+                "remove": string;
+            };
+            "empty": {
+                "title": string;
+                "description": string;
+            };
+            "panel": {
+                "title": string;
+                "new": string;
+                "openPage": string;
+                "openSettings": string;
+                "notEnabled": string;
+                "notReady": string;
+            };
+            "page": {
+                "title": string;
+                "search": string;
+                "showActive": string;
+                "showArchived": string;
+                "noThreads": string;
+                "archive": string;
+                "unarchive": string;
+                "waiting": string;
+                "back": string;
+            };
+        };
         "clickToCopyTooltip": string;
         "copiedTooltip": string;
         "hiddenFieldCount_one": string;

@@ -1754,5 +1754,46 @@
       "save": "保存",
       "saved": "设置已保存"
     }
+  },
+  "agent": {
+    "approval": {
+      "label": "需要审批",
+      "title": "智能体想要运行",
+      "approve": "批准",
+      "deny": "拒绝"
+    },
+    "composer": {
+      "skills": "技能",
+      "placeholder": "向智能体提问… 输入 / 选择技能",
+      "stop": "停止",
+      "send": "发送"
+    },
+    "context": {
+      "selected": "已选 {{count}} 条",
+      "remove": "移除上下文"
+    },
+    "empty": {
+      "title": "向智能体提问",
+      "description": "它可以读写所有空间的数据、记住信息并使用技能。重要的更改会等待你的批准。"
+    },
+    "panel": {
+      "title": "智能体",
+      "new": "新对话",
+      "openPage": "打开智能体页面",
+      "openSettings": "打开 管理 ▸ 智能体",
+      "notEnabled": "智能体尚未启用。",
+      "notReady": "智能体需要设置。"
+    },
+    "page": {
+      "title": "智能体",
+      "search": "搜索对话",
+      "showActive": "显示进行中的对话",
+      "showArchived": "显示已归档的对话",
+      "noThreads": "还没有对话",
+      "archive": "归档",
+      "unarchive": "恢复",
+      "waiting": "等待你处理",
+      "back": "返回"
+    }
   }
 }

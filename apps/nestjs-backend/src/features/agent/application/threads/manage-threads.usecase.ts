@@ -27,6 +27,9 @@ const toVo = (t: IThread, run?: IAgentRun): IAgentThreadVo => ({
   messageCount: t.messageCount,
   lastMessageAt: t.lastMessageAt,
   createdAt: t.createdAt,
+  tokensIn: t.tokensIn,
+  tokensOut: t.tokensOut,
+  costUsd: t.costUsd,
   activeRun:
     run && (run.status === 'running' || run.status === 'awaiting_approval')
       ? { id: run.id, status: run.status }

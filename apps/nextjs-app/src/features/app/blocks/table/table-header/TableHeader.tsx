@@ -3,6 +3,7 @@ import {
   useIsHydrated,
   useIsReadOnlyPreview,
   useIsTouchDevice,
+  useSession,
   useTemplate,
   useView,
 } from '@cybernetics/sdk/hooks';
@@ -50,6 +51,7 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
   const { t } = useTranslation(tableConfig.i18nNamespaces);
   const [open, setOpen] = useState(false);
   const { status: chatStatus, toggleVisible: toggleChat } = useChatPanelStore();
+  const isAdmin = Boolean(useSession().user?.isAdmin);
   const { setOpen: openHelp } = useHelpStore();
   const { baseId, tableId, viewId } = useBaseResource() as IBaseResourceTable;
   const isTouchDevice = useIsTouchDevice();
@@ -182,15 +184,17 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
               <span className="hidden @md/view-header:inline">{t('space:action.invite')}</span>
             </Button>
           </ShareBasePopover>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            title={t('common:ai.chat.title', 'AI Chat')}
-            className={cn(chatStatus !== 'close' && 'bg-accent text-accent-foreground')}
-            onClick={toggleChat}
-          >
-            <MessageSquare className="size-4" />
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title={t('common:agent.panel.title', 'Agent')}
+              className={cn(chatStatus !== 'close' && 'bg-accent text-accent-foreground')}
+              onClick={toggleChat}
+            >
+              <MessageSquare className="size-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon-xs"
@@ -215,15 +219,17 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
       {/* Collapsed menu for small screens (only on touch devices) */}
       {isTouchDevice && (
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            title={t('common:ai.chat.title', 'AI Chat')}
-            className={cn(chatStatus !== 'close' && 'bg-accent text-accent-foreground')}
-            onClick={toggleChat}
-          >
-            <MessageSquare className="size-4" />
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              title={t('common:agent.panel.title', 'Agent')}
+              className={cn(chatStatus !== 'close' && 'bg-accent text-accent-foreground')}
+              onClick={toggleChat}
+            >
+              <MessageSquare className="size-4" />
+            </Button>
+          )}
           {collapsedContent}
         </div>
       )}

@@ -11,6 +11,7 @@ import {
   useIsReadOnlyPreview,
 } from '@cybernetics/sdk';
 import { TablePermissionProvider } from '@cybernetics/sdk/context/table-permission';
+import { useSession } from '@cybernetics/sdk/hooks';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getBaseById,
@@ -31,8 +32,8 @@ import { PluginPanel } from '../../components/plugin-panel/PluginPanel';
 import type { IBaseResourceTable } from '../../hooks/useBaseResource';
 import { useBaseResource } from '../../hooks/useBaseResource';
 import { useBrand } from '../../hooks/useBrand';
+import { AgentPanel } from '../agent/AgentPanel';
 import { View } from '../view/View';
-import { ChatPanel } from './chat-panel/ChatPanel';
 import { FailAlert } from './FailAlert';
 import { useViewErrorHandler } from './hooks/use-view-error-handler';
 import { TableHeader } from './table-header/TableHeader';
@@ -56,6 +57,7 @@ export const Table: React.FC<ITableProps> = ({
   const { undo, redo } = useUndoRedo();
   const queryClient = useQueryClient();
   const isReadOnlyPreview = useIsReadOnlyPreview();
+  const isAdmin = Boolean(useSession().user?.isAdmin);
   const { baseId, tableId, viewId } = useBaseResource() as IBaseResourceTable;
 
   const table = tables.find((t) => t.id === tableId);
@@ -128,8 +130,8 @@ export const Table: React.FC<ITableProps> = ({
                   <PluginContextMenu tableId={tableId} baseId={baseId} />
                   <DownloadAllAttachmentsDialog />
                   <CellDownloadHandler />
-                  {/* Chat state is per base and read once on mount, so remount on base change */}
-                  <ChatPanel key={baseId} baseId={baseId} />
+                  {/* Admins only (design §9.1); remount on base change for its per-base thread */}
+                  {isAdmin && <AgentPanel key={baseId} baseId={baseId} />}
                 </div>
               </PersonalViewProvider>
             </FieldProvider>

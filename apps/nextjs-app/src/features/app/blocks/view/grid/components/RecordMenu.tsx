@@ -1,5 +1,11 @@
 import { useGridViewStore } from '@cybernetics/sdk/components';
-import { useBaseId, useTableId, useTablePermission, useView } from '@cybernetics/sdk/hooks';
+import {
+  useBaseId,
+  useSession,
+  useTableId,
+  useTablePermission,
+  useView,
+} from '@cybernetics/sdk/hooks';
 import { History, ArrowUp, ArrowDown, Link, MessageSquare, MessageSquareDot } from '@teable/icons';
 import {
   cn,
@@ -299,7 +305,9 @@ export const RecordMenu = () => {
   const recordMenuRef = useRef<HTMLDivElement>(null);
   const { enable: aiEnable } = useAI();
   const usage = useBaseUsage({ disabled: !baseId });
-  const chatEnabled = Boolean(aiEnable && usage?.limit?.chatAIEnable);
+  const isAdmin = Boolean(useSession().user?.isAdmin);
+  // the agent panel is for instance admins only (design §9.1)
+  const chatEnabled = Boolean(aiEnable && usage?.limit?.chatAIEnable && isAdmin);
 
   useClickAway(recordMenuRef, () => {
     closeRecordMenu();

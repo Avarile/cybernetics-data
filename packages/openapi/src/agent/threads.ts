@@ -11,6 +11,10 @@ export const agentThreadVoSchema = z.object({
   messageCount: z.number().nullable(),
   lastMessageAt: z.string().nullable(),
   createdAt: z.string().nullable(),
+  tokensIn: z.number().nullable(),
+  tokensOut: z.number().nullable(),
+  /** From the admin's model prices; null when the model is not priced. */
+  costUsd: z.number().nullable(),
   /** A run that is still going or waiting for approval. */
   activeRun: z
     .object({ id: z.string(), status: z.enum(['running', 'awaiting_approval']) })

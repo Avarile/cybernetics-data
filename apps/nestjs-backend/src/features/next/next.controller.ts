@@ -68,6 +68,7 @@ export class NextController {
     'share/?*',
     'setting/?*',
     'admin/?*',
+    'agent',
     'oauth/?*',
     'developer/?*',
     'public/?*',
