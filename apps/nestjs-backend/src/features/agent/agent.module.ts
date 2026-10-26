@@ -4,6 +4,7 @@ import { AggregationOpenApiModule } from '../aggregation/open-api/aggregation-op
 import { AiModule } from '../ai/ai.module';
 import { AiDataModule } from '../ai-data/ai-data.module';
 import { BaseModule } from '../base/base.module';
+import { BaseSqlExecutorModule } from '../base-sql-executor/base-sql-executor.module';
 import { FieldOpenApiModule } from '../field/open-api/field-open-api.module';
 import { RecordOpenApiModule } from '../record/open-api/record-open-api.module';
 import { RecordModule } from '../record/record.module';
@@ -56,6 +57,7 @@ import { DataWriteToolkit, SchemaToolkit } from './toolkits/data-write/data-writ
 import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
 import { SetupToolkit } from './toolkits/setup/setup.toolkit';
 import { SkillsToolkit } from './toolkits/skills/skills.toolkit';
+import { SqlReadToolkit } from './toolkits/sql-read/sql-read.toolkit';
 import { ThreadsToolkit } from './toolkits/threads/threads.toolkit';
 import { ToolkitRegistry } from './toolkits/toolkit.registry';
 
@@ -80,6 +82,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     TableOpenApiModule,
     AiDataModule,
     AggregationOpenApiModule,
+    BaseSqlExecutorModule,
   ],
   providers: [
     AgentExecutionContext,
@@ -97,6 +100,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     DataReadToolkit,
     DataWriteToolkit,
     SchemaToolkit,
+    SqlReadToolkit,
     UnrestrictedDataWriter,
     ToolAssembler,
     ContextBuilder,
