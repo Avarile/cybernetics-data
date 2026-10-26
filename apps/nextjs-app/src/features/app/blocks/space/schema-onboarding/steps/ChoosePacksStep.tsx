@@ -6,17 +6,16 @@ import { PackCard } from '../components/PackCard';
 export interface IChoosePacksStepProps {
   catalog: ISchemaPackCatalogVo;
   packs: SchemaPackId[];
-  /** The pack whose details are open in the rail. */
-  peek?: SchemaPackId | null;
+  /** The pack whose contents are shown in the rail. */
+  active?: SchemaPackId;
   onToggle: (pack: SchemaPackId) => void;
-  onPeek?: (pack: SchemaPackId) => void;
-  onHover?: (pack: SchemaPackId | null) => void;
+  onActivate?: (pack: SchemaPackId) => void;
   /** Enter, once a pack is picked; the footer holds the button itself. */
   onContinue: () => void;
 }
 
 export const ChoosePacksStep = (props: IChoosePacksStepProps) => {
-  const { catalog, packs, peek, onToggle, onPeek, onHover, onContinue } = props;
+  const { catalog, packs, active, onToggle, onActivate, onContinue } = props;
   const { t } = useTranslation('onboarding');
 
   useEffect(() => {
@@ -44,10 +43,9 @@ export const ChoosePacksStep = (props: IChoosePacksStepProps) => {
             tables={pack.tables}
             index={index}
             selected={packs.includes(pack.id)}
-            peeking={peek === pack.id}
+            active={active === pack.id}
             onToggle={() => onToggle(pack.id)}
-            onPeek={() => onPeek?.(pack.id)}
-            onHover={(hovering) => onHover?.(hovering ? pack.id : null)}
+            onActivate={() => onActivate?.(pack.id)}
           />
         ))}
       </div>

@@ -20,6 +20,7 @@ import type { IBaseNodePageProps } from '@/features/app/base-node/types';
 import { parseBaseSlug, useBaseResource } from '@/features/app/hooks/useBaseResource';
 import { BaseLayout } from '@/features/app/layouts/BaseLayout';
 import { baseAllConfig } from '@/features/i18n/base-all.config';
+import { allowAnyFrameAncestor } from '@/lib/allow-any-frame-ancestor';
 import ensureLogin from '@/lib/ensureLogin';
 import handleBase from '@/lib/handleBase';
 import { getTranslationsProps } from '@/lib/i18n';
@@ -48,7 +49,7 @@ export const getServerSideProps: GetServerSideProps<IBaseNodePageProps> = withEn
   ensureLogin(
     withAuthSSR(async (context, ssrApi) => {
       const { baseId, slug, ...queryParams } = context.query;
-      context.res.setHeader('Content-Security-Policy', 'frame-ancestors *;');
+      allowAnyFrameAncestor(context.res);
       const queryClient = new QueryClient();
       const base = await handleBase(baseId as string, ssrApi, queryClient);
       // Redirect legacy table URLs: /base/xxx/tbl1/viw1 → /base/xxx/table/tbl1/viw1

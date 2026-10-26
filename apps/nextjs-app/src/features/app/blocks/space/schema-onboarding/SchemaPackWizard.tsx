@@ -71,9 +71,8 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
     })
   );
   const [result, setResult] = useState<ISchemaPackInstallVo>();
-  const [mapOpen, setMapOpen] = useState(false);
-  const [peek, setPeek] = useState<SchemaPackId | null>(null);
-  const [hovered, setHovered] = useState<SchemaPackId | null>(null);
+  const [railOpen, setRailOpen] = useState(false);
+  const [activePack, setActivePack] = useState<SchemaPackId | null>(null);
   const install = useInstallSchemaPacks();
 
   useEffect(() => {
@@ -104,17 +103,14 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
     const back = ORDER.indexOf(state.step) < ORDER.indexOf(transition.current.step);
     transition.current = { step: state.step, back };
   }
+  // Toggling a pack, from anywhere, also shows its contents in the rail.
   const togglePack = useCallback(
-    (pack: Parameters<typeof optionalOf>[0]) => dispatch({ type: 'togglePack', pack, optionalOf }),
+    (pack: SchemaPackId) => {
+      dispatch({ type: 'togglePack', pack, optionalOf });
+      setActivePack(pack);
+    },
     [optionalOf]
   );
-
-  // The rail holds the details; where it is hidden (below lg), they open in the map sheet.
-  const openPeek = useCallback((pack: SchemaPackId) => {
-    const railShown = window.matchMedia('(min-width: 1024px)').matches;
-    setPeek((current) => (railShown && current === pack ? null : pack));
-    if (!railShown) setMapOpen(true);
-  }, []);
 
   const build = () => {
     goto('building');
@@ -196,6 +192,9 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
     );
   }
 
+  // Before any hover, toggle or switch: the first picked pack, else the first in the catalog.
+  const active = activePack ?? state.packs[0] ?? catalog.packs[0]?.id;
+
   const content = (
     <div
       key={state.step}
@@ -211,10 +210,9 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
         <ChoosePacksStep
           catalog={catalog}
           packs={state.packs}
-          peek={peek}
+          active={active}
           onToggle={togglePack}
-          onPeek={openPeek}
-          onHover={setHovered}
+          onActivate={setActivePack}
           onContinue={() => goto('review')}
         />
       )}
@@ -265,11 +263,9 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
     <BaseRail
       catalog={catalog}
       packs={state.packs}
-      optionalTables={optionalTables}
+      active={active}
+      onSelect={setActivePack}
       onToggle={togglePack}
-      peek={state.step === 'choose' ? peek : null}
-      onClosePeek={() => setPeek(null)}
-      highlight={state.step === 'choose' ? hovered : null}
     />
   );
 
@@ -277,7 +273,7 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
     <div className="flex min-h-0 flex-1 flex-col">
       {header}
       {framed ? (
-        // Content and rail scroll on their own, so a long peek never pushes the cards away.
+        // Content and rail scroll on their own, so a long pack never pushes the cards away.
         <div className="flex min-h-0 flex-1">
           <div className="min-w-0 flex-1 overflow-y-auto">
             <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">{content}</div>
@@ -297,7 +293,7 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
               catalog={catalog}
               packs={state.packs}
               optionalTables={optionalTables}
-              onOpenMap={() => setMapOpen(true)}
+              onOpenRail={() => setRailOpen(true)}
             />
           }
           canAdvance={canAdvance(state, {
@@ -309,17 +305,11 @@ export const SchemaPackWizard = (props: ISchemaPackWizardProps) => {
           onNext={() => (state.step === 'review' ? build() : goto('review'))}
         />
       )}
-      <Sheet
-        open={framed && mapOpen}
-        onOpenChange={(open) => {
-          setMapOpen(open);
-          if (!open) setPeek(null);
-        }}
-      >
+      <Sheet open={framed && railOpen} onOpenChange={setRailOpen}>
         <SheetContent side="bottom" className="max-h-[80vh] overflow-y-auto">
           {/* The rail brings its own visible heading. */}
           <SheetHeader className="sr-only">
-            <SheetTitle>{t('choose.preview')}</SheetTitle>
+            <SheetTitle>{t('choose.peek')}</SheetTitle>
           </SheetHeader>
           {rail}
         </SheetContent>

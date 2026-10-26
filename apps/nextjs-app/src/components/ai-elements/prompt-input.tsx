@@ -923,12 +923,13 @@ export const PromptInputTextarea = ({
         }
         e.preventDefault();
 
-        // Check if the submit button is disabled before submitting
+        // Check if the submit button is disabled before submitting. While a reply streams it
+        // becomes a type="button" Stop control; submitting then would clear the draft unsent.
         const { form } = e.currentTarget;
         const submitButton = form?.querySelector(
           'button[type="submit"]'
         ) as HTMLButtonElement | null;
-        if (submitButton?.disabled) {
+        if (!submitButton || submitButton.disabled) {
           return;
         }
 

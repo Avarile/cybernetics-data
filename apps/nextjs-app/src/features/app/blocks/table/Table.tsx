@@ -128,7 +128,8 @@ export const Table: React.FC<ITableProps> = ({
                   <PluginContextMenu tableId={tableId} baseId={baseId} />
                   <DownloadAllAttachmentsDialog />
                   <CellDownloadHandler />
-                  <ChatPanel baseId={baseId} />
+                  {/* Chat state is per base and read once on mount, so remount on base change */}
+                  <ChatPanel key={baseId} baseId={baseId} />
                 </div>
               </PersonalViewProvider>
             </FieldProvider>

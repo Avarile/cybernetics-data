@@ -1,13 +1,14 @@
 import type { IHttpError } from '@cybernetics/core';
 import type { GetServerSideProps } from 'next';
 import { SsrApi } from '@/backend/api/rest/ssr-api';
+import { allowAnyFrameAncestor } from '@/lib/allow-any-frame-ancestor';
 import withEnv from '@/lib/withEnv';
 
 // This page redirects to the proper share base URL with baseId
 export const getServerSideProps: GetServerSideProps = withEnv(async (context) => {
   const { res, req, query } = context;
   const { shareId } = query;
-  res.setHeader('Content-Security-Policy', 'frame-ancestors *;');
+  allowAnyFrameAncestor(res);
 
   try {
     const ssrApi = new SsrApi();

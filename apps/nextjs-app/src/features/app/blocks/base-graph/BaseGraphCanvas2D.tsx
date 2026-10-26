@@ -1,3 +1,4 @@
+import { escape } from 'lodash';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import type { ForceGraphMethods, NodeObject } from 'react-force-graph-2d';
 import ForceGraph2D from 'react-force-graph-2d';
@@ -89,7 +90,8 @@ export const BaseGraphCanvas2D = forwardRef<IBaseGraphCanvasHandle, IBaseGraphCa
       [focusedNodeId]
     );
 
-    const nodeLabel = useMemo(() => (node: INode) => node.label, []);
+    // The hover tooltip renders strings as HTML, and labels are record values.
+    const nodeLabel = useMemo(() => (node: INode) => escape(node.label), []);
 
     return (
       <ForceGraph2D<INode, ISimulationLink>

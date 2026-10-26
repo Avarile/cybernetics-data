@@ -24,11 +24,8 @@
     "removePack": "Remove {{pack}}",
     "optional": "optional",
     "keyboardHint": "Tip: press 1–4 to toggle a pack",
-    "preview": "Your base",
     "previewEmpty": "Pick a pack to see your base take shape",
-    "previewCount": "{{tables}} tables from {{packs}}",
-    "nudge": "Add {{pack}} to {{benefit}}",
-    "viewMap": "View map"
+    "previewCount": "{{tables}} tables from {{packs}}"
   },
   "packs": {
     "progress": {
@@ -63,10 +60,6 @@
       "bullet2": "Budgets with variance and % used",
       "bullet3": "Categories, payees and receipts"
     }
-  },
-  "bridges": {
-    "progress+people": "assign tasks and projects to people",
-    "progress+knowledge": "link notes to goals, projects and tasks"
   },
   "personalise": {
     "baseName": "Base name",

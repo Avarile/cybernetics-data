@@ -6,7 +6,15 @@ import type {
   ILinkFieldOptions,
   StatisticsFunc,
 } from '@cybernetics/core';
-import { CellFormat, FieldKeyType, FieldType, HttpErrorCode, ViewType } from '@cybernetics/core';
+import {
+  CellFormat,
+  extractFieldIdsFromFilter,
+  FieldKeyType,
+  FieldType,
+  HttpErrorCode,
+  mergeFilter,
+  ViewType,
+} from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import { DataPrismaService } from '@teable/db-data-prisma';
 import { PrismaService } from '@teable/db-main-prisma';
@@ -242,20 +250,44 @@ export class ShareService {
       ? fields.filter((f) => visibleFieldIds?.includes(f.id) || f.isPrimary)
       : fields;
 
+    // The query comes from an anonymous visitor: it may narrow the shared fields, never widen
+    // them, and may not filter or sort on a field the share leaves out (that would leak values).
+    const sharedFieldIds = new Set(filteredFields.map((f) => f.id));
+    this.assertSharedFields(sharedFieldIds, [
+      ...extractFieldIdsFromFilter(query?.filter, true),
+      ...(query?.orderBy ?? []).map(({ fieldId }) => fieldId),
+      ...(query?.groupBy ?? []).map(({ fieldId }) => fieldId),
+    ]);
+    const projection = query?.projection?.filter((fieldId) => sharedFieldIds.has(fieldId));
+
     return await this.recordService.getRecords(
       tableId,
       {
         viewId,
         skip: query?.skip ?? 0,
         take: query?.take ?? 100,
-        filter: query?.filter ?? linkFilter,
+        filter: mergeFilter(linkFilter, query?.filter),
         orderBy: query?.orderBy,
         groupBy: query?.groupBy ?? group,
         fieldKeyType: FieldKeyType.Id,
-        projection: query?.projection ?? filteredFields.map((f) => f.id),
+        projection: projection?.length ? projection : [...sharedFieldIds],
       },
       true
     );
+  }
+
+  private assertSharedFields(sharedFieldIds: Set<string>, fieldIds: string[]) {
+    if (fieldIds.some((fieldId) => !sharedFieldIds.has(fieldId))) {
+      throw new CustomHttpException(
+        'field is hidden, not allowed',
+        HttpErrorCode.RESTRICTED_RESOURCE,
+        {
+          localization: {
+            i18nKey: 'httpErrors.share.fieldHiddenNotAllowed',
+          },
+        }
+      );
+    }
   }
 
   async formSubmit(shareInfo: IShareViewInfo, shareViewFormSubmitRo: ShareViewFormSubmitRo) {

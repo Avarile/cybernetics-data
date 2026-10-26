@@ -29,6 +29,10 @@ export const useIframeUrl = (params: IPluginParams) => {
     }
 
     const urlObj = new URL(pluginUrl, publicOrigin);
+    // A javascript: URL in the iframe would run in this page's origin.
+    if (urlObj.protocol !== 'http:' && urlObj.protocol !== 'https:') {
+      return;
+    }
     defaultTheme.current && urlObj.searchParams.set('theme', defaultTheme.current);
     resolvedLanguage && urlObj.searchParams.set('lang', resolvedLanguage);
     const urlStr = urlObj.toString();

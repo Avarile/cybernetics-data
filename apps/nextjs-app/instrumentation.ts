@@ -31,8 +31,19 @@ export const onRequestError = async (
   const Sentry = await import('@sentry/nextjs');
   Sentry.captureException(err, {
     extra: {
-      request,
+      request: { ...request, headers: redactHeaders(request.headers) },
       context,
     },
   });
 };
+
+// Session cookies and tokens would let anyone who can read the Sentry event act as the user.
+const SENSITIVE_HEADERS = new Set(['cookie', 'authorization', 'proxy-authorization', 'x-api-key']);
+
+const redactHeaders = (headers: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(headers ?? {}).map(([key, value]) => [
+      key,
+      SENSITIVE_HEADERS.has(key.toLowerCase()) ? '[redacted]' : value,
+    ])
+  );

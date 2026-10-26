@@ -2,7 +2,7 @@ import { FieldType } from '@cybernetics/core';
 import type { ISchemaPackCatalogVo, SchemaPackId } from '@teable/openapi';
 import { vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@/test-utils';
-import { BaseRail, pendingBridges } from './components/BaseRail';
+import { BaseRail } from './components/BaseRail';
 import { SchemaPreview } from './components/SchemaPreview';
 import type { IWizardState } from './state';
 import { canAdvance, createInitialState, guessCurrency, wizardReducer } from './state';
@@ -117,14 +117,6 @@ describe('wizard state', () => {
 });
 
 describe('bridges', () => {
-  it('nudges only when exactly one side is picked', () => {
-    expect(pendingBridges(catalog, [])).toEqual([]);
-    expect(pendingBridges(catalog, ['progress'])).toEqual([
-      { key: 'progress+people', missing: 'people' },
-    ]);
-    expect(pendingBridges(catalog, ['progress', 'people'])).toEqual([]);
-  });
-
   it('draws a bridge dashed until both packs are picked', () => {
     const { rerender } = render(<SchemaPreview catalog={catalog} packs={[]} optionalTables={[]} />);
     const bridge = () => screen.getByTestId('bridge-tasks-contacts');
@@ -145,29 +137,44 @@ describe('bridges', () => {
 });
 
 describe('the base rail', () => {
-  it('labels an unpicked pack’s tables only while its card is hovered', () => {
-    const { rerender } = render(<SchemaPreview catalog={catalog} packs={[]} optionalTables={[]} />);
+  const setup = (packs: SchemaPackId[], active?: SchemaPackId) => {
+    const onToggle = vi.fn();
+    const onSelect = vi.fn();
+    const props = { catalog, active, onToggle, onSelect };
+    const view = render(<BaseRail {...props} packs={packs} />);
+    return { ...view, props, onToggle, onSelect };
+  };
+
+  it('shows the active pack’s contents without a click, and no map', () => {
+    const { container } = setup([], 'people');
+    expect(screen.getByText('packs.people.bullet1')).toBeTruthy();
+    expect(screen.getByText('contacts')).toBeTruthy();
     expect(screen.queryByText('goals')).toBeNull();
-    rerender(
-      <SchemaPreview catalog={catalog} packs={[]} optionalTables={[]} highlight="progress" />
-    );
-    expect(screen.getByText('goals')).toBeTruthy();
-    expect(screen.getByText('frameworks')).toBeTruthy();
-    expect(screen.queryByText('contacts')).toBeNull();
+    expect(container.querySelector('svg [data-testid^="node-"]')).toBeNull();
+    expect(screen.queryByLabelText('back')).toBeNull();
   });
 
-  it('shows a peeked pack with a way to add it and a way back to the map', () => {
-    const onToggle = vi.fn();
-    const onClosePeek = vi.fn();
-    const props = { catalog, optionalTables: [], onToggle, onClosePeek, peek: 'people' as const };
-    const { rerender } = render(<BaseRail {...props} packs={[]} />);
-    expect(screen.getByText('packs.people.bullet1')).toBeTruthy();
+  it('falls back to the first pack when none is active', () => {
+    setup([]);
+    expect(screen.getByText('packs.progress.bullet1')).toBeTruthy();
+  });
+
+  it('adds or removes the shown pack', () => {
+    const { rerender, props, onToggle } = setup([], 'people');
     fireEvent.click(screen.getByText('choose.addPack'));
     expect(onToggle).toHaveBeenLastCalledWith('people');
     rerender(<BaseRail {...props} packs={['people']} />);
     expect(screen.getByText('choose.removePack')).toBeTruthy();
-    fireEvent.click(screen.getByLabelText('back'));
-    expect(onClosePeek).toHaveBeenCalled();
+  });
+
+  it('switches packs from the strip', () => {
+    const { onSelect, onToggle } = setup([], 'people');
+    const tab = screen.getByLabelText('packs.knowledge.name');
+    expect(tab.getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByLabelText('packs.people.name').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(tab);
+    expect(onSelect).toHaveBeenLastCalledWith('knowledge');
+    expect(onToggle).not.toHaveBeenCalled();
   });
 });
 
@@ -175,24 +182,28 @@ describe('ChoosePacksStep', () => {
   const setup = (packs: SchemaPackId[]) => {
     const onToggle = vi.fn();
     const onContinue = vi.fn();
-    const onPeek = vi.fn();
+    const onActivate = vi.fn();
     render(
       <ChoosePacksStep
         catalog={catalog}
         packs={packs}
         onToggle={onToggle}
-        onPeek={onPeek}
+        onActivate={onActivate}
         onContinue={onContinue}
       />
     );
-    return { onToggle, onContinue, onPeek };
+    return { onToggle, onContinue, onActivate };
   };
 
-  it('badges the recommended packs and peeks without toggling', () => {
-    const { onToggle, onPeek } = setup([]);
+  it('badges the recommended packs and activates on hover or focus without toggling', () => {
+    const { onToggle, onActivate } = setup([]);
     expect(screen.getAllByText('choose.recommended')).toHaveLength(2);
-    fireEvent.click(screen.getAllByText('choose.peek')[2]);
-    expect(onPeek).toHaveBeenLastCalledWith('knowledge');
+    expect(screen.queryByText('choose.peek')).toBeNull();
+    const cards = screen.getAllByRole('checkbox');
+    fireEvent.mouseEnter(cards[2].parentElement!);
+    expect(onActivate).toHaveBeenLastCalledWith('knowledge');
+    fireEvent.focus(cards[3]);
+    expect(onActivate).toHaveBeenLastCalledWith('finance');
     expect(onToggle).not.toHaveBeenCalled();
   });
 

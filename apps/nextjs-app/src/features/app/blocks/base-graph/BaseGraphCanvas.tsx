@@ -1,4 +1,5 @@
 import { forceRadial } from 'd3-force-3d';
+import { escape } from 'lodash';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import type { ForceGraphMethods } from 'react-force-graph-3d';
 import ForceGraph3D from 'react-force-graph-3d';
@@ -392,7 +393,8 @@ export const BaseGraphCanvas = forwardRef<IBaseGraphCanvasHandle, IBaseGraphCanv
       [onNodeClick]
     );
 
-    const nodeLabel = useMemo(() => (node: ISimulationNode) => node.label, []);
+    // The hover tooltip renders strings as HTML, and labels are record values.
+    const nodeLabel = useMemo(() => (node: ISimulationNode) => escape(node.label), []);
 
     return (
       <ForceGraph3D<ISimulationNode, ISimulationLink>

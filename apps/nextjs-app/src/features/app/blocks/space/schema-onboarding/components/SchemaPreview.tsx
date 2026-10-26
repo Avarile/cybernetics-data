@@ -41,8 +41,6 @@ export interface ISchemaPreviewProps {
   optionalTables: string[];
   /** Nodes pulse while the base is being built. */
   building?: boolean;
-  /** Light up this pack's tables, picked or not, and dim the rest. */
-  highlight?: SchemaPackId | null;
   className?: string;
 }
 
@@ -78,36 +76,27 @@ const animationVars = (delay: number, length?: number) =>
 
 type NodeState = 'on' | 'ghost' | 'off';
 type LineState = 'solid' | 'pending' | 'hidden';
-/** Relative to a hovered pack: its own tables are lit, the others dimmed. */
-type Focus = 'lit' | 'dim' | undefined;
-
-const focusOf = (pack: SchemaPackId, highlight?: SchemaPackId | null): Focus =>
-  !highlight ? undefined : pack === highlight ? 'lit' : 'dim';
 
 const lineState = (a: NodeState, b: NodeState): LineState =>
   a === 'on' && b === 'on' ? 'solid' : a === 'on' || b === 'on' ? 'pending' : 'hidden';
 
-const edgeOpacity = (line: LineState, focus: Focus) => {
-  if (focus === 'dim') return 'opacity-10';
-  if (line === 'solid') return 'opacity-90';
-  return line === 'pending' || focus === 'lit' ? 'opacity-40' : 'opacity-0';
+const EDGE_OPACITY: Record<LineState, string> = {
+  solid: 'opacity-90',
+  pending: 'opacity-40',
+  hidden: 'opacity-0',
 };
 
-const nodeOpacity = (state: NodeState, focus: Focus) => {
-  if (focus === 'dim') return 'opacity-10';
-  if (state === 'on' || focus === 'lit') return 'opacity-100';
-  return state === 'ghost' ? 'opacity-50' : 'opacity-25';
+const NODE_OPACITY: Record<NodeState, string> = {
+  on: 'opacity-100',
+  ghost: 'opacity-50',
+  off: 'opacity-25',
 };
 
-const nodeFill = (state: NodeState, pack: SchemaPackId, focus: Focus) => {
-  if (state === 'on') return PACK_THEME[pack].node;
-  return focus === 'lit'
-    ? cn('fill-background', PACK_THEME[pack].edge)
-    : 'fill-background stroke-muted-foreground';
-};
+const nodeFill = (state: NodeState, pack: SchemaPackId) =>
+  state === 'on' ? PACK_THEME[pack].node : 'fill-background stroke-muted-foreground';
 
 export const SchemaPreview = (props: ISchemaPreviewProps) => {
-  const { catalog, packs, optionalTables, building, highlight, className } = props;
+  const { catalog, packs, optionalTables, building, className } = props;
 
   const { nodes, edges } = useMemo(() => {
     const nodes = catalog.packs.flatMap((pack) =>
@@ -156,7 +145,6 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
         const b = POSITIONS[edge.to];
         if (!a || !b) return null;
         const line = lineState(stateOf(edge.from), stateOf(edge.to));
-        const focus = focusOf(edge.pack, highlight);
         const draw = building && line === 'solid';
         const delay = onCount * NODE_STAGGER_MS + drawn * EDGE_STAGGER_MS;
         if (draw) drawn += 1;
@@ -176,8 +164,7 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
               'transition-opacity duration-300 motion-reduce:transition-none',
               draw && 'sp-draw',
               edge.bridge ? 'stroke-foreground/50' : PACK_THEME[edge.pack].edge,
-              // Bridges join two packs, so they never dim with one of them.
-              edgeOpacity(line, edge.bridge && focus === 'dim' ? undefined : focus)
+              EDGE_OPACITY[line]
             )}
           />
         );
@@ -185,7 +172,6 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
       {nodes.map((node) => {
         const pos = POSITIONS[node.key];
         if (!pos) return null;
-        const focus = focusOf(node.pack, highlight);
         const order = building ? onKeys.indexOf(node.key) : -1;
         return (
           <g
@@ -195,7 +181,7 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
             style={order >= 0 ? animationVars(order * NODE_STAGGER_MS) : undefined}
             className={cn(
               'transition-opacity duration-300 motion-reduce:transition-none',
-              nodeOpacity(node.state, focus),
+              NODE_OPACITY[node.state],
               order >= 0 && 'sp-pop'
             )}
           >
@@ -205,10 +191,10 @@ export const SchemaPreview = (props: ISchemaPreviewProps) => {
               r={node.optional ? 5.5 : 7.5}
               strokeWidth={1.5}
               strokeDasharray={node.state === 'on' ? undefined : '2 2'}
-              className={nodeFill(node.state, node.pack, focus)}
+              className={nodeFill(node.state, node.pack)}
             />
-            {/* Unpicked tables stay unlabelled until their card is hovered: dots, not a word cloud. */}
-            {(node.state !== 'off' || focus === 'lit') && (
+            {/* Unpicked tables stay unlabelled: dots, not a word cloud. */}
+            {node.state !== 'off' && (
               <text
                 x={pos[0]}
                 y={pos[1] + 19}

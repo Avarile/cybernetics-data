@@ -38,6 +38,14 @@ export enum PluginStatus {
   Published = 'published',
 }
 
+// Plugin URLs are loaded into iframes, so only http(s) is accepted; `.url()` alone allows javascript:.
+export const pluginHttpUrlSchema = z
+  .string()
+  .url()
+  .refine((url) => /^https?:\/\//i.test(url), {
+    message: 'URL must start with http:// or https://',
+  });
+
 export const pluginUserSchema = z
   .object({
     id: z.string(),

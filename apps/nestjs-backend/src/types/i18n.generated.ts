@@ -2171,11 +2171,8 @@ export type I18nTranslations = {
             "removePack": string;
             "optional": string;
             "keyboardHint": string;
-            "preview": string;
             "previewEmpty": string;
             "previewCount": string;
-            "nudge": string;
-            "viewMap": string;
         };
         "packs": {
             "progress": {
@@ -2210,10 +2207,6 @@ export type I18nTranslations = {
                 "bullet2": string;
                 "bullet3": string;
             };
-        };
-        "bridges": {
-            "progress+people": string;
-            "progress+knowledge": string;
         };
         "personalise": {
             "baseName": string;

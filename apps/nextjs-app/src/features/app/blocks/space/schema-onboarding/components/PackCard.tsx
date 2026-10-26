@@ -8,33 +8,30 @@ export interface IPackCardProps {
   id: SchemaPackId;
   tables: ISchemaPackCatalogTable[];
   selected: boolean;
-  /** Its details are open in the rail. */
-  peeking?: boolean;
+  /** Its contents are shown in the rail. */
+  active?: boolean;
   index: number;
   onToggle: () => void;
-  onPeek: () => void;
-  /** Pointer or focus on the card, so the map can light up its tables. */
-  onHover?: (hovering: boolean) => void;
+  /** Pointer or focus on the card: the rail shows its contents, and keeps them after it leaves. */
+  onActivate?: () => void;
 }
 
 export const PackCard = (props: IPackCardProps) => {
-  const { id, tables, selected, peeking, index, onToggle, onPeek, onHover } = props;
+  const { id, tables, selected, active, index, onToggle, onActivate } = props;
   const { t } = useTranslation('onboarding');
   const theme = PACK_THEME[id];
   const core = tables.filter((table) => !table.optional);
 
   return (
     <div
-      onMouseEnter={() => onHover?.(true)}
-      onMouseLeave={() => onHover?.(false)}
-      onFocus={() => onHover?.(true)}
-      onBlur={() => onHover?.(false)}
+      onMouseEnter={onActivate}
+      onFocus={onActivate}
       className={cn(
         'group relative flex flex-col rounded-2xl border bg-card p-5 text-left transition-colors duration-150',
         'hover:border-foreground/25 motion-reduce:transition-none',
         'animate-in fade-in slide-in-from-bottom-2 fill-mode-both motion-reduce:animate-none',
         selected && theme.selected,
-        peeking && !selected && 'border-foreground/25'
+        active && !selected && 'border-foreground/25'
       )}
       style={{ animationDelay: `${index * 40}ms` }}
     >
@@ -82,14 +79,6 @@ export const PackCard = (props: IPackCardProps) => {
           </span>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={onPeek}
-        aria-expanded={peeking}
-        className="relative mt-4 self-start text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-      >
-        {t('choose.peek')}
-      </button>
     </div>
   );
 };

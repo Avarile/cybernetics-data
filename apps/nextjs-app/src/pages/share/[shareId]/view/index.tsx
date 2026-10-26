@@ -5,6 +5,7 @@ import { SsrApi } from '@/backend/api/rest/ssr-api';
 import type { IShareViewPageProps } from '@/features/app/blocks/share/view/ShareViewPage';
 import { ShareViewPage } from '@/features/app/blocks/share/view/ShareViewPage';
 import { shareConfig } from '@/features/i18n/share.config';
+import { allowAnyFrameAncestor } from '@/lib/allow-any-frame-ancestor';
 import { getAppDatabaseUrl } from '@/lib/database-url';
 import { getTranslationsProps } from '@/lib/i18n';
 import withEnv from '@/lib/withEnv';
@@ -14,7 +15,7 @@ export const getServerSideProps: GetServerSideProps<IShareViewPageProps> =
     const { res, req, query } = context;
     const { shareId } = query;
     const { i18nNamespaces } = shareConfig;
-    res.setHeader('Content-Security-Policy', 'frame-ancestors *;');
+    allowAnyFrameAncestor(res);
 
     try {
       const ssrApi = new SsrApi();

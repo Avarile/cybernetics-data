@@ -10,6 +10,7 @@ import type { ISSRContext } from '@/features/app/base-node';
 import type { IBaseNodePageProps } from '@/features/app/base-node/types';
 import { parseBaseSlug } from '@/features/app/hooks/useBaseResource';
 import { baseAllConfig } from '@/features/i18n/base-all.config';
+import { allowAnyFrameAncestor } from '@/lib/allow-any-frame-ancestor';
 import { getTranslationsProps } from '@/lib/i18n';
 import type { I18nNamespace } from '@/lib/i18n';
 
@@ -81,7 +82,7 @@ export const createShareBaseSSR = async <T extends IShareBasePagePropsBase>(
   const { ssrApi, context, getResourcePageProps, getExtraProps, i18nNamespaces } = options;
   const { baseId, shareId, slug, ...queryParams } = context.query;
 
-  context.res.setHeader('Content-Security-Policy', 'frame-ancestors *;');
+  allowAnyFrameAncestor(context.res);
   ssrApi.axios.defaults.headers['cookie'] = context.req.headers.cookie || '';
 
   try {

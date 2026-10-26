@@ -43,21 +43,21 @@ export const Stepper = ({ step }: { step: WizardStep }) => {
   );
 };
 
-/** The live selection; on small screens, where the rail is hidden, it opens the map. */
+/** The live selection; on small screens, where the rail is hidden, it opens the rail. */
 export const FooterSummary = (props: {
   catalog: ISchemaPackCatalogVo;
   packs: SchemaPackId[];
   optionalTables: string[];
-  onOpenMap: () => void;
+  onOpenRail: () => void;
 }) => {
   const { t } = useTranslation('onboarding');
   const summary = useSelectionSummary(props.catalog, props.packs, props.optionalTables);
   return (
     <>
       <span className="hidden truncate text-xs text-muted-foreground lg:inline">{summary}</span>
-      <Button variant="outline" size="sm" className="w-full lg:hidden" onClick={props.onOpenMap}>
+      <Button variant="outline" size="sm" className="w-full lg:hidden" onClick={props.onOpenRail}>
         <span className="truncate">
-          {summary} · {t('choose.viewMap')}
+          {summary} · {t('choose.peek')}
         </span>
       </Button>
     </>

@@ -69,6 +69,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
   const [contextDismissed, setContextDismissed] = useState(false);
   const [panelWidth, setPanelWidth] = useState(PANEL_DEFAULT_WIDTH);
   const abortRef = useRef<AbortController | null>(null);
+  const streamIdRef = useRef(0);
 
   // Mastra agent + thread state
   const [selectedAgentId, setSelectedAgentId] = useState<string | undefined>(() => {
@@ -313,6 +314,13 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
     async (history: IMessage[], fileTokens: string[]) => {
       const controller = new AbortController();
       abortRef.current = controller;
+      // A newer stream or a discarded one (agent switch, cleared session) must not touch the
+      // messages: they now belong to another conversation.
+      const streamId = ++streamIdRef.current;
+      const ifCurrent = (run: () => void) => {
+        if (streamIdRef.current === streamId) run();
+      };
+      const updateMessages: typeof setMessages = (update) => ifCurrent(() => setMessages(update));
       lastFileTokensRef.current = fileTokens;
 
       // Filter out divider and error messages — they're UI-only and must not be sent to the API
@@ -343,7 +351,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
           const reasoningPart = chunk.slice(0, sepIdx);
           const answerPart = chunk.slice(sepIdx + 1);
           answerMode = true;
-          setMessages((prev) => {
+          updateMessages((prev) => {
             const updated = [...prev];
             const last = { ...updated[updated.length - 1] };
             if (reasoningPart) last.reasoning = (last.reasoning ?? '') + reasoningPart;
@@ -352,7 +360,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
             return updated;
           });
         } else if (answerMode) {
-          setMessages((prev) => {
+          updateMessages((prev) => {
             const updated = [...prev];
             updated[updated.length - 1] = {
               ...updated[updated.length - 1],
@@ -361,7 +369,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
             return updated;
           });
         } else {
-          setMessages((prev) => {
+          updateMessages((prev) => {
             const updated = [...prev];
             const last = { ...updated[updated.length - 1] };
             last.reasoning = (last.reasoning ?? '') + chunk;
@@ -396,7 +404,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
         // Capture new thread ID from header (only emitted when a new thread was created)
         const newThreadId = res.headers.get('X-Thread-Id');
         if (newThreadId) {
-          setThreadId(newThreadId);
+          ifCurrent(() => setThreadId(newThreadId));
         }
 
         reader = res.body.getReader();
@@ -405,7 +413,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
         // Responses without the separator (e.g. models without tool use) are all answer,
         // not reasoning — move the text out of the collapsed reasoning section.
         if (!answerMode) {
-          setMessages((prev) => {
+          updateMessages((prev) => {
             const last = prev[prev.length - 1];
             if (last?.role !== 'assistant' || last.content || !last.reasoning) return prev;
             return [
@@ -416,14 +424,14 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') {
-          setMessages((prev) => {
+          updateMessages((prev) => {
             const last = prev[prev.length - 1];
             if (last?.role === 'assistant' && !last.content) return prev.slice(0, -1);
             return prev;
           });
         } else {
           const { key, fallback } = getChatErrorMessage(failedStatus);
-          setMessages((prev) => {
+          updateMessages((prev) => {
             const updated = [...prev];
             updated[updated.length - 1] = {
               role: 'assistant',
@@ -435,9 +443,11 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
         }
       } finally {
         reader?.cancel();
-        setIsStreaming(false);
-        setIsThinking(false);
-        abortRef.current = null;
+        ifCurrent(() => {
+          setIsStreaming(false);
+          setIsThinking(false);
+          abortRef.current = null;
+        });
       }
     },
     [selectedRecordsContext, baseId, t, selectedAgentId, userId, threadId]
@@ -485,8 +495,17 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
     abortRef.current?.abort();
   }, []);
 
-  const handleClearSession = useCallback(async () => {
+  // Stops the reply in flight and drops whatever it still sends.
+  const discardStream = useCallback(() => {
+    streamIdRef.current++;
     abortRef.current?.abort();
+    abortRef.current = null;
+    setIsStreaming(false);
+    setIsThinking(false);
+  }, []);
+
+  const handleClearSession = useCallback(async () => {
+    discardStream();
 
     if (threadId) {
       try {
@@ -511,12 +530,11 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
     }
 
     setMessages([]);
-    setIsStreaming(false);
-    setIsThinking(false);
-  }, [baseId, threadId, userId, selectedAgentId]);
+  }, [baseId, threadId, userId, selectedAgentId, discardStream]);
 
   const handleAgentChange = useCallback(
     (agentId: string | undefined) => {
+      discardStream();
       setSelectedAgentId(agentId);
       // Switching agents starts a fresh session
       setThreadId(undefined);
@@ -533,7 +551,7 @@ export const ChatPanel = ({ baseId }: IChatPanelProps) => {
         setMessages(loadStoredMessages(baseId));
       }
     },
-    [baseId, userId]
+    [baseId, userId, discardStream]
   );
 
   // Switching agents starts a new conversation, so confirm when there is one to lose.

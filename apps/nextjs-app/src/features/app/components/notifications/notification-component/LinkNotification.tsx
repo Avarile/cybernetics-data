@@ -3,6 +3,7 @@ import type { ILocalization, NotificationStatesEnum } from '@cybernetics/core';
 import { getLocalizationMessage } from '@cybernetics/sdk/context';
 import type { ILocaleFunction } from '@cybernetics/sdk/context/app/i18n';
 import { type INotificationVo } from '@teable/openapi';
+import { escape, mapValues } from 'lodash';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 
@@ -11,20 +12,32 @@ interface LinkNotificationProps {
   notifyStatus: NotificationStatesEnum;
 }
 
+/**
+ * The result is rendered as HTML. Only the translation templates may carry markup (links in
+ * import/export notices); plain messages and interpolated values hold user, table and field
+ * names, so they are escaped. i18next does not escape them here (escapeValue is false).
+ */
 const getShowMessage = (data: INotificationVo['notifications'][number], t: ILocaleFunction) => {
   const { message, messageI18n } = data;
   try {
     if (!messageI18n) {
-      return message;
+      return escape(message);
     }
     const parsedMessage = JSON.parse(messageI18n);
     const { i18nKey = '', context = {} } = parsedMessage as ILocalization;
     if (!i18nKey) {
-      return message;
+      return escape(message);
     }
-    return getLocalizationMessage({ i18nKey, context: { spaceName: '', ...context } }, t, 'common');
+    const safeContext = mapValues(context, (value) =>
+      typeof value === 'string' ? escape(value) : value
+    );
+    return getLocalizationMessage(
+      { i18nKey, context: { spaceName: '', ...safeContext } },
+      t,
+      'common'
+    );
   } catch (error) {
-    return message;
+    return escape(message);
   }
 };
 

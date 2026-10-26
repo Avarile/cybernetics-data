@@ -24,11 +24,8 @@
     "removePack": "移除{{pack}}",
     "optional": "可选",
     "keyboardHint": "提示：按 1–4 可切换选择",
-    "preview": "你的数据库",
     "previewEmpty": "选择一个模块，看看你的数据库成形",
-    "previewCount": "来自{{packs}}的 {{tables}} 张表",
-    "nudge": "添加{{pack}}，即可{{benefit}}",
-    "viewMap": "查看结构图"
+    "previewCount": "来自{{packs}}的 {{tables}} 张表"
   },
   "packs": {
     "progress": {
@@ -63,10 +60,6 @@
       "bullet2": "预算差额与使用比例",
       "bullet3": "分类、收付款方和票据"
     }
-  },
-  "bridges": {
-    "progress+people": "把任务和项目分配给联系人",
-    "progress+knowledge": "把笔记关联到目标、项目和任务"
   },
   "personalise": {
     "baseName": "数据库名称",

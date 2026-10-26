@@ -4,6 +4,7 @@ import { registerRoute } from '../utils';
 import { z } from '../zod';
 import {
   pluginConfigSchema,
+  pluginHttpUrlSchema,
   pluginI18nSchema,
   PluginPosition,
   PluginStatus,
@@ -17,9 +18,9 @@ export const createPluginRoSchema = z.object({
   description: z.string().max(150).optional(),
   detailDesc: z.string().max(3000).optional(),
   logo: z.string(),
-  url: z.string().url().optional(),
+  url: pluginHttpUrlSchema.optional(),
   config: pluginConfigSchema.optional(),
-  helpUrl: z.string().url().optional(),
+  helpUrl: pluginHttpUrlSchema.optional(),
   positions: z.array(z.enum(PluginPosition)).min(1),
   i18n: pluginI18nSchema.optional(),
   autoCreateMember: z.boolean().optional(),
