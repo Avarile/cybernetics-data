@@ -133,6 +133,10 @@ export const llmProviderSchema = z.object({
   // Also list models from {baseUrl}/models.
   fetchModels: z.boolean().optional(),
   enabled: z.boolean().optional(),
+  // Optimistic concurrency for the provider routes; bumped on every change.
+  version: z.number().int().min(0).optional(),
+  // Last connection test, written by the backend; drives the health chip.
+  lastTest: z.object({ ok: z.boolean(), at: z.string(), error: z.string().optional() }).optional(),
   isInstance: z.boolean().optional(),
   // Model-specific configurations keyed by model name
   modelConfigs: z.record(z.string(), modelConfigSchema).optional(),
@@ -145,6 +149,8 @@ export const llmProviderRegistryFields = {
   headers: true,
   fetchModels: true,
   enabled: true,
+  version: true,
+  lastTest: true,
 } as const;
 
 export type LLMProvider = z.infer<typeof llmProviderSchema>;
@@ -239,6 +245,15 @@ export const aiConfigSchema = z.object({
   aiGatewayApiKey: z.string().nullable().optional(),
   // AI Gateway base URL (defaults to Vercel's gateway if not set)
   aiGatewayBaseUrl: z.url().nullable().optional(),
+  // Registry metadata of the Gateway entry in the provider list (version, last test)
+  aiGatewayMeta: z
+    .object({
+      version: z.number().int().min(0).optional(),
+      lastTest: z
+        .object({ ok: z.boolean(), at: z.string(), error: z.string().optional() })
+        .optional(),
+    })
+    .optional(),
   // Attachment transfer test results (from dual-mode testing)
   attachmentTest: attachmentTestSchema.nullable().optional(),
   // Attachment transfer mode: 'url' (default) or 'base64'

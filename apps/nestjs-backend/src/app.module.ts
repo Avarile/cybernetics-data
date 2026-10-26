@@ -10,6 +10,7 @@ import { ConfigModule } from './configs/config.module';
 import { AccessTokenModule } from './features/access-token/access-token.module';
 import { AggregationOpenApiModule } from './features/aggregation/open-api/aggregation-open-api.module';
 import { AiModule } from './features/ai/ai.module';
+import { AiProviderModule } from './features/ai-provider/ai-provider.module';
 import { AttachmentsModule } from './features/attachments/attachments.module';
 import { AuthModule } from './features/auth/auth.module';
 import { BaseModule } from './features/base/base.module';
@@ -106,6 +107,7 @@ export const appModules = {
     CommentOpenApiModule,
     OrganizationModule,
     AiModule,
+    AiProviderModule,
     PluginModule,
     PluginPanelModule,
     PluginContextMenuModule,
