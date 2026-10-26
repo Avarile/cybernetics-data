@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { EventJobModule } from '../../event-emitter/event-job/event-job.module';
+import { AggregationOpenApiModule } from '../aggregation/open-api/aggregation-open-api.module';
 import { AiModule } from '../ai/ai.module';
+import { AiDataModule } from '../ai-data/ai-data.module';
 import { BaseModule } from '../base/base.module';
 import { FieldOpenApiModule } from '../field/open-api/field-open-api.module';
 import { RecordOpenApiModule } from '../record/open-api/record-open-api.module';
@@ -27,10 +29,12 @@ import {
   AGENT_LAYOUT_PORT,
   AGENT_STORE_PORT,
   AUDIT_PORT,
+  DATA_GATEWAY_PORT,
   MODEL_PORT,
   RUN_STORE_PORT,
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
+import { UnrestrictedDataGateway } from './infrastructure/data/unrestricted-data-gateway';
 import { AgentExecutionContext } from './infrastructure/execution-context';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
@@ -45,6 +49,7 @@ import { AgentRuntime } from './runtime/agent-runtime';
 import { ContextBuilder } from './runtime/context-builder';
 import { ToolAssembler } from './runtime/tool-assembler';
 import { CredentialsToolkit } from './toolkits/credentials/credentials.toolkit';
+import { DataReadToolkit } from './toolkits/data-read/data-read.toolkit';
 import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
 import { SetupToolkit } from './toolkits/setup/setup.toolkit';
 import { SkillsToolkit } from './toolkits/skills/skills.toolkit';
@@ -69,6 +74,8 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     RecordOpenApiModule,
     ViewOpenApiModule,
     TrashModule,
+    AiDataModule,
+    AggregationOpenApiModule,
   ],
   providers: [
     AgentExecutionContext,
@@ -83,6 +90,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     ThreadsToolkit,
     SetupToolkit,
     CredentialsToolkit,
+    DataReadToolkit,
     ToolAssembler,
     ContextBuilder,
     AgentRuntime,
@@ -102,6 +110,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: AGENT_LAYOUT_PORT, useExisting: EnsureInstallation },
     { provide: AGENT_STORE_PORT, useClass: AgentTableStore },
     { provide: RUN_STORE_PORT, useClass: PrismaRunStore },
+    { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
   ],
   exports: [
     AgentExecutionContext,
