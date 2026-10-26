@@ -131,12 +131,13 @@ export function chunkDocument(text: string, format: IChunkFormat = 'markdown'): 
   );
 }
 
-/** A record (kb_records, agent_memory): one section, title as its path (design §11.2 step 4). */
+/**
+ * A record (kb_records, agent_memory): one section (design §11.2 step 4). The title is its heading,
+ * so keyword search sees it; the body is the content, or the title when there is no body.
+ */
 export function chunkRecord(title: string | null, body: string | null): IRagSection[] {
-  const content = [title, body]
-    .filter((s) => s && s.trim())
-    .join('\n\n')
-    .trim();
+  const head = title?.trim() || null;
+  const content = body?.trim() || head;
   if (!content) return [];
-  return [{ headingPath: title?.trim() || null, content, chunks: chunkSection(content) }];
+  return [{ headingPath: head, content, chunks: chunkSection(content) }];
 }

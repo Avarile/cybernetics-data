@@ -63,6 +63,12 @@
           "type": "singleLineText"
         },
         {
+          "key": "knowledge_tables",
+          "name": "knowledge_tables",
+          "type": "longText",
+          "description": "Table ids kept in sync with knowledge search, one per line. Empty: every table with a primary field and a text field named context"
+        },
+        {
           "key": "temperature",
           "name": "temperature",
           "type": "number",

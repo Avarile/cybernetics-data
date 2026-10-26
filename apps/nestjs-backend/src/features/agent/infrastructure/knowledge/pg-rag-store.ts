@@ -285,10 +285,14 @@ export class PgRagStore implements IRagStorePort, OnModuleDestroy {
       await trx.raw(`SELECT pg_advisory_xact_lock(hashtext('agent_rag_schema'))`);
       for (const statement of spaceTableStatements(slug, dimension)) await trx.raw(statement);
     });
-    await db(`${RAG_SCHEMA}.embedding_space`)
-      .insert({ slug, model, dimension, status })
-      .onConflict('slug')
-      .ignore();
+    // a retired space chosen again starts over as `status` (its old vectors are still valid)
+    await db.raw(
+      `INSERT INTO ${RAG_SCHEMA}.embedding_space (slug, model, dimension, status)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (slug) DO UPDATE SET status = excluded.status
+       WHERE ${RAG_SCHEMA}.embedding_space.status = 'retired'`,
+      [slug, model, dimension, status]
+    );
     const row = await db(`${RAG_SCHEMA}.embedding_space`).where({ slug }).first();
     return toSpace(row);
   }
@@ -405,6 +409,8 @@ export class PgRagStore implements IRagStorePort, OnModuleDestroy {
 
 /** What gets embedded for a chunk (design §11.2 step 3): title › heading path, then the text. */
 export function embeddingText(title: string | null, headingPath: string | null, content: string) {
-  const prefix = [title, headingPath].filter(Boolean).join(' › ');
+  // a record's section is headed by its own title; say it once
+  const path = headingPath === title ? null : headingPath;
+  const prefix = [title, path].filter(Boolean).join(' › ');
   return prefix ? `${prefix}\n\n${content}` : content;
 }

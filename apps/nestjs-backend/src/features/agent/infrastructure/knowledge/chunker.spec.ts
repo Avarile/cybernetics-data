@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import {
   CHUNK_OVERLAP,
   CHUNK_SIZE,
@@ -103,8 +104,8 @@ describe('chunker', () => {
     expect(chunkRecord('VPN setup', 'Install the client.')).toEqual([
       {
         headingPath: 'VPN setup',
-        content: 'VPN setup\n\nInstall the client.',
-        chunks: ['VPN setup\n\nInstall the client.'],
+        content: 'Install the client.',
+        chunks: ['Install the client.'],
       },
     ]);
     expect(chunkRecord(null, '  ')).toEqual([]);

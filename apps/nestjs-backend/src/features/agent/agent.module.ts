@@ -3,8 +3,10 @@ import { EventJobModule } from '../../event-emitter/event-job/event-job.module';
 import { AggregationOpenApiModule } from '../aggregation/open-api/aggregation-open-api.module';
 import { AiModule } from '../ai/ai.module';
 import { AiDataModule } from '../ai-data/ai-data.module';
+import { StorageModule } from '../attachments/plugins/storage.module';
 import { BaseModule } from '../base/base.module';
 import { BaseSqlExecutorModule } from '../base-sql-executor/base-sql-executor.module';
+import { ChatFileModule } from '../chat-file/chat-file.module';
 import { FieldOpenApiModule } from '../field/open-api/field-open-api.module';
 import { RecordOpenApiModule } from '../record/open-api/record-open-api.module';
 import { RecordModule } from '../record/record.module';
@@ -26,6 +28,9 @@ import { AgentExposureService } from './application/installation/exposure';
 import { AgentMembershipService } from './application/installation/membership';
 import { AGENT_JOBS_QUEUE, AgentJobs } from './application/jobs/agent-jobs';
 import { TurnJobs } from './application/jobs/turn-jobs';
+import { EmbeddingSpaces } from './application/knowledge/embedding-spaces';
+import { KnowledgeIngest } from './application/knowledge/knowledge-ingest';
+import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
 import { AgentStatusQuery } from './application/status/agent-status.query';
 import { ManageThreads } from './application/threads/manage-threads.usecase';
 import {
@@ -35,6 +40,7 @@ import {
   DATA_GATEWAY_PORT,
   HTTP_PORT,
   MODEL_PORT,
+  RAG_SOURCE_READER_PORT,
   RAG_STORE_PORT,
   RUN_STORE_PORT,
   SECRET_VAULT_PORT,
@@ -45,7 +51,10 @@ import { UnrestrictedDataWriter } from './infrastructure/data/unrestricted-data-
 import { AgentExecutionContext } from './infrastructure/execution-context';
 import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
+import { RagJobsProcessor } from './infrastructure/jobs/rag-jobs.processor';
+import { KnowledgeSyncListener } from './infrastructure/knowledge/knowledge-sync.listener';
 import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
+import { RagSourceReader } from './infrastructure/knowledge/source-reader';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
@@ -77,6 +86,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
   controllers: [AgentLifecycleController, AgentChatController, AgentSettingsController],
   imports: [
     EventJobModule.registerQueue(AGENT_JOBS_QUEUE),
+    EventJobModule.registerQueue(RAG_JOBS_QUEUE),
     AiModule,
     SettingModule,
     SchemaPackModule,
@@ -91,6 +101,8 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     AiDataModule,
     AggregationOpenApiModule,
     BaseSqlExecutorModule,
+    ChatFileModule,
+    StorageModule,
   ],
   providers: [
     AgentExecutionContext,
@@ -119,6 +131,10 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     AgentJobs,
     TurnJobs,
     AgentJobsProcessor,
+    EmbeddingSpaces,
+    KnowledgeIngest,
+    RagJobsProcessor,
+    KnowledgeSyncListener,
     RunTurn,
     ResumeTurn,
     CancelRun,
@@ -135,6 +151,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
     { provide: HTTP_PORT, useClass: OutboundHttp },
     { provide: RAG_STORE_PORT, useClass: PgRagStore },
+    { provide: RAG_SOURCE_READER_PORT, useClass: RagSourceReader },
   ],
   exports: [
     AgentExecutionContext,

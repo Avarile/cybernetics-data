@@ -42,19 +42,19 @@ export const createLocalQueueProvider = (queueName: string): Provider => ({
       return job;
     };
 
+    const add = (name: string, data: unknown, opts?: JobsOptions) => {
+      const id = opts?.jobId ?? getRandomString(10);
+      const job = createJob(id, name, data, opts);
+      jobs.set(id, job);
+      localQueueEventEmitter.emit(`handle-listener-${queueName}`, job);
+      return job;
+    };
+
     return {
-      add: (name: string, data: unknown, opts?: JobsOptions) => {
-        const id = opts?.jobId ?? getRandomString(10);
-        const job = createJob(id, name, data, opts);
-        jobs.set(id, job);
-        localQueueEventEmitter.emit(`handle-listener-${queueName}`, job);
-        return job;
-      },
-      addBulk: (bulkJobs: JobsOptions[]) => {
-        bulkJobs.forEach((job) => {
-          localQueueEventEmitter.emit(`handle-listener-${queueName}`, job);
-        });
-      },
+      add,
+      // same shape as BullMQ's addBulk; each entry becomes a real job (with its queue name)
+      addBulk: async (bulkJobs: { name: string; data: unknown; opts?: JobsOptions }[]) =>
+        bulkJobs.map((job) => add(job.name, job.data, job.opts)),
       getJob: async (jobId: string) => {
         return jobs.get(jobId) ?? null;
       },

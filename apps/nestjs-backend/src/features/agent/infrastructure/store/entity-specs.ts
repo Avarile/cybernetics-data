@@ -39,6 +39,7 @@ export const profileSpec: IEntitySpec<IAgentProfile> = {
     smallModel: ['small_model', text],
     embeddingModel: ['embedding_model', text],
     rerankModel: ['rerank_model', text],
+    knowledgeTables: ['knowledge_tables', lines],
     temperature: ['temperature', num],
     maxSteps: ['max_steps', num],
     maxOutputTokens: ['max_output_tokens', num],

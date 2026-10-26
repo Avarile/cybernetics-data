@@ -23,6 +23,7 @@ const profileView = (p: IAgentProfile) => ({
   smallModel: p.smallModel,
   embeddingModel: p.embeddingModel,
   rerankModel: p.rerankModel,
+  knowledgeTables: p.knowledgeTables,
   temperature: p.temperature,
   maxSteps: p.maxSteps,
   maxOutputTokens: p.maxOutputTokens,
@@ -77,6 +78,11 @@ export class SetupToolkit implements IToolkit, OnModuleInit {
           smallModel: modelRef.optional(),
           embeddingModel: modelRef.optional(),
           rerankModel: modelRef.optional(),
+          knowledgeTables: z
+            .array(z.string().regex(/^tbl\w+$/, 'a table id'))
+            .max(200)
+            .optional()
+            .describe('Tables synced into knowledge search; [] detects them automatically'),
           temperature: z.number().min(0).max(2).nullable().optional(),
           maxSteps: z.number().int().min(1).max(100).optional(),
           maxOutputTokens: z.number().int().min(256).max(128_000).optional(),

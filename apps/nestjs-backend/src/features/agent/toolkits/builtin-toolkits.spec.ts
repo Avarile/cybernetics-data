@@ -34,6 +34,7 @@ function fakeStore() {
     smallModel: null,
     embeddingModel: null,
     rerankModel: null,
+    knowledgeTables: [],
     temperature: null,
     maxSteps: 25,
     maxOutputTokens: 8000,

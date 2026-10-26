@@ -105,7 +105,7 @@ export interface IRagStorePort {
 
   listSpaces(): Promise<IRagSpace[]>;
   activeSpace(): Promise<IRagSpace | undefined>;
-  /** Create the space and its table if needed. */
+  /** Create the space and its table if needed; a retired space is revived with `status`. */
   ensureSpace(model: string, dimension: number, status: IRagSpaceStatus): Promise<IRagSpace>;
   /** Make one space active; the previous active one is retired. */
   activateSpace(slug: string): Promise<void>;
@@ -138,3 +138,24 @@ export interface IRagStorePort {
 }
 
 export const RAG_STORE_PORT = Symbol('AGENT_RAG_STORE_PORT');
+
+/** Where a document's text comes from (design §11.3); the source ref is derived from it. */
+export type IRagSource =
+  | { kind: 'text'; text: string; slug?: string }
+  | { kind: 'attachment'; token: string }
+  | { kind: 'url'; url: string }
+  | { kind: 'record'; baseId: string; tableId: string; recordId: string };
+
+export interface IRagSourceText {
+  title: string | null;
+  /** For a record, its body (context or content); the title is kept apart. */
+  text: string;
+  format: 'markdown' | 'text' | 'record';
+}
+
+export interface IRagSourceReaderPort {
+  /** Undefined when the source is gone (a deleted record, a forgotten memory). */
+  read(source: IRagSource): Promise<IRagSourceText | undefined>;
+}
+
+export const RAG_SOURCE_READER_PORT = Symbol('AGENT_RAG_SOURCE_READER_PORT');
