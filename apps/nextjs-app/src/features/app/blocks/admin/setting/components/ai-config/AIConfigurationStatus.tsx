@@ -4,6 +4,7 @@ import { LLMProviderType } from '@teable/openapi';
 import { cn } from '@teable/ui-lib/shadcn';
 import { useTranslation } from 'next-i18next';
 import { useMemo } from 'react';
+import { hasStoredGatewayKey } from './key-state';
 
 export type ConfigStatus = 'complete' | 'incomplete' | 'warning';
 
@@ -23,7 +24,7 @@ interface IAIConfigurationStatusProps {
 export const AIConfigurationStatus = ({ aiConfig, onNavigate }: IAIConfigurationStatusProps) => {
   const { t } = useTranslation('common');
 
-  const hasGatewayKey = Boolean(aiConfig?.aiGatewayApiKey);
+  const hasGatewayKey = hasStoredGatewayKey(aiConfig);
   const hasGatewayModels = (aiConfig?.gatewayModels?.filter((m) => m.enabled)?.length ?? 0) > 0;
   const hasLegacyProviders = (aiConfig?.llmProviders?.length ?? 0) > 0;
   const hasChatModel = Boolean(aiConfig?.chatModel?.lg);

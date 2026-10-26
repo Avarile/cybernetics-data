@@ -4,6 +4,7 @@ import type { IGatewayModel, ISettingVo, LLMProvider } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
+import { hasStoredGatewayKey } from './key-state';
 
 export interface IAISetupStep {
   id: string;
@@ -39,7 +40,7 @@ export function useAISetupSteps({
 }) {
   const { t } = useTranslation('common');
 
-  const hasGatewayKey = Boolean(aiConfig?.aiGatewayApiKey);
+  const hasGatewayKey = hasStoredGatewayKey(aiConfig);
   const hasGatewayModels = gatewayModels.filter((m) => m.enabled).length > 0;
   const hasChatModel = Boolean(aiConfig?.chatModel?.lg);
   const hasProviders = llmProviders.length > 0;

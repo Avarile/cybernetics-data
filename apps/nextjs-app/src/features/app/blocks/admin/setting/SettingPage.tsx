@@ -17,6 +17,7 @@ import { useEnv } from '@/features/app/hooks/useEnv';
 import { useIsCloud } from '@/features/app/hooks/useIsCloud';
 import { useIsEE } from '@/features/app/hooks/useIsEE';
 import { CopyInstance } from './components';
+import { hasStoredGatewayKey } from './components/ai-config/key-state';
 import { Branding } from './components/Branding';
 import { CanarySettings } from './components/canary';
 import type { IList } from './components/ConfigurationList';
@@ -105,8 +106,8 @@ export const SettingPage = (props: ISettingPageProps) => {
         isComplete: (() => {
           const aiConfig = setting?.aiConfig;
           const hasLlmApi =
-            Boolean(aiConfig?.aiGatewayApiKey) || (aiConfig?.llmProviders?.length ?? 0) > 0;
-          const hasModelPool = aiConfig?.aiGatewayApiKey
+            hasStoredGatewayKey(aiConfig) || (aiConfig?.llmProviders?.length ?? 0) > 0;
+          const hasModelPool = hasStoredGatewayKey(aiConfig)
             ? (aiConfig?.gatewayModels ?? []).some((m) => m.enabled)
             : (aiConfig?.llmProviders?.length ?? 0) > 0;
           const hasChatModel = Boolean(aiConfig?.chatModel?.lg);

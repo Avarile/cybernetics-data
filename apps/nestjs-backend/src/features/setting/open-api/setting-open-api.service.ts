@@ -25,6 +25,7 @@ import type {
   GatewayModelTag,
   GatewayModelProvider,
   IImageSize,
+  IAIConfig,
 } from '@teable/openapi';
 import {
   chatModelAbilityType,
@@ -53,6 +54,8 @@ import { InjectStorageAdapter } from '../../attachments/plugins/storage';
 import { getPublicFullStorageUrl } from '../../attachments/plugins/utils';
 import { EMAIL_LOGO_TOKEN } from '../../builtin-assets-init';
 import { verifyTransport } from '../../mail-sender/mail-helpers';
+import { maskAiConfig, mergeIncomingAiConfig } from '../provider-config';
+import { GATEWAY_PROVIDER_ID, ProviderSecretService } from '../provider-secret.service';
 import { SettingService } from '../setting.service';
 
 const unknownErrorMsg = 'unknown error';
@@ -77,20 +80,64 @@ export class SettingOpenApiService {
     @InjectStorageAdapter() readonly storageAdapter: StorageAdapter,
     private readonly cls: ClsService<IClsStore>,
     private readonly settingService: SettingService,
-    protected readonly attachmentsStorageService: AttachmentsStorageService
+    protected readonly attachmentsStorageService: AttachmentsStorageService,
+    private readonly providerSecretService: ProviderSecretService
   ) {}
 
+  /** Raw settings, keys included (encrypted at rest). For server-side use only. */
   async getSetting(names?: string[]): Promise<ISettingVo> {
     return this.settingService.getSetting(names);
   }
 
+  /** Settings as the admin API returns them: provider and Gateway keys are masked. */
+  async getAdminSetting(): Promise<ISettingVo> {
+    return this.maskSetting(await this.settingService.getSetting());
+  }
+
   async updateSetting(updateSettingRo: Partial<ISettingVo>): Promise<ISettingVo> {
-    // Instance providers must use "teable" as name so modelKeys end with @teable,
-    // allowing a simple suffix check to distinguish instance vs BYOK models.
     if (updateSettingRo.aiConfig) {
-      this.normalizeInstanceProviderNames(updateSettingRo.aiConfig as Record<string, unknown>);
+      // The UI never holds keys: keep stored keys it did not send, encrypt the ones it did.
+      const stored = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
+      const merged = mergeIncomingAiConfig(
+        stored,
+        updateSettingRo.aiConfig as IAIConfig,
+        this.keyCrypto,
+        GATEWAY_PROVIDER_ID
+      );
+      // Instance providers must use "teable" as name so modelKeys end with @teable,
+      // allowing a simple suffix check to distinguish instance vs BYOK models.
+      this.normalizeInstanceProviderNames(merged as Record<string, unknown>);
+      updateSettingRo = { ...updateSettingRo, aiConfig: merged };
     }
-    return this.settingService.updateSetting(updateSettingRo);
+    return this.maskSetting(await this.settingService.updateSetting(updateSettingRo));
+  }
+
+  private get keyCrypto() {
+    return {
+      encrypt: (id: string, plain: string) => this.providerSecretService.encryptKey(id, plain),
+      isEncrypted: (value: unknown) => this.providerSecretService.isEncrypted(value),
+    };
+  }
+
+  private maskSetting(setting: ISettingVo): ISettingVo {
+    if (!setting.aiConfig) return setting;
+    const aiConfig = maskAiConfig(setting.aiConfig as IAIConfig, {
+      preview: (p) => this.providerSecretService.preview(p),
+      gatewayPreview: (c) => this.providerSecretService.gatewayPreview(c),
+    });
+    return { ...setting, aiConfig: aiConfig as ISettingVo['aiConfig'] };
+  }
+
+  /** The stored key of the instance provider a test request refers to, for tests sent without one. */
+  private async storedProviderKey(type: string, baseUrl: string | undefined) {
+    const stored = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
+    if (type === LLMProviderType.AI_GATEWAY) {
+      return this.providerSecretService.resolveGatewayKey(stored);
+    }
+    const provider = stored?.llmProviders?.find(
+      (p) => p.type === type && (p.baseUrl ?? '') === (baseUrl ?? '')
+    );
+    return provider ? this.providerSecretService.resolveKey(provider) : undefined;
   }
 
   /**
@@ -501,16 +548,10 @@ export class SettingOpenApiService {
   }
 
   async testLLM(testLLMRo: ITestLLMRo): Promise<ITestLLMVo> {
-    const {
-      type,
-      baseUrl,
-      apiKey,
-      models,
-      ability,
-      modelKey,
-      testImageGeneration,
-      testImageToImage,
-    } = testLLMRo;
+    const apiKey =
+      testLLMRo.apiKey || (await this.storedProviderKey(testLLMRo.type, testLLMRo.baseUrl)) || '';
+    const { type, baseUrl, models, ability, modelKey, testImageGeneration, testImageToImage } =
+      testLLMRo;
 
     try {
       const modelArray = models.split(',');
@@ -864,10 +905,18 @@ export class SettingOpenApiService {
     let providers: LLMProvider[];
 
     if (batchTestLLMRo?.providers && batchTestLLMRo.providers.length > 0) {
-      providers = batchTestLLMRo.providers;
+      providers = await Promise.all(
+        batchTestLLMRo.providers.map(async (p) => ({
+          ...p,
+          apiKey: p.apiKey || (await this.storedProviderKey(p.type, p.baseUrl)) || '',
+        }))
+      );
     } else {
       const setting = await this.getSetting();
-      providers = setting.aiConfig?.llmProviders ?? [];
+      providers = (setting.aiConfig?.llmProviders ?? []).map((p) => ({
+        ...p,
+        apiKey: this.providerSecretService.resolveKey(p),
+      }));
     }
 
     if (providers.length === 0) {
@@ -943,7 +992,13 @@ export class SettingOpenApiService {
    * When testAttachment is true, results are automatically saved to appConfig
    */
   async testApiKey(testApiKeyRo: ITestApiKeyRo): Promise<ITestApiKeyVo> {
-    const { type, apiKey, baseUrl, testAttachment } = testApiKeyRo;
+    const { type, baseUrl, testAttachment } = testApiKeyRo;
+    // The UI shows only a preview of the stored Gateway key; an empty key means "test the stored one".
+    const apiKey =
+      testApiKeyRo.apiKey ||
+      (type === 'aiGateway'
+        ? (await this.storedProviderKey(LLMProviderType.AI_GATEWAY, undefined)) ?? ''
+        : '');
 
     if (type === 'aiGateway') {
       const keyResult = await this.testAiGatewayKey(apiKey, baseUrl);

@@ -6,6 +6,7 @@ import type { LLMProvider } from '@teable/openapi';
 import type { ImageModel, LanguageModel } from 'ai';
 import { createGateway } from 'ai';
 import { CustomHttpException } from '../../../custom.exception';
+import { ProviderSecretService } from '../../setting/provider-secret.service';
 import { SettingService } from '../../setting/setting.service';
 import { getAdaptedProviderOptions, modelProviders } from '../util';
 
@@ -20,7 +21,10 @@ export type ILanguageModelV2 = Exclude<LanguageModel, string>;
 export class ModelResolverService {
   private readonly logger = new Logger(ModelResolverService.name);
 
-  constructor(private readonly settingService: SettingService) {}
+  constructor(
+    private readonly settingService: SettingService,
+    private readonly providerSecretService: ProviderSecretService
+  ) {}
 
   public parseModelKey(modelKey: string) {
     const [type, model, name] = modelKey.split('@');
@@ -71,7 +75,8 @@ export class ModelResolverService {
     if (this.isGatewayModel(modelKey)) {
       const { aiConfig } = await this.settingService.getSetting([SettingKey.AI_CONFIG]);
 
-      if (!aiConfig?.aiGatewayApiKey) {
+      const gatewayApiKey = this.providerSecretService.resolveGatewayKey(aiConfig);
+      if (!gatewayApiKey) {
         throw new CustomHttpException(
           'AI Gateway API key is not configured',
           HttpErrorCode.VALIDATION_ERROR,
@@ -86,8 +91,8 @@ export class ModelResolverService {
       return {
         type: LLMProviderType.AI_GATEWAY,
         model,
-        baseUrl: aiConfig.aiGatewayBaseUrl || undefined,
-        apiKey: aiConfig.aiGatewayApiKey,
+        baseUrl: aiConfig?.aiGatewayBaseUrl || undefined,
+        apiKey: gatewayApiKey,
       };
     }
 
@@ -108,7 +113,9 @@ export class ModelResolverService {
       );
     }
 
-    const { baseUrl, apiKey } = providerConfig;
+    const { baseUrl } = providerConfig;
+    // Stored keys are encrypted; env-var keys are read at call time.
+    const apiKey = this.providerSecretService.resolveKey(providerConfig);
 
     return {
       type,

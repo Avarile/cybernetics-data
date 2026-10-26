@@ -20,6 +20,7 @@ import { useEnv } from '@/features/app/hooks/useEnv';
 import { AIProviderCard } from './AIProviderCard';
 import type { LLMApiMode } from './AISetupWizard';
 import { BatchTestModels } from './BatchTestModels';
+import { hasStoredGatewayKey } from './key-state';
 import type { IModelTestResult } from './LlmproviderManage';
 
 interface ILLMApiConfigStepProps {
@@ -92,13 +93,15 @@ export function LLMApiConfigStep({
     null
   );
 
-  // Local state for gateway fields — only persisted after a successful test
-  const [localGatewayKey, setLocalGatewayKey] = useState(aiConfig?.aiGatewayApiKey || '');
+  // Local state for gateway fields — only persisted after a successful test. The stored key is
+  // never sent to the browser: an empty field means "keep the stored key".
+  const hasStoredKey = hasStoredGatewayKey(aiConfig);
+  const [localGatewayKey, setLocalGatewayKey] = useState('');
   const [localGatewayBaseUrl, setLocalGatewayBaseUrl] = useState(aiConfig?.aiGatewayBaseUrl || '');
 
   useEffect(() => {
-    setLocalGatewayKey(aiConfig?.aiGatewayApiKey || '');
-  }, [aiConfig?.aiGatewayApiKey]);
+    setLocalGatewayKey('');
+  }, [aiConfig?.aiGatewayApiKeyPreview]);
 
   useEffect(() => {
     setLocalGatewayBaseUrl(aiConfig?.aiGatewayBaseUrl || '');
@@ -108,20 +111,14 @@ export function LLMApiConfigStep({
   const hasProviders = llmProviders.length > 0;
 
   const isGatewayKeyVerified =
-    testResult === 'success' ||
-    (testResult !== 'error' &&
-      Boolean(aiConfig?.aiGatewayApiKey) &&
-      localGatewayKey === (aiConfig?.aiGatewayApiKey || ''));
+    testResult === 'success' || (testResult !== 'error' && hasStoredKey && localGatewayKey === '');
 
   const canProceed = mode === 'gateway' ? isGatewayKeyVerified : hasProviders;
 
   // A gateway key is only saved after a successful test, so warn before leaving with one
   // that was typed but not (successfully) tested — it would be silently discarded.
   const hasUntestedGatewayKey =
-    mode === 'gateway' &&
-    hasLocalGatewayKey &&
-    testResult !== 'success' &&
-    localGatewayKey !== (aiConfig?.aiGatewayApiKey || '');
+    mode === 'gateway' && hasLocalGatewayKey && testResult !== 'success';
 
   const router = useRouter();
   useEffect(() => {
@@ -191,7 +188,8 @@ export function LLMApiConfigStep({
         setTestResult('success');
         const updates: Partial<NonNullable<ISettingVo['aiConfig']>> = {
           ...aiConfig,
-          aiGatewayApiKey: localGatewayKey,
+          // empty = keep the stored key (the server merges)
+          aiGatewayApiKey: localGatewayKey || undefined,
           aiGatewayBaseUrl: localGatewayBaseUrl || undefined,
         };
         if (result.attachmentTest) {
@@ -371,7 +369,11 @@ export function LLMApiConfigStep({
                 id="gateway-key"
                 type="password"
                 value={localGatewayKey}
-                placeholder={t('admin.action.enterApiKey')}
+                placeholder={
+                  hasStoredKey
+                    ? `${aiConfig?.aiGatewayApiKeyPreview ?? '••••'}`
+                    : t('admin.action.enterApiKey')
+                }
                 onChange={(e) => {
                   setLocalGatewayKey(e.target.value?.trim() || '');
                   setTestResult(null);
@@ -657,7 +659,7 @@ export function LLMApiConfigStep({
 
       {/* Continue Button */}
       <div className="flex justify-end gap-2">
-        {mode === 'gateway' && Boolean(aiConfig?.aiGatewayApiKey) && (
+        {mode === 'gateway' && hasStoredKey && (
           <Button variant="outline" onClick={handleClearGatewayKey}>
             <RotateCw className="mr-1.5 size-3.5" />
             Reset

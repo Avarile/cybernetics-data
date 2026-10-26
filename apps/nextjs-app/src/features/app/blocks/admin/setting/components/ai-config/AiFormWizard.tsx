@@ -19,6 +19,7 @@ import { useIsCloud } from '@/features/app/hooks/useIsCloud';
 import { AISetupWizard, useAISetupSteps, type LLMApiMode } from './AISetupWizard';
 import { DefaultModelsStep } from './DefaultModelsStep';
 import { GatewayModelsStep } from './GatewayModelsStep';
+import { hasStoredGatewayKey } from './key-state';
 import { LLMApiConfigStep } from './LLMApiConfigStep';
 import type { IModelTestResult } from './LlmproviderManage';
 import { SetupStepCard } from './SetupStepCard';
@@ -85,7 +86,7 @@ export function AIConfigFormWizard({
   // LLM API mode: gateway or custom
   // Auto-detect initial mode based on existing config
   const [llmApiMode, setLlmApiModeRaw] = useState<LLMApiMode>(() => {
-    if (aiConfig?.aiGatewayApiKey) return 'gateway';
+    if (hasStoredGatewayKey(aiConfig)) return 'gateway';
     if (llmProviders.length > 0) return 'custom';
     return 'gateway'; // Default to gateway
   });

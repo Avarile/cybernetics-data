@@ -41,6 +41,7 @@ describe('SettingOpenApiService', () => {
       undefined as never,
       undefined as never,
       undefined as never,
+      undefined as never,
       undefined as never
     );
 

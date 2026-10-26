@@ -113,6 +113,12 @@ export class SettingService {
     }
   }
 
+  /** One setting exactly as stored, without env overrides (TEST_AI_CONFIG, AI_GATEWAY_API_KEY). */
+  async getStoredSetting<T>(name: string): Promise<T | null> {
+    const row = await this.prismaService.setting.findUnique({ where: { name } });
+    return (this.parseSettingContent(row?.content ?? null) as T | null) ?? null;
+  }
+
   async updateSetting(updateSettingRo: Partial<ISettingVo>): Promise<ISettingVo> {
     const userId = this.cls.get('user.id');
     const updates = Object.entries(updateSettingRo).map(([name, value]) => ({

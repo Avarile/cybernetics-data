@@ -57,7 +57,7 @@ export class SettingOpenApiController {
   @Permissions('instance|read')
   @Get()
   async getSetting(): Promise<ISettingVo> {
-    return await this.settingOpenApiService.getSetting();
+    return await this.settingOpenApiService.getAdminSetting();
   }
 
   /**

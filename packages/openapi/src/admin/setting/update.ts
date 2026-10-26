@@ -257,6 +257,18 @@ export type IAIConfig = z.infer<typeof aiConfigSchema>;
 
 export const aiConfigVoSchema = aiConfigSchema.extend({
   enable: z.boolean().optional(),
+  // Read-only, from the admin API: keys are never returned, only whether they exist.
+  llmProviders: z
+    .array(
+      llmProviderSchema.extend({
+        hasApiKey: z.boolean().optional(),
+        apiKeyPreview: z.string().optional(),
+      })
+    )
+    .default([]),
+  aiGatewayApiKeyPreview: z.string().optional(),
+  aiGatewayApiKeyCount: z.number().int().optional(),
+  hasVertexByokCredential: z.boolean().optional(),
 });
 
 export const appConfigSchema = z.object({

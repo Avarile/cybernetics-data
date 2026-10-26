@@ -47,6 +47,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useIsCloud } from '@/features/app/hooks/useIsCloud';
 import { LLM_PROVIDERS } from './constant';
+import { hasStoredProviderKey, storedKeyPreview } from './key-state';
 import { testImageModelCapability, TEXT_MODEL_TIMEOUT_MS, withTimeout } from './model-test-utils';
 
 const CUSTOM_MODEL_DOC_URL = 'https://help.teable.ai/en/basic/ai/custom-model';
@@ -580,7 +581,9 @@ export const LLMProviderForm = ({
       !formData.name ||
       !formData.type ||
       !formData.baseUrl ||
-      (!formData.apiKey && formData.type !== LLMProviderType.OLLAMA)
+      (!formData.apiKey &&
+        formData.type !== LLMProviderType.OLLAMA &&
+        !hasStoredProviderKey(value as { hasApiKey?: boolean } | undefined))
     ) {
       setTestResult({
         success: false,
@@ -812,7 +815,12 @@ export const LLMProviderForm = ({
                     <Input
                       {...field}
                       type="password"
-                      placeholder={currentProvider?.apiKeyPlaceholder ?? ''}
+                      autoComplete="off"
+                      placeholder={
+                        storedKeyPreview(value as { apiKeyPreview?: string } | undefined) ??
+                        currentProvider?.apiKeyPlaceholder ??
+                        ''
+                      }
                     />
                   </FormControl>
                   <FormMessage />
