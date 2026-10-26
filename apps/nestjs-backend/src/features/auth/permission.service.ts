@@ -1,5 +1,6 @@
 import type { IBaseRole, Action } from '@cybernetics/core';
 import {
+  AGENT_ROBOT_ID,
   HttpErrorCode,
   IdPrefix,
   Role,
@@ -393,7 +394,54 @@ export class PermissionService {
     return this.getPermissionByBaseId(baseId, includeInactiveResource);
   }
 
+  /**
+   * The admin-only agent: the agent robot inside a run opened by AgentExecutionContext. Neither
+   * part can come from a request: `agentRun` is only set server-side, and the robot is a system
+   * user that cannot sign in. Token, share and template contexts never qualify.
+   */
+  private isAgentRun(): boolean {
+    return (
+      Boolean(this.cls.get('agentRun')?.runId) &&
+      this.cls.get('user.id') === AGENT_ROBOT_ID &&
+      !this.cls.get('accessTokenId') &&
+      !this.cls.get('baseShare') &&
+      !this.cls.get('template')
+    );
+  }
+
+  /** Owner permissions on any existing space, base or table (the resource must still exist). */
+  private async getAgentPermissions(resourceId: string, includeInactiveResource?: boolean) {
+    if (resourceId.startsWith(IdPrefix.Space)) {
+      const space = await this.prismaService.space.findFirst({
+        where: { id: resourceId, ...(includeInactiveResource ? {} : { deletedTime: null }) },
+        select: { id: true },
+      });
+      if (!space) {
+        throw new CustomHttpException('Space not found', HttpErrorCode.NOT_FOUND, {
+          localization: { i18nKey: 'httpErrors.space.notFound' },
+        });
+      }
+      this.cls.set('spaceId', resourceId);
+    } else if (resourceId.startsWith(IdPrefix.Base)) {
+      await this.getUpperIdByBaseId(resourceId, includeInactiveResource);
+    } else if (resourceId.startsWith(IdPrefix.Table)) {
+      await this.getUpperIdByTableId(resourceId, includeInactiveResource);
+    } else {
+      throw new CustomHttpException(
+        `Request path is not valid`,
+        HttpErrorCode.RESTRICTED_RESOURCE,
+        {
+          localization: { i18nKey: 'httpErrors.permission.invalidRequestPath' },
+        }
+      );
+    }
+    return getPermissions(Role.Owner);
+  }
+
   async getPermissionsByResourceId(resourceId: string, includeInactiveResource?: boolean) {
+    if (this.isAgentRun()) {
+      return this.getAgentPermissions(resourceId, includeInactiveResource);
+    }
     if (resourceId.startsWith(IdPrefix.Space)) {
       return await this.getPermissionBySpaceId(resourceId, includeInactiveResource);
     } else if (resourceId.startsWith(IdPrefix.Base)) {

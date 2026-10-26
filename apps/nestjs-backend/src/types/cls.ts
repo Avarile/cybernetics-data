@@ -26,6 +26,15 @@ export interface IClsStore extends ClsStore {
     isAdmin?: boolean | null;
   };
   accessTokenId?: string;
+  /**
+   * Set only by AgentExecutionContext (features/agent), never from a request. Together with the
+   * agent robot as user it grants the admin-only agent owner permissions everywhere (design §9.2).
+   */
+  agentRun?: {
+    runId: string;
+    /** The instance admin the agent is working for. */
+    actorUserId: string;
+  };
   // for template authentication
   template?: {
     id: string;

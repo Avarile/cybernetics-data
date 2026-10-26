@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Action } from '@cybernetics/core';
-import { Role, getPermissions } from '@cybernetics/core';
+import { AGENT_ROBOT_ID, Role, getPermissions } from '@cybernetics/core';
 import { ForbiddenException } from '@nestjs/common';
 import type { TestingModule } from '@nestjs/testing';
 import { Test } from '@nestjs/testing';
@@ -345,6 +345,66 @@ describe('PermissionService', () => {
       await expect(service.validPermissions(resourceId, ['space|create'])).rejects.toThrow(
         `not allowed to operate space|create on ${resourceId}`
       );
+    });
+  });
+
+  describe('agent run bypass', () => {
+    const store = (values: Partial<Record<string, unknown>>) =>
+      clsServiceMock.get.mockImplementation(((key: string) => {
+        if (key === 'user.id') return (values.user as { id?: string })?.id;
+        return values[key];
+      }) as any);
+    const agentRun = { runId: 'run1', actorUserId: 'usrAdmin' };
+    const robot = { id: AGENT_ROBOT_ID };
+
+    it('gives the agent robot inside a run owner permissions on a base it has no role in', async () => {
+      store({ user: robot, agentRun });
+      prismaServiceMock.base.findFirst.mockResolvedValue({ spaceId: 'spcX' } as any);
+      const perms = await service.getPermissionsByResourceId('bseNoRole');
+      expect(perms).toEqual(getPermissions(Role.Owner));
+      expect(prismaServiceMock.collaborator.findMany).not.toHaveBeenCalled();
+    });
+
+    it('covers tables and spaces too, but only existing ones', async () => {
+      store({ user: robot, agentRun });
+      prismaServiceMock.txClient.mockReturnValue(prismaServiceMock as any);
+      prismaServiceMock.tableMeta.findFirst.mockResolvedValue({
+        base: { id: 'bseX', spaceId: 'spcX' },
+      } as any);
+      await expect(service.getPermissionsByResourceId('tblX')).resolves.toEqual(
+        getPermissions(Role.Owner)
+      );
+      prismaServiceMock.space.findFirst.mockResolvedValue(null);
+      await expect(service.getPermissionsByResourceId('spcGone')).rejects.toThrow(
+        /Space not found/
+      );
+      prismaServiceMock.base.findFirst.mockResolvedValue(null);
+      await expect(service.getPermissionsByResourceId('bseGone')).rejects.toThrow(/Base not found/);
+    });
+
+    it('gives the robot nothing without a run', async () => {
+      store({ user: robot });
+      prismaServiceMock.collaborator.findMany.mockResolvedValue([]);
+      prismaServiceMock.base.findFirst.mockResolvedValue({ spaceId: 'spcX' } as any);
+      prismaServiceMock.space.findFirst.mockResolvedValue({ deletedTime: null } as any);
+      await expect(service.getPermissionsByResourceId('bseNoRole')).rejects.toThrow(
+        /no permission to access this base/
+      );
+    });
+
+    it('ignores a run marker for any other user, an access token, a share or a template', async () => {
+      prismaServiceMock.collaborator.findMany.mockResolvedValue([]);
+      prismaServiceMock.base.findFirst.mockResolvedValue({ spaceId: 'spcX' } as any);
+      prismaServiceMock.space.findFirst.mockResolvedValue({ deletedTime: null } as any);
+      for (const values of [
+        { user: { id: 'usrAdmin' }, agentRun },
+        { user: robot, agentRun, accessTokenId: 'tok1' },
+        { user: robot, agentRun, baseShare: { baseId: 'bseX', nodeId: null } },
+        { user: robot, agentRun, template: { id: 'tpl', baseId: 'bseX' } },
+      ]) {
+        store(values);
+        await expect(service.getPermissionsByResourceId('bseNoRole')).rejects.toThrow();
+      }
     });
   });
 });
