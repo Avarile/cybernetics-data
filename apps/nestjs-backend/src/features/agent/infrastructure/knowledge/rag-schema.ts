@@ -49,6 +49,8 @@ export const RAG_SCHEMA_STATEMENTS = [
     dimension int NOT NULL,
     status text NOT NULL,
     created_time timestamptz NOT NULL DEFAULT now())`,
+  // when a space was retired; its table is dropped some days later (design §11.5)
+  `ALTER TABLE ${RAG_SCHEMA}.embedding_space ADD COLUMN IF NOT EXISTS retired_time timestamptz`,
   // design §11.1: kb_records and agent_memory are synced from tables; knowledge is for documents
   `INSERT INTO ${RAG_SCHEMA}.collection (id, label, description, kind) VALUES
     ('knowledge', 'Knowledge', 'Documents the admin or the agent added', 'documents'),

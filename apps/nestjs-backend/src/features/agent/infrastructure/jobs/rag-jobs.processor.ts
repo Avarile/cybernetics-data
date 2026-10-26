@@ -39,6 +39,8 @@ export class RagJobsProcessor extends WorkerHost {
             return job.data.documentId ? this.ingest.remove(job.data.documentId) : undefined;
           case 'backfill':
             return job.data.space ? this.spaces.backfill(job.data.space) : undefined;
+          case 'ensure-space':
+            return this.spaces.ensure(job.data.actorUserId);
           default:
             this.logger.warn(`unknown knowledge job ${String(name)}`);
             return undefined;

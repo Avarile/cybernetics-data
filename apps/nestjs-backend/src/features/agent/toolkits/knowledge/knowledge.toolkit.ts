@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { AgentConfig, type IAgentConfig } from '../../../../configs/agent.config';
 import { CustomHttpException } from '../../../../custom.exception';
+import { EmbeddingSpaces } from '../../application/knowledge/embedding-spaces';
 import { KnowledgeIngest } from '../../application/knowledge/knowledge-ingest';
 import { KnowledgeSearch, MAX_TOP_K } from '../../application/knowledge/knowledge-search';
 import {
@@ -81,6 +82,7 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     private readonly registry: ToolkitRegistry,
     private readonly searcher: KnowledgeSearch,
     private readonly ingest: KnowledgeIngest,
+    private readonly spaces: EmbeddingSpaces,
     @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort,
     @AgentConfig() private readonly config: IAgentConfig
   ) {
@@ -227,10 +229,13 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
   private collectionList() {
     return defineTool({
       name: 'collection_list',
-      description: 'The knowledge collections: documents (added by hand) and derived (synced).',
+      description:
+        'The knowledge collections, documents (added by hand) and derived (synced), and the ' +
+        'embedding spaces: which model is active and which is being built.',
       input: z.object({}),
       execute: async () => ({
         collections: (await this.rag.listCollections()).map(collectionView),
+        embedding: await this.spaces.status(),
       }),
     });
   }

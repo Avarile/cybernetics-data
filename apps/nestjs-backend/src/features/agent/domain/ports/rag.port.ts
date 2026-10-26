@@ -34,6 +34,7 @@ export interface IRagSpace {
   model: string;
   dimension: number;
   status: IRagSpaceStatus;
+  retiredAt: string | null;
 }
 
 /** A section (what is returned) with its chunks (what is searched). */
@@ -109,6 +110,8 @@ export interface IRagStorePort {
   ensureSpace(model: string, dimension: number, status: IRagSpaceStatus): Promise<IRagSpace>;
   /** Make one space active; the previous active one is retired. */
   activateSpace(slug: string): Promise<void>;
+  /** Drop the tables of spaces retired before the date; returns their slugs. */
+  dropRetiredSpaces(retiredBefore: Date): Promise<string[]>;
   /** Level-1 chunks without a vector in the space, for backfills. */
   chunksWithoutEmbedding(space: string, limit: number): Promise<{ id: number; text: string }[]>;
   writeEmbeddings(space: string, rows: { chunkId: number; vector: number[] }[]): Promise<void>;

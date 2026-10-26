@@ -119,6 +119,11 @@ export class KnowledgeIngest {
     );
   }
 
+  /** The embedding model may have changed: build its space in the background. */
+  async enqueueSpaceCheck(actorUserId: string) {
+    await this.queue.add('ensure-space', { actorUserId }, jobOptions);
+  }
+
   async status(documentId: string) {
     return this.rag.getDocument(documentId);
   }

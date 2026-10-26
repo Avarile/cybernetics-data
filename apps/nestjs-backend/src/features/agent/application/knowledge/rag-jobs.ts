@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import type { IRagSource } from '../../domain/ports';
 
 export const RAG_JOBS_QUEUE = 'agent-rag';
-export type IRagJobName = 'ingest' | 'remove' | 'backfill';
+export type IRagJobName = 'ingest' | 'remove' | 'backfill' | 'ensure-space';
 
 export interface IRagJobData {
   actorUserId: string;

@@ -59,6 +59,7 @@ const toSpace = (r: IRow): IRagSpace => ({
   model: String(r.model),
   dimension: Number(r.dimension),
   status: r.status as IRagSpaceStatus,
+  retiredAt: r.retired_time ? new Date(r.retired_time as string).toISOString() : null,
 });
 
 /**
@@ -289,7 +290,7 @@ export class PgRagStore implements IRagStorePort, OnModuleDestroy {
     await db.raw(
       `INSERT INTO ${RAG_SCHEMA}.embedding_space (slug, model, dimension, status)
        VALUES (?, ?, ?, ?)
-       ON CONFLICT (slug) DO UPDATE SET status = excluded.status
+       ON CONFLICT (slug) DO UPDATE SET status = excluded.status, retired_time = NULL
        WHERE ${RAG_SCHEMA}.embedding_space.status = 'retired'`,
       [slug, model, dimension, status]
     );
@@ -303,8 +304,27 @@ export class PgRagStore implements IRagStorePort, OnModuleDestroy {
       await trx(`${RAG_SCHEMA}.embedding_space`)
         .where({ status: 'active' })
         .whereNot({ slug })
-        .update({ status: 'retired' });
-      await trx(`${RAG_SCHEMA}.embedding_space`).where({ slug }).update({ status: 'active' });
+        .update({ status: 'retired', retired_time: trx.fn.now() });
+      await trx(`${RAG_SCHEMA}.embedding_space`)
+        .where({ slug })
+        .update({ status: 'active', retired_time: null });
+    });
+  }
+
+  async dropRetiredSpaces(retiredBefore: Date) {
+    const db = await this.conn();
+    return db.transaction(async (trx) => {
+      await trx.raw(`SELECT pg_advisory_xact_lock(hashtext('agent_rag_schema'))`);
+      const rows = await trx(`${RAG_SCHEMA}.embedding_space`)
+        .where({ status: 'retired' })
+        .andWhere('retired_time', '<', retiredBefore)
+        .select('slug');
+      const slugs = rows.map((r) => String(r.slug));
+      for (const slug of slugs) {
+        await trx.raw(`DROP TABLE IF EXISTS ${spaceTable(slug)}`);
+        await trx(`${RAG_SCHEMA}.embedding_space`).where({ slug }).delete();
+      }
+      return slugs;
     });
   }
 

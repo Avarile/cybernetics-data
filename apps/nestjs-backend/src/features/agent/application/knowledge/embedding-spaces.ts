@@ -15,6 +15,10 @@ import { RAG_JOBS_QUEUE, type IRagJobData } from './rag-jobs';
 
 /** Texts per embedding request (design §11.3). */
 export const EMBED_BATCH = 100;
+/** A retired space's table is dropped this long after it was retired (design §11.5). */
+export const RETIRED_SPACE_DAYS = 7;
+const dayMs = 86_400_000;
+const backfillOptions = { attempts: 5, backoff: { type: 'exponential' as const, delay: 5000 } };
 
 /**
  * Embedding spaces (design §11.1, §11.5): one per embedding model. New chunks are written to the
@@ -50,8 +54,11 @@ export class EmbeddingSpaces {
 
   /** The spaces that new chunks go to; starts building the configured model's space if needed. */
   async targets(actorUserId: string): Promise<IRagSpace[]> {
-    const live = (await this.rag.listSpaces()).filter((s) => s.status !== 'retired');
     const ref = await this.configuredModel();
+    // the active space, and the space being built for the configured model (not stale builds)
+    const live = (await this.rag.listSpaces()).filter(
+      (s) => s.status === 'active' || (s.status === 'building' && s.model === ref)
+    );
     if (!ref || live.some((s) => s.model === ref)) return live;
     return [...live, await this.build(ref, actorUserId)];
   }
@@ -61,11 +68,7 @@ export class EmbeddingSpaces {
     const [probe] = await this.embed(ref, ['dimension probe']);
     const space = await this.rag.ensureSpace(ref, probe.length, 'building');
     if (space.status === 'building') {
-      await this.queue.add(
-        'backfill',
-        { space: space.slug, actorUserId },
-        { attempts: 5, backoff: { type: 'exponential', delay: 5000 } }
-      );
+      await this.queue.add('backfill', { space: space.slug, actorUserId }, backfillOptions);
       this.logger.log(`embedding space ${space.slug} is building`);
     }
     return space;
@@ -75,12 +78,61 @@ export class EmbeddingSpaces {
   async backfill(slug: string): Promise<{ embedded: number; activated: boolean }> {
     const space = (await this.rag.listSpaces()).find((s) => s.slug === slug);
     if (!space || space.status !== 'building') return { embedded: 0, activated: false };
+    let embedded = await this.fill(slug, space.model);
+    // only the configured model becomes active; a space for a model replaced meanwhile stays built
+    const activated = (await this.configuredModel()) === space.model;
+    if (activated) {
+      await this.rag.activateSpace(slug);
+      // ingests that started before the space existed wrote to the old spaces only
+      embedded += await this.fill(slug, space.model);
+      await this.cleanup();
+    }
+    return { embedded, activated };
+  }
+
+  /** Setup changed: start building the configured model's space, drop old retired spaces. */
+  async ensure(actorUserId: string) {
+    const spaces = await this.targets(actorUserId);
+    const ref = await this.configuredModel();
+    // a space built earlier for this model (then left for another one) is finished now
+    for (const s of spaces.filter((x) => x.status === 'building' && x.model === ref)) {
+      await this.queue.add('backfill', { space: s.slug, actorUserId }, backfillOptions);
+    }
+    const dropped = await this.cleanup();
+    return { spaces: spaces.map((s) => ({ slug: s.slug, status: s.status })), dropped };
+  }
+
+  async cleanup(now = new Date()) {
+    const dropped = await this.rag.dropRetiredSpaces(
+      new Date(now.getTime() - RETIRED_SPACE_DAYS * dayMs)
+    );
+    if (dropped.length) this.logger.log(`dropped retired embedding spaces ${dropped.join(', ')}`);
+    return dropped;
+  }
+
+  /** What the agent and the admin see: the configured model and every space. */
+  async status() {
+    return {
+      configuredModel: await this.configuredModel(),
+      spaces: (await this.rag.listSpaces()).map(
+        ({ slug, model, dimension, status, retiredAt }) => ({
+          slug,
+          model,
+          dimension,
+          status,
+          retiredAt,
+        })
+      ),
+    };
+  }
+
+  private async fill(slug: string, model: string) {
     let embedded = 0;
     for (;;) {
       const missing = await this.rag.chunksWithoutEmbedding(slug, EMBED_BATCH);
-      if (!missing.length) break;
+      if (!missing.length) return embedded;
       const vectors = await this.embed(
-        space.model,
+        model,
         missing.map((m) => m.text)
       );
       await this.rag.writeEmbeddings(
@@ -89,9 +141,5 @@ export class EmbeddingSpaces {
       );
       embedded += missing.length;
     }
-    // only the configured model becomes active; a space for a model replaced meanwhile stays built
-    const activated = (await this.configuredModel()) === space.model;
-    if (activated) await this.rag.activateSpace(slug);
-    return { embedded, activated };
   }
 }

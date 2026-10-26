@@ -22,6 +22,8 @@ interface ISyncSettings {
   agentBaseId: string | null;
   memoryTableId: string | null;
   memoryWatch: Set<string>;
+  setupTableId: string | null;
+  embeddingFieldId: string | null;
   /** Configured knowledge tables; empty means detect them. */
   knowledgeTables: Set<string>;
 }
@@ -67,6 +69,10 @@ export class KnowledgeSyncListener {
   @OnEvent(Events.TABLE_RECORD_UPDATE, { async: true })
   async onUpdate(event: RecordUpdateEvent) {
     const { tableId, record } = event.payload;
+    if (await this.embeddingModelChanged(tableId, asArray(record))) {
+      await this.ingest.enqueueSpaceCheck(event.context.user?.id ?? AGENT_ROBOT_ID);
+      return;
+    }
     await this.sync(tableId, asArray(record), event.context.user?.id);
   }
 
@@ -74,6 +80,20 @@ export class KnowledgeSyncListener {
   async onDelete(event: RecordDeleteEvent) {
     const { tableId, recordId } = event.payload;
     await this.sync(tableId, asArray(recordId), event.context.user?.id, true);
+  }
+
+  /** agent_setup.embedding_model changed (design §11.5): build the new model's space now. */
+  private async embeddingModelChanged(tableId: string, records: { fields: object }[]) {
+    if (!this.config.ragDatabaseUrl) return false;
+    try {
+      const settings = await this.currentSettings();
+      if (!settings?.embeddingFieldId || tableId !== settings.setupTableId) return false;
+      const changed = records.some((r) => settings.embeddingFieldId! in r.fields);
+      if (changed) this.invalidate();
+      return changed;
+    } catch {
+      return false;
+    }
   }
 
   /** Forget cached settings and table profiles (setup or schema changed). */
@@ -119,6 +139,7 @@ export class KnowledgeSyncListener {
     const tableMap = JSON.parse(row.tableMap || '{}') as Record<string, string>;
     const fieldMap = JSON.parse(row.fieldMap || '{}') as Record<string, Record<string, string>>;
     const memoryFields = fieldMap[AGENT_TABLES.memory] ?? {};
+    const setupFields = fieldMap[AGENT_TABLES.setup] ?? {};
     const profile = await this.execution
       .run({ runId: 'knowledge-sync', actorUserId: AGENT_ROBOT_ID }, () =>
         this.store.getDefaultProfile()
@@ -131,6 +152,8 @@ export class KnowledgeSyncListener {
         ['title', 'content', 'is_active'].map((k) => memoryFields[k]).filter(Boolean)
       ),
       knowledgeTables: new Set(profile?.knowledgeTables ?? []),
+      setupTableId: tableMap[AGENT_TABLES.setup] ?? null,
+      embeddingFieldId: setupFields.embedding_model ?? null,
     };
   }
 
