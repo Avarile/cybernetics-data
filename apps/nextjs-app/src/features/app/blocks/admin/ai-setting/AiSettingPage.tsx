@@ -1,36 +1,33 @@
 import { useIsHydrated } from '@cybernetics/sdk/hooks';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ISettingVo, IUpdateSettingRo } from '@teable/openapi';
+import type { IGatewayModel, ISettingVo, IUpdateSettingRo } from '@teable/openapi';
 import { getSetting, updateSetting } from '@teable/openapi';
+import { Card, CardContent, CardHeader, CardTitle } from '@teable/ui-lib/shadcn';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { AIConfigurationStatus } from '../setting/components/ai-config/AIConfigurationStatus';
 import { AIControlCard } from '../setting/components/ai-config/AIControlCard';
-import { AIConfigFormWizard } from '../setting/components/ai-config/AiFormWizard';
+import { DefaultModelsStep } from '../setting/components/ai-config/DefaultModelsStep';
+import {
+  generateGatewayModelKeyList,
+  generateModelKeyList,
+} from '../setting/components/ai-config/utils';
 import { AppBuilderConfig } from './AppBuilderConfig';
+import { ProvidersCard } from './providers/ProvidersCard';
 
 export interface IAiSettingPageProps {
   settingServerData?: ISettingVo;
 }
 
-// Maps AIConfigurationStatus section names to wizard step indices
-const SECTION_TO_STEP: Record<string, number> = {
-  enable: 0,
-  gateway: 0,
-  providers: 0,
-  'gateway-models': 1,
-  'chat-model': 2,
-};
-
 export const AiSettingPage = ({ settingServerData }: IAiSettingPageProps) => {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
   const router = useRouter();
-  const llmRef = useRef<HTMLDivElement>(null);
+  const providersRef = useRef<HTMLDivElement>(null);
+  const modelsRef = useRef<HTMLDivElement>(null);
   const appRef = useRef<HTMLDivElement>(null);
   const isHydrated = useIsHydrated();
-  const [wizardStep, setWizardStep] = useState(-1);
 
   const { data: setting = settingServerData } = useQuery({
     queryKey: ['setting'],
@@ -41,40 +38,41 @@ export const AiSettingPage = ({ settingServerData }: IAiSettingPageProps) => {
     mutationFn: (props: IUpdateSettingRo) => updateSetting(props),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['setting'] });
+      queryClient.invalidateQueries({ queryKey: ['ai-providers'] });
     },
   });
 
   useEffect(() => {
     const { anchor } = router.query;
-    if (anchor === 'llm') {
-      setTimeout(() => llmRef.current?.scrollIntoView({ behavior: 'smooth' }), 500);
-    } else if (anchor === 'app') {
-      setTimeout(() => appRef.current?.scrollIntoView({ behavior: 'smooth' }), 500);
-    }
+    const target = anchor === 'llm' ? providersRef : anchor === 'app' ? appRef : undefined;
+    if (target) setTimeout(() => target.current?.scrollIntoView({ behavior: 'smooth' }), 500);
   }, [router.query]);
 
   const handleNavigate = useCallback((section: string) => {
-    const step = SECTION_TO_STEP[section] ?? 0;
-    setWizardStep(step);
-    setTimeout(() => llmRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+    const target = section === 'chat-model' ? modelsRef : providersRef;
+    setTimeout(() => target.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   }, []);
+
+  const aiConfig = setting?.aiConfig;
+  // Models the default pickers offer: every enabled provider's models plus the Gateway pool.
+  const models = useMemo(
+    () => [
+      ...generateModelKeyList((aiConfig?.llmProviders ?? []).filter((p) => p.enabled !== false)),
+      ...generateGatewayModelKeyList(aiConfig?.gatewayModels),
+    ],
+    [aiConfig?.llmProviders, aiConfig?.gatewayModels]
+  );
 
   if (!setting || !isHydrated) return null;
 
-  const setAiConfig = (aiConfig: NonNullable<ISettingVo['aiConfig']>) => {
-    mutateUpdateSetting({ aiConfig } as IUpdateSettingRo);
-  };
-
-  const onControlChange = ({ disableActions }: { disableActions: string[] }) => {
+  // Providers and keys are saved through the provider routes; this PATCH carries the rest.
+  const patchAiConfig = (patch: Partial<NonNullable<ISettingVo['aiConfig']>>) =>
     mutateUpdateSetting({
-      // disableActions lives under aiConfig.capabilities in the schema; writing
-      // it at the top level silently produced a field the server never reads.
-      aiConfig: {
-        ...setting.aiConfig,
-        capabilities: { ...setting.aiConfig?.capabilities, disableActions },
-      },
+      aiConfig: { ...setting.aiConfig, ...patch },
     } as IUpdateSettingRo);
-  };
+
+  const onControlChange = ({ disableActions }: { disableActions: string[] }) =>
+    patchAiConfig({ capabilities: { ...setting.aiConfig?.capabilities, disableActions } });
 
   const saveAppConfig = (appConfig: NonNullable<ISettingVo['appConfig']>) => {
     mutateUpdateSetting({ appConfig } as IUpdateSettingRo);
@@ -93,26 +91,46 @@ export const AiSettingPage = ({ settingServerData }: IAiSettingPageProps) => {
       </div>
 
       <div className="flex max-w-3xl flex-col gap-6">
-        {/* AI Configuration Status — checklist with click-to-navigate */}
         <AIConfigurationStatus aiConfig={setting.aiConfig} onNavigate={handleNavigate} />
 
-        {/* LLM Provider Setup Wizard */}
-        <div ref={llmRef}>
-          <AIConfigFormWizard
-            aiConfig={setting.aiConfig}
-            setAiConfig={setAiConfig}
-            currentStep={wizardStep}
-            onStepChange={setWizardStep}
+        <div ref={providersRef}>
+          <ProvidersCard
+            gatewayModels={aiConfig?.gatewayModels ?? []}
+            onGatewayModelsChange={(gatewayModels: IGatewayModel[]) =>
+              patchAiConfig({ gatewayModels })
+            }
           />
         </div>
 
-        {/* AI Feature Enable/Disable Toggles */}
+        <div ref={modelsRef}>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {t('admin.setting.ai.providers.defaultModels', 'Default models')}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  'admin.setting.ai.providers.defaultModelsHelp',
+                  'Used by field AI and other AI features unless they choose their own model.'
+                )}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <DefaultModelsStep
+                chatModel={aiConfig?.chatModel ?? undefined}
+                models={models}
+                onChange={(chatModel) => patchAiConfig({ chatModel })}
+                disabled={models.length === 0}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
         <AIControlCard
           disableActions={setting.aiConfig?.capabilities?.disableActions ?? []}
           onChange={onControlChange}
         />
 
-        {/* App Builder Configuration */}
         <div ref={appRef}>
           <AppBuilderConfig appConfig={setting.appConfig} onSave={saveAppConfig} />
         </div>

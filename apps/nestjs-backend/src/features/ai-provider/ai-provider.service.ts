@@ -89,12 +89,16 @@ export class AiProviderService {
     if (!current) throw notFound(id);
     this.assertVersion(current.version ?? 0, ro.version);
 
-    const { apiKey, version: _v, ...changes } = ro;
+    const { apiKey, apiKeyEnv, baseUrl, version: _v, ...changes } = ro;
     const next: LLMProvider = { ...current, ...changes, id, version: (current.version ?? 0) + 1 };
+    if (apiKeyEnv === null) delete next.apiKeyEnv;
+    else if (apiKeyEnv) next.apiKeyEnv = apiKeyEnv;
+    if (baseUrl === null) delete next.baseUrl;
+    else if (baseUrl) next.baseUrl = baseUrl;
     if (apiKey === null) delete next.apiKey;
     else if (apiKey) next.apiKey = this.secrets.encryptKey(id, apiKey);
     // A changed endpoint or key invalidates the last test.
-    if (apiKey !== undefined || changes.baseUrl !== undefined || changes.type !== undefined) {
+    if (apiKey !== undefined || baseUrl !== undefined || changes.type !== undefined) {
       delete next.lastTest;
     }
     await this.saveProviders(
@@ -235,7 +239,7 @@ export class AiProviderService {
   }
 
   /** The server's env allow pattern applies on top of the schema's denylist. */
-  private assertEnvNames(ro: Pick<LLMProvider, 'apiKeyEnv' | 'headers'>) {
+  private assertEnvNames(ro: { apiKeyEnv?: string | null; headers?: LLMProvider['headers'] }) {
     const names = [
       ...(ro.apiKeyEnv ? [ro.apiKeyEnv] : []),
       ...Object.values(ro.headers ?? {})
@@ -254,7 +258,7 @@ export class AiProviderService {
 
   private async saveGateway(
     aiConfig: IAIConfig,
-    ro: { version: number; apiKey?: string | null; baseUrl?: string },
+    ro: { version: number; apiKey?: string | null; baseUrl?: string | null },
     creating: boolean
   ): Promise<IAiProviderVo> {
     const meta = aiConfig.aiGatewayMeta ?? {};

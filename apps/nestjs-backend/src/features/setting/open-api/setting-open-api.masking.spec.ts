@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { randomBytes } from 'crypto';
 import { LLMProviderType, SettingKey } from '@teable/openapi';
 import type { IAIConfig, ISettingVo } from '@teable/openapi';
@@ -79,14 +80,15 @@ describe('SettingOpenApiService key masking', () => {
     expect(secrets.resolveGatewayKey(current())).toBe('vck_gateway_0123456789');
   });
 
-  it('PATCH encrypts a newly typed key', async () => {
+  it('PATCH ignores providers and keys sent in the setting', async () => {
     const { service, current } = makeService();
     await service.updateSetting({
       aiConfig: {
         llmProviders: [{ ...stored.llmProviders[0], apiKey: 'sk-new-key-123' }],
+        aiGatewayApiKey: 'forged',
       },
     });
-    expect(current().llmProviders[0].apiKey).not.toContain('sk-new');
-    expect(secrets.resolveKey(current().llmProviders[0])).toBe('sk-new-key-123');
+    expect(secrets.resolveKey(current().llmProviders[0])).toBe('sk-vllm-0123456789');
+    expect(secrets.resolveGatewayKey(current())).toBe('vck_gateway_0123456789');
   });
 });

@@ -106,64 +106,34 @@ export function migrateAiConfig(
   return { aiConfig: { ...aiConfig, llmProviders, aiGatewayApiKey }, changed };
 }
 
-/** Find the stored provider an incoming one updates: by id, else (pre-id UI) by type + base URL. */
-const findStored = (stored: LLMProvider[], incoming: LLMProvider) =>
-  (incoming.id && stored.find((s) => s.id === incoming.id)) ||
-  stored.find(
-    (s) =>
-      !incoming.id && s.type === incoming.type && (s.baseUrl ?? '') === (incoming.baseUrl ?? '')
-  );
-
 /**
- * Merge a config the admin UI sends with the stored one. The UI never has the keys, so a provider
- * sent without a key (missing or empty) keeps its stored key; a new key is encrypted. The Gateway
- * key is kept when missing and removed only when sent as null.
+ * Apply a PATCH of the aiConfig setting. Providers and the Gateway key are managed only through the
+ * provider routes (/api/admin/ai/providers), so the stored values always win for them; the masked
+ * read-only fields the UI got from GET are dropped. Everything else comes from the request.
  */
-export function mergeIncomingAiConfig(
+export function applyAiConfigPatch(
   stored: IAIConfig | undefined | null,
-  incoming: IAIConfig,
-  crypto: IKeyCrypto,
-  gatewayProviderId: string
+  incoming: IAIConfig
 ): IAIConfig {
-  const storedProviders = stored?.llmProviders ?? [];
-  const incomingProviders = (incoming.llmProviders ?? []).map((p) => {
-    const {
-      hasApiKey: _h,
-      apiKeyPreview: _p,
-      ...rest
-    } = p as LLMProvider & Partial<IMaskedProviderFields>;
-    const match = findStored(storedProviders, rest);
-    return { ...rest, id: rest.id ?? match?.id, apiKey: rest.apiKey || match?.apiKey };
-  });
-  const { providers } = relabelProviders(assignProviderIds(incomingProviders).providers);
-  const llmProviders = providers.map((p) =>
-    p.apiKey && !crypto.isEncrypted(p.apiKey)
-      ? { ...p, apiKey: crypto.encrypt(p.id!, p.apiKey) }
-      : p
-  );
-
-  const { aiGatewayApiKeyPreview: _g, ...incomingRest } = incoming as IAIConfig & {
+  const {
+    aiGatewayApiKeyPreview: _p,
+    aiGatewayApiKeyCount: _c,
+    hasVertexByokCredential: _v,
+    ...rest
+  } = incoming as IAIConfig & {
     aiGatewayApiKeyPreview?: string;
+    aiGatewayApiKeyCount?: number;
+    hasVertexByokCredential?: boolean;
   };
-  let aiGatewayApiKey: string | null | undefined;
-  if (incoming.aiGatewayApiKey === null) {
-    aiGatewayApiKey = null;
-  } else if (incoming.aiGatewayApiKey) {
-    aiGatewayApiKey = crypto.isEncrypted(incoming.aiGatewayApiKey)
-      ? stored?.aiGatewayApiKey
-      : crypto.encrypt(gatewayProviderId, incoming.aiGatewayApiKey);
-  } else {
-    aiGatewayApiKey = stored?.aiGatewayApiKey;
-  }
-
-  // Masked on read (see maskAiConfig), so a config sent without them keeps the stored values.
+  // Masked on read (see maskAiConfig), so a request without them keeps the stored values.
   const aiGatewayApiKeys = incoming.aiGatewayApiKeys ?? stored?.aiGatewayApiKeys;
   const vertexByokCredential = incoming.vertexByokCredential ?? stored?.vertexByokCredential;
-
   return {
-    ...incomingRest,
-    llmProviders,
-    aiGatewayApiKey,
+    ...rest,
+    llmProviders: stored?.llmProviders ?? [],
+    aiGatewayApiKey: stored?.aiGatewayApiKey ?? null,
+    aiGatewayBaseUrl: stored?.aiGatewayBaseUrl ?? null,
+    ...(stored?.aiGatewayMeta ? { aiGatewayMeta: stored.aiGatewayMeta } : {}),
     ...(aiGatewayApiKeys ? { aiGatewayApiKeys } : {}),
     ...(vertexByokCredential ? { vertexByokCredential } : {}),
   };

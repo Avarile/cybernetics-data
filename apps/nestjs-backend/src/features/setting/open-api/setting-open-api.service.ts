@@ -53,8 +53,8 @@ import { InjectStorageAdapter } from '../../attachments/plugins/storage';
 import { getPublicFullStorageUrl } from '../../attachments/plugins/utils';
 import { EMAIL_LOGO_TOKEN } from '../../builtin-assets-init';
 import { verifyTransport } from '../../mail-sender/mail-helpers';
-import { maskAiConfig, mergeIncomingAiConfig } from '../provider-config';
-import { GATEWAY_PROVIDER_ID, ProviderSecretService } from '../provider-secret.service';
+import { applyAiConfigPatch, maskAiConfig } from '../provider-config';
+import { ProviderSecretService } from '../provider-secret.service';
 import { SettingService } from '../setting.service';
 
 const unknownErrorMsg = 'unknown error';
@@ -95,24 +95,14 @@ export class SettingOpenApiService {
 
   async updateSetting(updateSettingRo: Partial<ISettingVo>): Promise<ISettingVo> {
     if (updateSettingRo.aiConfig) {
-      // The UI never holds keys: keep stored keys it did not send, encrypt the ones it did.
+      // Providers and keys are managed through /api/admin/ai/providers; keep the stored ones.
       const stored = await this.settingService.getStoredSetting<IAIConfig>(SettingKey.AI_CONFIG);
-      const merged = mergeIncomingAiConfig(
-        stored,
-        updateSettingRo.aiConfig as IAIConfig,
-        this.keyCrypto,
-        GATEWAY_PROVIDER_ID
-      );
-      updateSettingRo = { ...updateSettingRo, aiConfig: merged };
+      updateSettingRo = {
+        ...updateSettingRo,
+        aiConfig: applyAiConfigPatch(stored, updateSettingRo.aiConfig as IAIConfig),
+      };
     }
     return this.maskSetting(await this.settingService.updateSetting(updateSettingRo));
-  }
-
-  private get keyCrypto() {
-    return {
-      encrypt: (id: string, plain: string) => this.providerSecretService.encryptKey(id, plain),
-      isEncrypted: (value: unknown) => this.providerSecretService.isEncrypted(value),
-    };
   }
 
   private maskSetting(setting: ISettingVo): ISettingVo {

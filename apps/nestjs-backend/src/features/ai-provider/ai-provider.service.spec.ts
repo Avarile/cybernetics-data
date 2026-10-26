@@ -81,6 +81,21 @@ describe('AiProviderService', () => {
     expect(secrets.resolveKey(row().llmProviders[0])).toBe('sk-1');
   });
 
+  it('clears the env var and base URL when sent as null', async () => {
+    const { service, row } = setup();
+    await service.create({
+      id: 'v',
+      type: compat,
+      name: 'V',
+      models: '',
+      baseUrl: 'http://v/v1',
+      apiKeyEnv: 'VLLM_KEY',
+    });
+    await service.update('v', { version: 1, apiKeyEnv: null, baseUrl: null });
+    expect(row().llmProviders[0]).not.toHaveProperty('apiKeyEnv');
+    expect(row().llmProviders[0]).not.toHaveProperty('baseUrl');
+  });
+
   it('removes the key when sent as null', async () => {
     const { service } = setup();
     await service.create({ id: 'x', type: compat, name: 'X', models: '', apiKey: 'sk-1' });

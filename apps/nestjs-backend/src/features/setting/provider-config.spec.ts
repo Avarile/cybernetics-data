@@ -3,8 +3,8 @@ import type { IAIConfig, LLMProvider } from '@teable/openapi';
 import { LLMProviderType } from '@teable/openapi';
 import {
   assignProviderIds,
+  applyAiConfigPatch,
   maskAiConfig,
-  mergeIncomingAiConfig,
   migrateAiConfig,
   relabelProviders,
 } from './provider-config';
@@ -99,95 +99,46 @@ describe('migrateAiConfig', () => {
   });
 });
 
-describe('mergeIncomingAiConfig', () => {
+describe('applyAiConfigPatch', () => {
   const stored: IAIConfig = {
-    llmProviders: [
-      provider({ id: 'vllm', apiKey: 'v1:vllm:t:old', baseUrl: 'http://gpu/v1' }),
-      provider({ id: 'ollama', type: LLMProviderType.OLLAMA, baseUrl: 'http://o/v1' }),
-    ],
+    llmProviders: [provider({ id: 'vllm', apiKey: 'v1:vllm:t:old', baseUrl: 'http://gpu/v1' })],
     aiGatewayApiKey: 'v1:gw:t:gw-old',
+    aiGatewayBaseUrl: 'https://gw.example',
     aiGatewayApiKeys: ['k1', 'k2'],
+    chatModel: { lg: 'a@b@vllm' },
   };
 
-  it('keeps stored keys when the UI sends none (missing or empty)', () => {
-    const merged = mergeIncomingAiConfig(
-      stored,
-      {
-        llmProviders: [
-          provider({ id: 'vllm', baseUrl: 'http://gpu/v1', models: 'm1,m2' }),
-          provider({ id: 'ollama', type: LLMProviderType.OLLAMA, apiKey: '' }),
-        ],
-      },
-      crypto,
-      GATEWAY
-    );
-    expect(merged.llmProviders[0]).toMatchObject({ apiKey: 'v1:vllm:t:old', models: 'm1,m2' });
-    expect(merged.llmProviders[1].apiKey).toBeUndefined();
+  it('keeps stored providers and Gateway key fields whatever the request says', () => {
+    const merged = applyAiConfigPatch(stored, {
+      llmProviders: [],
+      aiGatewayApiKey: 'gw-forged',
+      aiGatewayBaseUrl: 'https://evil.example',
+      chatModel: { lg: 'x@y@vllm' },
+    });
+    expect(merged.llmProviders).toEqual(stored.llmProviders);
     expect(merged.aiGatewayApiKey).toBe('v1:gw:t:gw-old');
+    expect(merged.aiGatewayBaseUrl).toBe('https://gw.example');
     expect(merged.aiGatewayApiKeys).toEqual(['k1', 'k2']);
-  });
-
-  it('matches pre-id providers by type and base URL', () => {
-    const merged = mergeIncomingAiConfig(
-      stored,
-      { llmProviders: [provider({ baseUrl: 'http://gpu/v1' })] },
-      crypto,
-      GATEWAY
-    );
-    expect(merged.llmProviders[0]).toMatchObject({ id: 'vllm', apiKey: 'v1:vllm:t:old' });
-  });
-
-  it('encrypts new keys and new providers', () => {
-    const merged = mergeIncomingAiConfig(
-      stored,
-      {
-        llmProviders: [
-          provider({ id: 'vllm', apiKey: 'sk-new' }),
-          provider({ type: LLMProviderType.OPENAI, apiKey: 'sk-oa', baseUrl: 'https://x/v1' }),
-        ],
-        aiGatewayApiKey: 'gw-new',
-      },
-      crypto,
-      GATEWAY
-    );
-    expect(merged.llmProviders[0].apiKey).toBe('v1:vllm:t:sk-new');
-    expect(merged.llmProviders[1]).toMatchObject({ id: 'openai', apiKey: 'v1:openai:t:sk-oa' });
-    expect(merged.aiGatewayApiKey).toBe(`v1:${GATEWAY}:t:gw-new`);
-  });
-
-  it('removes the Gateway key only when sent as null', () => {
-    const merged = mergeIncomingAiConfig(
-      stored,
-      { llmProviders: [], aiGatewayApiKey: null },
-      crypto,
-      GATEWAY
-    );
-    expect(merged.aiGatewayApiKey).toBeNull();
-  });
-
-  it('never stores a ciphertext sent from outside as a new key', () => {
-    const merged = mergeIncomingAiConfig(
-      stored,
-      { llmProviders: [], aiGatewayApiKey: 'v1:forged:t:x' },
-      crypto,
-      GATEWAY
-    );
-    expect(merged.aiGatewayApiKey).toBe('v1:gw:t:gw-old');
+    expect(merged.chatModel).toEqual({ lg: 'x@y@vllm' });
   });
 
   it('drops the masked read-only fields', () => {
-    const merged = mergeIncomingAiConfig(
-      stored,
-      {
-        llmProviders: [{ ...provider({ id: 'vllm' }), hasApiKey: true, apiKeyPreview: 'x' }],
-        aiGatewayApiKeyPreview: 'y',
-      } as unknown as IAIConfig,
-      crypto,
-      GATEWAY
-    );
-    expect(merged.llmProviders[0]).not.toHaveProperty('hasApiKey');
-    expect(merged.llmProviders[0]).not.toHaveProperty('apiKeyPreview');
+    const merged = applyAiConfigPatch(stored, {
+      llmProviders: [],
+      aiGatewayApiKeyPreview: 'y',
+      aiGatewayApiKeyCount: 2,
+      hasVertexByokCredential: true,
+    } as unknown as IAIConfig);
     expect(merged).not.toHaveProperty('aiGatewayApiKeyPreview');
+    expect(merged).not.toHaveProperty('aiGatewayApiKeyCount');
+    expect(merged).not.toHaveProperty('hasVertexByokCredential');
+  });
+
+  it('starts empty when nothing is stored', () => {
+    expect(applyAiConfigPatch(null, { llmProviders: [] })).toMatchObject({
+      llmProviders: [],
+      aiGatewayApiKey: null,
+    });
   });
 });
 

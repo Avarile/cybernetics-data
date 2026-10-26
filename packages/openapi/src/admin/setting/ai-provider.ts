@@ -62,13 +62,18 @@ const providerWriteFields = llmProviderSchema.omit({
 export const createAiProviderRoSchema = providerWriteFields.extend({ id: providerIdSchema });
 export type ICreateAiProviderRo = z.infer<typeof createAiProviderRoSchema>;
 
-/** Update: `version` must match; a missing `apiKey` keeps the stored key, `null` removes it. */
+/**
+ * Update: `version` must match. A missing field is unchanged; `null` clears `apiKey`, `apiKeyEnv`
+ * and `baseUrl`.
+ */
 export const updateAiProviderRoSchema = providerWriteFields
-  .omit({ id: true, apiKey: true })
+  .omit({ id: true, apiKey: true, apiKeyEnv: true, baseUrl: true })
   .partial()
   .extend({
     version: z.number().int().min(0),
     apiKey: z.string().min(1).nullable().optional(),
+    apiKeyEnv: providerWriteFields.shape.apiKeyEnv.unwrap().nullable().optional(),
+    baseUrl: z.string().url().nullable().optional(),
   });
 export type IUpdateAiProviderRo = z.infer<typeof updateAiProviderRoSchema>;
 
