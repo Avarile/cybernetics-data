@@ -1,0 +1,197 @@
+{
+  "description": "Golden set for the knowledge search (design §11.6). Synthetic company corpus in corpus/; expected holds source refs. kind tags the question type.",
+  "entries": [
+    {
+      "question": "How many paid vacation days do I get a year?",
+      "collection": "knowledge",
+      "expected": ["text:hr-leave"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "Until when can I use the holiday days I didn't take last year?",
+      "collection": "knowledge",
+      "expected": ["text:hr-leave"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "When do I need a doctor's certificate if I'm ill?",
+      "collection": "knowledge",
+      "expected": ["text:hr-leave"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "How long is paid leave for new parents?",
+      "collection": "knowledge",
+      "expected": ["text:hr-leave"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "The VPN says E-HANDSHAKE-17, what do I do?",
+      "collection": "knowledge",
+      "expected": ["text:it-vpn"],
+      "kind": "exact"
+    },
+    {
+      "question": "Where do I get my WireGuard configuration?",
+      "collection": "knowledge",
+      "expected": ["text:it-vpn"],
+      "kind": "exact"
+    },
+    {
+      "question": "Internal hostnames don't resolve over the tunnel",
+      "collection": "knowledge",
+      "expected": ["text:it-vpn"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "Can I fly premium economy on a long flight?",
+      "collection": "knowledge",
+      "expected": ["text:fin-expenses"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "What is the kilometre rate for driving my own car for work?",
+      "collection": "knowledge",
+      "expected": ["text:fin-expenses"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "Deadline for uploading receipts",
+      "collection": "knowledge",
+      "expected": ["text:fin-expenses"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "How do I undo a bad deploy?",
+      "collection": "knowledge",
+      "expected": ["text:eng-deploy"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "crictl rmi timeout",
+      "collection": "knowledge",
+      "expected": ["text:eng-deploy"],
+      "kind": "exact"
+    },
+    {
+      "question": "restart the backend pods without a new image",
+      "collection": "knowledge",
+      "expected": ["text:eng-deploy"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "How fast must I acknowledge a SEV1 page?",
+      "collection": "knowledge",
+      "expected": ["text:eng-oncall"],
+      "kind": "exact"
+    },
+    {
+      "question": "When is the postmortem due?",
+      "collection": "knowledge",
+      "expected": ["text:eng-oncall"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "Who do I call if an outage isn't fixed after half an hour?",
+      "collection": "knowledge",
+      "expected": ["text:eng-oncall"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "Which password manager do we use?",
+      "collection": "knowledge",
+      "expected": ["text:sec-baseline"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "I lost my laptop on the train",
+      "collection": "knowledge",
+      "expected": ["text:sec-baseline"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "What discount can a sales rep give without asking anyone?",
+      "collection": "knowledge",
+      "expected": ["text:sales-pricing"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "Price of the Business plan per seat",
+      "collection": "knowledge",
+      "expected": ["text:sales-pricing"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "How do I book the Ørsted room?",
+      "collection": "knowledge",
+      "expected": ["text:office-guide"],
+      "kind": "exact"
+    },
+    {
+      "question": "How much does the canteen lunch cost?",
+      "collection": "knowledge",
+      "expected": ["text:office-guide"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "How long are database backups kept?",
+      "collection": "knowledge",
+      "expected": ["text:data-retention"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "A customer asked us to delete their personal data. How long do we have?",
+      "collection": "knowledge",
+      "expected": ["text:data-retention"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "What ticket does a manager open before a new hire starts?",
+      "collection": "knowledge",
+      "expected": ["text:onboarding"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "报销发票要在多久内提交？",
+      "collection": "knowledge",
+      "expected": ["text:zh-reimburse"],
+      "kind": "cjk"
+    },
+    {
+      "question": "春节值班怎么安排？",
+      "collection": "knowledge",
+      "expected": ["text:zh-holiday"],
+      "kind": "cjk"
+    },
+    {
+      "question": "INV-2041",
+      "collection": "kb_records",
+      "expected": ["record:bseEval/tblEval/rec04"],
+      "kind": "exact"
+    },
+    {
+      "question": "who is our contact person at Nordlys",
+      "collection": "kb_records",
+      "expected": ["record:bseEval/tblEval/rec08"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "The printer keeps jamming",
+      "collection": "kb_records",
+      "expected": ["record:bseEval/tblEval/rec01"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "What is the guest wifi password?",
+      "collection": "kb_records",
+      "expected": ["record:bseEval/tblEval/rec02"],
+      "kind": "paraphrase"
+    },
+    {
+      "question": "pgbouncer pool size",
+      "collection": "kb_records",
+      "expected": ["record:bseEval/tblEval/rec05"],
+      "kind": "exact"
+    }
+  ]
+}

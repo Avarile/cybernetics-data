@@ -4,6 +4,28 @@ import { RAG_SCHEMA, spaceTable } from './rag-schema';
 export const RRF_K = 60;
 export const DEFAULT_POOL = 40;
 
+/** Words that say nothing about a topic; a question's keyword pass leaves them out. */
+const stopwords = new Set(
+  (
+    'a an and are as at be but by can could did do does for from had has have how i if in into is ' +
+    'it its me my no not of on or our please so that the their them there these they this to was ' +
+    'we were what when where which who whom why will with would you your about after before ' +
+    'should any all some just than then too very also get got need want tell show find'
+  ).split(' ')
+);
+
+/**
+ * The keyword pass of a question (design §11.4): its meaningful terms joined with `or`, so a
+ * chunk ranks by how many it contains instead of needing every word. Quoted text keeps
+ * websearch syntax (phrases, `-exclusions`).
+ */
+export function keywordQuery(text: string): string {
+  if (text.includes('"')) return text;
+  const terms = text.toLowerCase().match(/[\p{L}\p{N}](?:[\p{L}\p{N}_.-]*[\p{L}\p{N}])?/gu) ?? [];
+  const kept = terms.filter((t) => !stopwords.has(t) && (t.length > 1 || /\p{N}/u.test(t)));
+  return [...new Set(kept.length ? kept : terms)].join(' or ');
+}
+
 export const toVectorLiteral = (v: number[]) =>
   `[${v.map((x) => (Number.isFinite(x) ? x : 0)).join(',')}]`;
 
@@ -53,9 +75,10 @@ export function buildHybridQuery(q: IRagQuery): { sql: string; bindings: unknown
   }
   let kwCte = '';
   if (useKeyword) {
-    bindings.push(q.text, q.collections, q.text);
+    const terms = keywordQuery(q.text);
+    bindings.push(terms, q.collections, terms);
     const filter = docFilter('kd');
-    bindings.push(q.text, pool);
+    bindings.push(terms, pool);
     kwCte = `kw AS (
       SELECT c.id AS chunk_id,
              row_number() OVER (ORDER BY ts_rank_cd(c.tsv, websearch_to_tsquery('simple', ?)) DESC) AS r

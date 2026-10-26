@@ -22,6 +22,8 @@ export interface ISearchRequest {
   tableIds?: string[];
   topK?: number;
   rerankModel?: string | null;
+  /** Evaluation only: one pass instead of both (design §11.6). */
+  mode?: 'hybrid' | 'keyword' | 'vector';
   abortSignal?: AbortSignal;
 }
 
@@ -103,7 +105,8 @@ export class KnowledgeSearch {
     const warnings: string[] = [];
     if (!searched.length) return { searched, failed, mode: 'none', warnings, results: [] };
 
-    const { vector, space } = await this.queryVector(req.query, warnings);
+    const { vector, space } =
+      req.mode === 'keyword' ? {} : await this.queryVector(req.query, warnings);
     const hits = await this.rag.query({
       text: req.query,
       collections: searched,
@@ -112,6 +115,7 @@ export class KnowledgeSearch {
       baseIds: req.baseIds,
       tableIds: req.tableIds,
       pool: CANDIDATE_POOL,
+      mode: req.mode,
     });
     const ranked = await this.rerank(req, hits, warnings);
     const results = bySection(ranked.map((r) => r.hit))
@@ -120,7 +124,7 @@ export class KnowledgeSearch {
     return {
       searched,
       failed,
-      mode: `${vector ? 'hybrid' : 'keyword'}${ranked.reranked ? '+rerank' : ''}`,
+      mode: `${req.mode === 'vector' ? 'vector' : vector ? 'hybrid' : 'keyword'}${ranked.reranked ? '+rerank' : ''}`,
       warnings,
       results,
     };

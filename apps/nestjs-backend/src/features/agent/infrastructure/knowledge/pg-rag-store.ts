@@ -429,8 +429,9 @@ export class PgRagStore implements IRagStorePort, OnModuleDestroy {
 
 /** What gets embedded for a chunk (design §11.2 step 3): title › heading path, then the text. */
 export function embeddingText(title: string | null, headingPath: string | null, content: string) {
-  // a record's section is headed by its own title; say it once
+  // say the title once: a record's section is headed by it, a document's top heading often is
   const path = headingPath === title ? null : headingPath;
-  const prefix = [title, path].filter(Boolean).join(' › ');
+  const prefix =
+    title && path?.startsWith(`${title} › `) ? path : [title, path].filter(Boolean).join(' › ');
   return prefix ? `${prefix}\n\n${content}` : content;
 }

@@ -47,6 +47,7 @@
     "pre-test-e2e": "cross-env NODE_ENV=test pnpm -F @teable/db-main-prisma prisma-db-seed -- --e2e",
     "test-e2e": "pnpm pre-test-e2e && vitest run --config ./vitest-e2e.config.ts --silent",
     "test-e2e-cover": "pnpm test-e2e --coverage --bail 1 ${VITEST_SHARD:+--shard=$VITEST_SHARD}",
+    "rag-eval": "vitest run --config ./test/rag-eval/vitest.config.ts",
     "typecheck": "tsc --project ./tsconfig.json --noEmit",
     "lint": "eslint . --ext .ts,.js,.cjs,.mjs,.mdx --cache --cache-location ../../.cache/eslint/nestjs-backend.eslintcache",
     "fix-all-files": "eslint . --ext .ts,.tsx,.js,.jsx,.cjs,.mjs,.mdx --fix",

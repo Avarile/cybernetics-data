@@ -1,0 +1,52 @@
+[
+  {
+    "id": "rec01",
+    "title": "Printer on the third floor jams",
+    "body": "Use tray 2 for A4 paper and keep tray 1 for envelopes. If it still jams, call facilities on extension 2210."
+  },
+  {
+    "id": "rec02",
+    "title": "Guest Wi-Fi",
+    "body": "The guest network is CYB-Guest. Its password rotates every Monday and is posted at reception."
+  },
+  {
+    "id": "rec03",
+    "title": "Resetting an admin's two-factor",
+    "body": "Another instance admin can turn off two-factor for an admin in the instance settings. A single admin who lost the device needs the recovery codes."
+  },
+  {
+    "id": "rec04",
+    "title": "Invoice INV-2041 dispute",
+    "body": "Customer Nordlys ApS disputed INV-2041 because the delivery was late. Credit note CN-118 was issued for 10 percent."
+  },
+  {
+    "id": "rec05",
+    "title": "Postgres connection limits",
+    "body": "max_connections is 200 on the primary. Each service connects through pgbouncer with a pool size of 20."
+  },
+  {
+    "id": "rec06",
+    "title": "Budget approvals",
+    "body": "Budgets above 50,000 EUR need CFO approval; above 500,000 EUR the board decides."
+  },
+  {
+    "id": "rec07",
+    "title": "Company bike scheme",
+    "body": "Employees can lease a bike through salary sacrifice with an allowance of 30 euros a month."
+  },
+  {
+    "id": "rec08",
+    "title": "Nordlys ApS main contact",
+    "body": "The main contact at Nordlys ApS is Mette Holm in procurement. She prefers email over phone calls."
+  },
+  {
+    "id": "rec09",
+    "title": "Coffee machine descaling",
+    "body": "The canteen coffee machine is descaled every second Friday by the cleaning team."
+  },
+  {
+    "id": "rec10",
+    "title": "Staging database refresh",
+    "body": "Staging is refreshed from an anonymised production snapshot every Sunday night at 02:00."
+  }
+]
