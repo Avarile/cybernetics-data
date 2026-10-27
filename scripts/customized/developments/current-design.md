@@ -1,6 +1,6 @@
 # Agent follow-up: search over every table, `/clear`, and the review fixes
 
-Status: **designed 2026-10-27; P0 and P1 done** (commits in §10). Branch: `feat/agentic-database`.
+Status: **designed and built 2026-10-27; P0–P5 done** (commits in §10, as-built notes in §7, §4 and §9). Branch: `feat/agentic-database`.
 The previous content of this file (the admin-only agent design, now implemented) is in git
 history: `git show e6a3eb4:scripts/customized/developments/current-design.md`. What was built is
 in `implementation-report.md`.
@@ -305,6 +305,25 @@ As built (P1), where it differs from the table above:
 
 ---
 
+As built (P2), where it differs from the table above or adds to it:
+
+- **E1:** reproduced in tests that the SDK's pipe stops reading a closed socket (4 of 200 chunks);
+  in practice a stopped turn's tail usually fit the stream buffers. The bug users could see was a
+  closed tab or Stop recording the run as `done`: a stop through the abort signal now ends the run
+  `cancelled`.
+- **E3:** handled without `ignoreIncompleteToolCalls` (createAgentUIStream does not expose it):
+  unfinished tool parts become `output-error` when a stopped turn is saved and when history is
+  read back.
+- **E4:** `fitParts` drops, in order, tool outputs (largest first), long tool errors, reasoning,
+  inputs of finished calls, and the end of long texts; calls and approvals always stay.
+- **E5:** no job deduplication (BullMQ keeps completed job ids); a job folds in up to 5 batches and
+  a second job finds nothing left to do.
+- **E6:** `CacheService.delIfEquals` (one Lua script on Redis), checked against a throwaway Redis.
+- **E7:** `IRunStorePort.transition` (conditional update); the end of a turn also closes only a
+  running run, so a last-moment cancel is kept.
+
+---
+
 ## 8. Part F: frontend thread state
 
 | # | Problem | Fix | Files |
@@ -331,6 +350,28 @@ As built (P1), where it differs from the table above:
 
 ---
 
+As built (P3–P5), where it differs from §4, §5 and §9:
+
+- **§4.4:** every base of the Agent space is excluded, not just the current Agent base (a reset
+  can leave old ones). Tables of an earlier Agent home in another space cannot be told apart (the
+  pack leaves no marker on its tables); that only happens when the installation row is deleted.
+- **§4.6:** `sync-table` jobs come 2 s after the last field event of a table, and a full sync 2 s
+  after an agent_setup change (in-process debounce). No job ids: BullMQ keeps completed ones, which
+  would block later jobs. One full sync runs at a time (cache lock); one asked for meanwhile runs
+  again when it ends. The source reader no longer caches field lists (a sync right after a rename
+  must see the new name). `search` warns only while the first full sync has not finished or the
+  last one failed.
+- **§4.7:** results that are records carry `table` and `base` names.
+- **§5.2:** resolved in `ContextBuilder` from the admin's text, so a resumed turn keeps the skill.
+- **§9:** `BaseSqlExecutorService.executeQuerySql` takes `timeoutMs`; it also applies to its
+  read-only check, which runs the whole query first (so every query runs twice; unchanged).
+  The credential test path is a field next to Test.
+- A record's title now follows the record (ingest used to keep the first title it saw).
+- Eval (46 questions): documents and knowledge records recall@5 0.969 / MRR@5 0.914 (unchanged,
+  gated); ordinary records 1.0 / 0.964; every question across all collections 0.978 / 0.887.
+
+---
+
 ## 10. Phases
 
 One commit per step, as before. Each phase ends with tsc, unit tests and the affected e2e suites.
@@ -352,6 +393,15 @@ Done:
 |---|---|
 | P0 | `c4af13d` skills upgrade in place · `ad64a96` reserved names · `866be88` leftovers |
 | P1 | `a24c4fd1` D1 · `ab510f07` D2 · `11c150dd` D3 · `5195cb7e` D4 |
+| P2 | `793bb945` E1 · `044fbe66` E2 · `cfa28a3e` E3 · `4ada35f7` E4 · `4b6c550e` E5 · `81bf1765` E6 · `42144a82` E7 |
+| P3 | `80faf8c8` settings · `3ccfdcd5` every table · `be6a8b45` row lock · `552e8f4b` tools and skill · `78ce0d15` eval |
+| P4 | `bbcbe975` /clear and F1–F3 · `5b64295e` /skill-name |
+| P5 | `c1735f56` sql_read · `c59a45b9` credential test |
+
+Final check (2026-10-27): typechecks clean (backend, frontend, openapi); unit tests 156 backend
+and 33 frontend; all 16 agent e2e suites pass (111 tests) on the disposable database. Two suites
+in one vitest process sometimes end in a Prisma engine panic after the tests (exit 134); run alone
+they pass.
 
 ---
 
