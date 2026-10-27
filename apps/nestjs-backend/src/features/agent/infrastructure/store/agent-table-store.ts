@@ -28,18 +28,16 @@ import {
   skillSpec,
   threadSpec,
 } from './entity-specs';
+import { fitParts } from './fit-parts';
 import type { IRepoDeps } from './table-repo';
 import { TableRepo } from './table-repo';
 
-/** `agent_messages.parts` is capped (design §7.2); bigger payloads are replaced by a marker. */
+/** `agent_messages.parts` is capped (design §7.2); bigger payloads are shrunk to fit. */
 export const MAX_PARTS_BYTES = 64 * 1024;
 const summaryLength = 100;
 
-const cappedParts = (parts: string | null | undefined) => {
-  if (!parts) return parts;
-  if (Buffer.byteLength(parts, 'utf8') <= MAX_PARTS_BYTES) return parts;
-  return JSON.stringify([{ type: 'text', text: '[parts omitted: larger than 64 KB]' }]);
-};
+const cappedParts = (parts: string | null | undefined) =>
+  parts ? fitParts(parts, MAX_PARTS_BYTES) : parts;
 
 export const messageSummary = (input: IMessageInput) => {
   const text = (input.content ?? '').replace(/\s+/g, ' ').trim();
