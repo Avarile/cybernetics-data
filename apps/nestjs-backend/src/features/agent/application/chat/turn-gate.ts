@@ -8,9 +8,11 @@ import { CustomHttpException } from '../../../../custom.exception';
 import type { IAgentProfile, IThread } from '../../domain/entities';
 import {
   AGENT_STORE_PORT,
+  RUN_STORE_PORT,
   type IAgentRun,
   type IAgentStorePort,
   type IRunStatus,
+  type IRunStorePort,
 } from '../../domain/ports';
 import { RunRegistry } from '../../infrastructure/runs/run-registry';
 import { AgentRuntime, TURN_TIMEOUT_MS } from '../../runtime/agent-runtime';
@@ -37,7 +39,8 @@ export class TurnGate {
     private readonly registry: RunRegistry,
     private readonly runtime: AgentRuntime,
     private readonly jobs: AgentJobs,
-    @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort
+    @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort,
+    @Inject(RUN_STORE_PORT) private readonly runs: IRunStorePort
   ) {}
 
   /** Admin right now (read from the database, not the session), healthy install, a profile. */
@@ -123,6 +126,14 @@ export class TurnGate {
         abort: () => this.registry.abort(input.run.id, 'client closed the connection'),
       };
     } catch (error) {
+      // no model, a model that cannot be resolved, a context that cannot be built: the run
+      // never started, so it must not stay `running`
+      await this.runs
+        .update(input.run.id, {
+          status: 'failed',
+          error: ((error as Error)?.message ?? String(error)).slice(0, 1000),
+        })
+        .catch(() => undefined);
       await settle();
       throw error;
     }

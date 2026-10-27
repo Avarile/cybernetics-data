@@ -246,6 +246,27 @@ describe('Agent chat (e2e)', () => {
     expect(messages.map((m) => [m.role, m.content])).toEqual([['user', 'Are you there?']]);
   });
 
+  it('marks the run failed when the turn cannot start, and the thread stays usable', async () => {
+    play([say('First answer.')]);
+    const first = await turn('Hello');
+    await drain(first.stream);
+    const profile = (await store.getDefaultProfile())!;
+    await store.updateProfile(profile.id, { model: null });
+    await expect(turn('Again', first.threadId)).rejects.toThrow(/no chat model/);
+    await store.updateProfile(profile.id, { model: 'mock/scripted' });
+
+    const last = await prisma.agentRun.findFirstOrThrow({
+      where: { threadRecordId: first.threadId },
+      orderBy: { startedTime: 'desc' },
+    });
+    expect(last.status).toBe('failed');
+    expect(last.error).toMatch(/no chat model/);
+    expect((await runs.activeFor([first.threadId])).size).toBe(0);
+    play([say('Working again.')]);
+    await drain((await turn('Now?', first.threadId)).stream);
+    expect((await messagesOf(first.threadId)).at(-1)?.content).toBe('Working again.');
+  });
+
   it('allows one run per thread at a time', async () => {
     play(['slow']);
     const t = await turn('First');
