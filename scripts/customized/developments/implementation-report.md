@@ -1,342 +1,223 @@
-# Admin-only agent: implementation report
+# Agent follow-up: implementation report
 
-Branch `feat/agentic-database`, 2026-10-27. Implements `current-design.md` (P0–P5, CYBERDATA steps
-01–41). 38 commits from `9036215` to the report commit, nothing pushed. 335 files changed, about
-+28,200 / −5,900 lines without the lockfile and `apps/mastra-ai`. Removing Mastra and the old chat
-took out another 13,500 lines.
+Branch `feat/agentic-database`, 2026-10-27. Implements the follow-up design in `current-design.md`
+(P0–P5): search over every table, `/clear` and server-side `/skill-name`, and the fixes from the
+review of 2026-10-27. 26 commits from `c71ad720` to `629680a1` plus this report, nothing pushed.
+103 files changed, +3,842 / −1,566 lines (without `.claude-flow/`).
+
+The report on the first implementation (the admin-only agent) is in git history:
+`git show 629680a1:scripts/customized/developments/implementation-report.md`.
 
 ## 1. Status
 
-| Phase | Done when (design §15) | Result |
+| Phase | Content | Result |
 |---|---|---|
-| P0 Providers | Ollama and vLLM side by side, env-var keys, no stored key in any response, Gateway migrated | Done (steps 01–08) |
-| P1 Skeleton | enable creates space, base and 6 tables; repair; membership reconcile; lock-down; non-admin 403 | Done (09–17) |
-| P2 Runtime | chat persists, "remember X" is used next turn, approval round-trip | Done, live 15/15 (18–25) |
-| P3 Data | edits a base it has no role in, delete asks, skill uses a credential it never saw | Done, live (26–30) |
-| P4 Knowledge | hybrid recall@5 ≥ baseline, model switch keeps search up, `apps/mastra-ai` deleted | Done (31–38) |
-| P5 Hardening | prompt-injection suite, 500-message load test, docs | Done (39–41) |
+| P0 Skills | built-in skills upgrade in place, stale copies removed, reserved names, leftovers | Done (3 commits) |
+| P1 Security | Agent space off limits to data tools, secret previews, IPv6 guard, membership timer | Done (4) |
+| P2 Reliability | disconnects, failed launches, cut-off tool calls, 64 KB parts, summary, lock, cancel race | Done (7) |
+| P3 Search everywhere | settings, every table indexed and kept in sync, row lock, tools, eval | Done (5) |
+| P4 Chat | `/clear`, fresh thread history, archive and panel fixes, `/skill-name` on the server | Done (2) |
+| P5 Small fixes | `sql_read` row cap and timeout, credential retest | Done (2) |
+
+Decisions taken (design §12): search covers every table minus `search_exclude`; nothing is
+excluded on day one; attachment contents are not indexed; the two new settings have no admin
+screen.
 
 ### What you may want to act on
 
-1. **PM updates are queued, not posted.** The cybernetics-project MCP server disconnected
-   mid-session. Comments and state changes for CYBERDATA-87 to 105 (P2–P5) are saved in the
-   session scratchpad file `pm-pending.md`, ready to post when it reconnects.
-2. **Leftover Redis keys.** Early in the work, about 50 `bull:agent-jobs:*` keys went to your
-   platform Redis (127.0.0.1:30490), before the test environment was pinned. They are harmless.
-   Say the word and I'll delete them; I left them alone.
-3. **Knowledge search is now full-text only** (changed after delivery, §12). The vector store,
-   embedding and rerank models, and the legacy Mastra import are gone. The Mastra schemas in the
-   vector database (`vector_schema`, `index_schema`, `store_schema`, `job_schema`) are no longer
-   read by anything and can be dropped by hand.
-4. **`BACKEND_SECRETS_ENCRYPTION_KEY`** is not set in dev. Secrets then use a key derived from
-   `SECRET_KEY`, and the status page warns about it. Set a dedicated key before production.
-5. **Existing installations** keep their seeded approval list. The new `knowledge_write` category
-   (ingest, collection changes) is on for new installs only. Turn it on in Admin ▸ Agent if you
-   want it on yours. `collection_delete`, `delete_table` and `delete_field` always ask.
-6. **One e2e failure that predates this work:** `test/mcp.e2e-spec.ts` › "deletes records and
-   leaves them restorable" fails because `get_record` on a deleted record returns "Can not get
-   record". It fails the same way without these changes, as does `import-base` ("Invalid URL").
+1. **A database migration ships with this branch:** `20261027000000_add_agent_secret_preview`
+   (postgres and sqlite) adds `agent_secret.preview`. Deploy runs it with the usual migrate step.
+2. **The first agent check after deploy changes the Agent base:** pack version 3 adds
+   `search_scope` and `search_exclude` to `agent_setup` and deletes the old
+   `agent_credentials.preview` column; seed version 4 upgrades the built-in skills that nobody
+   edited (in your k3s data: `knowledge-search` and `rag-search`→`document-search` from v1, and
+   `data-navigation` to v2) and deletes the `-v2` copies the old seeding left active.
+3. **The first full search sync runs about 30 s after boot.** Until it has finished, `search`
+   warns that results may be incomplete. At today's volume (48 tables, about 3,000 records) it
+   takes seconds. To exclude a table or base, add its id to `agent_setup.search_exclude`; the
+   index follows within seconds.
+4. **Your local `cybernetics_k3s` copy is already migrated.** The dev server from an earlier
+   session ran on it in watch mode: the migration, pack version 3 and seed version 4 (all six
+   skills current) are applied there. One leftover: its `agent_credentials.preview` field
+   (`fldEVqc0Wb64LPLp78n`, empty) was not dropped, because the dev server ran a check between the
+   commit's two edits and stored the field map without it. A deploy ships both at once, so this
+   does not happen there; on the copy, delete the field by hand if you like. That dev server is
+   stopped now.
+5. **Project tracking:** this round was not tracked in CYBERDATA. The comments for CYBERDATA-87
+   to 105 from the first round are still unposted (see the earlier report).
+6. **Leftover Redis keys** (about 50 `bull:agent-jobs:*` in your platform Redis, from the first
+   round) are still there; nothing in this round touched that Redis.
 
 ## 2. What was built
 
-### P0: Providers (`9036215`…`5ebddea`)
+### P0: Skills (`c4af13d5`, `ad64a96e`, `866be88a`)
 
-- `SecretCipher`: AES-GCM per purpose (`ai-provider`, `agent-credential`) with associated data
-  (AAD), so a ciphertext can't be moved to another row.
-- Providers get stable ids, env-var keys (`apiKeyEnv`, with deny-listed patterns), custom headers
-  and an `anthropicCompatible` type. Keys are encrypted at rest and only masked previews leave
-  the server.
-- The model-key resolver works by provider id and keeps `@teable` as an alias. A configured
-  Gateway key becomes the `vercel-gateway` provider.
-- Provider routes under `/api/admin/ai`. A Provider Setup UI in Admin ▸ AI Settings, a shared
-  `ModelPicker` and a Default models card.
+- A built-in skill whose body is one we shipped (sha256 of earlier bodies in `previous`) is
+  upgraded in place and keeps its record id; `renamedFrom` renames it; `name-vN` copies earlier
+  seeding added are deleted. An edited skill is never touched; a newer version is offered as an
+  inactive `name-vN` row.
+- `clear`, `new` and `help` cannot be skill names.
+- Comments and test fixtures from the vector-search era are gone.
 
-### P1: Skeleton (`7ee7a85`…`2f9e3ae`)
+### P1: Security (`a24c4fd1`, `ab510f07`, `11c150dd`, `5195cb7e`)
 
-- **Agent robot user** and `AgentExecutionContext`. A run is a fresh CLS context with the robot
-  user and owner permissions; `PermissionService` honours the bypass only for the robot inside a
-  run, and no HTTP path can produce it.
-- **Prisma tables** `agent_installation`, `agent_secret`, `agent_run`, `agent_audit_log`.
-- **Agent schema pack**: 6 tables, built-in skills and a default profile.
-- **`EnsureInstallation`** creates the Agent space and base, then verifies and repairs tables and
-  fields, reconciles membership to the admin set, seeds once, and supports restore from the trash.
-- **Lock-down** of the Agent space: no invites, invite links, shares, template publishing or
-  base moves.
-- **Lifecycle routes**: enable, disable, verify, reset and status.
+- Record and schema writes refuse any base in the Agent space. Before, an update of up to 50
+  records (no approval) could rewrite `agent_credentials.allowed_hosts` and then send the secret
+  to another host.
+- The secret preview moved from the `agent_credentials` table (readable by the agent) to
+  `agent_secret`; `credential_list` no longer returns it. Fields a pack retires are deleted on the
+  next check by the id stored for them (`RETIRED_AGENT_FIELDS`).
+- IPv6 addresses are parsed into groups; mapped (including the `::ffff:7f00:1` form the URL parser
+  produces), SIIT, compatible, NAT64 and 6to4 addresses are judged by the IPv4 address inside;
+  Teredo, documentation, site-local and local-use NAT64 ranges are refused.
+- The Agent space members are reconciled with the instance admins every 15 minutes (a timer with
+  a tick lock, like the email sync scheduler), and changes are audited.
 
-### P2: Runtime (`bad74e6`…`e9ac5d1`)
+### P2: Reliability (`793bb945` … `42144a82`)
 
-- **`AgentTableStore`**: the agent's data lives in the Agent base, addressed by pack keys, so
-  admin renames don't break it.
-- **Policies**: context budget, approval policy, memory ranking.
-- **Toolkit registry and tool wrapper**: untrusted-data fencing, approvals through AI SDK
-  `needsApproval`, and an audit row per call.
-- **Turns**: `RunTurn` and `ResumeTurn` run on `ToolLoopAgent` with a UI message stream. A turn
-  gate allows one run per thread, and turns can be cancelled.
-- **Toolkits**: memory, skills, threads, setup, credentials.
-- **Background jobs** (BullMQ, or the in-process fallback): title, rolling summary, memory
-  extraction, usage and cost.
-- **Frontend**: the agent panel (context chip, `/` skill picker, approval cards, tool steps), the
-  `/agent` page with threads and usage, and Admin ▸ Agent (setup, credentials, audit, restore).
+| Fix | What it was |
+|---|---|
+| E1 | A closed tab or Stop recorded the run as `done`; now `cancelled`. The chat route reads the stream to its end with its own pump; the SDK's pipe stopped after 4 of 200 chunks on a closed socket |
+| E2 | A turn that could not start (no model) left its run `running` for good |
+| E3 | A tool call cut off by a stop was saved without a result; providers refuse such history, so every later turn of the thread would fail. Now saved, and read back, as `output-error` |
+| E4 | A message over 64 KB was replaced by one marker text; `fitParts` now drops tool outputs first and keeps text, calls and approvals |
+| E5 | The rolling summary marked up to 200 messages as summarised but read only the newest 30,000 characters of them, and waited for 10 new ones |
+| E6 | The thread lock was released without checking the owner; now a token and `CacheService.delIfEquals` |
+| E7 | A cancel landing while an approval was answered was overwritten; run changes are now conditional (`IRunStorePort.transition`) |
 
-### P3: Data (`9c704a6`…`15e9d1b`)
+### P3: Search over every table (`80faf8c8`, `3ccfdcd5`, `be6a8b45`, `552e8f4b`, `78ce0d15`)
 
-- **`data_read`**: spaces, bases, tables, describe, query, get, aggregate and search across every
-  space.
-- **`data_write`**: create, update and delete records, at most 100 per call; deletes go to the
-  trash.
-- **`schema`**: create and update tables and fields; deletes always ask.
-- **`sql_read`**: through the base read-only SQL executor, capped at 200 rows, plus
-  `sql_tables`.
-- **Secrets**: a vault on `SecretCipher`. Secret values are write-only through
-  `PUT /api/agent/credentials/:id/secret` and are never returned.
-- **`http_request`** has an SSRF guard. Addresses are resolved and pinned, then private,
-  loopback, link-local, metadata, CGNAT and multicast ranges are refused. Redirects are not
-  followed. Credentials are injected per host and method, and secrets are scrubbed from
-  responses, including base64 and URL-encoded forms.
+See §3 for how it works. In short: every table outside the Agent space (minus `search_exclude`)
+is indexed into a new `records` collection; knowledge tables stay in `kb_records`; the index
+follows record changes, field changes, table deletes and settings changes; a full sync runs after
+boot, daily and on demand. `search` results name their table and base. `search_everywhere` finds
+names only now. The always-loaded `data-navigation` skill tells the agent to call `search` first.
 
-### P4: Knowledge (`3d71911`…`960c33b`)
+### P4: Chat (`bbcbe975`, `5b64295e`)
 
-| Step | Commit | What |
-|---|---|---|
-| 31 | `3d71911` | `agent_rag` schema with collections, documents, sectioned chunks and one vector table per embedding space (HNSW); `PgRagStore`, lazy connect, schema DDL under an advisory lock |
-| 32 | `b236200` | Structure-aware chunker: heading trail `A › B › C`, ~1000-char chunks with 120 overlap at sentence ends (CJK aware), sections ≤ 4000, records as one section |
-| 33 | `dcbedf3` | Ingest jobs: extract (text, chat file or attachment via pdf/docx parsers, URL through the SSRF guard, record) → hash → skip if unchanged → chunk → embed in batches of 100 → one transaction. Derived sync of knowledge tables and `agent_memory` from record events. `agent_setup.knowledge_tables` (empty means auto-detect title + `context`) |
-| 34 | `d8ca44c` | Knowledge toolkit: `knowledge_search`, `rag_search`, `rag_read`, `rag_ingest`, `rag_ingest_status`, `collection_list/create/delete`. Hybrid RRF over 40 candidates, optional rerank (AI SDK `rerank()`), small-to-big by section, snippets ≤ 400 chars, `min_score`, failed collections reported |
-| 35 | `c9ed6a9` | Embedding model switch: changing `embedding_model` builds the new space in the background while search uses the active one; new ingests write to both; backfill → activate → catch-up; retired tables dropped after 7 days |
-| 36 | `abc2d6f` | `pnpm -F @teable/backend rag-eval`: golden set, runner, baseline (§4) |
-| 37 | `eb22018` | `POST /api/agent/admin/knowledge/import-legacy {dryRun}`: rebuilds documents from Mastra's overlapping chunks and re-ingests them as `legacy:<index>/<docName>`; skips `credential` |
-| 38 | `960c33b` | Removed `apps/mastra-ai`, `MastraClientService`, the old agents, the Mastra thread routes, the chat panel, and the internal ai-data endpoint with its context tokens. `MASTRA_*` env, the dev script, `start.sh` and the Dockerfile no longer reference Mastra |
+- `/clear` (or `/new`) starts a new conversation on the page and in the panel, stopping a reply
+  that is still streaming; the picker offers it above the skills.
+- A thread's messages are fetched afresh whenever its chat opens (`AgentThreadChat`); before,
+  going back to a thread showed its history as first loaded, with approval ids the server no
+  longer knew.
+- Archiving the open thread on the Agent page starts a new chat; the side panel reopens on the
+  thread its chat last used.
+- A message starting with `/name` of an active skill (any invocation, `manual` included) puts
+  that skill's body into the turn's system prompt, instead of hoping the model calls `skill_load`.
 
-### P5: Hardening (`c20466c`, `c783620`, this report)
+### P5: Small fixes (`c1735f56`, `c59a45b9`)
 
-- **Prompt-injection suite** (§5) and **500-message load test** (§6).
-- Both turned up a real bug, now fixed (§7, items 1 and 2).
+- `sql_read` wraps the query on its own lines, so a trailing `-- comment` no longer removes the
+  row limit; an unclosed `/*` is refused; queries stop after 15 s, also in the executor's
+  read-only check, which runs the whole query first.
+- A credential marked `invalid` can be tested again and set back to working; the test takes an
+  optional path (API and a field next to Test in Admin ▸ Agent ▸ Credentials).
 
-## 3. Architecture as built
+## 3. Search over every table, as built
 
 ```text
-interface/        agent-chat, agent-lifecycle, agent-settings controllers; AgentAdminGuard
-application/      chat (run, resume, cancel, gate), installation (ensure, seeder, membership,
-                  exposure), admin (configure, credentials), threads, status, jobs (turn jobs),
-                  knowledge (ingest, search, embedding spaces, legacy import, rag jobs)
-domain/           entities, policies (approval, context budget, memory ranking),
-                  ports (store, run, model, audit, data, secret/http, rag + source reader)
-infrastructure/   store (table repo, codecs, entity specs, deadlock retry), runs, audit, data
-                  gateway and writer, secrets vault, outbound http + network policy, llm adapter,
-                  knowledge (pg store, query builder, chunker, source reader, sync listener,
-                  Mastra legacy reader), jobs (agent-jobs, agent-rag processors)
-runtime/          agent runtime, context builder, tool assembler, turn recorder, message mapper
-toolkits/         memory, skills, threads, setup, credentials, data_read, data_write, schema,
-                  sql_read, http, knowledge
-pack/             agent.pack.json (6 tables), defaults, built-in skills
+record / field / table events ─► KnowledgeSyncListener ─► rag jobs ─► KnowledgeSync ─► agent_rag
+agent_setup change (2 s quiet) ─┘        (field changes: 2 s quiet)      │
+KnowledgeSyncScheduler (boot +30 s if due, daily) ─► sync job ───────────┘
+admin POST /api/agent/admin/knowledge/sync ─► KnowledgeSync.syncAll (409 while one runs)
 ```
 
-The agent's own data (setup, memory, threads, messages, skills, credential metadata) lives in the
-Agent base, which admins can read and edit. Runs, audit and secrets live in Prisma tables. Knowledge
-lives in `agent_rag` in the vector database.
+- **Which table goes where** (`SearchTables`): the memory table → `agent_memory`; a knowledge
+  table (configured in `knowledge_tables`, or a primary field plus a text field named `context`)
+  → `kb_records`; with `search_scope` `all`, any other table → `records`. Tables in the Agent
+  space or in `search_exclude` (table or base ids) are never indexed. Tables are known by id;
+  names are looked up when results are returned.
+- **What a record reads as** (`recordText`): its text cells, formatted as the UI shows them
+  (`CellFormat.Text`), read in batches with one field query per batch. Title: the primary field.
+  Knowledge tables: the `context` field. Other tables: every field with a value as
+  `Field name: value`, bookkeeping fields (auto number, created/modified time and by, button)
+  left out; values over 20,000 characters are cut. A set `deleted_at` removes the record.
+- **Jobs:** `ingest-records` (a batch of up to 200 records from one event), `remove`,
+  `sync-table`, `remove-table`, `sync`. Unchanged records cost a hash comparison; documents of
+  vanished records, of tables no longer searched and of tables that moved collection are deleted.
+  `agent_rag.sync_state` records each table's last sync and the full sync (row `*`).
+- **Concurrency:** one full sync at a time (cache lock); one asked for meanwhile runs again after
+  it. `replaceChunks` locks the document row, so two re-indexes of one record run one after the
+  other (six at once used to leave five copies).
+- **Settings:** `search_scope` (`all` or `knowledge`, empty means `all`) and `search_exclude`, in
+  `agent_setup`, changeable with `setup_update` (needs `setup_change` approval) or by editing the
+  table.
 
-## 4. Retrieval evaluation (design §11.6)
+## 4. Search evaluation (`test/rag-eval`, `pnpm -F @teable/backend rag-eval`)
 
-Corpus: 12 documents (2 in Chinese) and 10 knowledge records, all synthetic company material.
-Questions: 32 (paraphrase, exact codes, CJK). Models through AI Gateway:
-`openai/text-embedding-3-small`, rerank `cohere/rerank-v3.5`.
+46 questions: the 32 from before (documents and knowledge records) and 14 on three ordinary
+tables (tasks, contacts, emails; some rows share words with the documents on purpose; codes,
+names and Chinese). Each is asked in its own collection and, as `search` does by default, across
+all of them (mixed).
 
-| Configuration | recall@5 baseline → now | MRR@5 baseline → now | p50 / p95 ms |
+| Set | recall@5 | MRR@5 | p95 |
 |---|---|---|---|
-| keyword only | 0.094 → **0.938** | 0.094 → 0.897 | 2 / 4 |
-| vector only | 1.0 → 1.0 | 1.0 → 1.0 | 720 / 920 |
-| hybrid | 1.0 → 1.0 | 1.0 → 0.979 | 717 / 900 |
-| hybrid + rerank | 1.0 → 1.0 | 0.984 → 0.984 | 1741 / 2207 |
+| Documents and knowledge records (gated at 0.969 / 0.914) | 0.969 | 0.914 | 3 ms |
+| Ordinary records (gated at recall 0.9) | 1.0 | 0.964 | 3 ms |
+| All 46, own collection | 0.978 | 0.929 | 4 ms |
+| All 46, across all collections | 0.978 | 0.887 | 3 ms |
 
-- **Gate.** Hybrid recall@5 must stay at or above the recorded baseline. It passes.
-- **Keyword-pass change.** The baseline showed the keyword pass was nearly useless: it required
-  every word of the question to match. It now ORs the meaningful terms (stopwords dropped).
-  Keyword-only search, the mode when no embedding model is set, went from 9% to 94% recall.
-  Hybrid MRR dropped slightly, with about one question now ranking second.
-- **Rerank** adds about 1 s and no recall on this set, which supports keeping it off by default.
-- **CJK keyword recall is 0.** The `simple` parser treats a CJK run as one token; vectors cover it.
-- **The set is too easy.** Hybrid already scores 1.0, so it can't separate configurations.
-  Extend it with harder questions drawn from your real knowledge records before tuning anything
-  (§10).
+Indexing every table does not lower recall; across collections some documents move down a place
+(MRR 0.929 → 0.887) but stay in the top five. The one miss is the old "I lost my laptop on the
+train" paraphrase, which shares no word with its document.
 
-## 5. Prompt-injection suite (`test/agent-injection.e2e-spec.ts`, 10/10)
+## 5. Bugs found along the way
 
-The model is scripted to obey instructions planted in records, documents and pages. The suite
-checks that the rails hold anyway:
+Beyond the review's list:
 
-- The system prompt says untrusted data is never instructions. Record, document and page text
-  reaches the next model step wrapped as `untrusted_data`.
-- A planted "delete every record" stops at the approval. A denial deletes nothing.
-- `delete_table` and `collection_delete` ask even with every approval switched off.
-- These are refused:
-  - a GET to an unknown host;
-  - the metadata IP 169.254.169.254;
-  - a credential used against a host it isn't allowed for.
-- A POST to an allowed host waits for approval.
-- The credential secret never appears in tool output, prompts, `agent_messages` or the audit log.
-- `setup_update` needs approval.
-- A planted loop is cut at `maxSteps`.
-- Refused calls are audited.
+- **The old seeding left dead instructions active.** Seeding never upgraded a built-in, and its
+  "inactive" `-v2` copies came out active because `is_active` defaults to true and a false
+  checkbox is an empty cell. Your k3s data had `knowledge-search` and `rag-search` v1 (calling
+  removed tools) active next to their v2 copies.
+- **The preview leaked through the table too** (D2), not only through `credential_list`.
+- **A stopped turn was recorded as `done`** (E1); the "hang" the review described was real in
+  principle but rarely reached.
+- **Concurrent re-indexes duplicated chunks**, reproduced with six at once.
+- **A field rename was not seen by a sync within 30 s**: the reader cached field lists.
+- **A record kept its first title** in the index after it was renamed.
+- **Old Agent homes fed the agent its own transcripts**: on the e2e database, earlier test
+  installs left Agent spaces whose `agent_messages` tables were indexed and outranked real
+  results. Every base of the current Agent space is now excluded (§7 for the rest).
+- **`sql_read` ran every query twice without a time limit**: the executor's read-only check
+  executes the full query before the real run.
 
-## 6. Load: a 500-message thread (`test/agent-load.e2e-spec.ts`, 5/5)
+## 6. Deviations from the design
 
-Scripted model, in-process jobs, local disposable Postgres.
+Recorded in `current-design.md` (as-built notes under §7, before §8 and before §10). The main
+ones: E1 and E3 were fixed differently than planned (signal → `cancelled`; error results instead
+of `ignoreIncompleteToolCalls`), D2 needed a migration, D4 has no event listener (`user.delete`
+is never emitted and deactivated users cannot sign in), job de-duplication uses in-process
+debouncing and a re-run flag instead of BullMQ job ids, and the whole Agent space is excluded
+from search.
 
-| Measure | Result |
+## 7. Known limitations and next steps
+
+- **Agent homes in other spaces** (left if someone deletes the `agent_installation` row by hand)
+  are indexed like any table: the schema pack leaves no marker to tell them apart. Your k3s data
+  has one Agent space, so this does not apply there today.
+- **Lookups and formulas** that change through edits in another table are caught by the daily
+  sync; whether Teable also emits record events for them was not checked.
+- **The full sync is one record at a time** within each batch. Fine at today's 3,000 records;
+  at hundreds of thousands it would take minutes and could batch its writes.
+- **Mixed ranking:** a per-collection weight in `buildSearchQuery` could lift documents back up
+  if the agent's answers show it is needed.
+- **Attachments** are indexed by file name only.
+- **Tests:** two agent e2e suites in one vitest process sometimes end in a Prisma engine panic
+  after all tests passed (exit 134). Run alone they pass; not traced further.
+- **Settings UI:** `search_scope` and `search_exclude` are edited in `agent_setup` or by the agent.
+
+## 8. Verification summary
+
+All on the disposable `agent-e2e-pg` database, with `BACKEND_CACHE_REDIS_URI` and
+`BACKEND_PERFORMANCE_CACHE` blanked; the k3s database and the platform Redis were not used.
+
+| Check | Result |
 |---|---|
-| Append 500 messages (batches of 100) | 8.6 s |
-| `GET /api/agent/threads/:id/messages` (all 500, in order) | 0.3 s |
-| History sent to the model | 201 messages, ~22.6k tokens (budget 24k) |
-| Turn latency on the long thread (8 turns) | p50 1.57 s, p95 1.60 s |
-| Delete the thread with its 500 messages | 0.7 s |
-
-## 7. Bugs found and fixed along the way
-
-1. **Deadlocks between a turn and the previous turn's background jobs.** Both write linked rows
-   in the Agent base, and a quick follow-up message got a 500. Agent table writes now retry on
-   Postgres 40P01/40001 (`infrastructure/store/retry.ts`).
-2. **Messages older than the 200-message history window were never summarised.** The drop count
-   only covered budget drops inside the window. Threads now record `summary_through_seq`, and the
-   summary job folds unsummarised older messages in, oldest first, 200 per run, once 10 or more
-   are pending.
-3. **The in-process fallback queue's `addBulk` silently dropped every job.** This affected any
-   caller when Redis is off. Fixed in `local-queue.provider.ts`.
-4. **Keyword search needed every word of the question** (§4).
-5. **A record's title was embedded twice**, and a document's title once more in front of its own
-   top heading. Fixed in `embeddingText`.
-6. **Records that existed before the agent was enabled were never indexed** (found on the K3s
-   data copy: the 151-record knowledge table was invisible to search). Derived sync only followed
-   record events. A full sync now runs on the first knowledge search in each server process
-   (`POST /api/agent/admin/knowledge/sync` reruns it); it skips unchanged records and removes
-   documents of vanished ones. An embedding slot holding a chat model no longer fails indexing:
-   records are indexed for keyword search and the search says why vectors are missing.
-7. **A type error introduced in step 36** (`knowledge-search.ts`) was fixed in step 37. Commit
-   hooks lint but don't typecheck, so it slipped through one commit.
-
-## 8. Operating notes
-
-| Env var | Meaning |
-|---|---|
-| `AGENT_HTTP_ALLOWED_HOSTS` | Hosts `http_request` may reach without a credential |
-| `AGENT_HTTP_ALLOW_PRIVATE_NETWORKS` | Dev and test only |
-| `AGENT_HTTP_TIMEOUT_MS`, `AGENT_HTTP_MAX_RESPONSE_BYTES` | Outbound limits |
-| `BACKEND_SECRETS_ENCRYPTION_KEY` | Key for provider keys and agent secrets |
-| `AI_GATEWAY_API_KEY` | Default `apiKeyEnv` of the `vercel-gateway` provider (kept, §9) |
-| `RAG_EVAL_RECORD`, `RAG_EVAL_DATABASE_URL` | Eval runner only |
-
-Removed: `MASTRA_URL`, `MASTRA_API_KEY`, `AI_DATA_CONTEXT_TTL_SECONDS`, and (§12) the agent's use
-of `AGENT_RAG_DATABASE_URL` and `VECTOR_DATABASE_URL`.
-
-**Knowledge index.** It lives in the `agent_rag` schema of the main database and is created on
-first use. The first search after each start indexes the knowledge tables and memories that
-aren't indexed yet. `POST /api/agent/admin/knowledge/sync` reruns that sync.
-
-**Knowledge tables.** Every table with a primary field and a text field named `context` syncs
-automatically. List table ids in `agent_setup.knowledge_tables` to choose them yourself.
-
-**Eval.** `pnpm -F @teable/backend rag-eval`, with no model or key needed. It uses the local
-disposable `agent_rag_eval` database; `RAG_EVAL_RECORD=1` records a new baseline.
-
-## 9. Deviations from the design
-
-| Design | As built | Why |
-|---|---|---|
-| Panel on `useChat` from `@ai-sdk/react` | A hook on `ai`'s `AbstractChat` | Same behaviour without a second copy of `ai` |
-| Agent chat keeps file upload | Text only in v1 | The chat API takes text; `rag_ingest` accepts chat-file tokens |
-| `oauth2_client_credentials` credentials | Not supported | Not needed for v1 targets |
-| — | `sql_tables` added | The model needs physical table and column names to write SQL |
-| — | View shares locked down too; AiData schema cache invalidated after schema tools | Gaps found while building |
-| Approval categories (§7.2) | Plus `knowledge_write` | Design §8 wants ingest and collection delete to ask |
-| §14.4 removes `AI_GATEWAY_API_KEY` | Kept | P0 made it the `vercel-gateway` provider's key |
-| Golden set from real records (§11.6) | Synthetic corpus | Keeps personal data out of the repo; extend it with real questions |
-| Legacy import as a "script" | Built, then removed (§12) | Production had no Mastra vectors to import |
-| Hybrid vector + keyword search (§11) | Full-text only, in the main database (§12) | Owner's decision after delivery; better recall on the eval than the old keyword pass |
-| `agent_setup` | Plus `knowledge_tables`; `agent_threads` plus `summary_through_seq` | §11.3 "admin can edit the list"; bug 7.2 |
-
-## 10. Known limitations and next steps
-
-- **Retrieval.** Full text matches words, not meaning: "lost my laptop" doesn't find "lost or
-  stolen device". Extend the golden set with real questions from your knowledge tables before
-  tuning chunk sizes or term weighting.
-- **Search scope.** Search is per instance. Knowledge-table sync follows record events, so data
-  written with raw SQL isn't seen until the record changes.
-- **URL ingest** reads text and HTML. Binary files over HTTP (for example PDF) aren't parsed;
-  upload them as files instead.
-- **Live check with a real model.** Run the injection suite's scenarios once against a real model
-  through the panel before production. The automated suite proves the rails, not the model's
-  judgement.
-- **Turn latency** of ~1–1.5 s with a mock model is mostly reading the Agent base (history,
-  memories, skills). It is fine at admin scale; a Prisma message store is the documented next
-  step if it isn't.
-
-## 11. Verification summary
-
-- **Backend unit:** 127 agent tests.
-- **Agent e2e:** 16 suites, 96 tests (after §12), run against the disposable Postgres container
-  `agent-e2e-pg`.
-  - installation, lifecycle and lock-down: 22;
-  - store 6, chat 10, admin 4;
-  - data-read 6, data-write 4, sql-read 3, credentials 4;
-  - rag-store 7, rag-ingest 6, knowledge-toolkit 6, knowledge-sync 3;
-  - injection 10, load 5.
-- **Other e2e:** ai-data 11/11 (rewritten).
-- **Other unit:** openapi 127/127, frontend agent and admin 29/29.
-- **Type checks:** clean for backend, openapi, sdk and nextjs-app.
-- **Live, on the dev server** with a scripted model:
-  - P2 UI walkthrough 15/15, repeated after the Mastra removal;
-  - Admin page 8/8;
-  - P3 chat API checks;
-  - P4 chat API checks (ingest approval, keyword search, read, collections, legacy dry run).
-
-**Test environment.**
-- Disposable Docker Postgres `agent-e2e-pg` on :5432, with the `agent_rag_dev`, `agent_rag_test`
-  and `agent_rag_eval` databases.
-- Dev server on :3000 and scripted fake models on :18080 to :18082.
-- Your k3s databases and Redis were not used, apart from the stray keys in §1.
-
-## 12. Change after delivery: full-text search only (2026-10-27)
-
-Testing on a copy of the K3s data showed two problems:
-- knowledge records that existed before the agent was enabled were never indexed;
-- the embedding slot held a chat model.
-
-Fixes `890e9a3` and `6c61ea4` cover the first: a full sync on first search, and reads that avoid
-the per-user rate limit.
-
-The owner then chose to drop vector search altogether. Decisions:
-- PostgreSQL built-in full-text search.
-- Rerank removed.
-- `rag_search` renamed to `search`, with `knowledge_search` merged into it.
-- `embedding_model` and `rerank_model` removed everywhere.
-- The separate vector database and the legacy import removed.
-
-**What changed**
-
-| Area | Now |
-|---|---|
-| Storage | `agent_rag` in the main database through Prisma (knex builds the SQL); no pgvector, no embedding tables, no `min_score` |
-| Index | Each chunk's `tsv` = title and heading path (weight A) + text (weight D), with CJK runs added as character pairs |
-| Query | Meaningful words matched individually (stopwords dropped); the last word also as a prefix; `"quoted"` input in websearch syntax; ranked by `ts_rank_cd`, one result per section |
-| Ingest | Extract → hash → skip unchanged → chunk → one transaction; no embedding step |
-| Tools | `search(query, collections?, baseIds?, tables?, topK?)`, `rag_read`, `rag_ingest`, `rag_ingest_status`, `collection_list/create/delete`; built-in knowledge skills updated to v2 |
-| Removed | Embedding spaces, backfill and model-switch jobs, rerank, the `embedding_model`/`rerank_model` slots (pack, entity, setup tool, admin UI, status), AI-service embedding and rerank resolvers, the legacy Mastra import (route, reader, tests) |
-
-**Eval (32 questions, synthetic corpus)**
-
-| | Keyword pass before | Full text now |
-|---|---|---|
-| recall@5 | 0.938 | **0.969** |
-| MRR@5 | 0.897 | **0.914** |
-| CJK | 0 | **1.0** |
-| p50 / p95 | 2 / 4 ms | 2 / 4 ms |
-
-The one miss needs meaning, not words ("lost my laptop" vs "lost or stolen device").
-
-**For existing installations**
-- The old `embedding_model` and `rerank_model` columns stay in the Agent base (repair never
-  deletes fields) and are ignored; delete them by hand if you like.
-- The built-in knowledge skills arrive as inactive `-v2` copies; activate them, or edit the
-  originals to call `search`.
-- The old `agent_rag` schema in the vector database, if any, is unused.
-
+| Typecheck: backend, frontend, openapi | clean |
+| Backend unit tests (`src/features/agent`, `src/cache`) | 156 passed |
+| Frontend unit tests (agent and admin blocks) | 33 passed |
+| Agent e2e, all 16 suites | 111 passed |
+| Search eval | §4, gates met |
+| New tests that fail without their fix (checked) | Agent space write block (D1), stop during a tool call (E3), concurrent re-index (row lock), sql_read slow query |
+| Redis compare-and-delete (E6) | checked against a throwaway `redis:7.4-alpine` container, then removed |
+| Real data | the new seed plan dry-run against the k3s copy's skill rows, then applied there by the dev server: 4 search skills → 2, original records kept |
