@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -24,7 +25,6 @@ import {
   IUpdateAgentThreadRo,
   updateAgentThreadRoSchema,
 } from '@teable/openapi';
-import { pipeUIMessageStreamToResponse } from 'ai';
 import { Response } from 'express';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
@@ -34,6 +34,7 @@ import { ResumeTurn } from '../application/chat/resume-turn.usecase';
 import { RunTurn } from '../application/chat/run-turn.usecase';
 import { ManageThreads } from '../application/threads/manage-threads.usecase';
 import { AgentAdminGuard } from './agent-admin.guard';
+import { pumpUIMessageStream } from './ui-stream-pump';
 
 const threadHeader = 'x-agent-thread-id';
 const runHeader = 'x-agent-run-id';
@@ -44,6 +45,8 @@ const threadPath = 'threads/:threadId';
 @Controller('api/agent')
 @UseGuards(AgentAdminGuard)
 export class AgentChatController {
+  private readonly logger = new Logger(AgentChatController.name);
+
   constructor(
     private readonly runTurn: RunTurn,
     private readonly resumeTurn: ResumeTurn,
@@ -68,11 +71,12 @@ export class AgentChatController {
     res.on('close', () => {
       if (!res.writableFinished) turn.abort();
     });
-    pipeUIMessageStreamToResponse({
-      response: res,
-      stream: turn.stream,
-      headers: { [threadHeader]: turn.threadId, [runHeader]: turn.runId },
-    });
+    await pumpUIMessageStream(res, turn.stream, {
+      [threadHeader]: turn.threadId,
+      [runHeader]: turn.runId,
+    }).catch((error) =>
+      this.logger.error(`agent stream ${turn.runId} broke: ${(error as Error).message}`)
+    );
   }
 
   @Post('runs/:runId/cancel')

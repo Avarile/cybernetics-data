@@ -139,7 +139,11 @@ export class AgentRuntime {
       onFinish: async (event) => {
         let status: IRunStatus = 'failed';
         try {
-          status = await recorder.finish(event);
+          // a closed tab or the timeout stops the turn through the signal, not an abort chunk
+          status = await recorder.finish({
+            ...event,
+            isAborted: event.isAborted || signal.aborted,
+          });
         } finally {
           dispose();
           await input.onSettled({ status, droppedMessages: built.droppedMessages });

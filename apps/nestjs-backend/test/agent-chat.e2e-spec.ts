@@ -317,5 +317,31 @@ describe('Agent chat (e2e)', () => {
       const invalid = await getError(() => axios.post(AGENT_CHAT, {}));
       expect(invalid?.status).toBe(400);
     });
+
+    it('a client that goes away mid-reply ends the run and frees the thread', async () => {
+      play(['slow']);
+      const { axios } = await import('@teable/openapi');
+      const controller = new AbortController();
+      const res = await axios.post(
+        AGENT_CHAT,
+        { message: { text: 'Write slowly' } },
+        { responseType: 'stream', signal: controller.signal }
+      );
+      const threadId = res.headers['x-agent-thread-id'];
+      const runId = res.headers['x-agent-run-id'];
+      // read the first bytes, then hang up
+      await new Promise((resolve) => res.data.once('data', resolve));
+      controller.abort();
+      res.data.destroy();
+
+      let status: string | undefined;
+      for (let i = 0; i < 50 && (status = (await runs.get(runId))?.status) === 'running'; i++) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      expect(status).toBe('cancelled');
+      play([say('Back again.')]);
+      await drain((await turn('Still there?', threadId)).stream);
+      expect((await messagesOf(threadId)).at(-1)?.content).toBe('Back again.');
+    });
   });
 });
