@@ -162,6 +162,31 @@ describe('PgRagStore (full-text, main database)', () => {
     expect(section).toMatchObject({ headingPath: 'Expenses', title: 'Staff handbook' });
   });
 
+  it('re-indexing one document at the same time leaves one set of chunks', async () => {
+    const prisma = app.get(PrismaService);
+    const doc = await store.upsertDocument({
+      collectionId: 'kb_records',
+      sourceRef: 'record:bseRace/tblRace/recRace',
+      title: 'Race',
+      contentHash: 'h',
+      status: 'processing',
+      baseId: 'bseRace',
+      tableId: 'tblRace',
+      recordId: 'recRace',
+    });
+    const sections = [{ headingPath: 'Race', content: 'one two', chunks: ['one', 'two'] }];
+    await Promise.all(Array.from({ length: 6 }, () => store.replaceChunks(doc.id, sections)));
+    const rows = await prisma.$queryRawUnsafe<{ level: number; n: number }[]>(
+      `select level, count(*)::int n from agent_rag.chunk where document_id = $1 group by level order by level`,
+      doc.id
+    );
+    expect(rows).toEqual([
+      { level: 0, n: 1 },
+      { level: 1, n: 2 },
+    ]);
+    await store.deleteDocument(doc.id);
+  });
+
   it('deleting a document or a collection removes its chunks', async () => {
     const prisma = app.get(PrismaService);
     await store.deleteDocument(handbook);

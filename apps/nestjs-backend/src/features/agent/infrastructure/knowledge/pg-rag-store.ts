@@ -278,6 +278,9 @@ export class PgRagStore implements IRagStorePort {
     if (!doc) throw new Error(`No document ${documentId}`);
     const chunkCount = sections.reduce((n, s) => n + s.chunks.length, 0);
     return db.$transaction(async (tx) => {
+      // one re-index of a document at a time: two at once (a table sync and a record event)
+      // would each delete the chunks they can see and both insert, leaving two sets
+      await this.rows(tx, qb(documentTable).select('id').where({ id: documentId }).forUpdate());
       await this.rows(tx, qb(chunkTable).where({ document_id: documentId }).delete());
       let seq = 0;
       for (const section of sections) {
