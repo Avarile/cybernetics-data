@@ -2075,6 +2075,7 @@ export type I18nTranslations = {
             "composer": {
                 "skills": string;
                 "placeholder": string;
+                "clear": string;
                 "stop": string;
                 "send": string;
             };

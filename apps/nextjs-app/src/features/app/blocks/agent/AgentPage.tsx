@@ -7,8 +7,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';
-import { AgentChatView } from './AgentChatView';
-import { agentQueryKeys, useAgentSkills, useAgentStatus, useThreadMessages } from './useAgentData';
+import { AgentThreadChat } from './AgentChatView';
+import { agentQueryKeys, useAgentSkills, useAgentStatus } from './useAgentData';
 
 /** Tokens and cost of a thread, for the list. */
 export const formatUsage = (t: Pick<IAgentThreadVo, 'tokensIn' | 'tokensOut' | 'costUsd'>) => {
@@ -77,7 +77,6 @@ export const AgentPage = () => {
     queryKey: [...agentQueryKeys.threads, status],
     queryFn: () => listAgentThreads({ status }),
   });
-  const history = useThreadMessages(opened);
 
   const threads = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -89,16 +88,23 @@ export const AgentPage = () => {
     void router.replace(id ? { pathname: '/agent', query: { thread: id } } : '/agent', undefined, {
       shallow: true,
     });
-  /** Switch the chat to another thread (or a new one). */
-  const openThread = (id?: string) => {
+  /** Switch the chat to another thread. */
+  const openThread = (id: string) => {
     setOpened(id);
     show(id);
+  };
+  /** A new conversation: `+`, `/clear`, or archiving the open thread. */
+  const startNew = () => {
+    setOpened(undefined);
+    show(undefined);
+    // also when no thread was open yet (a reply had just started one)
+    setChatKey((k) => k + 1);
   };
   const archive = async (thread: IAgentThreadVo) => {
     await updateAgentThread(thread.id, {
       status: thread.status === 'archived' ? 'active' : 'archived',
     });
-    if (thread.id === threadId) openThread();
+    if (thread.id === threadId) startNew();
     refresh();
   };
 
@@ -117,10 +123,7 @@ export const AgentPage = () => {
             size="icon-xs"
             variant="ghost"
             title={t('agent.panel.new', 'New chat')}
-            onClick={() => {
-              openThread();
-              setChatKey((k) => k + 1);
-            }}
+            onClick={startNew}
           >
             <Plus className="size-4" />
           </Button>
@@ -160,22 +163,18 @@ export const AgentPage = () => {
         </ul>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col">
-        {opened && history.isLoading ? (
-          <div className="flex-1" />
-        ) : (
-          <AgentChatView
-            key={`${opened ?? 'new'}-${chatKey}`}
-            threadId={opened}
-            initialMessages={history.isError ? [] : history.data}
-            skills={skills}
-            disabled={agent ? !agent.enabled || agent.status !== 'ok' : false}
-            onThread={(id) => {
-              show(id);
-              refresh();
-            }}
-            onTurnFinished={refresh}
-          />
-        )}
+        <AgentThreadChat
+          key={`${opened ?? 'new'}-${chatKey}`}
+          threadId={opened}
+          skills={skills}
+          disabled={agent ? !agent.enabled || agent.status !== 'ok' : false}
+          onThread={(id) => {
+            show(id);
+            refresh();
+          }}
+          onTurnFinished={refresh}
+          onClear={startNew}
+        />
       </main>
     </div>
   );

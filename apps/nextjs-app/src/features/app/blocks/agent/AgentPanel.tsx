@@ -7,12 +7,12 @@ import { Bot, ExternalLink, Maximize2, Minimize2, Plus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { Resizable } from 're-resizable';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useChatPanelStore } from '../../components/sidebar/useChatPanelStore';
-import { AgentChatView } from './AgentChatView';
+import { AgentThreadChat } from './AgentChatView';
 import { ContextChip } from './components/ContextChip';
 import { countSelectedRows, PANEL_DEFAULT_WIDTH, type IGridSelection } from './panel-selection';
-import { useAgentSkills, useAgentStatus, useThreadMessages } from './useAgentData';
+import { useAgentSkills, useAgentStatus } from './useAgentData';
 
 const threadKey = (baseId: string) => `agent-thread:${baseId}`;
 const readThread = (baseId: string) => {
@@ -126,7 +126,10 @@ export const AgentPanel = ({ baseId }: { baseId: string }) => {
 
   const { data: agent } = useAgentStatus(status !== 'close');
   const { data: skills } = useAgentSkills(agent?.tables.agent_skills);
-  const history = useThreadMessages(opened);
+  // closed, the chat is gone: it reopens on the thread it last used, fetched afresh
+  useEffect(() => {
+    if (status === 'close') setOpened(threadId);
+  }, [status, threadId]);
   const { data: gridSelection } = useQuery<IGridSelection | null>({
     queryKey: ReactQueryKeys.gridSelection(baseId),
     queryFn: () => Promise.resolve(null),
@@ -150,8 +153,6 @@ export const AgentPanel = ({ baseId }: { baseId: string }) => {
   let body;
   if (blocked) {
     body = <NotReady text={blocked} />;
-  } else if (opened && history.isLoading) {
-    body = <div className="flex-1" />;
   } else {
     body = (
       <>
@@ -162,16 +163,16 @@ export const AgentPanel = ({ baseId }: { baseId: string }) => {
             onDismiss={() => setContextOff(true)}
           />
         )}
-        <AgentChatView
+        <AgentThreadChat
           key={`${opened ?? 'new'}-${chatKey}`}
           threadId={opened}
-          initialMessages={history.isError ? [] : history.data}
           context={context}
           skills={skills}
           onThread={(id) => {
             writeThread(baseId, id);
             setThreadId(id);
           }}
+          onClear={startNew}
         />
       </>
     );

@@ -15,6 +15,8 @@ export interface IAgentComposerProps {
   skills?: IAgentSkillOption[];
   onSend: (text: string) => void;
   onStop: () => void;
+  /** `/clear` (or `/new`); without it the commands are not offered. */
+  onClear?: () => void;
 }
 
 /** Skills that match what follows a leading `/`. */
@@ -24,21 +26,42 @@ export const matchSkills = (value: string, skills: IAgentSkillOption[]) => {
   return skills.filter((s) => s.name.startsWith(m[1].toLowerCase())).slice(0, 8);
 };
 
-/** Input with send/stop, voice, and a `/` skill picker (design §13). */
+/** A chat command the composer handles itself: start a new conversation. */
+export const isClearCommand = (text: string) => /^\/(?:clear|new)$/i.test(text.trim());
+
+/** Input with send/stop, voice, and a `/` picker for commands and skills (design §13). */
 export const AgentComposer = ({
   busy,
   disabled,
   skills = [],
   onSend,
   onStop,
+  onClear,
 }: IAgentComposerProps) => {
   const { t } = useTranslation('common');
   const [value, setValue] = useState('');
-  const suggestions = useMemo(() => matchSkills(value, skills), [value, skills]);
+  const options = useMemo(
+    () => [
+      ...(onClear
+        ? [{ name: 'clear', description: t('agent.composer.clear', 'Start a new conversation') }]
+        : []),
+      // the server reserves command names; an old skill with one is not offered
+      ...skills.filter((s) => s.name !== 'clear' && s.name !== 'new'),
+    ],
+    [onClear, skills, t]
+  );
+  const suggestions = useMemo(() => matchSkills(value, options), [value, options]);
 
+  const clear = () => {
+    setValue('');
+    onClear?.();
+  };
   const submit = () => {
     const text = value.trim();
-    if (!text || busy || disabled) return;
+    if (!text || disabled) return;
+    // a command works while a reply streams: it stops it
+    if (onClear && isClearCommand(text)) return clear();
+    if (busy) return;
     onSend(text);
     setValue('');
   };
@@ -58,7 +81,7 @@ export const AgentComposer = ({
                 role="option"
                 aria-selected={false}
                 className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
-                onClick={() => setValue(`/${s.name} `)}
+                onClick={() => (onClear && s.name === 'clear' ? clear() : setValue(`/${s.name} `))}
               >
                 <span className="font-medium">/{s.name}</span>
                 {s.description && (
@@ -77,7 +100,10 @@ export const AgentComposer = ({
           disabled={disabled}
           rows={2}
           className="max-h-48 min-h-[44px] resize-none"
-          placeholder={t('agent.composer.placeholder', 'Ask the agent… type / for skills')}
+          placeholder={t(
+            'agent.composer.placeholder',
+            'Ask the agent… type / for skills, /clear for a new chat'
+          )}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {

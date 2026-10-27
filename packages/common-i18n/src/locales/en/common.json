@@ -1767,7 +1767,8 @@
     },
     "composer": {
       "skills": "Skills",
-      "placeholder": "Ask the agent… type / for skills",
+      "placeholder": "Ask the agent… type / for skills, /clear for a new chat",
+      "clear": "Start a new conversation",
       "stop": "Stop",
       "send": "Send"
     },

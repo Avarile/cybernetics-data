@@ -2,6 +2,7 @@ import type { IAgentChatContext } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import { Bot } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
+import { useRef } from 'react';
 import {
   Conversation,
   ConversationContent,
@@ -11,6 +12,7 @@ import {
 import { AgentComposer, type IAgentSkillOption } from './components/AgentComposer';
 import { AgentMessageView } from './components/AgentMessageView';
 import { useAgentChat } from './useAgentChat';
+import { useThreadMessages } from './useAgentData';
 
 export interface IAgentChatViewProps {
   threadId?: string;
@@ -20,6 +22,8 @@ export interface IAgentChatViewProps {
   disabled?: boolean;
   onThread?: (threadId: string) => void;
   onTurnFinished?: () => void;
+  /** `/clear`: the reply (if any) stops and the caller starts a new conversation. */
+  onClear?: () => void;
 }
 
 /** The conversation and the composer; shared by the side panel and the /agent page. */
@@ -31,6 +35,7 @@ export const AgentChatView = ({
   disabled,
   onThread,
   onTurnFinished,
+  onClear,
 }: IAgentChatViewProps) => {
   const { t } = useTranslation('common');
   const chat = useAgentChat({ threadId, initialMessages, context, onThread });
@@ -76,7 +81,23 @@ export const AgentChatView = ({
         skills={skills}
         onSend={(text) => void chat.send(text).then(onTurnFinished)}
         onStop={() => void chat.stop()}
+        onClear={onClear && (() => void chat.stop().then(onClear))}
       />
     </div>
   );
+};
+
+/**
+ * The chat of a stored thread (or a new one): its messages are fetched fresh when it mounts, and
+ * the chat starts from that snapshot, so later refetches never reset a conversation in progress.
+ */
+export const AgentThreadChat = (props: Omit<IAgentChatViewProps, 'initialMessages'>) => {
+  const history = useThreadMessages(props.threadId);
+  const snapshot = useRef<UIMessage[]>();
+  if (!snapshot.current) {
+    if (!props.threadId || history.isError) snapshot.current = [];
+    else if (history.isFetchedAfterMount) snapshot.current = history.data ?? [];
+  }
+  if (!snapshot.current) return <div className="flex-1" />;
+  return <AgentChatView {...props} initialMessages={snapshot.current} />;
 };

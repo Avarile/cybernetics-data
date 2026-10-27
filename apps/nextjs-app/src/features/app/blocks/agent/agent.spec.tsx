@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, userEvent } from '@/test-utils';
 import { answeredApprovals, buildAgentRequestBody, waitingApprovals } from './agent-request';
 import { formatUsage } from './AgentPage';
-import { matchSkills } from './components/AgentComposer';
+import { AgentComposer, isClearCommand, matchSkills } from './components/AgentComposer';
 import { AgentToolStep } from './components/AgentToolStep';
 import { ApprovalCard } from './components/ApprovalCard';
 
@@ -115,7 +115,56 @@ describe('AgentToolStep', () => {
   });
 });
 
+describe('AgentComposer commands', () => {
+  const setup = (props: { busy?: boolean; withClear?: boolean }) => {
+    const onSend = vi.fn();
+    const onClear = vi.fn();
+    render(
+      <AgentComposer
+        busy={Boolean(props.busy)}
+        skills={[{ name: 'clear' }, { name: 'reports', description: 'Weekly reports' }]}
+        onSend={onSend}
+        onStop={vi.fn()}
+        onClear={props.withClear === false ? undefined : onClear}
+      />
+    );
+    return { onSend, onClear, input: screen.getByRole('textbox') };
+  };
+
+  it('/clear starts a new conversation instead of sending, also while a reply streams', async () => {
+    const { onSend, onClear, input } = setup({ busy: true });
+    await userEvent.type(input, '/clear{Enter}');
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(onSend).not.toHaveBeenCalled();
+    expect(input).toHaveValue('');
+    cleanup();
+  });
+
+  it('offers /clear first in the picker, and no skill with its name', async () => {
+    const { onClear, input } = setup({});
+    await userEvent.type(input, '/');
+    const options = screen.getAllByRole('option').map((o) => o.textContent);
+    expect(options[0]).toContain('/clear');
+    expect(options.filter((o) => o?.startsWith('/clear'))).toHaveLength(1);
+    await userEvent.click(screen.getAllByRole('option')[0]);
+    expect(onClear).toHaveBeenCalledTimes(1);
+    cleanup();
+  });
+
+  it('without a clear handler, /clear is ordinary text', async () => {
+    const { onSend, input } = setup({ withClear: false });
+    await userEvent.type(input, '/clear{Enter}');
+    expect(onSend).toHaveBeenCalledWith('/clear');
+    cleanup();
+  });
+});
+
 describe('helpers', () => {
+  it('knows the clear commands', () => {
+    expect(['/clear', ' /new ', '/CLEAR'].every(isClearCommand)).toBe(true);
+    expect(['/clear now', 'clear', '/clearance'].some(isClearCommand)).toBe(false);
+  });
+
   it('matches skills after a slash', () => {
     const skills = [
       { name: 'data-navigation' },

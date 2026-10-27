@@ -18,7 +18,10 @@ export const useAgentStatus = (enabled = true) =>
     staleTime: 60_000,
   });
 
-/** Stored messages of a thread, as UI messages for the chat. */
+/**
+ * Stored messages of a thread, as UI messages for the chat. Fetched again every time a chat
+ * mounts: a thread opened earlier has new messages and answered approvals since.
+ */
 export const useThreadMessages = (threadId?: string) =>
   useQuery({
     queryKey: agentQueryKeys.messages(threadId ?? ''),
@@ -27,7 +30,10 @@ export const useThreadMessages = (threadId?: string) =>
         (m) => ({ id: m.id, role: m.role, parts: m.parts }) as unknown as UIMessage
       ),
     enabled: Boolean(threadId),
-    staleTime: Infinity,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: false,
   });
 

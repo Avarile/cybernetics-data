@@ -1764,7 +1764,8 @@
     },
     "composer": {
       "skills": "技能",
-      "placeholder": "向智能体提问… 输入 / 选择技能",
+      "placeholder": "向智能体提问… 输入 / 选择技能，/clear 开始新对话",
+      "clear": "开始新的对话",
       "stop": "停止",
       "send": "发送"
     },
