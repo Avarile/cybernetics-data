@@ -2,3 +2,6 @@
 {"type":"edit","file":"/home/avarile/Documents/codeRepo/TypeScript/cybernetics-group/cybernetics-data-centre/apps/nextjs-app/src/features/app/blocks/table/chat-panel/components/ChatInputArea.tsx","timestamp":1791628044061,"sessionId":null}
 {"type":"edit","file":"/home/avarile/Documents/codeRepo/TypeScript/cybernetics-group/cybernetics-data-centre/apps/nextjs-app/src/components/ai-elements/prompt-input.tsx","timestamp":1793000327446,"sessionId":null}
 {"type":"edit","file":"/home/avarile/Documents/codeRepo/TypeScript/cybernetics-group/cybernetics-data-centre/apps/nextjs-app/src/components/ai-elements/prompt-input.spec.tsx","timestamp":1793000340720,"sessionId":null}
+{"type":"edit","file":"/home/avarile/Documents/codeRepo/TypeScript/cybernetics-group/cybernetics-data-centre/apps/nextjs-app/src/features/app/blocks/admin/ai-setting/providers/ProviderSheet.tsx","timestamp":1793013116542,"sessionId":null}
+{"type":"edit","file":"/home/avarile/Documents/codeRepo/TypeScript/cybernetics-group/cybernetics-data-centre/apps/nextjs-app/src/features/app/layouts/AgentLayout.tsx","timestamp":1793034490583,"sessionId":null}
+{"type":"edit","file":"/home/avarile/Documents/codeRepo/TypeScript/cybernetics-group/cybernetics-data-centre/packages/openapi/src/agent/admin.ts","timestamp":1793035594844,"sessionId":null}
