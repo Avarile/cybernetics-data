@@ -1,6 +1,6 @@
 # Agent follow-up: search over every table, `/clear`, and the review fixes
 
-Status: **designed 2026-10-27; P0 in progress**. Branch: `feat/agentic-database`.
+Status: **designed 2026-10-27; P0 and P1 done** (commits in §10). Branch: `feat/agentic-database`.
 The previous content of this file (the admin-only agent design, now implemented) is in git
 history: `git show e6a3eb4:scripts/customized/developments/current-design.md`. What was built is
 in `implementation-report.md`.
@@ -274,6 +274,23 @@ little gain over a new thread.
 
 ---
 
+As built (P1), where it differs from the table above:
+
+- **D2:** the preview was also stored in the `agent_credentials` table, which `data_read` and
+  `sql_read` can read. It moved to a new `agent_secret.preview` column (Prisma migration, postgres
+  and sqlite); the admin views read it from the vault. The pack drops the field (pack version 2)
+  and the installation check deletes retired pack fields by their stored id
+  (`RETIRED_AGENT_FIELDS`).
+- **D3:** IPv6 addresses are parsed into groups instead of using `net.BlockList`. Mapped, SIIT,
+  compatible, NAT64 (`64:ff9b::/96`) and 6to4 forms are judged by the IPv4 address they carry, so
+  NAT64 to a public address still works; local-use NAT64, Teredo, documentation and site-local
+  ranges are refused.
+- **D4:** `USER_DELETE` is never emitted and deactivated users cannot sign in, so there is no
+  listener. A 15-minute timer (`membership-scheduler.ts`, the email-sync pattern, since the
+  fallback queue has no repeatable jobs) reconciles and audits changes.
+
+---
+
 ## 7. Part E: reliability fixes
 
 | # | Problem (review id) | Fix | Files |
@@ -326,6 +343,15 @@ One commit per step, as before. Each phase ends with tsc, unit tests and the aff
 | P3 Search everywhere | settings and collection; `SearchTables`; record text; sync state and jobs; schema listeners; row lock; tool/result changes; `search_everywhere` trim; skill text; eval | Biggest change; it builds on the P0 skills and the P2 job fixes |
 | P4 Slash commands and frontend | §5.1 `/clear`, §5.2 server-side skills, F1–F3 | Frontend work together; `/clear` reuses the F2 helper |
 | P5 Small fixes | `sql_read`, credential test | Independent |
+
+---
+
+Done:
+
+| Phase | Commits |
+|---|---|
+| P0 | `c4af13d` skills upgrade in place · `ad64a96` reserved names · `866be88` leftovers |
+| P1 | `a24c4fd1` D1 · `ab510f07` D2 · `11c150dd` D3 · `5195cb7e` D4 |
 
 ---
 
