@@ -122,15 +122,14 @@ describe('Agent load: a 500-message thread (e2e)', () => {
     expect(promptTokens).toBeLessThanOrEqual(DEFAULT_CONTEXT_BUDGET * 1.2);
     expect(JSON.stringify(prompt.at(-1))).toContain('Summarise our discussion');
     expect(t.threadId).toBe(threadId);
-    // the summary job covers the messages that were left out
+    // the summary job covers the messages that were left out: 300+ lie before the window, folded
+    // in oldest first, a batch that fits the summary model's input at a time
     const summarised = await until(
       () => store.getThread(threadId),
-      (th) => Boolean(th.summary),
-      20_000
+      (th) => (th.summaryThroughSeq ?? 0) >= 300,
+      30_000
     );
     expect(summarised.summary).toBeTruthy();
-    // 300+ messages lie before the window: the oldest 200 are folded in first
-    expect(summarised.summaryThroughSeq).toBe(200);
   }, 120_000);
 
   it('turns on the long thread stay fast', async () => {

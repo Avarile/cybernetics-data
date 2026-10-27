@@ -130,19 +130,38 @@ describe('TurnJobs', () => {
     expect(r.prompts).toHaveLength(1);
   });
 
-  it('waits for enough new dropped messages once a summary exists', async () => {
+  it('folds in every newly dropped message, without waiting for more', async () => {
     const r = replies(['Updated summary.']);
     const s = setup(r.model);
     for (let seq = 3; seq <= 30; seq++) {
       s.messages.push({ id: `m${seq}`, role: 'user', seq, content: `Message ${seq}` } as IMessage);
     }
     Object.assign(s.thread, { summary: 'Earlier summary.', summaryThroughSeq: 20 });
-    await s.jobs.summary({ ...s.data, droppedMessages: 25 });
-    expect(r.prompts).toHaveLength(0);
-    await s.jobs.summary({ ...s.data, droppedMessages: 30 });
+    await s.jobs.summary({ ...s.data, droppedMessages: 23 });
     expect(r.prompts[0]).toContain('Message 21');
+    expect(r.prompts[0]).toContain('Message 23');
     expect(r.prompts[0]).not.toContain('Message 20');
-    expect(s.thread).toMatchObject({ summary: 'Updated summary.', summaryThroughSeq: 30 });
+    expect(r.prompts[0]).not.toContain('Message 24');
+    expect(s.thread).toMatchObject({ summary: 'Updated summary.', summaryThroughSeq: 23 });
+  });
+
+  it('summarises long stretches in batches that fit, oldest first, skipping none', async () => {
+    const r = replies(['First part.', 'Second part.', 'Third part.']);
+    const s = setup(r.model);
+    s.messages.length = 0;
+    for (let seq = 1; seq <= 20; seq++) {
+      const content = `Message ${seq} ${'x'.repeat(4000)}`;
+      s.messages.push({ id: `m${seq}`, role: 'user', seq, content } as IMessage);
+    }
+    await s.jobs.summary({ ...s.data, droppedMessages: 20 });
+    // about seven 4,000-character messages fit in one batch
+    expect(r.prompts).toHaveLength(3);
+    expect(r.prompts[0]).toContain('Message 1 ');
+    expect(r.prompts[1]).toContain('First part.');
+    for (let seq = 1; seq <= 20; seq++) {
+      expect(r.prompts.some((p) => p.includes(`Message ${seq} `))).toBe(true);
+    }
+    expect(s.thread).toMatchObject({ summary: 'Third part.', summaryThroughSeq: 20 });
   });
 
   it('extracts memories, updates duplicates instead of adding, and drops secrets', async () => {

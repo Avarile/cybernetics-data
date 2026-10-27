@@ -25,9 +25,9 @@ export interface ITurnJobData {
 const maxTitle = 80;
 const maxSummaryInput = 30_000;
 const maxExtract = 3;
-/** Fold dropped messages into the summary once this many are new (or there is no summary). */
-export const SUMMARY_MIN_NEW = 10;
 const summaryBatch = 200;
+/** Batches one summary job may fold in; a long thread catches up over later turns. */
+const summaryRounds = 5;
 
 export const cleanTitle = (raw: string) =>
   raw
@@ -66,13 +66,28 @@ export function findDuplicate(existing: IMemory[], title: string): IMemory | und
   });
 }
 
+const said = (m: IMessage) => m.role === 'user' || m.role === 'assistant';
+const lineOf = (m: IMessage) =>
+  `${m.role === 'user' ? 'Admin' : 'Agent'}: ${(m.content ?? '').slice(0, 4000)}`;
+
+/** The conversation as text; the newest part when it is longer than `max`. */
 const transcript = (messages: IMessage[], max: number) => {
-  const lines = messages
-    .filter((m) => m.role === 'user' || m.role === 'assistant')
-    .map((m) => `${m.role === 'user' ? 'Admin' : 'Agent'}: ${(m.content ?? '').slice(0, 4000)}`);
-  const text = lines.join('\n\n');
+  const text = messages.filter(said).map(lineOf).join('\n\n');
   return text.length > max ? text.slice(text.length - max) : text;
 };
+
+/** The oldest messages whose transcript fits in `max` characters (at least one). */
+export function fitBatch(messages: IMessage[], max: number): IMessage[] {
+  const batch: IMessage[] = [];
+  let used = 0;
+  for (const m of messages) {
+    const size = said(m) ? lineOf(m).length + 2 : 0;
+    if (batch.length && used + size > max) break;
+    batch.push(m);
+    used += size;
+  }
+  return batch;
+}
 
 const extractionSchema = z.object({
   items: z
@@ -124,31 +139,36 @@ export class TurnJobs {
     if (title) await this.store.updateThread(threadId, { title });
   }
 
-  /** When history no longer fits: fold the dropped messages into the rolling summary. */
+  /**
+   * When history no longer fits: fold the dropped messages into the rolling summary, oldest first,
+   * a batch that fits the model's input at a time. summaryThroughSeq only moves past what was
+   * summarised, so no dropped message is left out of both the history and the summary.
+   */
   async summary({ threadId, droppedMessages }: ITurnJobData) {
     if (!droppedMessages) return;
-    const thread = await this.store.getThread(threadId);
-    const through = thread.summaryThroughSeq ?? 0;
-    const pending = droppedMessages - through;
-    if (pending <= 0 || (pending < SUMMARY_MIN_NEW && thread.summary)) return;
-    // oldest first, a batch at a time: a long thread catches up over a few turns
-    const old = (
-      await this.store.listMessages(threadId, {
-        after: through,
-        first: Math.min(pending, summaryBatch),
-      })
-    ).filter((m) => (m.seq ?? 0) <= droppedMessages);
-    if (!old.length) return;
-    const { text } = await generateText({
-      model: await this.smallModel(),
-      system:
-        'Update the running summary of a conversation between an admin and their workspace agent. Keep decisions, facts, names, ids and open questions. At most 300 words. Plain text.',
-      prompt: `Summary so far:\n${thread.summary ?? '(none)'}\n\nOlder messages:\n${transcript(old, maxSummaryInput)}`,
-    });
-    await this.store.updateThread(threadId, {
-      summary: text.trim() || thread.summary,
-      summaryThroughSeq: old.at(-1)!.seq,
-    });
+    for (let round = 0; round < summaryRounds; round++) {
+      const thread = await this.store.getThread(threadId);
+      const through = thread.summaryThroughSeq ?? 0;
+      if (droppedMessages <= through) return;
+      const pending = (
+        await this.store.listMessages(threadId, {
+          after: through,
+          first: Math.min(droppedMessages - through, summaryBatch),
+        })
+      ).filter((m) => (m.seq ?? 0) <= droppedMessages);
+      if (!pending.length) return;
+      const batch = fitBatch(pending, maxSummaryInput);
+      const { text } = await generateText({
+        model: await this.smallModel(),
+        system:
+          'Update the running summary of a conversation between an admin and their workspace agent. Keep decisions, facts, names, ids and open questions. At most 300 words. Plain text.',
+        prompt: `Summary so far:\n${thread.summary ?? '(none)'}\n\nOlder messages:\n${transcript(batch, maxSummaryInput)}`,
+      });
+      await this.store.updateThread(threadId, {
+        summary: text.trim() || thread.summary,
+        summaryThroughSeq: batch.at(-1)!.seq,
+      });
+    }
   }
 
   /** memory_mode = auto: at most 3 durable items from the last exchange; duplicates update. */
