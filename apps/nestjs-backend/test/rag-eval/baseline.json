@@ -1,16 +1,33 @@
 {
-  "date": "2026-10-26",
-  "questions": 32,
-  "search": "fulltext",
+  "date": "2026-10-27",
+  "questions": 46,
+  "search": "fulltext-all-tables",
   "result": {
-    "recallAt5": 0.969,
-    "mrrAt5": 0.914,
+    "recallAt5": 0.978,
+    "mrrAt5": 0.929,
     "p50Ms": 2,
     "p95Ms": 4,
     "byKind": {
       "paraphrase": 0.957,
       "exact": 1,
-      "cjk": 1
+      "cjk": 1,
+      "record": 1,
+      "record-exact": 1,
+      "record-cjk": 1
+    }
+  },
+  "mixed": {
+    "recallAt5": 0.978,
+    "mrrAt5": 0.887,
+    "p50Ms": 2,
+    "p95Ms": 3,
+    "byKind": {
+      "paraphrase": 0.957,
+      "exact": 1,
+      "cjk": 1,
+      "record": 1,
+      "record-exact": 1,
+      "record-cjk": 1
     }
   }
 }

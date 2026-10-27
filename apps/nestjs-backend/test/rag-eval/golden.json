@@ -192,6 +192,90 @@
       "collection": "kb_records",
       "expected": ["record:bseEval/tblEval/rec05"],
       "kind": "exact"
+    },
+    {
+      "question": "When does the VPN gateway certificate expire?",
+      "collection": "records",
+      "expected": ["record:bseEval/tblTasks/recT01"],
+      "kind": "record"
+    },
+    {
+      "question": "who handles procurement at Nordlys Energi",
+      "collection": "records",
+      "expected": ["record:bseEval/tblContacts/recC01"],
+      "kind": "record"
+    },
+    {
+      "question": "Henrik Lund phone",
+      "collection": "records",
+      "expected": ["record:bseEval/tblContacts/recC01"],
+      "kind": "record-exact"
+    },
+    {
+      "question": "MSKU 4471203",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE01"],
+      "kind": "record-exact"
+    },
+    {
+      "question": "when will the delayed Rotterdam shipment arrive",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE01"],
+      "kind": "record"
+    },
+    {
+      "question": "INV-7730",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE03"],
+      "kind": "record-exact"
+    },
+    {
+      "question": "which task is blocked waiting for the Apple developer account",
+      "collection": "records",
+      "expected": ["record:bseEval/tblTasks/recT06"],
+      "kind": "record"
+    },
+    {
+      "question": "Mika's leave request for the wedding",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE02"],
+      "kind": "record"
+    },
+    {
+      "question": "what power socket does the Kaze robot arm need",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE04"],
+      "kind": "record"
+    },
+    {
+      "question": "Cedar Health signed data processing agreement",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE05"],
+      "kind": "record"
+    },
+    {
+      "question": "Postgres 17 migration",
+      "collection": "records",
+      "expected": ["record:bseEval/tblTasks/recT02"],
+      "kind": "record-exact"
+    },
+    {
+      "question": "team offsite venue near Aarhus",
+      "collection": "records",
+      "expected": ["record:bseEval/tblTasks/recT08"],
+      "kind": "record"
+    },
+    {
+      "question": "王磊的邮箱",
+      "collection": "records",
+      "expected": ["record:bseEval/tblContacts/recC06"],
+      "kind": "record-cjk"
+    },
+    {
+      "question": "增值税发票",
+      "collection": "records",
+      "expected": ["record:bseEval/tblEmails/recE06"],
+      "kind": "record-cjk"
     }
   ]
 }

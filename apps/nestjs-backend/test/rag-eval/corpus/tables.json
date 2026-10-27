@@ -1,0 +1,255 @@
+{
+  "description": "Ordinary tables for the records collection (current-design §4, §11): cells as text, the way the UI formats them. Some rows share words with the knowledge documents on purpose (VPN, leave, expenses, deploy), so the eval shows whether table rows push documents down.",
+  "tables": [
+    {
+      "id": "tblTasks",
+      "name": "Tasks",
+      "fields": [
+        { "id": "fldTaskName", "name": "Name", "type": "singleLineText", "primary": true },
+        { "id": "fldTaskStatus", "name": "Status", "type": "singleSelect" },
+        { "id": "fldTaskOwner", "name": "Owner", "type": "user" },
+        { "id": "fldTaskDue", "name": "Due", "type": "date" },
+        { "id": "fldTaskNotes", "name": "Notes", "type": "longText" },
+        { "id": "fldTaskNo", "name": "No", "type": "autoNumber" }
+      ],
+      "rows": [
+        {
+          "id": "recT01",
+          "cells": {
+            "fldTaskName": "Renew the VPN gateway certificate",
+            "fldTaskStatus": "In progress",
+            "fldTaskOwner": "Mika Jensen",
+            "fldTaskDue": "2026-11-14",
+            "fldTaskNotes": "The certificate on vpn-gw-01 expires mid November. Order through the Sectigo portal.",
+            "fldTaskNo": "1"
+          }
+        },
+        {
+          "id": "recT02",
+          "cells": {
+            "fldTaskName": "Migrate billing database to Postgres 17",
+            "fldTaskStatus": "Planned",
+            "fldTaskOwner": "Ana Ruiz",
+            "fldTaskDue": "2026-12-05",
+            "fldTaskNotes": "Needs a maintenance window; test the logical replication first.",
+            "fldTaskNo": "2"
+          }
+        },
+        {
+          "id": "recT03",
+          "cells": {
+            "fldTaskName": "Quarterly access review",
+            "fldTaskStatus": "Done",
+            "fldTaskOwner": "Lee Chen",
+            "fldTaskDue": "2026-10-01",
+            "fldTaskNotes": "Remove leavers from the finance and HR groups.",
+            "fldTaskNo": "3"
+          }
+        },
+        {
+          "id": "recT04",
+          "cells": {
+            "fldTaskName": "Replace toner in the third floor printer",
+            "fldTaskStatus": "Done",
+            "fldTaskOwner": "Facilities",
+            "fldTaskDue": "2026-10-20",
+            "fldTaskNo": "4"
+          }
+        },
+        {
+          "id": "recT05",
+          "cells": {
+            "fldTaskName": "Prepare the Nordlys renewal quote",
+            "fldTaskStatus": "In progress",
+            "fldTaskOwner": "Sofie Berg",
+            "fldTaskDue": "2026-11-03",
+            "fldTaskNotes": "Three-year term, apply the multi-year discount.",
+            "fldTaskNo": "5"
+          }
+        },
+        {
+          "id": "recT06",
+          "cells": {
+            "fldTaskName": "Set up staging for the mobile app",
+            "fldTaskStatus": "Blocked",
+            "fldTaskOwner": "Ana Ruiz",
+            "fldTaskNotes": "Waiting for the Apple developer account.",
+            "fldTaskNo": "6"
+          }
+        },
+        {
+          "id": "recT07",
+          "cells": {
+            "fldTaskName": "Archive 2019 invoices",
+            "fldTaskStatus": "Planned",
+            "fldTaskOwner": "Dana Holm",
+            "fldTaskNotes": "Seven-year retention ends this year for the 2019 batch.",
+            "fldTaskNo": "7"
+          }
+        },
+        {
+          "id": "recT08",
+          "cells": {
+            "fldTaskName": "Book the team offsite venue",
+            "fldTaskStatus": "In progress",
+            "fldTaskOwner": "Sofie Berg",
+            "fldTaskDue": "2026-11-21",
+            "fldTaskNotes": "Around 40 people, near Aarhus, two nights.",
+            "fldTaskNo": "8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tblContacts",
+      "name": "Contacts",
+      "fields": [
+        { "id": "fldConName", "name": "Name", "type": "singleLineText", "primary": true },
+        { "id": "fldConCompany", "name": "Company", "type": "link" },
+        { "id": "fldConRole", "name": "Role", "type": "singleLineText" },
+        { "id": "fldConEmail", "name": "Email", "type": "singleLineText" },
+        { "id": "fldConPhone", "name": "Phone", "type": "singleLineText" },
+        { "id": "fldConCity", "name": "City", "type": "singleSelect" }
+      ],
+      "rows": [
+        {
+          "id": "recC01",
+          "cells": {
+            "fldConName": "Henrik Lund",
+            "fldConCompany": "Nordlys Energi",
+            "fldConRole": "Head of procurement",
+            "fldConEmail": "henrik.lund@nordlys.example",
+            "fldConPhone": "+45 31 22 90 14",
+            "fldConCity": "Aarhus"
+          }
+        },
+        {
+          "id": "recC02",
+          "cells": {
+            "fldConName": "Grace Okafor",
+            "fldConCompany": "Brightline Logistics",
+            "fldConRole": "CTO",
+            "fldConEmail": "grace@brightline.example",
+            "fldConPhone": "+44 20 7946 0321",
+            "fldConCity": "London"
+          }
+        },
+        {
+          "id": "recC03",
+          "cells": {
+            "fldConName": "Paulo Mendes",
+            "fldConCompany": "Mendes & Filhos",
+            "fldConRole": "Owner",
+            "fldConEmail": "paulo@mendes.example",
+            "fldConCity": "Porto"
+          }
+        },
+        {
+          "id": "recC04",
+          "cells": {
+            "fldConName": "Yuki Tanaka",
+            "fldConCompany": "Kaze Robotics",
+            "fldConRole": "Partner manager",
+            "fldConEmail": "y.tanaka@kaze.example",
+            "fldConPhone": "+81 3 5555 0187",
+            "fldConCity": "Tokyo"
+          }
+        },
+        {
+          "id": "recC05",
+          "cells": {
+            "fldConName": "Amira Haddad",
+            "fldConCompany": "Cedar Health",
+            "fldConRole": "Data protection officer",
+            "fldConEmail": "dpo@cedarhealth.example",
+            "fldConCity": "Copenhagen"
+          }
+        },
+        {
+          "id": "recC06",
+          "cells": {
+            "fldConName": "王磊",
+            "fldConCompany": "上海云帆科技",
+            "fldConRole": "采购经理",
+            "fldConEmail": "wanglei@yunfan.example",
+            "fldConPhone": "+86 21 5555 0199",
+            "fldConCity": "上海"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tblEmails",
+      "name": "Emails",
+      "fields": [
+        { "id": "fldMailSubject", "name": "Subject", "type": "singleLineText", "primary": true },
+        { "id": "fldMailFrom", "name": "From", "type": "singleLineText" },
+        { "id": "fldMailDate", "name": "Date", "type": "date" },
+        { "id": "fldMailBody", "name": "Body", "type": "longText" },
+        { "id": "fldMailBy", "name": "Created by", "type": "createdBy" }
+      ],
+      "rows": [
+        {
+          "id": "recE01",
+          "cells": {
+            "fldMailSubject": "Re: shipment delayed at Rotterdam",
+            "fldMailFrom": "grace@brightline.example",
+            "fldMailDate": "2026-10-22",
+            "fldMailBody": "Customs held container MSKU 4471203 for inspection. New arrival estimate is 29 October. We will waive the storage fees.",
+            "fldMailBy": "sync"
+          }
+        },
+        {
+          "id": "recE02",
+          "cells": {
+            "fldMailSubject": "Leave request 24-28 November",
+            "fldMailFrom": "mika.jensen@company.example",
+            "fldMailDate": "2026-10-19",
+            "fldMailBody": "I would like to take five days off for my sister's wedding. Ana covers the VPN certificate task while I am away.",
+            "fldMailBy": "sync"
+          }
+        },
+        {
+          "id": "recE03",
+          "cells": {
+            "fldMailSubject": "Invoice INV-7730 overdue",
+            "fldMailFrom": "accounts@mendes.example",
+            "fldMailDate": "2026-10-15",
+            "fldMailBody": "Our invoice from August is still unpaid. Please confirm the payment date.",
+            "fldMailBy": "sync"
+          }
+        },
+        {
+          "id": "recE04",
+          "cells": {
+            "fldMailSubject": "Robot arm demo next week",
+            "fldMailFrom": "y.tanaka@kaze.example",
+            "fldMailDate": "2026-10-24",
+            "fldMailBody": "We can bring the KZ-3 arm to Copenhagen on Thursday. It needs a 16 A socket.",
+            "fldMailBy": "sync"
+          }
+        },
+        {
+          "id": "recE05",
+          "cells": {
+            "fldMailSubject": "Data processing agreement signed",
+            "fldMailFrom": "dpo@cedarhealth.example",
+            "fldMailDate": "2026-10-11",
+            "fldMailBody": "Attached is the countersigned DPA. Patient data must stay in the EU region.",
+            "fldMailBy": "sync"
+          }
+        },
+        {
+          "id": "recE06",
+          "cells": {
+            "fldMailSubject": "报价单确认",
+            "fldMailFrom": "wanglei@yunfan.example",
+            "fldMailDate": "2026-10-23",
+            "fldMailBody": "我们已收到年度服务报价，请在十一月底前提供增值税发票。",
+            "fldMailBy": "sync"
+          }
+        }
+      ]
+    }
+  ]
+}
