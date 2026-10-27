@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { HttpErrorCode } from '@cybernetics/core';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
@@ -73,17 +74,23 @@ export class TurnGate {
     return thread;
   }
 
-  /** One run per thread at a time, across replicas. Returns the release function. */
+  /**
+   * One run per thread at a time, across replicas. Returns the release function, which frees the
+   * lock only while this caller still holds it (not after it expired and another turn took it).
+   */
   async lock(threadId: string): Promise<() => Promise<void>> {
     const key = `lock:agent-thread:${threadId}` as const;
     const ttl = Math.ceil(TURN_TIMEOUT_MS / 1000) + 30;
-    if (!(await this.cacheService.setnx(key, threadId, ttl))) {
+    const token = randomUUID();
+    if (!(await this.cacheService.setnx(key, token, ttl))) {
       throw new CustomHttpException(
         'This thread already has a reply in progress. Wait for it or stop it first.',
         HttpErrorCode.CONFLICT
       );
     }
-    return () => this.cacheService.del(key);
+    return async () => {
+      await this.cacheService.delIfEquals(key, token);
+    };
   }
 
   async launch(input: {

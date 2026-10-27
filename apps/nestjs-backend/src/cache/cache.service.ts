@@ -128,6 +128,29 @@ export class CacheService<T extends ICacheStore = ICacheStore> {
     await this.cacheManager.delete(key as string);
   }
 
+  /**
+   * Deletes the key only while it still holds `value` (Redis: one atomic script), so a lock is
+   * released by its owner only, never after it expired and someone else took it.
+   * Returns true when the key was deleted.
+   */
+  async delIfEquals<TKey extends keyof T>(key: TKey, value: T[TKey]): Promise<boolean> {
+    const redis = this.getRedisClient();
+    if (!redis) {
+      // Fallback for non-Redis: not truly atomic, like setnx
+      if ((await this.get(key)) !== value) return false;
+      await this.del(key);
+      return true;
+    }
+    const fullKey = `${this.cacheManager.opts.namespace}:${key as string}`;
+    const result = await redis.eval(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+      1,
+      fullKey,
+      JSON.stringify(value)
+    );
+    return result === 1;
+  }
+
   async getMany<TKey extends keyof T>(keys: TKey[]): Promise<Array<T[TKey] | undefined>> {
     return this.cacheManager.get(keys as string[]);
   }
