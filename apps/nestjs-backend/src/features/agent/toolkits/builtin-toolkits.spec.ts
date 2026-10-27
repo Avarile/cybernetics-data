@@ -219,6 +219,11 @@ describe('built-in toolkits', () => {
             body: 'b',
           })
       ).toThrow(/kebab-case/);
+      expect(() =>
+        kit.tools
+          .find((t) => t.name === 'skill_create')!
+          .input.parse({ name: 'clear', description: 'd', body: 'b' })
+      ).toThrow(/reserved/);
 
       await run(kit, 'skill_update', { name: 'weekly-report', description: 'new' }, c);
       expect(f.skills[1].version).toBe(1);

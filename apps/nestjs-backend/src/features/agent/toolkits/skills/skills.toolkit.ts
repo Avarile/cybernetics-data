@@ -8,11 +8,15 @@ import { ToolkitRegistry } from '../toolkit.registry';
 import type { IToolkit } from '../toolkit.types';
 import { defineTool, TOOLKIT_IDS } from '../toolkit.types';
 
+/** Chat commands the composer handles itself (current-design §5.1); no skill may take them. */
+export const RESERVED_SKILL_NAMES: readonly string[] = ['clear', 'new', 'help'];
+
 /** kebab-case, 64 characters at most; also the `/name` command (design §7.2). */
 export const skillNameSchema = z
   .string()
   .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'use kebab-case, e.g. weekly-report')
-  .max(64);
+  .max(64)
+  .refine((name) => !RESERVED_SKILL_NAMES.includes(name), 'reserved for a chat command');
 const bodySchema = z.string().min(1).max(100_000);
 const invocations = ['auto', 'manual', 'always'] as const;
 
