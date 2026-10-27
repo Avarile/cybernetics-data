@@ -1840,6 +1840,7 @@
       "setSecretHelp": "加密保存，只会发送到",
       "secret": "密钥",
       "test": "测试",
+      "testPath": "测试路径",
       "removeSecret": "移除"
     }
   }

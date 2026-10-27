@@ -173,4 +173,12 @@ describe('OutboundHttp guard', () => {
       make().request({ method: 'GET', url: 'https://api.github.com/', credential: 'nope' })
     ).rejects.toThrow(/credential_request/);
   });
+
+  it('uses a credential marked invalid only for the admin test', async () => {
+    const invalid = make({}, { status: 'invalid', allowedHosts: ['127.0.0.1'] });
+    const req = { method: 'GET', url: 'http://127.0.0.1:1/', credential: 'github' };
+    await expect(invalid.request(req)).rejects.toThrow(/was rejected/);
+    // past the credential check: stopped at the address check instead
+    await expect(invalid.request({ ...req, credentialTest: true })).rejects.toThrow(/private/);
+  });
 });

@@ -75,8 +75,12 @@ export class ManageCredentials {
     return this.view(id);
   }
 
-  /** GET the first allowed host with the secret; 401/403 marks the credential invalid. */
-  async test(actorUserId: string, id: string): Promise<ITestAgentCredentialVo> {
+  /**
+   * GET `path` (default `/`) on the first allowed host with the secret: 401/403 marks the
+   * credential invalid, another answer marks an invalid one set again. Many APIs answer 401 on `/`
+   * even to a good key: give a path the key may read, e.g. /user.
+   */
+  async test(actorUserId: string, id: string, path = '/'): Promise<ITestAgentCredentialVo> {
     const c = await this.credential(id);
     const host = c.allowedHosts.find((h) => !h.startsWith('*.'));
     if (!host) {
@@ -84,7 +88,12 @@ export class ManageCredentials {
     }
     try {
       const res = await this.execution.run({ runId: 'credential-test', actorUserId }, () =>
-        this.http.request({ method: 'GET', url: `https://${host}/`, credential: c.name })
+        this.http.request({
+          method: 'GET',
+          url: `https://${host}${path}`,
+          credential: c.name,
+          credentialTest: true,
+        })
       );
       const rejected = res.status === 401 || res.status === 403;
       if (rejected) await this.store.updateCredential(id, { status: 'invalid' });

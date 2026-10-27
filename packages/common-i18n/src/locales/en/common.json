@@ -1843,6 +1843,7 @@
       "setSecretHelp": "Stored encrypted and only ever sent to",
       "secret": "Secret",
       "test": "Test",
+      "testPath": "Test path",
       "removeSecret": "Remove"
     }
   }

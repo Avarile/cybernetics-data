@@ -108,7 +108,7 @@ export class OutboundHttp implements IHttpPort {
     let forms: string[] = [];
     let credential: ICredentialRef | undefined;
     if (req.credential) {
-      credential = await this.authorize(req.credential, url, method);
+      credential = await this.authorize(req.credential, url, method, req.credentialTest);
       const secret = await this.vault.reveal(credential.id);
       if (!secret) throw refuse(`The secret of ${credential.name} is not set; ask the admin`);
       delete headers.authorization;
@@ -134,11 +134,17 @@ export class OutboundHttp implements IHttpPort {
     };
   }
 
-  private async authorize(name: string, url: URL, method: string) {
+  private async authorize(name: string, url: URL, method: string, test = false) {
     const credential = await this.store.getCredentialByName(name);
     if (!credential) throw refuse(`No credential named ${name}; use credential_request`);
-    if (credential.status !== 'set')
-      throw refuse(`The secret of ${name} is not set; ask the admin`);
+    const usable = credential.status === 'set' || (test && credential.status === 'invalid');
+    if (!usable) {
+      throw refuse(
+        credential.status === 'invalid'
+          ? `The secret of ${name} was rejected; ask the admin to check it`
+          : `The secret of ${name} is not set; ask the admin`
+      );
+    }
     if (credential.expiresAt && new Date(credential.expiresAt).getTime() < Date.now()) {
       throw refuse(`The credential ${name} has expired`);
     }

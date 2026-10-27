@@ -2150,6 +2150,7 @@ export type I18nTranslations = {
                 "setSecretHelp": string;
                 "secret": string;
                 "test": string;
+                "testPath": string;
                 "removeSecret": string;
             };
         };

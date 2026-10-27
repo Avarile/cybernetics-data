@@ -97,6 +97,16 @@ export const setAgentSecretRoSchema = z
   .strict();
 export type ISetAgentSecretRo = z.infer<typeof setAgentSecretRoSchema>;
 
+export const testAgentCredentialRoSchema = z.object({
+  /** Where to send the test request on the first allowed host; default `/`. */
+  path: z
+    .string()
+    .max(500)
+    .regex(/^\/\S*$/, 'a path such as /user')
+    .optional(),
+});
+export type ITestAgentCredentialRo = z.infer<typeof testAgentCredentialRoSchema>;
+
 export const testAgentCredentialVoSchema = z.object({
   ok: z.boolean(),
   status: z.number().optional(),
@@ -207,8 +217,8 @@ export const AgentSecretDeleteRoute: RouteConfig = registerRoute({
 export const AgentCredentialTestRoute: RouteConfig = registerRoute({
   method: 'post',
   path: AGENT_CREDENTIAL_TEST,
-  description: 'Try the credential against its first allowed host',
-  request: { params: credentialParams },
+  description: 'Try the credential against its first allowed host (at path, default /)',
+  request: { params: credentialParams, body: json(testAgentCredentialRoSchema) },
   responses: { 200: { description: 'Result', ...json(testAgentCredentialVoSchema) } },
   tags,
 });
@@ -221,9 +231,13 @@ export const deleteAgentCredentialSecret = async (credentialId: string) =>
   (await axios.delete<IAgentCredentialVo>(urlBuilder(AGENT_CREDENTIAL_SECRET, { credentialId })))
     .data;
 
-export const testAgentCredential = async (credentialId: string) =>
-  (await axios.post<ITestAgentCredentialVo>(urlBuilder(AGENT_CREDENTIAL_TEST, { credentialId })))
-    .data;
+export const testAgentCredential = async (credentialId: string, ro: ITestAgentCredentialRo = {}) =>
+  (
+    await axios.post<ITestAgentCredentialVo>(
+      urlBuilder(AGENT_CREDENTIAL_TEST, { credentialId }),
+      ro
+    )
+  ).data;
 
 export const getAgentSetup = async () => (await axios.get<IAgentSetupVo>(AGENT_SETUP)).data;
 

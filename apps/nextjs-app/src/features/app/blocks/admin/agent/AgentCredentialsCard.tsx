@@ -98,6 +98,8 @@ export const AgentCredentialsCard = () => {
   const { data } = useQuery({ queryKey: ['agent', 'credentials'], queryFn: listAgentCredentials });
   const credentials = useMemo(() => data?.credentials ?? [], [data]);
   const [editing, setEditing] = useState<IAgentCredentialVo | null>(null);
+  // many APIs answer 401 on / even to a good key: the admin may test a path the key can read
+  const [testPaths, setTestPaths] = useState<Record<string, string>>({});
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ['agent', 'credentials'] });
 
   // the link credential_request gives the admin: /admin/agent?credential=<id>
@@ -113,7 +115,12 @@ export const AgentCredentialsCard = () => {
   }, [linked, credentials]);
 
   const test = async (c: IAgentCredentialVo) => {
-    const result = await testAgentCredential(c.id);
+    const path = testPaths[c.id]?.trim();
+    const result = await testAgentCredential(c.id, path ? { path } : {}).catch((error: Error) => ({
+      ok: false,
+      status: undefined,
+      error: error.message,
+    }));
     if (result.ok) toast.success(`${c.name}: HTTP ${result.status}`);
     else toast.error(`${c.name}: ${result.error ?? `HTTP ${result.status}`}`);
     refresh();
@@ -160,6 +167,13 @@ export const AgentCredentialsCard = () => {
               </Button>
               {c.status !== 'missing' && (
                 <>
+                  <Input
+                    className="h-7 w-28 text-xs"
+                    aria-label={t('agent.admin.testPath', 'Test path')}
+                    placeholder="/"
+                    value={testPaths[c.id] ?? ''}
+                    onChange={(e) => setTestPaths((p) => ({ ...p, [c.id]: e.target.value }))}
+                  />
                   <Button size="xs" variant="ghost" onClick={() => void test(c)}>
                     {t('agent.admin.test', 'Test')}
                   </Button>

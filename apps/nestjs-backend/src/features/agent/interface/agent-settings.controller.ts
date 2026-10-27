@@ -24,6 +24,8 @@ import {
   IAgentAuditQuery,
   ISetAgentSecretRo,
   setAgentSecretRoSchema,
+  ITestAgentCredentialRo,
+  testAgentCredentialRoSchema,
   IUpdateAgentSetupRo,
   updateAgentSetupRoSchema,
 } from '@teable/openapi';
@@ -91,9 +93,10 @@ export class AgentSettingsController {
   @Post('credentials/:credentialId/test')
   @HttpCode(200)
   async testCredential(
-    @Param('credentialId') credentialId: string
+    @Param('credentialId') credentialId: string,
+    @Body(new ZodValidationPipe(testAgentCredentialRoSchema)) ro: ITestAgentCredentialRo
   ): Promise<ITestAgentCredentialVo> {
-    return this.credentialsAdmin.test(this.cls.get('user.id'), credentialId);
+    return this.credentialsAdmin.test(this.cls.get('user.id'), credentialId, ro.path);
   }
 
   @Get('audit')

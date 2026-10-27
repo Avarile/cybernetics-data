@@ -28,6 +28,11 @@ export interface IHttpRequest {
   body?: string;
   /** Name of an agent_credentials row whose secret is injected server-side. */
   credential?: string;
+  /**
+   * The admin's credential test: a credential marked invalid may be used, to find out whether it
+   * works again. No tool sets it (tools pass their parsed input only).
+   */
+  credentialTest?: boolean;
 }
 
 export interface IHttpResponse {
