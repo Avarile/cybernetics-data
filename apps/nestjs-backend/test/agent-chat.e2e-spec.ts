@@ -356,6 +356,26 @@ describe('Agent chat (e2e)', () => {
     expect(String(plain?.content)).not.toContain('Reconcile the ledger first');
   });
 
+  it('asks for short spoken answers on a voice turn only', async () => {
+    const systemOf = () =>
+      String(
+        (current.prompts.at(-1) as { role: string; content: unknown }[]).find(
+          (m) => m.role === 'system'
+        )?.content
+      );
+    play([say('Here you go.')]);
+    const spoken = await app
+      .get(RunTurn)
+      .execute(adminId(), { message: { text: 'Read me the totals' }, context: { voice: true } });
+    await drain(spoken.stream);
+    expect(systemOf()).toMatch(/## Voice\n.*short, plain spoken sentences/);
+    expect(systemOf()).not.toContain('## Where the admin is');
+
+    play([say('Typed.')]);
+    await drain((await turn('Now typed', spoken.threadId)).stream);
+    expect(systemOf()).not.toContain('## Voice');
+  });
+
   it('allows one run per thread at a time', async () => {
     play(['slow']);
     const t = await turn('First');

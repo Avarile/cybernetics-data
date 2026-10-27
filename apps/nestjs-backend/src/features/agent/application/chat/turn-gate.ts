@@ -115,13 +115,16 @@ export class TurnGate {
         );
       }
     };
+    // voice is how the admin talks, not what the turn is about (voice design §7.3)
+    const { voice, ...focus } = input.context ?? {};
     try {
       const stream = await this.runtime.start({
         run: input.run,
         thread: input.thread,
         profile: input.profile,
         actorUserId: input.actorUserId,
-        focus: input.context,
+        focus: input.context ? focus : undefined,
+        voice,
         userText: input.userText,
         controller,
         onSettled: settle,

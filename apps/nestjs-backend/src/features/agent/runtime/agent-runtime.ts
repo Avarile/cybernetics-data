@@ -45,6 +45,8 @@ export interface ITurnInput {
   profile: IAgentProfile;
   actorUserId: string;
   focus?: IToolContext['focus'];
+  /** The admin talks by voice: the prompt asks for short spoken answers. */
+  voice?: boolean;
   /** The admin's latest message: ranks memories. */
   userText: string;
   controller: AbortController;
@@ -92,6 +94,7 @@ export class AgentRuntime {
       toolkits: assembled.toolkits,
       userText: input.userText,
       summary: thread.summary,
+      voice: input.voice,
     });
     const history = dropUnknownTools(built.messages, new Set(Object.keys(assembled.tools)));
     const recorder = new TurnRecorder(

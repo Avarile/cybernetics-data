@@ -10,6 +10,8 @@ export const agentChatContextSchema = z
     tableId: z.string().optional(),
     viewId: z.string().optional(),
     recordIds: z.array(z.string()).max(100).optional(),
+    /** Voice design §7.3: the admin talks by voice and hears the reply; answers stay short. */
+    voice: z.boolean().optional(),
   })
   .strict();
 export type IAgentChatContext = z.infer<typeof agentChatContextSchema>;

@@ -29,6 +29,8 @@ export interface IPromptParts {
   /** The skill the admin's `/name` message asks for, if any. */
   requested?: ISkill;
   summary: string | null;
+  /** The admin talks by voice and hears the reply (voice design §7.3). */
+  voice?: boolean;
 }
 
 const memoryLine = (m: IMemory) => `- ${m.title}${m.content ? `: ${m.content}` : ''}`;
@@ -69,6 +71,11 @@ export function requestedSkill(text: string, skills: ISkill[]): ISkill | undefin
   return name ? skills.find((s) => s.name === name) : undefined;
 }
 
+const voiceSection = [
+  '## Voice',
+  'The admin is talking to you by voice and hears your reply read aloud. Answer in short, plain spoken sentences. Put tables, code and long lists in markdown as usual; the app asks the admin to look at them, so do not repeat their contents in prose.',
+].join('\n');
+
 /** The system prompt (design §10.1 step 3), in a fixed order so prompt caching works. */
 export function buildSystemPrompt(p: IPromptParts): string {
   const rules = [
@@ -91,6 +98,8 @@ export function buildSystemPrompt(p: IPromptParts): string {
       ? `## Skill requested by the admin: ${p.requested.name}\nThe admin's message starts with /${p.requested.name}: follow this skill for it.\n${p.requested.body ?? ''}`
       : undefined,
     p.summary ? `## Earlier in this conversation\n${p.summary}` : undefined,
+    // last, so switching voice on or off keeps the cached prefix
+    p.voice ? voiceSection : undefined,
   ]
     .filter((section): section is string => !!section)
     .join('\n\n');
@@ -117,6 +126,7 @@ export class ContextBuilder {
     userText: string;
     summary?: string | null;
     now?: Date;
+    voice?: boolean;
   }): Promise<IBuiltContext> {
     const { profile, ctx } = input;
     const now = input.now ?? new Date();
@@ -152,6 +162,7 @@ export class ContextBuilder {
       always,
       requested,
       summary: input.summary ?? null,
+      voice: input.voice,
     });
 
     let history: IMessage[] = [];

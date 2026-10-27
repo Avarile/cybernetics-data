@@ -14,6 +14,7 @@ import { AgentMessageView } from './components/AgentMessageView';
 import { useAgentChat } from './useAgentChat';
 import { useThreadMessages } from './useAgentData';
 import { useVoiceConversation } from './voice/useVoiceConversation';
+import { useAgentVoiceStore } from './voice/voice-store';
 
 export interface IAgentChatViewProps {
   threadId?: string;
@@ -39,7 +40,14 @@ export const AgentChatView = ({
   onClear,
 }: IAgentChatViewProps) => {
   const { t } = useTranslation('common');
-  const chat = useAgentChat({ threadId, initialMessages, context, onThread });
+  // while voice is on, the agent is asked for short spoken answers (voice design §7.3)
+  const voiceOn = useAgentVoiceStore((s) => s.enabled);
+  const chat = useAgentChat({
+    threadId,
+    initialMessages,
+    context: voiceOn ? { ...context, voice: true } : context,
+    onThread,
+  });
   const busy = chat.status === 'submitted' || chat.status === 'streaming';
   const respond = (approvalId: string, approved: boolean) => {
     void chat.respond(approvalId, approved).then(onTurnFinished);

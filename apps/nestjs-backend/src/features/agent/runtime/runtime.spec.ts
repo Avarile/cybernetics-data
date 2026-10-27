@@ -118,6 +118,24 @@ describe('buildSystemPrompt', () => {
     const always = buildSystemPrompt({ ...parts, always: [weekly], requested: weekly });
     expect(always).not.toContain('requested by the admin');
   });
+
+  it('asks for short spoken answers last, only while the admin talks by voice', () => {
+    const parts = {
+      persona: null,
+      now: new Date('2026-10-27T00:00:00Z'),
+      toolkits: [],
+      pinned: [],
+      relevant: [],
+      catalog: [],
+      always: [],
+      summary: 'They asked about invoices.',
+    };
+    const typed = buildSystemPrompt(parts);
+    const spoken = buildSystemPrompt({ ...parts, voice: true });
+    expect(typed).not.toContain('## Voice');
+    expect(spoken.startsWith(typed)).toBe(true);
+    expect(spoken.slice(typed.length)).toMatch(/^\n\n## Voice\n.*short, plain spoken sentences/);
+  });
 });
 
 describe('ContextBuilder', () => {
