@@ -331,6 +331,31 @@ describe('Agent chat (e2e)', () => {
     expect((await messagesOf(first.threadId)).at(-1)?.content).toBe('Working again.');
   });
 
+  it('a message starting with /name follows that skill, manual ones too', async () => {
+    await store.createSkill({
+      name: 'month-close',
+      description: 'Close the month',
+      body: 'Reconcile the ledger first, then lock the period.',
+      invocation: 'manual',
+      source: 'admin',
+      version: 1,
+    });
+    play([say('Closing October.')]);
+    await drain((await turn('/month-close for October')).stream);
+    const system = (current.prompts.at(-1) as { role: string; content: unknown }[]).find(
+      (m) => m.role === 'system'
+    );
+    expect(String(system?.content)).toContain('## Skill requested by the admin: month-close');
+    expect(String(system?.content)).toContain('Reconcile the ledger first');
+
+    play([say('Sure.')]);
+    await drain((await turn('Tell me about month-close')).stream);
+    const plain = (current.prompts.at(-1) as { role: string; content: unknown }[]).find(
+      (m) => m.role === 'system'
+    );
+    expect(String(plain?.content)).not.toContain('Reconcile the ledger first');
+  });
+
   it('allows one run per thread at a time', async () => {
     play(['slow']);
     const t = await turn('First');

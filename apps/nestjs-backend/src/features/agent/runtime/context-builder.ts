@@ -26,6 +26,8 @@ export interface IPromptParts {
   relevant: IMemory[];
   catalog: ISkill[];
   always: ISkill[];
+  /** The skill the admin's `/name` message asks for, if any. */
+  requested?: ISkill;
   summary: string | null;
 }
 
@@ -53,10 +55,19 @@ const skillsSection = (catalog: ISkill[]) =>
   catalog.length
     ? [
         '## Skills',
-        'Load a skill with skill_load before you follow it. A message that starts with /name asks for that skill.',
+        'Load a skill with skill_load before you follow it.',
         ...catalog.map((s) => `- ${s.name}: ${s.description ?? ''}`.trim()),
       ].join('\n')
     : undefined;
+
+/**
+ * The active skill a message asks for by starting with `/name` (current-design §5.2), any
+ * invocation, `manual` included. An unknown name asks for nothing; the text goes on as it is.
+ */
+export function requestedSkill(text: string, skills: ISkill[]): ISkill | undefined {
+  const name = /^\/([a-z0-9]+(?:-[a-z0-9]+)*)(?=\s|$)/.exec(text.trim())?.[1];
+  return name ? skills.find((s) => s.name === name) : undefined;
+}
 
 /** The system prompt (design §10.1 step 3), in a fixed order so prompt caching works. */
 export function buildSystemPrompt(p: IPromptParts): string {
@@ -76,6 +87,9 @@ export function buildSystemPrompt(p: IPromptParts): string {
     memorySection(p.pinned, p.relevant),
     skillsSection(p.catalog),
     ...p.always.map((s) => `## Skill: ${s.name}\n${s.body ?? ''}`),
+    p.requested && !p.always.includes(p.requested)
+      ? `## Skill requested by the admin: ${p.requested.name}\nThe admin's message starts with /${p.requested.name}: follow this skill for it.\n${p.requested.body ?? ''}`
+      : undefined,
     p.summary ? `## Earlier in this conversation\n${p.summary}` : undefined,
   ]
     .filter((section): section is string => !!section)
@@ -125,6 +139,7 @@ export class ContextBuilder {
     const alwaysIds = new Set(profile.alwaysSkillIds);
     const always = skills.filter((s) => s.invocation === 'always' || alwaysIds.has(s.id));
     const catalog = skills.filter((s) => s.invocation === 'auto' && !always.includes(s));
+    const requested = requestedSkill(input.userText, skills);
 
     const system = buildSystemPrompt({
       persona: profile.persona,
@@ -135,6 +150,7 @@ export class ContextBuilder {
       relevant,
       catalog,
       always,
+      requested,
       summary: input.summary ?? null,
     });
 

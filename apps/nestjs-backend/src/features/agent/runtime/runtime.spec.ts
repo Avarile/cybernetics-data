@@ -5,7 +5,7 @@ import type { IAgentStorePort } from '../domain/ports';
 import type { AgentExecutionContext } from '../infrastructure/execution-context';
 import { ToolkitRegistry } from '../toolkits/toolkit.registry';
 import type { IToolkit } from '../toolkits/toolkit.types';
-import { buildSystemPrompt, ContextBuilder } from './context-builder';
+import { buildSystemPrompt, ContextBuilder, requestedSkill } from './context-builder';
 import { toUIMessage } from './message-mapper';
 import { ToolAssembler } from './tool-assembler';
 
@@ -90,6 +90,33 @@ describe('buildSystemPrompt', () => {
     ].map((s) => prompt.indexOf(s));
     expect(order.every((i) => i >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it('adds the skill a /name message asks for, any invocation, after the always skills', () => {
+    const weekly = skill({ id: 'w', name: 'weekly-report', invocation: 'manual', body: 'Steps.' });
+    const skills = [skill({ name: 'document-search' }), weekly];
+    expect(requestedSkill('/weekly-report for October', skills)).toBe(weekly);
+    expect(requestedSkill('  /weekly-report', skills)).toBe(weekly);
+    expect(requestedSkill('/weekly-reports', skills)).toBeUndefined();
+    expect(requestedSkill('please /weekly-report', skills)).toBeUndefined();
+    expect(requestedSkill('/unknown thing', skills)).toBeUndefined();
+
+    const parts = {
+      persona: null,
+      now: new Date('2026-10-27T00:00:00Z'),
+      toolkits: [],
+      pinned: [],
+      relevant: [],
+      catalog: [],
+      always: [skill({ name: 'house-style', body: 'Be brief.' })],
+      summary: null,
+    };
+    const prompt = buildSystemPrompt({ ...parts, requested: weekly });
+    expect(prompt).toContain('## Skill requested by the admin: weekly-report');
+    expect(prompt.indexOf('Steps.')).toBeGreaterThan(prompt.indexOf('Be brief.'));
+    // an always skill is in the prompt already
+    const always = buildSystemPrompt({ ...parts, always: [weekly], requested: weekly });
+    expect(always).not.toContain('requested by the admin');
   });
 });
 
