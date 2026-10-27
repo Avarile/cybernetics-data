@@ -118,7 +118,6 @@ export interface ICredentialRef {
   allowedHosts: string[];
   allowedMethods: string[];
   status: ICredentialStatus | null;
-  preview: string | null;
   expiresAt: string | null;
   lastUsedAt: string | null;
   skillIds: string[];

@@ -13,8 +13,10 @@ import type { IAgentProfile, ICredentialRef } from '../../domain/entities';
 import {
   AGENT_STORE_PORT,
   AUDIT_PORT,
+  SECRET_VAULT_PORT,
   type IAgentStorePort,
   type IAuditPort,
+  type ISecretVaultPort,
 } from '../../domain/ports';
 
 const auditPage = 50;
@@ -34,7 +36,8 @@ export const toSetupVo = (p: IAgentProfile): IAgentSetupVo => ({
   memoryMode: p.memoryMode,
 });
 
-export const toCredentialVo = (c: ICredentialRef) => ({
+/** `preview` comes from the vault (Prisma), never from the table the agent can read. */
+export const toCredentialVo = (c: ICredentialRef, preview: string | null = null) => ({
   id: c.id,
   name: c.name,
   description: c.description,
@@ -42,7 +45,7 @@ export const toCredentialVo = (c: ICredentialRef) => ({
   allowedHosts: c.allowedHosts,
   allowedMethods: c.allowedMethods,
   status: c.status,
-  preview: c.preview,
+  preview,
   expiresAt: c.expiresAt,
   lastUsedAt: c.lastUsedAt,
 });
@@ -53,6 +56,7 @@ export class ConfigureAgent {
   constructor(
     @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort,
     @Inject(AUDIT_PORT) private readonly audit: IAuditPort,
+    @Inject(SECRET_VAULT_PORT) private readonly vault: ISecretVaultPort,
     private readonly prismaService: PrismaService
   ) {}
 
@@ -85,8 +89,9 @@ export class ConfigureAgent {
 
   async listCredentials(): Promise<IAgentCredentialListVo> {
     const credentials = await this.store.listCredentials();
+    const previews = await this.vault.previews(credentials.map((c) => c.id));
     return {
-      credentials: credentials.map(toCredentialVo),
+      credentials: credentials.map((c) => toCredentialVo(c, previews.get(c.id) ?? null)),
     };
   }
 

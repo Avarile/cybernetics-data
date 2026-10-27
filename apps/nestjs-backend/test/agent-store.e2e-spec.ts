@@ -162,11 +162,8 @@ describe('AgentTableStore (e2e)', () => {
     await store.updateSkill(skill!.id, { credentialIds: [github!.id] });
     expect((await store.getCredentialByName('github'))!.skillIds).toEqual([skill!.id]);
 
-    const updated = await store.updateCredential(github!.id, {
-      status: 'set',
-      preview: 'ghp…a1b2',
-    });
-    expect(updated).toMatchObject({ status: 'set', preview: 'ghp…a1b2' });
+    const updated = await store.updateCredential(github!.id, { status: 'set' });
+    expect(updated).toMatchObject({ status: 'set' });
     expect(await store.listCredentials()).toHaveLength(1);
   });
 

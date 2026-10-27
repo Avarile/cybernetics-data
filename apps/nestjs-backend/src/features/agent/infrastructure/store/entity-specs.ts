@@ -135,7 +135,6 @@ export const credentialSpec: IEntitySpec<ICredentialRef> = {
     allowedHosts: ['allowed_hosts', lines],
     allowedMethods: ['allowed_methods', strings],
     status: ['status', choice<ICredentialStatus>()],
-    preview: ['preview', text],
     expiresAt: ['expires_at', date],
     lastUsedAt: ['last_used_at', date],
     skillIds: ['skills', refs],

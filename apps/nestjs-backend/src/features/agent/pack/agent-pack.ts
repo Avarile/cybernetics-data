@@ -17,6 +17,15 @@ export type IAgentTableKey = (typeof AGENT_TABLES)[keyof typeof AGENT_TABLES];
 
 export const AGENT_PACK_VERSION = agentPackJson.version;
 
+/**
+ * Fields the pack no longer has. An install that still has one (found by the id stored for it,
+ * never by name) drops it on the next check.
+ */
+export const RETIRED_AGENT_FIELDS: Partial<Record<IAgentTableKey, string[]>> = {
+  // the secret preview moved to agent_secret, out of the agent's reach (pack version 2)
+  [AGENT_TABLES.credentials]: ['preview'],
+};
+
 let cached: ISchemaPackCatalog | undefined;
 
 /** The agent pack as its own catalog, separate from the user-facing pack wizard. */

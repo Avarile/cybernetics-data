@@ -1029,6 +1029,8 @@ model AgentSecret {
   // The agent_credentials record the secret belongs to (also the encryption AAD).
   credentialRecordId String    @unique @map("credential_record_id")
   ciphertext         String
+  // What the admin sees of the secret (e.g. ghp_e…2345); kept here, out of the agent's tables.
+  preview            String?
   keyVersion         Int       @default(1) @map("key_version")
   createdBy          String    @map("created_by")
   createdTime        DateTime  @default(now()) @map("created_time")

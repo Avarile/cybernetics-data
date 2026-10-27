@@ -10,7 +10,8 @@ const aad = (credentialId: string) => `agent-credential:${credentialId}`;
 
 /**
  * SecretVaultPort over Prisma `agent_secret` (design D4): AES-256-GCM with its own derived key
- * and the credential record id as AAD. The credential row only ever gets status and preview.
+ * and the credential record id as AAD. The preview stays here too: the credential row, which the
+ * agent can read, only ever gets the status.
  */
 @Injectable()
 export class PrismaSecretVault implements ISecretVaultPort {
@@ -31,14 +32,14 @@ export class PrismaSecretVault implements ISecretVaultPort {
 
   async set(credentialId: string, value: string, actorUserId: string, expiresAt?: string | null) {
     const ciphertext = this.cipher.encrypt({ value }, aad(credentialId));
+    const preview = secretPreview(value);
     await this.prismaService.agentSecret.upsert({
       where: { credentialRecordId: credentialId },
-      create: { credentialRecordId: credentialId, ciphertext, createdBy: actorUserId },
-      update: { ciphertext },
+      create: { credentialRecordId: credentialId, ciphertext, preview, createdBy: actorUserId },
+      update: { ciphertext, preview },
     });
     await this.store.updateCredential(credentialId, {
       status: 'set',
-      preview: secretPreview(value),
       ...(expiresAt !== undefined ? { expiresAt } : {}),
     });
   }
@@ -47,7 +48,7 @@ export class PrismaSecretVault implements ISecretVaultPort {
     await this.prismaService.agentSecret.deleteMany({
       where: { credentialRecordId: credentialId },
     });
-    await this.store.updateCredential(credentialId, { status: 'missing', preview: null });
+    await this.store.updateCredential(credentialId, { status: 'missing' });
   }
 
   async has(credentialId: string) {
@@ -56,6 +57,14 @@ export class PrismaSecretVault implements ISecretVaultPort {
         where: { credentialRecordId: credentialId },
       })) > 0
     );
+  }
+
+  async previews(credentialIds: string[]) {
+    const rows = await this.prismaService.agentSecret.findMany({
+      where: { credentialRecordId: { in: credentialIds } },
+      select: { credentialRecordId: true, preview: true },
+    });
+    return new Map(rows.map((r) => [r.credentialRecordId, r.preview]));
   }
 
   async reveal(credentialId: string) {

@@ -40,6 +40,11 @@ export class ManageCredentials {
     return found;
   }
 
+  private async view(id: string): Promise<IAgentCredentialVo> {
+    const c = await this.credential(id);
+    return toCredentialVo(c, (await this.vault.previews([id])).get(id) ?? null);
+  }
+
   private log(actorUserId: string, tool: string, name: string, summary: string) {
     return this.audit.append({
       runId: 'admin',
@@ -60,14 +65,14 @@ export class ManageCredentials {
     const c = await this.credential(id);
     await this.vault.set(id, ro.value, actorUserId, ro.expiresAt ?? null);
     await this.log(actorUserId, 'credential.set', c.name, 'secret set');
-    return toCredentialVo(await this.credential(id));
+    return this.view(id);
   }
 
   async deleteSecret(actorUserId: string, id: string): Promise<IAgentCredentialVo> {
     const c = await this.credential(id);
     await this.vault.delete(id);
     await this.log(actorUserId, 'credential.delete', c.name, 'secret removed');
-    return toCredentialVo(await this.credential(id));
+    return this.view(id);
   }
 
   /** GET the first allowed host with the secret; 401/403 marks the credential invalid. */

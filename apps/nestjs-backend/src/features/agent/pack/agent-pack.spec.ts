@@ -33,8 +33,10 @@ describe('agent schema pack', () => {
       expect.arrayContaining(['thread', 'seq', 'role', 'content', 'parts'])
     );
     expect(fields('agent_credentials')).toEqual(
-      expect.arrayContaining(['name', 'auth_kind', 'allowed_hosts', 'status', 'preview', 'skills'])
+      expect.arrayContaining(['name', 'auth_kind', 'allowed_hosts', 'status', 'skills'])
     );
+    // nothing derived from a secret in a table the agent can read
+    expect(fields('agent_credentials')).not.toContain('preview');
     expect(fields('agent_threads')).toEqual(
       expect.arrayContaining(['messages', 'memories', 'owner'])
     );

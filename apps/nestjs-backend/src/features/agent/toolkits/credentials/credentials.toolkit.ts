@@ -26,7 +26,6 @@ const view = (c: ICredentialRef) => ({
   allowedHosts: c.allowedHosts,
   allowedMethods: c.allowedMethods,
   status: c.status,
-  preview: c.preview,
   expiresAt: c.expiresAt,
 });
 

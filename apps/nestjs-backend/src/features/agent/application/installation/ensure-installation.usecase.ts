@@ -21,7 +21,11 @@ import {
 import { AGENT_INSTALLATION_ID } from '../../infrastructure/agent-home';
 import { AgentExecutionContext } from '../../infrastructure/execution-context';
 import { AGENT_SEED_VERSION } from '../../pack/agent-defaults';
-import { AGENT_PACK_VERSION, getAgentPackCatalog } from '../../pack/agent-pack';
+import {
+  AGENT_PACK_VERSION,
+  getAgentPackCatalog,
+  RETIRED_AGENT_FIELDS,
+} from '../../pack/agent-pack';
 import { AgentSeeder } from './agent-seeder';
 import { AgentExposureService, type IRevokedExposure } from './exposure';
 import { AgentMembershipService } from './membership';
@@ -279,6 +283,11 @@ export class EnsureInstallation implements OnApplicationBootstrap, IAgentLayoutP
       }
     }
 
+    const retired = await this.execution.run(runScope, () =>
+      this.dropRetired(stored.fieldMap, verified.tableMap)
+    );
+    if (retired.length) this.logger.log(`Agent fields retired: ${retired.join(', ')}`);
+
     let seeded: { setup: number; skills: number } | undefined;
     if (row.seededVersion < AGENT_SEED_VERSION) {
       seeded = await this.execution.run(runScope, () =>
@@ -288,6 +297,7 @@ export class EnsureInstallation implements OnApplicationBootstrap, IAgentLayoutP
 
     const health = this.health(verified, members, repaired, revoked, seeded);
     const changed =
+      retired.length +
       members.added.length +
       members.removed.length +
       repaired.tables.length +
@@ -334,6 +344,26 @@ export class EnsureInstallation implements OnApplicationBootstrap, IAgentLayoutP
     for (const { tableId, fieldId, name } of detached) {
       await this.fieldOpenApiService.updateField(tableId, fieldId, { name: `${name} (detached)` });
     }
+  }
+
+  /** Deletes the fields the pack retired, by the id stored for them. */
+  private async dropRetired(stored: IFieldMap, tableMap: ITableMap) {
+    const dropped: string[] = [];
+    for (const [tableKey, keys] of Object.entries(RETIRED_AGENT_FIELDS)) {
+      const tableId = tableMap[tableKey];
+      for (const key of keys ?? []) {
+        const fieldId = stored[tableKey]?.[key];
+        if (!tableId || !fieldId) continue;
+        const live = await this.prismaService.field.findFirst({
+          where: { id: fieldId, tableId, deletedTime: null },
+          select: { id: true },
+        });
+        if (!live) continue;
+        await this.fieldOpenApiService.deleteField(tableId, fieldId);
+        dropped.push(`${tableKey}.${key}`);
+      }
+    }
+    return dropped;
   }
 
   private async readBase(baseId: string): Promise<IActualTable[]> {

@@ -15,6 +15,8 @@ export interface ISecretVaultPort {
   has(credentialId: string): Promise<boolean>;
   /** The plain value, for the outbound request only; records last use. */
   reveal(credentialId: string): Promise<string | undefined>;
+  /** What the admin sees of each secret (e.g. ghp_e…2345); never given to the agent. */
+  previews(credentialIds: string[]): Promise<Map<string, string | null>>;
 }
 
 export const SECRET_VAULT_PORT = Symbol('AGENT_SECRET_VAULT_PORT');

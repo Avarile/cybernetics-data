@@ -100,14 +100,17 @@ describe('Agent credentials and http_request (e2e)', () => {
     expect(JSON.stringify(vo)).not.toContain(secretValue);
     const list = await listAgentCredentials();
     expect(JSON.stringify(list)).not.toContain(secretValue);
+    expect(list.credentials.find((c) => c.id === credentialId)?.preview).toBe('ghp_e…2345');
 
     const stored = await prisma.agentSecret.findUniqueOrThrow({
       where: { credentialRecordId: credentialId },
     });
     expect(stored.ciphertext).toMatch(/^v1:/);
     expect(stored.ciphertext).not.toContain(secretValue);
+    // the agent reads the credential table: not even the preview is there
     const cells = JSON.stringify(await store.listCredentials());
     expect(cells).not.toContain(secretValue);
+    expect(cells).not.toContain('ghp_e');
   });
 
   it('injects the secret for allowed hosts and scrubs it from the reply', async () => {

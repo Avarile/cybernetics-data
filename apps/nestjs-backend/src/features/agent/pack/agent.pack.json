@@ -1,6 +1,6 @@
 {
   "id": "agent",
-  "version": 1,
+  "version": 2,
   "tables": [
     {
       "key": "agent_setup",
@@ -1144,11 +1144,6 @@
               }
             ]
           }
-        },
-        {
-          "key": "preview",
-          "name": "preview",
-          "type": "singleLineText"
         },
         {
           "key": "expires_at",

@@ -145,6 +145,30 @@ describe('Agent installation (e2e)', () => {
     expect(after.records.find((r) => r.id === first.id)!.fields[body]).toBe('my own instructions');
   });
 
+  it('drops a field the pack retired, found by its stored id', async () => {
+    const before = await ensure.status();
+    const credentials = before.tableMap.agent_credentials;
+    const field = await asAgent(() =>
+      app.get(FieldOpenApiService).createField(credentials, {
+        name: 'preview',
+        type: 'singleLineText' as never,
+      })
+    );
+    // what an install made before pack version 2 has stored
+    const row = await prisma.agentInstallation.findUniqueOrThrow({ where: { id: 'agent' } });
+    const fieldMap = JSON.parse(row.fieldMap);
+    fieldMap.agent_credentials.preview = field.id;
+    await prisma.agentInstallation.update({
+      where: { id: 'agent' },
+      data: { fieldMap: JSON.stringify(fieldMap), lastVerifiedTime: null },
+    });
+    await ensure.ensure('e2e');
+
+    const live = await prisma.field.findFirst({ where: { id: field.id, deletedTime: null } });
+    expect(live).toBeNull();
+    expect((await ensure.status()).fieldMap.agent_credentials.preview).toBeUndefined();
+  });
+
   describe('built-in skill upgrades', () => {
     const skillsByName = async () => {
       const { tableMap, fieldMap } = await ensure.status();
