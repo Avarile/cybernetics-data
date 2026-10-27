@@ -1,6 +1,6 @@
 {
   "id": "agent",
-  "version": 2,
+  "version": 3,
   "tables": [
     {
       "key": "agent_setup",
@@ -57,6 +57,24 @@
           "name": "knowledge_tables",
           "type": "longText",
           "description": "Table ids kept in sync with knowledge search, one per line. Empty: every table with a primary field and a text field named context"
+        },
+        {
+          "key": "search_scope",
+          "name": "search_scope",
+          "type": "singleSelect",
+          "description": "What search covers. all (or empty): every table outside the Agent base, minus search_exclude. knowledge: the knowledge tables only",
+          "options": {
+            "choices": [
+              { "name": "all", "color": "blueLight2" },
+              { "name": "knowledge", "color": "greenLight2" }
+            ]
+          }
+        },
+        {
+          "key": "search_exclude",
+          "name": "search_exclude",
+          "type": "longText",
+          "description": "Base ids (bse...) or table ids (tbl...) that search never indexes, one per line"
         },
         {
           "key": "temperature",

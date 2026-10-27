@@ -42,10 +42,21 @@ export const RAG_SCHEMA_STATEMENTS = [
   `CREATE INDEX IF NOT EXISTS chunk_tsv_idx ON ${RAG_SCHEMA}.chunk USING gin (tsv) WHERE level = 1`,
   `CREATE INDEX IF NOT EXISTS chunk_document_idx ON ${RAG_SCHEMA}.chunk (document_id)`,
   `CREATE INDEX IF NOT EXISTS chunk_collection_level_idx ON ${RAG_SCHEMA}.chunk (collection_id, level)`,
-  // design §11.1: kb_records and agent_memory are synced from tables; knowledge is for documents
+  // what the table sync last did per table; table_id '*' holds the last full sync
+  `CREATE TABLE IF NOT EXISTS ${RAG_SCHEMA}.sync_state (
+    table_id text PRIMARY KEY,
+    collection_id text,
+    status text NOT NULL,
+    records int NOT NULL DEFAULT 0,
+    error text,
+    started_time timestamptz,
+    finished_time timestamptz)`,
+  // design §11.1: kb_records, records and agent_memory are synced from tables; knowledge is for
+  // documents (current-design §4.3: records holds every table that is not a knowledge table)
   `INSERT INTO ${RAG_SCHEMA}.collection (id, label, description, kind) VALUES
     ('knowledge', 'Knowledge', 'Documents the admin or the agent added', 'documents'),
     ('kb_records', 'Knowledge tables', 'Records of knowledge tables, kept in sync', 'derived'),
+    ('records', 'All tables', 'Records of every other table, kept in sync', 'derived'),
     ('agent_memory', 'Agent memory', 'The agent memory table, kept in sync', 'derived')
     ON CONFLICT (id) DO NOTHING`,
 ];

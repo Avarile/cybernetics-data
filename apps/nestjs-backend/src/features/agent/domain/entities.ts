@@ -18,6 +18,7 @@ export type ICredentialAuthKind =
   | 'basic'
   | 'oauth2_client_credentials';
 export type ICredentialStatus = 'missing' | 'set' | 'invalid' | 'expired';
+export type ISearchScope = 'all' | 'knowledge';
 
 export interface IAgentProfile {
   id: string;
@@ -29,6 +30,10 @@ export interface IAgentProfile {
   smallModel: string | null;
   /** Tables synced into kb_records; empty means detect them (design §11.3). */
   knowledgeTables: string[];
+  /** What search covers; null means all (current-design §4.2). */
+  searchScope: ISearchScope | null;
+  /** Base or table ids never indexed. */
+  searchExclude: string[];
   temperature: number | null;
   maxSteps: number | null;
   maxOutputTokens: number | null;

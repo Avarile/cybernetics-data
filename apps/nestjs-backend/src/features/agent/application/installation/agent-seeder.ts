@@ -99,6 +99,7 @@ export class AgentSeeder {
           [f(t, 'toolkits')]: [...s.toolkits],
           [f(t, 'approval_required')]: [...s.approval_required],
           [f(t, 'memory_mode')]: s.memory_mode,
+          [f(t, 'search_scope')]: s.search_scope,
         },
       ]);
       setup = 1;

@@ -18,6 +18,8 @@ const profile = (over: Partial<IAgentProfile> = {}): IAgentProfile => ({
   model: 'openai/gpt-4.1',
   smallModel: null,
   knowledgeTables: [],
+  searchScope: null,
+  searchExclude: [],
   temperature: null,
   maxSteps: 25,
   maxOutputTokens: 8000,

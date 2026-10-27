@@ -115,7 +115,7 @@ describe('Agent knowledge toolkit (e2e)', () => {
 
   it('search returns one result per section, with snippets', async () => {
     const out = await run<ISearchOut>('search', { query: 'leave detail explained' });
-    expect(out.searched).toEqual(['agent_memory', 'kb_records', 'knowledge']);
+    expect(out.searched).toEqual(['agent_memory', 'kb_records', 'knowledge', 'records']);
     const sections = out.results.map((r) => r.sectionId);
     expect(new Set(sections).size).toBe(sections.length);
     expect(out.results[0]).toMatchObject({

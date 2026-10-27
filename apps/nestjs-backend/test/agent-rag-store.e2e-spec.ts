@@ -59,6 +59,7 @@ describe('PgRagStore (full-text, main database)', () => {
       ['agent_memory', 'derived'],
       ['kb_records', 'derived'],
       ['knowledge', 'documents'],
+      ['records', 'derived'],
     ]);
     expect(b).toEqual(a);
   });

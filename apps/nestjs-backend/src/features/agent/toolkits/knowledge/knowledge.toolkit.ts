@@ -17,7 +17,7 @@ import { defineTool } from '../toolkit.types';
 import type { IToolkit } from '../toolkit.types';
 
 /** Seeded collections (design §11.1); they cannot be deleted. */
-const builtinCollections = ['knowledge', 'kb_records', 'agent_memory'];
+const builtinCollections = ['knowledge', 'kb_records', 'records', 'agent_memory'];
 /** rag_read returns at most this much text; ask for a range to read on. */
 const maxReadChars = 20_000;
 const maxIngestChars = 1_000_000;

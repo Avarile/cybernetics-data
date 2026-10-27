@@ -27,6 +27,8 @@ describe('agent schema pack', () => {
         'toolkits',
         'approval_required',
         'memory_mode',
+        'search_scope',
+        'search_exclude',
       ])
     );
     expect(fields('agent_messages')).toEqual(

@@ -22,6 +22,8 @@ const profileView = (p: IAgentProfile) => ({
   model: p.model,
   smallModel: p.smallModel,
   knowledgeTables: p.knowledgeTables,
+  searchScope: p.searchScope ?? 'all',
+  searchExclude: p.searchExclude,
   temperature: p.temperature,
   maxSteps: p.maxSteps,
   maxOutputTokens: p.maxOutputTokens,
@@ -79,6 +81,15 @@ export class SetupToolkit implements IToolkit, OnModuleInit {
             .max(200)
             .optional()
             .describe('Tables synced into knowledge search; [] detects them automatically'),
+          searchScope: z
+            .enum(['all', 'knowledge'])
+            .optional()
+            .describe('all: search covers every table; knowledge: the knowledge tables only'),
+          searchExclude: z
+            .array(z.string().regex(/^(bse|tbl)\w+$/, 'a base or table id'))
+            .max(500)
+            .optional()
+            .describe('Bases or tables search never indexes'),
           temperature: z.number().min(0).max(2).nullable().optional(),
           maxSteps: z.number().int().min(1).max(100).optional(),
           maxOutputTokens: z.number().int().min(256).max(128_000).optional(),
