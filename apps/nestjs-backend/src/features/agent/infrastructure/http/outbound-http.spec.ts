@@ -22,11 +22,33 @@ describe('network policy', () => {
       'fe80::1',
       'fd00::1',
       '::ffff:127.0.0.1',
+      // IPv4 inside IPv6, in the forms the URL parser and DNS produce
+      '::ffff:7f00:1',
+      '::ffff:a9fe:a9fe',
+      '::ffff:0:7f00:1',
+      '::127.0.0.1',
+      '64:ff9b::7f00:1',
+      '64:ff9b::169.254.169.254',
+      '64:ff9b:1::808:808',
+      '2002:7f00:1::1',
+      '2002:c0a8:101::1',
+      '2001:0:4136:e378:8000:63bf:3fff:fdd2',
+      '2001:db8::1',
+      'fec0::1',
+      'ff02::1',
       'not-an-ip',
     ]) {
       expect([ip, isBlockedAddress(ip)]).toEqual([ip, true]);
     }
-    for (const ip of ['8.8.8.8', '140.82.112.3', '172.32.0.1', '2606:4700:4700::1111']) {
+    for (const ip of [
+      '8.8.8.8',
+      '140.82.112.3',
+      '172.32.0.1',
+      '2606:4700:4700::1111',
+      '::ffff:808:808',
+      '64:ff9b::808:808',
+      '2002:808:808::1',
+    ]) {
       expect([ip, isBlockedAddress(ip)]).toEqual([ip, false]);
     }
   });

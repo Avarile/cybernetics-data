@@ -29,20 +29,55 @@ const blockedV4 = [
   '240.0.0.0/4', // reserved, broadcast
 ];
 
+/** The eight 16-bit groups of an IPv6 address (a dotted IPv4 tail is allowed). */
+function v6Groups(address: string): number[] | undefined {
+  let text = address.toLowerCase().split('%')[0];
+  const dotted = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
+  if (dotted) {
+    const n = v4ToInt(dotted[1]);
+    text = `${text.slice(0, -dotted[1].length)}${(n >>> 16).toString(16)}:${(n & 0xffff).toString(16)}`;
+  }
+  const halves = text.split('::');
+  if (halves.length > 2) return undefined;
+  const parts = (s: string) => (s ? s.split(':') : []);
+  const head = parts(halves[0]);
+  const tail = halves.length === 2 ? parts(halves[1]) : [];
+  const gap = 8 - head.length - tail.length;
+  if (halves.length === 2 ? gap < 1 : gap !== 0) return undefined;
+  const groups = [...head, ...Array<string>(gap).fill('0'), ...tail].map((g) => parseInt(g, 16));
+  return groups.every((g) => g >= 0 && g <= 0xffff) ? groups : undefined;
+}
+
+const v4Of = (hi: number, lo: number) => `${hi >>> 8}.${hi & 0xff}.${lo >>> 8}.${lo & 0xff}`;
+const zeros = (groups: number[]) => groups.every((g) => g === 0);
+
 /** True for addresses an outbound agent request must never reach. */
 export function isBlockedAddress(address: string): boolean {
   const family = isIP(address);
   if (family === 4) return blockedV4.some((cidr) => inV4(address, cidr));
   if (family !== 6) return true;
-  const ip = address.toLowerCase();
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(ip);
-  if (mapped) return isBlockedAddress(mapped[1]);
+  const g = v6Groups(address);
+  if (!g) return true;
+  // IPv6 forms that carry an IPv4 address are judged by that address: mapped ::ffff:0:0/96 (also
+  // written ::ffff:7f00:1), SIIT ::ffff:0:0:0/96, compatible ::/96 (incl. :: and ::1), NAT64
+  // 64:ff9b::/96 and 6to4 2002::/16
+  if (zeros(g.slice(0, 5)) && g[5] === 0xffff) return isBlockedAddress(v4Of(g[6], g[7]));
+  if (zeros(g.slice(0, 4)) && g[4] === 0xffff && g[5] === 0) {
+    return isBlockedAddress(v4Of(g[6], g[7]));
+  }
+  if (zeros(g.slice(0, 6))) return isBlockedAddress(v4Of(g[6], g[7]));
+  if (g[0] === 0x64 && g[1] === 0xff9b) {
+    // the local-use NAT64 prefix 64:ff9b:1::/48 is site-specific: never
+    return g[2] === 1 || !zeros(g.slice(2, 6)) || isBlockedAddress(v4Of(g[6], g[7]));
+  }
+  if (g[0] === 0x2002) return isBlockedAddress(v4Of(g[1], g[2]));
   return (
-    ip === '::' ||
-    ip === '::1' ||
-    /^fe[89ab]/.test(ip) || // link-local fe80::/10
-    /^f[cd]/.test(ip) || // unique local fc00::/7
-    /^ff/.test(ip) // multicast
+    (g[0] === 0x2001 && g[1] === 0) || // Teredo 2001::/32 (tunnels to any IPv4 host)
+    (g[0] === 0x2001 && g[1] === 0x0db8) || // documentation 2001:db8::/32
+    (g[0] & 0xffc0) === 0xfe80 || // link-local fe80::/10
+    (g[0] & 0xffc0) === 0xfec0 || // site-local fec0::/10 (deprecated)
+    (g[0] & 0xfe00) === 0xfc00 || // unique local fc00::/7
+    (g[0] & 0xff00) === 0xff00 // multicast ff00::/8
   );
 }
 
