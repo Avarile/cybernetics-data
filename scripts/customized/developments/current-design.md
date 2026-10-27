@@ -1,6 +1,7 @@
 # Agent voice conversation: talk to the agent hands-free
 
-Status: **designed and approved 2026-10-27 (decisions in §12 confirmed), not built.** Branch:
+Status: **designed, approved and built 2026-10-27; P0–P4 done, P5 (the manual run in real
+browsers, §11.3) waits for the admin.** Commits and as-built notes are in §14. Branch:
 `feat/agentic-database`.
 The previous content of this file (the follow-up design, P0–P5 done) is in git history:
 `git show 629680a1:scripts/customized/developments/current-design.md`.
@@ -738,3 +739,59 @@ Phases (one commit each):
 - **Chrome's 15-second cut-off.** Google voices stop after about 15 seconds of speech. This is an
   old, unfixed Chrome bug and is handled by the 180-character segments. If it shows up again (for
   example with a slow speaking rate), the segment limit is the setting to lower.
+
+---
+
+## 14. As built (2026-10-27)
+
+### 14.1 Commits
+
+| Phase | Commit | Tests |
+|---|---|---|
+| Design | `b5fcf2a3` | |
+| P0 `POST /api/agent/tts` | `a1c80abb` | `test/agent-voice.e2e-spec.ts`: 5 |
+| P1 speech script | `0e3a9eb1` | `voice/speech-script.spec.ts`: 17 |
+| P2 listener, queue, engines | `33ba8795` | `voice-listener.spec.ts` 13, `speech-queue.spec.ts` 10, `engines/engines.spec.ts` 14 |
+| P3 switch, composer, settings | `d701c226` | `voice/voice.spec.tsx`: 13 |
+| P4 voice hint | `f690d4c5` | `runtime.spec.ts` +1, `agent-chat.e2e-spec.ts` +1 |
+| i18n types | `c55b3640` | |
+
+All 79 frontend agent tests and both agent e2e suites (21 tests) pass. The app, backend, openapi
+and sdk typecheck and lint cleanly.
+
+### 14.2 Differences from the design
+
+- **§6.2 step 5, packing.** The script gives **one segment per sentence**, and the queue joins
+  them. Packing in the script would change ids while a paragraph grows, so a sentence that settled
+  later would never be spoken.
+  - The queue joins only prose that is already queued, up to the engine's length.
+  - Pointers stay separate, so their cached audio is reused.
+  - With nothing else queued, the first sentence is spoken alone.
+- **§6.2, forms.** The form pointer is added only after the stream has ended. A run always stops
+  right after asking for approval, so this costs nothing and keeps the "2 forms" count right.
+- **§10, files.**
+  - The listener and the queue are plain classes, `voice-listener.ts` and `speech-queue.ts`, with
+    `subscribe`/`getSnapshot` methods. One hook, `useVoiceConversation.ts`, wraps them; there is
+    no `useVoiceListener` or `useSpeechQueue`.
+  - There is no `voice-settings.ts`. The settings live in `voice-store.ts` (zustand `persist`,
+    only `engine` and `browserVoiceURI`), under `LocalStorageKeys.AgentVoice` = `ls_agent_voice`.
+  - The tests are split per module (§14.1).
+- **§5.7, network errors.** Retries come after 1 s, 2 s and 4 s; the fourth error in a row
+  fails. A result in between resets the count.
+- **§4.2, Stop.** Stop (and `/clear`) also marks the reply as silenced, so what is left of it is
+  never spoken, even though the stream sends a last update after the stop.
+- **§7.3, focus.** The turn gate splits `voice` from the context, so it never reaches the tools or
+  the "Where the admin is" section.
+- **§7.1, status code.** The route answers 200 (`@HttpCode(200)`), not Nest's default 201 for a
+  POST.
+- **§8, notices.** A mic error is shown in the footer row next to the switch, so it stays visible
+  after the error has turned voice off.
+
+### 14.3 Still to check by hand (P5)
+
+The §11.3 matrix needs a real microphone, Google Chrome (Chromium has no Google voices or speech
+service) and someone listening. Two settings matter while testing:
+
+- `ELEVENLABS_API_KEY` is set in `apps/nextjs-app/.env.development.local`. Unset it to test the
+  browser-voice fallback.
+- `ELEVENLABS_MODEL_ID` defaults to `eleven_turbo_v2`, which is English only (D5).
