@@ -2153,6 +2153,63 @@ export type I18nTranslations = {
                 "testPath": string;
                 "removeSecret": string;
             };
+            "voice": {
+                "label": string;
+                "hint": string;
+                "unsupported": string;
+                "locked": string;
+                "placeholder": string;
+                "clear": string;
+                "sendNow": string;
+                "retry": string;
+                "tapToHear": string;
+                "status": {
+                    "listening": string;
+                    "hearing": string;
+                    "sendingIn": string;
+                    "thinking": string;
+                    "working": string;
+                    "speaking": string;
+                    "approval": string;
+                    "paused": string;
+                };
+                "error": {
+                    "blocked": string;
+                    "noMicrophone": string;
+                    "unavailable": string;
+                    "notConfigured": string;
+                };
+                "settings": {
+                    "title": string;
+                    "speakWith": string;
+                    "auto": string;
+                    "elevenlabs": string;
+                    "browser": string;
+                    "browserVoice": string;
+                    "choose": string;
+                    "search": string;
+                    "noMatch": string;
+                    "noVoices": string;
+                    "online": string;
+                    "device": string;
+                    "previewText": string;
+                };
+                "look": {
+                    "table_one": string;
+                    "table_other": string;
+                    "code_one": string;
+                    "code_other": string;
+                    "form_one": string;
+                    "form_other": string;
+                    "diagram_one": string;
+                    "diagram_other": string;
+                    "formula_one": string;
+                    "formula_other": string;
+                    "image_one": string;
+                    "image_other": string;
+                    "error": string;
+                };
+            };
         };
         "clickToCopyTooltip": string;
         "copiedTooltip": string;
