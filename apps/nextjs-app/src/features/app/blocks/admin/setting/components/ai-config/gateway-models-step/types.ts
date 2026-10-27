@@ -35,7 +35,6 @@ export interface IGatewayModelsStepProps {
   gatewayModels: IGatewayModel[];
   onChange: (models: IGatewayModel[]) => void;
   disabled?: boolean;
-  apiKey?: string;
   baseUrl?: string;
   /** Whether to show pricing-related UI. Defaults to true (Cloud). */
   showPricing?: boolean;

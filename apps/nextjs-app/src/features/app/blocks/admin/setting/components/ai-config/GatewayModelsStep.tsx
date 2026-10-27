@@ -28,7 +28,6 @@ export function GatewayModelsStep({
   gatewayModels,
   onChange,
   disabled,
-  apiKey,
   showPricing = true,
 }: IGatewayModelsStepProps) {
   const { t } = useTranslation('common');
@@ -51,10 +50,9 @@ export function GatewayModelsStep({
   const [searchQuery, setSearchQuery] = useState('');
   const [modelsLoadError, setModelsLoadError] = useState<string | null>(null);
 
-  // Fetch available models from backend API (cached)
+  // The Gateway's public model catalog, through the backend (cached there). It needs no API key:
+  // stored keys are encrypted and never reach the browser, so gating on one hid the catalog.
   const fetchModels = useCallback(async () => {
-    if (!apiKey) return;
-
     setIsLoadingModels(true);
     setModelsLoadError(null);
 
@@ -75,14 +73,14 @@ export function GatewayModelsStep({
     } finally {
       setIsLoadingModels(false);
     }
-  }, [apiKey]);
+  }, []);
 
-  // Load models on component mount (for quick add buttons) and when dialog opens
+  // Load the catalog once the step is usable (for quick add and search); a failure waits for retry
   useEffect(() => {
-    if (apiKey && availableModels.length === 0) {
+    if (!disabled && availableModels.length === 0 && !modelsLoadError) {
       fetchModels();
     }
-  }, [apiKey, availableModels.length, fetchModels]);
+  }, [disabled, availableModels.length, modelsLoadError, fetchModels]);
 
   // Sort models by created timestamp (newest first)
   const sortedModels = useMemo(() => {
