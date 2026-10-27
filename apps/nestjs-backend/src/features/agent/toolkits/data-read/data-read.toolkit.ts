@@ -101,7 +101,7 @@ export class DataReadToolkit implements IToolkit, OnModuleInit {
       defineTool({
         name: 'search_everywhere',
         description:
-          'Find spaces, bases and tables by name across the instance; with baseId, also matching rows in that base.',
+          'Find spaces, bases and tables by name across the instance (with baseId, only its tables). To find records by their content, use search.',
         input: z.object({
           query: z.string().min(1).max(200),
           baseId: baseId.optional(),

@@ -95,6 +95,17 @@ export class SearchTables {
     return out;
   }
 
+  /** Current table and base names (looked up when needed, so renames show at once). */
+  async names(tableIds: string[]) {
+    const rows = tableIds.length
+      ? await this.prismaService.tableMeta.findMany({
+          where: { id: { in: tableIds } },
+          select: { id: true, name: true, base: { select: { name: true } } },
+        })
+      : [];
+    return new Map(rows.map((r) => [r.id, { table: r.name, base: r.base.name }]));
+  }
+
   /** The physical table of a live table, or undefined. */
   async dbTableName(tableId: string) {
     const table = await this.prismaService.tableMeta.findFirst({

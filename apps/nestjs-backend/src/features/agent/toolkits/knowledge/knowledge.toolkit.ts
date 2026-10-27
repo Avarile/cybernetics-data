@@ -13,6 +13,7 @@ import {
   type IRagSource,
   type IRagStorePort,
 } from '../../domain/ports';
+import { SearchTables } from '../../infrastructure/knowledge/search-tables';
 import { ToolkitRegistry } from '../toolkit.registry';
 import { defineTool } from '../toolkit.types';
 import type { IToolkit } from '../toolkit.types';
@@ -81,6 +82,7 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     private readonly registry: ToolkitRegistry,
     private readonly searcher: KnowledgeSearch,
     private readonly ingest: KnowledgeIngest,
+    private readonly tables: SearchTables,
     @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort
   ) {
     this.tools = [
@@ -115,11 +117,11 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     return defineTool({
       name: 'search',
       description:
-        'Full-text search over knowledge records (every knowledge table, kept in sync), documents ' +
-        'and memories: matches words and word beginnings, titles weigh most. Default: every active ' +
-        'collection; use collections ["kb_records"] for knowledge records only, and baseIds/tables ' +
-        'to narrow them. Returns snippets: call rag_read with a sectionId for the full text, or ' +
-        'get_records with a recordRef for a record.',
+        'Full-text search over the records of every table (collection records), the knowledge ' +
+        'tables (kb_records), documents (knowledge and others) and memories (agent_memory), kept ' +
+        'in sync: matches words and word beginnings, titles weigh most. Default: every active ' +
+        'collection; narrow with collections, baseIds or tables. Returns snippets: call rag_read ' +
+        'with a sectionId for the full text, or get_records with a recordRef for a record.',
       input: z.object({
         query: z
           .string()
@@ -136,15 +138,23 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
         const collections =
           input.collections ??
           (await this.rag.listCollections()).filter((c) => c.isActive).map((c) => c.id);
-        return this.withSyncNote(
-          await this.searcher.search({
-            query: input.query,
-            collections,
-            baseIds: input.baseIds,
-            tableIds: input.tables,
-            topK: input.topK,
-          })
-        );
+        const found = await this.searcher.search({
+          query: input.query,
+          collections,
+          baseIds: input.baseIds,
+          tableIds: input.tables,
+          topK: input.topK,
+        });
+        const names = await this.tables.names([
+          ...new Set(found.results.flatMap((r) => (r.recordRef ? [r.recordRef.tableId] : []))),
+        ]);
+        return this.withSyncNote({
+          ...found,
+          results: found.results.map((r) => ({
+            ...r,
+            ...(r.recordRef ? names.get(r.recordRef.tableId) : {}),
+          })),
+        });
       },
     });
   }

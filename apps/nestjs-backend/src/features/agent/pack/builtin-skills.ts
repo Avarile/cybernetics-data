@@ -65,11 +65,14 @@ export const BUILTIN_SKILLS: IBuiltinSkill[] = [
     description:
       'Use for any question about data in the workspace: finding the right base and table, reading records, following links.',
     invocation: 'always',
-    toolkits: ['data_read'],
+    toolkits: ['data_read', 'knowledge'],
     category: 'data',
-    version: 1,
+    version: 2,
+    previous: ['830b3e6cb66e6df4911fa00bcf699d0c3bd8fc2c08a0380ecfa5164a306a0fb9'],
     body: `# Finding and reading data
 
+- To find something by its words anywhere (a name, a code, a phrase), call \`search\` first: it
+  covers the records of every table. Then read the record with \`get_records\`.
 - Discover before you act: \`list_spaces\` → \`list_bases\` → \`list_tables\` → \`describe_table\`.
   Never guess table or field ids; names can be used where tools accept them.
 - Read with \`query_records\` (search, filter, sort, paging) and \`get_records\` for full rows.

@@ -17,8 +17,6 @@ import type {
 import { UnrestrictedDataWriter } from './unrestricted-data-writer';
 
 const listCap = 500;
-const searchTables = 10;
-const searchRowsPerTable = 3;
 
 const contains = (text: string, query: string) => text.toLowerCase().includes(query.toLowerCase());
 
@@ -167,35 +165,26 @@ export class UnrestrictedDataGateway implements IDataGatewayPort {
     };
   }
 
-  /** Names of spaces, bases and tables; with a base, also matching rows of its tables. */
+  /**
+   * Spaces, bases and tables by name; with a base, only its tables. Records are found with the
+   * knowledge toolkit's `search`, which covers every table (current-design §4.7).
+   */
   async searchEverywhere(query: string, options: { baseId?: string; limit?: number } = {}) {
     const limit = Math.min(options.limit ?? 20, 50);
     const [spaces, bases] = await Promise.all([this.listSpaces(), this.listBases()]);
     const tables = await this.prismaService.tableMeta.findMany({
-      where: { deletedTime: null, base: { deletedTime: null } },
+      where: {
+        deletedTime: null,
+        base: { deletedTime: null },
+        ...(options.baseId ? { baseId: options.baseId } : {}),
+      },
       select: { id: true, name: true, baseId: true },
       take: 5_000,
     });
-    const result: Record<string, unknown> = {
+    return {
       spaces: spaces.filter((s) => contains(s.name, query)).slice(0, limit),
       bases: bases.filter((b) => contains(b.name, query)).slice(0, limit),
       tables: tables.filter((t) => contains(t.name, query)).slice(0, limit),
     };
-    if (options.baseId) {
-      const baseTables = (await this.listTables(options.baseId)).slice(0, searchTables);
-      const rows = [];
-      for (const t of baseTables) {
-        const found = (await this.queryRecords({
-          baseId: options.baseId,
-          table: t.id,
-          search: query,
-          take: searchRowsPerTable,
-        })) as { records: unknown[] };
-        if (found.records.length)
-          rows.push({ tableId: t.id, table: t.name, records: found.records });
-      }
-      result.records = rows;
-    }
-    return result;
   }
 }

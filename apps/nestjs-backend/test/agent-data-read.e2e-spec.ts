@@ -172,21 +172,19 @@ describe('Agent data_read (e2e)', () => {
     ).rejects.toThrow(/Unknown function/);
   });
 
-  it('searches names everywhere and rows in a base', async () => {
+  it('searches names everywhere, or the tables of one base', async () => {
     const found = await run<{
       bases: { id: string }[];
       tables: { id: string }[];
       records: unknown[];
     }>('search_everywhere', { query: 'opportun', baseId });
     expect(found.tables.map((t) => t.id)).toContain(tableId);
-    const rows = await run<{ records: { table: string; records: unknown[] }[] }>(
-      'search_everywhere',
-      {
-        query: 'Deal 42',
-        baseId,
-      }
-    );
-    expect(rows.records[0]).toMatchObject({ table: 'Opportunities' });
+    // records are found with `search` now; this finds names only
+    const rows = await run<Record<string, unknown>>('search_everywhere', {
+      query: 'Deal 42',
+      baseId,
+    });
+    expect(rows.records).toBeUndefined();
   });
 
   it('reaches the model fenced as untrusted data', async () => {

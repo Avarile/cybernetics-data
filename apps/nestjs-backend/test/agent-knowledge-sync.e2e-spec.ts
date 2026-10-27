@@ -159,6 +159,8 @@ describe('Agent search over every table (e2e)', () => {
         title: 'Apollo rollout',
         collection: 'records',
         recordRef: { tableId: projectsTableId },
+        // names are looked up when searching, so renames show at once
+        table: 'Projects',
       });
       expect(out.results[0].snippet).toContain('Status: Active');
       // field values are searchable too, not only titles

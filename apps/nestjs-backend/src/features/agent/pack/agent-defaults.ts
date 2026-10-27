@@ -41,4 +41,4 @@ export const DEFAULT_AGENT_SETUP = {
 } as const;
 
 /** Bumped whenever the seeded rows change; seeding runs when the stored version is lower. */
-export const AGENT_SEED_VERSION = 3;
+export const AGENT_SEED_VERSION = 4;
