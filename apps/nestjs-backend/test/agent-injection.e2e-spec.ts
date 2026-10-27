@@ -245,7 +245,10 @@ describe('Agent prompt-injection suite (e2e)', () => {
       source: { kind: 'text', text: `# Printer guide\n\n${injection}`, slug: 'printer' },
       actorUserId: adminId(),
     });
-    play([call('search', { query: 'printer maintenance mode' }), say('Found the guide.')]);
+    play([
+      call('search', { query: 'printer maintenance mode', collections: ['knowledge'] }),
+      say('Found the guide.'),
+    ]);
     const t = await turn('How do I fix the printer?');
     const out = outputs(t.chunks)[0];
     expect(out).toContain('untrusted_data');

@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import { CustomHttpException } from '../../../../custom.exception';
 import { KnowledgeIngest } from '../../application/knowledge/knowledge-ingest';
+import { FULL_SYNC } from '../../application/knowledge/knowledge-sync';
 import { KnowledgeSearch, MAX_TOP_K } from '../../application/knowledge/knowledge-search';
 import {
   RAG_STORE_PORT,
@@ -97,17 +98,15 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
     this.registry.register(this);
   }
 
-  /** Searches wait (briefly) for the first full sync of the knowledge tables in this process. */
-  private async afterSync<T extends { warnings: string[] }>(
-    actorUserId: string,
-    search: () => Promise<T>
-  ): Promise<T> {
-    const { pending } = await this.ingest.ensureSynced(actorUserId);
-    const result = await search();
-    if (pending) {
+  /** Says so when the tables are not fully indexed yet (the first sync runs, or the last failed). */
+  private async withSyncNote<T extends { warnings: string[] }>(result: T): Promise<T> {
+    const full = await this.rag.getSyncState(FULL_SYNC);
+    if (!full || (full.status === 'running' && !full.finishedTime)) {
       result.warnings.push(
-        'Knowledge tables are still being indexed; results may be incomplete. Search again in a minute.'
+        'The tables are still being indexed for search; results may be incomplete. Search again in a few minutes.'
       );
+    } else if (full.status === 'failed') {
+      result.warnings.push('The last search sync failed; results may be incomplete.');
     }
     return result;
   }
@@ -133,12 +132,12 @@ export class KnowledgeToolkit implements IToolkit, OnModuleInit {
         topK,
       }),
       untrusted: true,
-      execute: async (input, ctx) => {
+      execute: async (input) => {
         const collections =
           input.collections ??
           (await this.rag.listCollections()).filter((c) => c.isActive).map((c) => c.id);
-        return this.afterSync(ctx.actorUserId, () =>
-          this.searcher.search({
+        return this.withSyncNote(
+          await this.searcher.search({
             query: input.query,
             collections,
             baseIds: input.baseIds,

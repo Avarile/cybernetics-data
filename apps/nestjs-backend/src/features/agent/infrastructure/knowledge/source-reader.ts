@@ -1,4 +1,5 @@
 import type { Readable } from 'stream';
+import { CellFormat, FieldKeyType } from '@cybernetics/core';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
 import { UploadType } from '@teable/openapi';
@@ -20,11 +21,8 @@ import {
   type IRagSourceText,
 } from '../../domain/ports';
 import { AGENT_TABLES } from '../../pack/agent-pack';
-import { cellText, htmlToText, looksMarkdown } from './text-extract';
-
-const fieldCacheMs = 30_000;
-
-const textTypes = new Set(['singleLineText', 'longText', 'singleSelect', 'multipleSelect']);
+import { recordText } from './record-text';
+import { htmlToText, looksMarkdown } from './text-extract';
 
 const streamToBuffer = (stream: Readable) =>
   new Promise<Buffer>((resolve, reject) => {
@@ -37,17 +35,11 @@ const streamToBuffer = (stream: Readable) =>
 /**
  * Reads the text of a knowledge source (design §11.3): pasted text, a chat file or attachment
  * (pdf, docx, html, md, csv via the chat-file parsers), a URL through the agent's outbound HTTP
- * guard, or a record of a knowledge table or of agent_memory.
+ * guard, or records of a table (read with their text cells, as the UI shows them) or of
+ * agent_memory.
  */
 @Injectable()
 export class RagSourceReader implements IRagSourceReaderPort {
-  private readonly fieldCache = new Map<
-    string,
-    {
-      at: number;
-      value: { fields: IAiDataFieldSummary[]; profile: ReturnType<typeof detectTableProfile> };
-    }
-  >();
   constructor(
     private readonly prismaService: PrismaService,
     private readonly chatFiles: ChatFileService,
@@ -58,7 +50,7 @@ export class RagSourceReader implements IRagSourceReaderPort {
     @Inject(AGENT_LAYOUT_PORT) private readonly layout: IAgentLayoutPort
   ) {}
 
-  async read(source: IRagSource): Promise<IRagSourceText | undefined> {
+  async read(source: IRagSource, collectionId?: string): Promise<IRagSourceText | undefined> {
     switch (source.kind) {
       case 'text':
         return {
@@ -71,7 +63,9 @@ export class RagSourceReader implements IRagSourceReaderPort {
       case 'url':
         return this.readUrl(source.url);
       case 'record':
-        return this.readRecord(source.baseId, source.tableId, source.recordId);
+        return (
+          await this.readRecords(source.tableId, [source.recordId], collectionId ?? 'kb_records')
+        ).get(source.recordId);
     }
   }
 
@@ -122,44 +116,44 @@ export class RagSourceReader implements IRagSourceReaderPort {
     };
   }
 
-  private async readRecord(baseId: string, tableId: string, recordId: string) {
+  async readRecords(tableId: string, recordIds: string[], collectionId: string) {
+    const out = new Map<string, IRagSourceText | undefined>();
+    if (!recordIds.length) return out;
     const { tableMap } = await this.layout.layout();
     if (tableMap[AGENT_TABLES.memory] === tableId) {
-      const memory = await this.store.getMemory(recordId).catch(() => undefined);
-      if (!memory?.isActive) return undefined;
-      return { title: memory.title, text: memory.content ?? '', format: 'record' as const };
+      for (const id of recordIds) {
+        const memory = await this.store.getMemory(id).catch(() => undefined);
+        out.set(
+          id,
+          memory?.isActive
+            ? { title: memory.title, text: memory.content ?? '', format: 'record' }
+            : undefined
+        );
+      }
+      return out;
     }
 
     const table = await this.tableFields(tableId);
-    const record = await this.recordService
-      .getRecordsById(tableId, [recordId], false)
-      .then((r) => r.records[0])
-      .catch(() => undefined);
-    if (!record) return undefined;
-    const { titleFieldId, contextFieldId, softDeleteFieldId } = table.profile;
-    if (softDeleteFieldId && record.fields[softDeleteFieldId]) return undefined;
-
-    const title = titleFieldId ? cellText(record.fields[titleFieldId]) || null : null;
-    // the context field when there is one; otherwise every other text field, by name
-    const text = contextFieldId
-      ? cellText(record.fields[contextFieldId])
-      : table.fields
-          .filter((f) => f.id !== titleFieldId && textTypes.has(f.type))
-          .map((f) => [f.name, cellText(record.fields[f.id])])
-          .filter(([, v]) => v)
-          .map(([name, v]) => `${name}: ${v}`)
-          .join('\n\n');
-    return { title, text, format: 'record' as const };
+    // the record service's own reader, without the per-user permission and rate limits of the
+    // interactive tools: a sync reads thousands of records
+    const snapshots = await this.recordService
+      .getSnapshotBulk(tableId, recordIds, undefined, FieldKeyType.Id, CellFormat.Text)
+      .catch(() => []);
+    const cells = new Map(snapshots.map((s) => [s.data.id, s.data.fields]));
+    const mode = collectionId === 'records' ? 'records' : 'knowledge';
+    for (const id of recordIds) {
+      const fields = cells.get(id);
+      out.set(id, fields ? recordText(table.fields, table.profile, fields, mode) : undefined);
+    }
+    return out;
   }
 
   /**
-   * Fields and profile of a table, straight from the schema and cached briefly. Not through the
-   * AI data service: its per-user rate limit is for interactive tools, and a full sync reads
-   * hundreds of records a minute.
+   * Fields and profile of a table, straight from the schema, once per batch (not cached: a sync
+   * after a rename must see the new names). Not through the AI data service: its per-user rate
+   * limit is for interactive tools, and a full sync reads thousands of records.
    */
   private async tableFields(tableId: string) {
-    const hit = this.fieldCache.get(tableId);
-    if (hit && Date.now() - hit.at < fieldCacheMs) return hit.value;
     const rows = await this.prismaService.field.findMany({
       where: { tableId, deletedTime: null },
       select: { id: true, name: true, type: true, isPrimary: true, isComputed: true },
@@ -170,8 +164,6 @@ export class RagSourceReader implements IRagSourceReaderPort {
       isPrimary: Boolean(f.isPrimary),
       isComputed: Boolean(f.isComputed),
     }));
-    const value = { fields, profile: detectTableProfile(fields) };
-    this.fieldCache.set(tableId, { at: Date.now(), value });
-    return value;
+    return { fields, profile: detectTableProfile(fields) };
   }
 }

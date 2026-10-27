@@ -30,6 +30,8 @@ import { AgentMembershipService } from './application/installation/membership';
 import { AGENT_JOBS_QUEUE, AgentJobs } from './application/jobs/agent-jobs';
 import { TurnJobs } from './application/jobs/turn-jobs';
 import { KnowledgeIngest } from './application/knowledge/knowledge-ingest';
+import { KnowledgeSync } from './application/knowledge/knowledge-sync';
+import { KnowledgeSyncScheduler } from './application/knowledge/knowledge-sync.scheduler';
 import { KnowledgeSearch } from './application/knowledge/knowledge-search';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
 import { AgentStatusQuery } from './application/status/agent-status.query';
@@ -54,7 +56,7 @@ import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { RagJobsProcessor } from './infrastructure/jobs/rag-jobs.processor';
 import { KnowledgeSyncListener } from './infrastructure/knowledge/knowledge-sync.listener';
-import { KnowledgeTables } from './infrastructure/knowledge/knowledge-tables';
+import { SearchTables } from './infrastructure/knowledge/search-tables';
 import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
 import { RagSourceReader } from './infrastructure/knowledge/source-reader';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
@@ -140,7 +142,9 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     KnowledgeSearch,
     RagJobsProcessor,
     KnowledgeSyncListener,
-    KnowledgeTables,
+    SearchTables,
+    KnowledgeSync,
+    KnowledgeSyncScheduler,
     RunTurn,
     ResumeTurn,
     CancelRun,

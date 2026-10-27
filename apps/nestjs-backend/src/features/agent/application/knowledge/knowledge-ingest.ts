@@ -1,6 +1,6 @@
 import { HttpErrorCode } from '@cybernetics/core';
 import { InjectQueue } from '@nestjs/bullmq';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { CustomHttpException } from '../../../../custom.exception';
 import {
@@ -9,10 +9,10 @@ import {
   type IRagDocument,
   type IRagSource,
   type IRagSourceReaderPort,
+  type IRagSourceText,
   type IRagStorePort,
 } from '../../domain/ports';
 import { chunkDocument, chunkRecord } from '../../infrastructure/knowledge/chunker';
-import { KnowledgeTables } from '../../infrastructure/knowledge/knowledge-tables';
 import { documentIdFor } from '../../infrastructure/knowledge/pg-rag-store';
 import { RAG_JOBS_QUEUE, sha256, sourceRefOf, type IRagJobData } from './rag-jobs';
 
@@ -33,17 +33,6 @@ export interface IIngestRequest {
   waitMs?: number;
 }
 
-export interface ISyncSummary {
-  tables: number;
-  records: number;
-  indexed: number;
-  unchanged: number;
-  removed: number;
-  failed: number;
-  /** The first errors, to show what went wrong. */
-  errors: string[];
-}
-
 export type IIngestOutcome =
   | { status: 'ready'; chunkCount: number; unchanged: boolean }
   | { status: 'removed' };
@@ -55,116 +44,16 @@ const recordIds = (source: IRagSource) =>
 
 /**
  * Background, idempotent, atomic ingest (design §11.3): extract → hash → skip when unchanged →
- * chunk → one transaction replaces the chunks (with their full-text index).
+ * chunk → one transaction replaces the chunks (with their full-text index). The table sync
+ * (KnowledgeSync) reads records in batches and hands each to `apply`.
  */
 @Injectable()
 export class KnowledgeIngest {
-  private readonly logger = new Logger(KnowledgeIngest.name);
-  /** The full sync this process started on the first knowledge search. */
-  private firstSync?: Promise<unknown>;
-
   constructor(
     @Inject(RAG_STORE_PORT) private readonly rag: IRagStorePort,
     @Inject(RAG_SOURCE_READER_PORT) private readonly reader: IRagSourceReaderPort,
-    private readonly tables: KnowledgeTables,
     @InjectQueue(RAG_JOBS_QUEUE) private readonly queue: Queue<IRagJobData>
   ) {}
-
-  /**
-   * Index every record of every knowledge table and of agent_memory, one at a time. Record events
-   * only cover changes made while the agent runs; this catches up with records that existed
-   * before (or changed while the server was down). Unchanged records cost a hash comparison;
-   * documents whose records are gone are removed.
-   */
-  async syncAll(actorUserId: string): Promise<ISyncSummary> {
-    const summary: ISyncSummary = {
-      tables: 0,
-      records: 0,
-      indexed: 0,
-      unchanged: 0,
-      removed: 0,
-      failed: 0,
-      errors: [],
-    };
-    const seen = new Map<string, Set<string>>();
-    for (const target of await this.tables.allTargets()) {
-      summary.tables++;
-      const ids = seen.get(target.collectionId) ?? new Set<string>();
-      seen.set(target.collectionId, ids);
-      for await (const page of this.tables.recordIds(target.dbTableName)) {
-        for (const recordId of page) {
-          const source: IRagSource = {
-            kind: 'record',
-            baseId: target.baseId,
-            tableId: target.tableId,
-            recordId,
-          };
-          ids.add(documentIdFor(target.collectionId, sourceRefOf(source)));
-          await this.syncRecord(summary, actorUserId, target.collectionId, source);
-        }
-      }
-    }
-    summary.removed += await this.removeOrphans(seen);
-    this.logger.log(`knowledge sync: ${JSON.stringify({ ...summary, errors: undefined })}`);
-    if (summary.errors.length)
-      this.logger.warn(`knowledge sync errors: ${summary.errors.join(' | ')}`);
-    return summary;
-  }
-
-  private async syncRecord(
-    summary: ISyncSummary,
-    actorUserId: string,
-    collectionId: string,
-    source: IRagSource
-  ) {
-    summary.records++;
-    try {
-      const outcome = await this.ingest({ actorUserId, collectionId, source });
-      if (outcome.status === 'removed') summary.removed++;
-      else if (outcome.unchanged) summary.unchanged++;
-      else summary.indexed++;
-    } catch (error) {
-      summary.failed++;
-      if (summary.errors.length < 5) {
-        const id = source.kind === 'record' ? source.recordId : '';
-        summary.errors.push(`${id}: ${(error as Error).message.slice(0, 200)}`);
-      }
-    }
-  }
-
-  /** Documents of records that no longer exist (deleted while the server was down). */
-  private async removeOrphans(seen: Map<string, Set<string>>) {
-    let removed = 0;
-    for (const [collectionId, ids] of seen) {
-      for (const doc of await this.rag.listDocuments(collectionId, 100_000)) {
-        if (doc.recordId && !ids.has(doc.id)) {
-          await this.rag.deleteDocument(doc.id);
-          removed++;
-        }
-      }
-    }
-    return removed;
-  }
-
-  /**
-   * The first knowledge search in this process starts a full sync and waits for it a little;
-   * `pending` says it is still running (results may be incomplete).
-   */
-  async ensureSynced(actorUserId: string, waitMs = INGEST_WAIT_MS): Promise<{ pending: boolean }> {
-    if (!this.firstSync) {
-      this.firstSync = this.syncAll(actorUserId).catch((error) => {
-        this.logger.warn(`knowledge sync failed: ${(error as Error).message}`);
-        this.firstSync = undefined; // try again on the next search
-      });
-    }
-    let timer: NodeJS.Timeout | undefined;
-    const done = await Promise.race([
-      this.firstSync.then(() => true),
-      new Promise<boolean>((r) => (timer = setTimeout(() => r(false), waitMs))),
-    ]);
-    clearTimeout(timer);
-    return { pending: !done };
-  }
 
   /** rag_ingest: queue a document, then wait a little for it. */
   async request(req: IIngestRequest) {
@@ -211,25 +100,6 @@ export class KnowledgeIngest {
     };
   }
 
-  /** Derived sync (design §11.3): a record changed or was deleted. */
-  async enqueueRecords(
-    collectionId: string,
-    refs: { baseId: string; tableId: string; recordId: string }[],
-    actorUserId: string,
-    removed = false
-  ) {
-    if (!refs.length) return;
-    await this.queue.addBulk(
-      refs.map((ref) => {
-        const source: IRagSource = { kind: 'record', ...ref };
-        const data: IRagJobData = removed
-          ? { actorUserId, documentId: documentIdFor(collectionId, sourceRefOf(source)) }
-          : { actorUserId, collectionId, source };
-        return { name: removed ? 'remove' : 'ingest', data, opts: jobOptions };
-      })
-    );
-  }
-
   async status(documentId: string) {
     return this.rag.getDocument(documentId);
   }
@@ -255,7 +125,8 @@ export class KnowledgeIngest {
     if (!collectionId || !source) throw new Error('ingest job without collection or source');
     const documentId = documentIdFor(collectionId, sourceRefOf(source));
     try {
-      return await this.run(data, collectionId, source, documentId);
+      const read = await this.reader.read(source, collectionId);
+      return await this.apply(collectionId, source, read, { title: data.title });
     } catch (error) {
       await this.rag
         .setDocumentStatus(documentId, 'failed', (error as Error).message.slice(0, 1000))
@@ -264,21 +135,28 @@ export class KnowledgeIngest {
     }
   }
 
-  private async run(
-    data: IRagJobData,
+  /**
+   * Indexes what was read from a source: removes the document when the source is gone, skips it
+   * when the content hash is unchanged, otherwise re-chunks it. `existing` saves a lookup when the
+   * caller already has the document.
+   */
+  async apply(
     collectionId: string,
     source: IRagSource,
-    documentId: string
+    read: IRagSourceText | undefined,
+    opts: { title?: string | null; existing?: IRagDocument | null } = {}
   ): Promise<IIngestOutcome> {
-    const read = await this.reader.read(source);
+    const documentId = documentIdFor(collectionId, sourceRefOf(source));
     if (!read) return this.remove(documentId);
     if (read.text.length > MAX_DOCUMENT_CHARS) {
       throw new Error(
         `The text has ${read.text.length} characters; the limit is ${MAX_DOCUMENT_CHARS}`
       );
     }
-    const existing = await this.rag.getDocument(documentId);
-    const title = data.title ?? existing?.title ?? read.title;
+    const existing =
+      opts.existing === undefined ? await this.rag.getDocument(documentId) : opts.existing;
+    const title =
+      opts.title ?? (source.kind === 'record' ? read.title : existing?.title ?? read.title);
     const hash = sha256(`${title ?? ''}\n${read.text}`);
 
     // indexed before with the same content: nothing to do (a queued re-ingest just turns ready)

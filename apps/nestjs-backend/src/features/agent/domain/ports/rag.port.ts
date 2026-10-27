@@ -53,6 +53,19 @@ export interface IRagHit {
   score: number;
 }
 
+export type ISyncStatus = 'running' | 'done' | 'failed';
+
+/** What the table sync last did for a table (current-design §4.6); table '*' is the full sync. */
+export interface ISyncState {
+  tableId: string;
+  collectionId: string | null;
+  status: ISyncStatus;
+  records: number;
+  error: string | null;
+  startedTime: Date | null;
+  finishedTime: Date | null;
+}
+
 export interface IRagQuery {
   text: string;
   collections: string[];
@@ -73,6 +86,17 @@ export interface IRagStorePort {
   setDocumentStatus(id: string, status: IRagDocumentStatus, error?: string | null): Promise<void>;
   deleteDocument(id: string): Promise<void>;
   listDocuments(collectionId: string, limit?: number): Promise<IRagDocument[]>;
+  getDocuments(ids: string[]): Promise<IRagDocument[]>;
+  deleteDocuments(ids: string[]): Promise<void>;
+  /** Record documents of one table in the given collections. */
+  listTableDocuments(tableId: string, collectionIds: string[]): Promise<IRagDocument[]>;
+  /** Every table that has record documents in the given collections. */
+  listIndexedTables(collectionIds: string[]): Promise<{ collectionId: string; tableId: string }[]>;
+  /** Deletes the record documents of a table in the given collections; returns how many. */
+  deleteTableDocuments(tableId: string, collectionIds: string[]): Promise<number>;
+
+  getSyncState(tableId: string): Promise<ISyncState | undefined>;
+  setSyncState(tableId: string, patch: Partial<Omit<ISyncState, 'tableId'>>): Promise<void>;
 
   /** One transaction: drop the old chunks, write the new ones, mark the document ready. */
   replaceChunks(documentId: string, sections: IRagSection[]): Promise<number>;
@@ -118,8 +142,17 @@ export interface IRagSourceText {
 }
 
 export interface IRagSourceReaderPort {
-  /** Undefined when the source is gone (a deleted record, a forgotten memory). */
-  read(source: IRagSource): Promise<IRagSourceText | undefined>;
+  /**
+   * Undefined when the source is gone (a deleted record, a forgotten memory). A record is read
+   * as the collection it goes into reads it (kb_records, records, agent_memory).
+   */
+  read(source: IRagSource, collectionId?: string): Promise<IRagSourceText | undefined>;
+  /** Records of one table read together; a missing or deleted record maps to undefined. */
+  readRecords(
+    tableId: string,
+    recordIds: string[],
+    collectionId: string
+  ): Promise<Map<string, IRagSourceText | undefined>>;
 }
 
 export const RAG_SOURCE_READER_PORT = Symbol('AGENT_RAG_SOURCE_READER_PORT');

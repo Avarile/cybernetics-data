@@ -10,6 +10,7 @@ import type {
   IRagQuery,
   IRagSection,
   IRagStorePort,
+  ISyncState,
 } from '../../domain/ports';
 import { buildSearchQuery, searchableText } from './rag-query';
 import { RAG_SCHEMA, RAG_SCHEMA_STATEMENTS } from './rag-schema';
@@ -26,6 +27,7 @@ const qb = knex({ client: 'pg' });
 const collectionTable = `${RAG_SCHEMA}.collection`;
 const documentTable = `${RAG_SCHEMA}.document`;
 const chunkTable = `${RAG_SCHEMA}.chunk`;
+const syncTable = `${RAG_SCHEMA}.sync_state`;
 
 const toCollection = (r: IRow): IRagCollection => ({
   id: String(r.id),
@@ -182,6 +184,92 @@ export class PgRagStore implements IRagStorePort {
         .limit(Math.max(1, Math.min(limit, 100_000)))
     );
     return rows.map(toDocument);
+  }
+
+  async getDocuments(ids: string[]) {
+    if (!ids.length) return [];
+    const db = await this.db();
+    return (await this.rows(db, qb(documentTable).whereIn('id', ids))).map(toDocument);
+  }
+
+  async deleteDocuments(ids: string[]) {
+    if (!ids.length) return;
+    const db = await this.db();
+    await this.rows(db, qb(documentTable).whereIn('id', ids).delete());
+  }
+
+  async listTableDocuments(tableId: string, collectionIds: string[]) {
+    const db = await this.db();
+    const rows = await this.rows(
+      db,
+      qb(documentTable)
+        .where({ table_id: tableId })
+        .whereIn('collection_id', collectionIds)
+        .whereNotNull('record_id')
+    );
+    return rows.map(toDocument);
+  }
+
+  async listIndexedTables(collectionIds: string[]) {
+    const db = await this.db();
+    const rows = await this.rows(
+      db,
+      qb(documentTable)
+        .distinct('collection_id', 'table_id')
+        .whereIn('collection_id', collectionIds)
+        .whereNotNull('table_id')
+    );
+    return rows.map((r) => ({
+      collectionId: String(r.collection_id),
+      tableId: String(r.table_id),
+    }));
+  }
+
+  async deleteTableDocuments(tableId: string, collectionIds: string[]) {
+    const db = await this.db();
+    const rows = await this.rows(
+      db,
+      qb(documentTable)
+        .where({ table_id: tableId })
+        .whereIn('collection_id', collectionIds)
+        .delete()
+        .returning('id')
+    );
+    return rows.length;
+  }
+
+  async getSyncState(tableId: string): Promise<ISyncState | undefined> {
+    const db = await this.db();
+    const [row] = await this.rows(db, qb(syncTable).where({ table_id: tableId }).limit(1));
+    if (!row) return undefined;
+    return {
+      tableId: String(row.table_id),
+      collectionId: (row.collection_id as string) ?? null,
+      status: row.status as ISyncState['status'],
+      records: Number(row.records),
+      error: (row.error as string) ?? null,
+      startedTime: (row.started_time as Date) ?? null,
+      finishedTime: (row.finished_time as Date) ?? null,
+    };
+  }
+
+  async setSyncState(tableId: string, patch: Partial<Omit<ISyncState, 'tableId'>>) {
+    const db = await this.db();
+    const values = {
+      ...(patch.collectionId !== undefined ? { collection_id: patch.collectionId } : {}),
+      ...(patch.status ? { status: patch.status } : {}),
+      ...(patch.records !== undefined ? { records: patch.records } : {}),
+      ...(patch.error !== undefined ? { error: patch.error?.slice(0, 2000) ?? null } : {}),
+      ...(patch.startedTime !== undefined ? { started_time: patch.startedTime } : {}),
+      ...(patch.finishedTime !== undefined ? { finished_time: patch.finishedTime } : {}),
+    };
+    await this.rows(
+      db,
+      qb(syncTable)
+        .insert({ table_id: tableId, status: patch.status ?? 'running', ...values })
+        .onConflict('table_id')
+        .merge(values)
+    );
   }
 
   async replaceChunks(documentId: string, sections: IRagSection[]) {

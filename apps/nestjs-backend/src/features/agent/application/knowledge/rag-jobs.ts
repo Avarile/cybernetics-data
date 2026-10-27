@@ -2,7 +2,17 @@ import { createHash } from 'crypto';
 import type { IRagSource } from '../../domain/ports';
 
 export const RAG_JOBS_QUEUE = 'agent-rag';
-export type IRagJobName = 'ingest' | 'remove' | 'sync';
+/**
+ * ingest / remove: one document. ingest-records: records of one table, read together. sync: every
+ * table. sync-table: one table, after its fields changed. remove-table: a deleted table's documents.
+ */
+export type IRagJobName =
+  | 'ingest'
+  | 'remove'
+  | 'ingest-records'
+  | 'sync'
+  | 'sync-table'
+  | 'remove-table';
 
 export interface IRagJobData {
   actorUserId: string;
@@ -12,6 +22,10 @@ export interface IRagJobData {
   title?: string | null;
   /** remove: the document to delete. */
   documentId?: string;
+  /** ingest-records, sync-table, remove-table. */
+  baseId?: string;
+  tableId?: string;
+  recordIds?: string[];
 }
 
 export const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
