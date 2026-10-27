@@ -25,6 +25,7 @@ import { TurnGate } from './application/chat/turn-gate';
 import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
 import { AgentExposureService } from './application/installation/exposure';
+import { AgentMembershipScheduler } from './application/installation/membership-scheduler';
 import { AgentMembershipService } from './application/installation/membership';
 import { AGENT_JOBS_QUEUE, AgentJobs } from './application/jobs/agent-jobs';
 import { TurnJobs } from './application/jobs/turn-jobs';
@@ -109,6 +110,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
   providers: [
     AgentExecutionContext,
     AgentMembershipService,
+    AgentMembershipScheduler,
     AgentSeeder,
     AgentExposureService,
     EnsureInstallation,
