@@ -26,6 +26,6 @@ const subServices = [
   imports: [ConfigModule, SettingModule, ChatFileModule],
   controllers: [AiController],
   providers: [AiService, ...subServices],
-  exports: [AiService],
+  exports: [AiService, TtsService],
 })
 export class AiModule {}

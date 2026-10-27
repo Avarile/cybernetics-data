@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Logger,
   Param,
   Patch,
@@ -20,8 +21,10 @@ import type {
 import {
   agentChatRoSchema,
   agentThreadListQuerySchema,
+  agentTtsRoSchema,
   IAgentChatRo,
   IAgentThreadListQuery,
+  IAgentTtsRo,
   IUpdateAgentThreadRo,
   updateAgentThreadRoSchema,
 } from '@teable/openapi';
@@ -29,6 +32,7 @@ import { Response } from 'express';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';
+import { TtsService } from '../../ai/service';
 import { CancelRun } from '../application/chat/cancel-run.usecase';
 import { ResumeTurn } from '../application/chat/resume-turn.usecase';
 import { RunTurn } from '../application/chat/run-turn.usecase';
@@ -52,6 +56,7 @@ export class AgentChatController {
     private readonly resumeTurn: ResumeTurn,
     private readonly cancelRun: CancelRun,
     private readonly threads: ManageThreads,
+    private readonly ttsService: TtsService,
     private readonly cls: ClsService<IClsStore>
   ) {}
 
@@ -77,6 +82,16 @@ export class AgentChatController {
     }).catch((error) =>
       this.logger.error(`agent stream ${turn.runId} broke: ${(error as Error).message}`)
     );
+  }
+
+  /** Voice design §7.1: one segment of a reply as audio/mpeg; 503 when ElevenLabs is not set up. */
+  @Post('tts')
+  @HttpCode(200)
+  async tts(
+    @Body(new ZodValidationPipe(agentTtsRoSchema)) ro: IAgentTtsRo,
+    @Res() res: Response
+  ): Promise<void> {
+    await this.ttsService.tts(ro.text, res);
   }
 
   @Post('runs/:runId/cancel')
