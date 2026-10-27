@@ -12,7 +12,14 @@ import { defineTool } from '../toolkit.types';
 export const MAX_SQL_ROWS = 200;
 const maxSqlChars = 20_000;
 
-/** The query inside a row limit; only one statement, no trailing semicolons. */
+/** A query runs at most this long. */
+export const SQL_TIMEOUT_MS = 15_000;
+
+/**
+ * The query inside a row limit; only one statement, no trailing semicolons. The body stands on
+ * its own lines, so a trailing `-- comment` cannot comment out the limit, and an unclosed `/*`
+ * is refused for the same reason.
+ */
 export function limitedSql(sql: string, limit = MAX_SQL_ROWS + 1) {
   const body = sql
     .trim()
@@ -22,7 +29,10 @@ export function limitedSql(sql: string, limit = MAX_SQL_ROWS + 1) {
   if (body.includes(';')) {
     throw new CustomHttpException('Send one statement at a time', HttpErrorCode.VALIDATION_ERROR);
   }
-  return `select * from (${body}) as agent_query limit ${limit}`;
+  if (body.lastIndexOf('/*') > body.lastIndexOf('*/')) {
+    throw new CustomHttpException('Close the /* comment', HttpErrorCode.VALIDATION_ERROR);
+  }
+  return `select * from (\n${body}\n) as agent_query limit ${limit}`;
 }
 
 /** JSON-safe rows (counts come back as BigInt). */
@@ -66,7 +76,8 @@ export class SqlReadToolkit implements IToolkit, OnModuleInit {
         execute: async (i) => {
           const rows = (await this.executor.executeQuerySql<Record<string, unknown>[]>(
             i.baseId,
-            limitedSql(i.sql)
+            limitedSql(i.sql),
+            { timeoutMs: SQL_TIMEOUT_MS }
           )) as Record<string, unknown>[];
           const truncated = rows.length > MAX_SQL_ROWS;
           return {

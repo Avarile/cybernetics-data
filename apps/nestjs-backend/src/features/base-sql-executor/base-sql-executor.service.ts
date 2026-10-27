@@ -279,8 +279,17 @@ export class BaseSqlExecutorService {
     await prisma.$executeRawUnsafe(this.knex.raw(`RESET ROLE`).toQuery());
   }
 
-  private async readonlyExecuteSql(sql: string) {
-    return this.db?.$queryRawUnsafe(sql);
+  private async readonlyExecuteSql(sql: string, timeoutMs?: number) {
+    if (!this.db) return;
+    if (!timeoutMs) return this.db.$queryRawUnsafe(sql);
+    // the check runs the query too: the same time limit applies
+    const [, rows] = await this.db.$transaction([
+      this.db.$executeRawUnsafe(
+        `SET LOCAL statement_timeout = ${Math.max(1, Math.floor(timeoutMs))}`
+      ),
+      this.db.$queryRawUnsafe(sql),
+    ]);
+    return rows;
   }
 
   /**
@@ -292,7 +301,7 @@ export class BaseSqlExecutorService {
   private async safeCheckSql(
     baseId: string,
     sql: string,
-    opts?: { projectionTableDbNames?: string[]; projectionTableIds?: string[] }
+    opts?: { projectionTableDbNames?: string[]; projectionTableIds?: string[]; timeoutMs?: number }
   ) {
     const { projectionTableDbNames = [] } = opts ?? {};
     // 1. role operations keywords validation, only pg support
@@ -318,7 +327,7 @@ export class BaseSqlExecutorService {
     });
     // 3. read only role check table access, only pg and pg version > 14 support
     try {
-      await this.readonlyExecuteSql(sql);
+      await this.readonlyExecuteSql(sql, opts?.timeoutMs);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       throw new CustomHttpException(
@@ -342,6 +351,8 @@ export class BaseSqlExecutorService {
     opts?: {
       projectionTableDbNames?: string[];
       projectionTableIds?: string[];
+      /** Cancels the query after this long (PostgreSQL statement_timeout). */
+      timeoutMs?: number;
     }
   ) {
     await this.safeCheckSql(baseId, sql, opts);
@@ -349,6 +360,11 @@ export class BaseSqlExecutorService {
     return this.dataPrismaService.$tx(async (prisma) => {
       try {
         await this.setRole(prisma, baseId);
+        if (opts?.timeoutMs) {
+          await prisma.$executeRawUnsafe(
+            `SET LOCAL statement_timeout = ${Math.max(1, Math.floor(opts.timeoutMs))}`
+          );
+        }
         return await prisma.$queryRawUnsafe<T>(sql);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {

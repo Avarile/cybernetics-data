@@ -99,6 +99,19 @@ describe('Agent sql_read (e2e)', () => {
     expect(result).toMatchObject({ returned: 200, truncated: true });
   });
 
+  it('keeps the row cap when the query ends in a comment, and stops slow queries', async () => {
+    const o = await orders();
+    const result = await run<{ returned: number; truncated: boolean }>('sql_query', {
+      baseId,
+      sql: `select "${o.total}" from ${o.quoted} -- every row`,
+    });
+    expect(result.truncated).toBe(true);
+    expect(result.returned).toBe(200);
+    await expect(
+      run('sql_query', { baseId, sql: `select pg_sleep(20)::text from ${o.quoted} limit 1` })
+    ).rejects.toThrow(/statement timeout|canceling statement/);
+  }, 40_000);
+
   it('refuses writes, other bases and several statements', async () => {
     const o = await orders();
     await expect(run('sql_query', { baseId, sql: `delete from ${o.quoted}` })).rejects.toThrow();
