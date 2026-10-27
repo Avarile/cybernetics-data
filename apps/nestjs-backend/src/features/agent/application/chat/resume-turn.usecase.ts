@@ -36,6 +36,7 @@ export class ResumeTurn {
     const profile = await this.gate.prepare(actorUserId);
     const thread = await this.gate.ownThread(ro.threadId!, actorUserId);
     const release = await this.gate.lock(thread.id);
+    let resumedRunId: string | undefined;
     try {
       const run = (await this.runs.activeFor([thread.id])).get(thread.id);
       if (run?.status !== 'awaiting_approval') {
@@ -58,9 +59,20 @@ export class ResumeTurn {
       if (applied.missing.length) {
         throw invalid(`Answer every pending approval (missing ${applied.missing.join(', ')})`);
       }
+      // only from awaiting_approval: a cancel that landed since the check above wins
+      const resumed = await this.runs.transition(run.id, ['awaiting_approval'], {
+        status: 'running',
+        pendingApproval: null,
+      });
+      if (!resumed) {
+        throw new CustomHttpException(
+          'This reply was stopped; send a new message instead',
+          HttpErrorCode.CONFLICT
+        );
+      }
+      resumedRunId = run.id;
       await this.store.updateMessage(reply.id, { parts: JSON.stringify(applied.parts) });
       await this.auditAnswers(run.id, actorUserId, parts, answers);
-      await this.runs.update(run.id, { status: 'running', pendingApproval: null });
 
       const lastUser = [...recent].reverse().find((m) => m.role === 'user');
       return await this.gate.launch({
@@ -73,6 +85,15 @@ export class ResumeTurn {
         release,
       });
     } catch (error) {
+      if (resumedRunId) {
+        // resumed but never started: the run must not stay `running`
+        await this.runs
+          .transition(resumedRunId, ['running'], {
+            status: 'failed',
+            error: ((error as Error)?.message ?? String(error)).slice(0, 1000),
+          })
+          .catch(() => undefined);
+      }
       await release();
       throw error;
     }

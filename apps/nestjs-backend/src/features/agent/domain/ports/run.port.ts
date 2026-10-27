@@ -36,6 +36,15 @@ export interface IRunStorePort {
     id: string,
     patch: Partial<Pick<IAgentRun, 'status' | 'pendingApproval' | 'usage' | 'error'>>
   ): Promise<void>;
+  /**
+   * The same change, made only while the run's status is one of `from` (one conditional
+   * statement, so a cancel and a resume cannot overwrite each other). True when it was made.
+   */
+  transition(
+    id: string,
+    from: IRunStatus[],
+    patch: Partial<Pick<IAgentRun, 'status' | 'pendingApproval' | 'usage' | 'error'>>
+  ): Promise<boolean>;
   /** The run of a thread that is still running or waiting for approval. */
   activeFor(threadIds: string[]): Promise<Map<string, IAgentRun>>;
 }

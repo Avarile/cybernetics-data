@@ -18,12 +18,16 @@ export class CancelRun {
     if (!run || run.actorUserId !== actorUserId) {
       throw new CustomHttpException('Run not found', HttpErrorCode.NOT_FOUND);
     }
-    if (run.status === 'running' || run.status === 'awaiting_approval') {
-      // marked first: a replica that streams this run sees it at its next step
-      await this.runs.update(runId, { status: 'cancelled', pendingApproval: null });
+    // marked first: a replica that streams this run sees it at its next step
+    const cancelled = await this.runs.transition(runId, ['running', 'awaiting_approval'], {
+      status: 'cancelled',
+      pendingApproval: null,
+    });
+    if (cancelled) {
       this.registry.abort(runId);
       return { id: run.id, threadId: run.threadId, status: 'cancelled' };
     }
-    return { id: run.id, threadId: run.threadId, status: run.status };
+    const now = (await this.runs.get(runId)) ?? run;
+    return { id: run.id, threadId: run.threadId, status: now.status };
   }
 }

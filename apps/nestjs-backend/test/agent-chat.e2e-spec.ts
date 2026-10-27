@@ -187,6 +187,32 @@ describe('Agent chat (e2e)', () => {
     ]);
   });
 
+  it('a cancel that lands while an approval is being answered wins', async () => {
+    play([call('probe_delete', { id: 'rec3' }, 'del-3')]);
+    const t = await turn('Delete rec3');
+    const { chunks } = await drain(t.stream);
+    const { approvalId } = chunks.find((c) => c.type === 'tool-approval-request') as {
+      approvalId: string;
+    };
+    // the cancel arrives after resume found the run waiting, before it moved it on
+    const listMessages = store.listMessages.bind(store);
+    let cancelled = false;
+    const spy = vi.spyOn(store, 'listMessages').mockImplementation(async (threadId, options) => {
+      // resume reads the last 20 messages; background jobs read others
+      if (!cancelled && threadId === t.threadId && options?.last === 20) {
+        cancelled = true;
+        await app.get(CancelRun).execute(adminId(), t.runId);
+      }
+      return listMessages(threadId, options);
+    });
+    await expect(resume(t.threadId, [{ approvalId, approved: true }])).rejects.toThrow(
+      /was stopped/
+    );
+    spy.mockRestore();
+    expect((await runs.get(t.runId))?.status).toBe('cancelled');
+    expect(executed).toEqual([]);
+  });
+
   it('a denial reaches the model and the tool never runs', async () => {
     play([call('probe_delete', { id: 'rec2' }, 'del-2')]);
     const t = await turn('Delete rec2');

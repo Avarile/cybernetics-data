@@ -92,13 +92,19 @@ export class TurnRecorder {
         : pending.length
           ? 'awaiting_approval'
           : 'done';
+    let final: IRunStatus = status;
     try {
-      await this.runs.update(this.run.id, {
+      // only from running: a cancel that lands after the check above keeps the run cancelled
+      const closed = await this.runs.transition(this.run.id, ['running'], {
         status,
         pendingApproval: pending.length && status === 'awaiting_approval' ? pending : null,
         usage: this.usage,
         error: status === 'failed' ? this.error ?? null : null,
       });
+      if (!closed) {
+        final = (await this.runs.get(this.run.id))?.status ?? status;
+        await this.runs.update(this.run.id, { usage: this.usage });
+      }
       const thread = await this.store.getThread(this.thread.id);
       await this.store.updateThread(this.thread.id, {
         tokensIn: (thread.tokensIn ?? 0) + this.usage.inputTokens,
@@ -108,6 +114,6 @@ export class TurnRecorder {
     } catch (error) {
       this.logger.error(`closing run ${this.run.id} failed: ${(error as Error).stack}`);
     }
-    return status;
+    return final;
   }
 }

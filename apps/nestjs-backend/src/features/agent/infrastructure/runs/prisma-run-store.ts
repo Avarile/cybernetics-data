@@ -25,6 +25,18 @@ const toRun = (row: AgentRun): IAgentRun => ({
 
 const finalStatuses: IRunStatus[] = ['done', 'failed', 'cancelled'];
 
+type IRunPatch = Partial<Pick<IAgentRun, 'status' | 'pendingApproval' | 'usage' | 'error'>>;
+
+const dataOf = (patch: IRunPatch) => ({
+  ...(patch.status ? { status: patch.status } : {}),
+  ...(patch.status && finalStatuses.includes(patch.status) ? { finishedTime: new Date() } : {}),
+  ...(patch.pendingApproval !== undefined
+    ? { pendingApproval: patch.pendingApproval ? JSON.stringify(patch.pendingApproval) : null }
+    : {}),
+  ...(patch.usage ? { usage: JSON.stringify(patch.usage) } : {}),
+  ...(patch.error !== undefined ? { error: patch.error?.slice(0, 2000) ?? null } : {}),
+});
+
 @Injectable()
 export class PrismaRunStore implements IRunStorePort {
   constructor(private readonly prismaService: PrismaService) {}
@@ -41,26 +53,16 @@ export class PrismaRunStore implements IRunStorePort {
     return row ? toRun(row) : undefined;
   }
 
-  async update(
-    id: string,
-    patch: Partial<Pick<IAgentRun, 'status' | 'pendingApproval' | 'usage' | 'error'>>
-  ) {
-    await this.prismaService.agentRun.update({
-      where: { id },
-      data: {
-        ...(patch.status ? { status: patch.status } : {}),
-        ...(patch.status && finalStatuses.includes(patch.status)
-          ? { finishedTime: new Date() }
-          : {}),
-        ...(patch.pendingApproval !== undefined
-          ? {
-              pendingApproval: patch.pendingApproval ? JSON.stringify(patch.pendingApproval) : null,
-            }
-          : {}),
-        ...(patch.usage ? { usage: JSON.stringify(patch.usage) } : {}),
-        ...(patch.error !== undefined ? { error: patch.error?.slice(0, 2000) ?? null } : {}),
-      },
+  async update(id: string, patch: IRunPatch) {
+    await this.prismaService.agentRun.update({ where: { id }, data: dataOf(patch) });
+  }
+
+  async transition(id: string, from: IRunStatus[], patch: IRunPatch) {
+    const { count } = await this.prismaService.agentRun.updateMany({
+      where: { id, status: { in: from } },
+      data: dataOf(patch),
     });
+    return count === 1;
   }
 
   async activeFor(threadIds: string[]) {

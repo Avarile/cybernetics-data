@@ -86,7 +86,10 @@ export class RunTurn {
     }
     const waiting = (await this.runs.activeFor([threadId])).get(threadId);
     if (waiting?.status === 'awaiting_approval') {
-      await this.runs.update(waiting.id, { status: 'done', pendingApproval: null });
+      await this.runs.transition(waiting.id, ['awaiting_approval'], {
+        status: 'done',
+        pendingApproval: null,
+      });
     }
   }
 }
