@@ -19,6 +19,8 @@ interface ISpeechRecognition extends EventTarget {
   lang: string;
   start(): void;
   stop(): void;
+  /** Stops at once and drops the result still being heard (stop() delivers it). */
+  abort(): void;
   onstart: ((ev: Event) => void) | null;
   onend: ((ev: Event) => void) | null;
   onresult: ((ev: ISpeechRecognitionEvent) => void) | null;
