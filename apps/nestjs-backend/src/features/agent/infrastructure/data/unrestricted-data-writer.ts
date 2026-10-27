@@ -11,11 +11,14 @@ import { RecordOpenApiService } from '../../../record/open-api/record-open-api.s
 import { TableOpenApiService } from '../../../table/open-api/table-open-api.service';
 import { prepareCreateTableRo } from '../../../table/open-api/table.pipe.helper';
 import type { IDataFieldSpec, IDataTableRef } from '../../domain/ports';
+import { isAgentHome } from '../agent-home';
 
 /**
  * Writes for the DataGatewayPort (design §8 data_write and schema). Tables and fields are
  * resolved fresh from the database (not the 30 s schema cache), and the cache is cleared after a
- * schema change so the next read sees it. Deletes go to Teable's trash.
+ * schema change so the next read sees it. Deletes go to Teable's trash. The Agent space is
+ * refused: its tables hold the agent's setup, credentials and skills, which change only through
+ * their own tools and approvals (current-design §6 D1).
  */
 @Injectable()
 export class UnrestrictedDataWriter {
@@ -27,8 +30,19 @@ export class UnrestrictedDataWriter {
     private readonly fields: FieldOpenApiService
   ) {}
 
-  /** The table of this base by id or exact name, with its fields. */
+  /** Refuses a base in the Agent space; reads of it stay allowed elsewhere. */
+  private async writable(baseId: string) {
+    if (await isAgentHome(this.prismaService, { baseId })) {
+      throw new CustomHttpException(
+        "The Agent base cannot be changed with data tools. Use the memory, skills, setup and credential tools for the agent's own tables.",
+        HttpErrorCode.RESTRICTED_RESOURCE
+      );
+    }
+  }
+
+  /** The table of this base by id or exact name, with its fields; refuses the Agent space. */
   async resolve({ baseId, table }: IDataTableRef) {
+    await this.writable(baseId);
     const tables = await this.prismaService.tableMeta.findMany({
       where: { baseId, deletedTime: null },
       select: { id: true, name: true },
@@ -92,6 +106,7 @@ export class UnrestrictedDataWriter {
   }
 
   async createTable(input: { baseId: string; name: string; fields: IDataFieldSpec[] }) {
+    await this.writable(input.baseId);
     // the same defaults (primary field, grid view) the table route applies
     const table = await this.tables.createTable(
       input.baseId,

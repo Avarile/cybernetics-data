@@ -175,6 +175,62 @@ describe('Agent data_write and schema (e2e)', () => {
     expect(tables.tables.map((x) => x.name)).toEqual(['Items']);
   });
 
+  it("refuses to change the Agent space's tables, but still reads them", async () => {
+    const homeSpaceId = (await member.post('/space', { name: 'Agent home' })).data.id;
+    const homeBaseId = (await member.post('/base', { spaceId: homeSpaceId, name: 'Agent' })).data
+      .id;
+    await member.post(`/base/${homeBaseId}/table/`, {
+      name: 'agent_credentials',
+      fields: [
+        { name: 'name', type: FieldType.SingleLineText },
+        { name: 'allowed_hosts', type: FieldType.LongText },
+      ],
+      records: [{ fields: { name: 'github', allowed_hosts: 'api.github.com' } }],
+    });
+    const original = await prisma.agentInstallation.findUnique({ where: { id: 'agent' } });
+    await prisma.agentInstallation.upsert({
+      where: { id: 'agent' },
+      create: { id: 'agent', spaceId: homeSpaceId, createdBy: globalThis.testConfig.userId },
+      update: { spaceId: homeSpaceId },
+    });
+    try {
+      const table = { baseId: homeBaseId, table: 'agent_credentials' };
+      const read = await run<{ records: { id: string }[] }>('query_records', table);
+      expect(read.records).toHaveLength(1);
+
+      const refused = /Agent base cannot be changed/;
+      await expect(
+        run('update_records', {
+          ...table,
+          records: [{ id: read.records[0].id, fields: { allowed_hosts: 'attacker.example' } }],
+        })
+      ).rejects.toThrow(refused);
+      await expect(run('create_records', { ...table, records: [{ name: 'x' }] })).rejects.toThrow(
+        refused
+      );
+      await expect(
+        run('create_field', { ...table, field: { name: 'note', type: FieldType.SingleLineText } })
+      ).rejects.toThrow(refused);
+      await expect(
+        run('create_table', {
+          baseId: homeBaseId,
+          name: 'extra',
+          fields: [{ name: 'Name', type: FieldType.SingleLineText }],
+        })
+      ).rejects.toThrow(refused);
+    } finally {
+      if (original) {
+        await prisma.agentInstallation.update({
+          where: { id: 'agent' },
+          data: { spaceId: original.spaceId },
+        });
+      } else {
+        await prisma.agentInstallation.delete({ where: { id: 'agent' } });
+      }
+      await member.delete(`/space/${homeSpaceId}`);
+    }
+  });
+
   it('caps writes at 100 records', () => {
     const rows = Array.from({ length: 101 }, () => ({ Name: 'x' }));
     expect(() =>
