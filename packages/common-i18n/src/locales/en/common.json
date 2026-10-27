@@ -1845,6 +1845,63 @@
       "test": "Test",
       "testPath": "Test path",
       "removeSecret": "Remove"
+    },
+    "voice": {
+      "label": "Voice",
+      "hint": "Talk with the agent: it listens, sends after 3 seconds of silence and reads replies aloud. Chrome and Edge recognise speech in their cloud.",
+      "unsupported": "Voice needs Chrome, Edge or Safari",
+      "locked": "Voice can be turned off when the agent has finished. Use Stop to end the reply now.",
+      "placeholder": "Say something…",
+      "clear": "Clear",
+      "sendNow": "Send now",
+      "retry": "Retry",
+      "tapToHear": "Tap to hear the reply",
+      "status": {
+        "listening": "Listening…",
+        "hearing": "Hearing you…",
+        "sendingIn": "sending in {{seconds}} s",
+        "thinking": "Thinking…",
+        "working": "Working…",
+        "speaking": "Speaking…",
+        "approval": "Waiting for your approval: use the card above",
+        "paused": "Paused"
+      },
+      "error": {
+        "blocked": "Microphone access is blocked. Allow it in the browser's site settings.",
+        "noMicrophone": "No microphone found.",
+        "unavailable": "Voice recognition is unavailable.",
+        "notConfigured": "ElevenLabs isn't configured; using the browser voice."
+      },
+      "settings": {
+        "title": "Voice settings",
+        "speakWith": "Speak replies with",
+        "auto": "Auto (ElevenLabs, else browser)",
+        "elevenlabs": "ElevenLabs",
+        "browser": "Browser voice",
+        "browserVoice": "Browser voice",
+        "choose": "Choose a voice",
+        "search": "Search voices",
+        "noMatch": "No voices found",
+        "noVoices": "This browser has no voices",
+        "online": "Online (Google / Microsoft)",
+        "device": "This device",
+        "previewText": "Hello, I'm your agent."
+      },
+      "look": {
+        "table_one": "Please take a look at this table.",
+        "table_other": "Please take a look at these {{count}} tables.",
+        "code_one": "Please take a look at this code.",
+        "code_other": "Please take a look at these {{count}} code blocks.",
+        "form_one": "I need your approval for this. Please take a look at this form.",
+        "form_other": "I need your approval for these. Please take a look at these {{count}} forms.",
+        "diagram_one": "Please take a look at this diagram.",
+        "diagram_other": "Please take a look at these {{count}} diagrams.",
+        "formula_one": "Please take a look at this formula.",
+        "formula_other": "Please take a look at these {{count}} formulas.",
+        "image_one": "Please take a look at this image.",
+        "image_other": "Please take a look at these {{count}} images.",
+        "error": "Something went wrong. Please take a look at the screen."
+      }
     }
   }
 }

@@ -3,6 +3,10 @@ import { ArrowUp, Square } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';
 import { SpeechInput } from '@/components/ai-elements/speech-input';
+import type { IVoiceConversation } from '../voice/useVoiceConversation';
+import { VoiceComposer } from '../voice/VoiceComposer';
+import { VoiceSettings } from '../voice/VoiceSettings';
+import { VoiceSwitch } from '../voice/VoiceSwitch';
 
 export interface IAgentSkillOption {
   name: string;
@@ -17,6 +21,8 @@ export interface IAgentComposerProps {
   onStop: () => void;
   /** `/clear` (or `/new`); without it the commands are not offered. */
   onClear?: () => void;
+  /** Voice conversation (voice design §4); without it there is no Voice switch. */
+  voice?: IVoiceConversation;
 }
 
 /** Skills that match what follows a leading `/`. */
@@ -29,7 +35,10 @@ export const matchSkills = (value: string, skills: IAgentSkillOption[]) => {
 /** A chat command the composer handles itself: start a new conversation. */
 export const isClearCommand = (text: string) => /^\/(?:clear|new)$/i.test(text.trim());
 
-/** Input with send/stop, voice, and a `/` picker for commands and skills (design §13). */
+/**
+ * Input with send/stop, voice, and a `/` picker for commands and skills (design §13). With voice
+ * on, the textarea gives way to the live transcript (voice design §8).
+ */
 export const AgentComposer = ({
   busy,
   disabled,
@@ -37,6 +46,7 @@ export const AgentComposer = ({
   onSend,
   onStop,
   onClear,
+  voice,
 }: IAgentComposerProps) => {
   const { t } = useTranslation('common');
   const [value, setValue] = useState('');
@@ -65,10 +75,22 @@ export const AgentComposer = ({
     onSend(text);
     setValue('');
   };
+  const voiceOn = Boolean(voice?.enabled);
+  /** Typed text starts the voice draft; a draft not sent comes back to the textarea. */
+  const toggleVoice = (on: boolean) => {
+    if (!voice) return;
+    if (on) {
+      voice.turnOn(value);
+      setValue('');
+    } else {
+      const draft = voice.turnOff();
+      if (draft) setValue(draft);
+    }
+  };
 
   return (
     <div className="relative border-t p-2">
-      {suggestions.length > 0 && (
+      {!voiceOn && suggestions.length > 0 && (
         <ul
           role="listbox"
           aria-label={t('agent.composer.skills', 'Skills')}
@@ -94,55 +116,66 @@ export const AgentComposer = ({
           ))}
         </ul>
       )}
-      <div className="flex items-end gap-2">
-        <Textarea
-          value={value}
-          disabled={disabled}
-          rows={2}
-          className="max-h-48 min-h-[44px] resize-none"
-          placeholder={t(
-            'agent.composer.placeholder',
-            'Ask the agent… type / for skills, /clear for a new chat'
-          )}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-        />
-        <div className="flex flex-col gap-1">
-          <SpeechInput
-            size="icon"
-            variant="ghost"
-            className="size-8"
-            disabled={disabled || busy}
-            onTranscriptionChange={(text) => setValue((v) => (v ? `${v} ${text}` : text))}
+      {voiceOn && voice ? (
+        <VoiceComposer voice={voice} onStop={onStop} />
+      ) : (
+        <div className="flex items-end gap-2">
+          <Textarea
+            value={value}
+            disabled={disabled}
+            rows={2}
+            className="max-h-48 min-h-[44px] resize-none"
+            placeholder={t(
+              'agent.composer.placeholder',
+              'Ask the agent… type / for skills, /clear for a new chat'
+            )}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                submit();
+              }
+            }}
           />
-          {busy ? (
-            <Button
+          <div className="flex flex-col gap-1">
+            <SpeechInput
               size="icon"
-              variant="secondary"
+              variant="ghost"
               className="size-8"
-              title={t('agent.composer.stop', 'Stop')}
-              onClick={onStop}
-            >
-              <Square className="size-4" />
-            </Button>
-          ) : (
-            <Button
-              size="icon"
-              className={cn('size-8')}
-              title={t('agent.composer.send', 'Send')}
-              disabled={disabled || !value.trim()}
-              onClick={submit}
-            >
-              <ArrowUp className="size-4" />
-            </Button>
-          )}
+              disabled={disabled || busy}
+              onTranscriptionChange={(text) => setValue((v) => (v ? `${v} ${text}` : text))}
+            />
+            {busy ? (
+              <Button
+                size="icon"
+                variant="secondary"
+                className="size-8"
+                title={t('agent.composer.stop', 'Stop')}
+                onClick={onStop}
+              >
+                <Square className="size-4" />
+              </Button>
+            ) : (
+              <Button
+                size="icon"
+                className={cn('size-8')}
+                title={t('agent.composer.send', 'Send')}
+                disabled={disabled || !value.trim()}
+                onClick={submit}
+              >
+                <ArrowUp className="size-4" />
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+      {voice && (
+        <div className="mt-1.5">
+          <VoiceSwitch voice={voice} disabled={disabled} onToggle={toggleVoice}>
+            <VoiceSettings voice={voice} />
+          </VoiceSwitch>
+        </div>
+      )}
     </div>
   );
 };

@@ -119,6 +119,17 @@ export class BrowserVoiceEngine implements ISpeechEngine {
     this.synth?.cancel();
   }
 
+  /** The picker's preview: says `text` in `voice` at once, cutting off what was playing. */
+  preview(text: string, voice: SpeechSynthesisVoice) {
+    if (!this.synth) return;
+    this.synth.cancel();
+    const utterance = this.createUtterance(text);
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+    this.current = utterance;
+    this.synth.speak(utterance);
+  }
+
   private utter(
     text: string,
     voice: SpeechSynthesisVoice | undefined,

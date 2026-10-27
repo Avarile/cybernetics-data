@@ -1842,6 +1842,63 @@
       "test": "测试",
       "testPath": "测试路径",
       "removeSecret": "移除"
+    },
+    "voice": {
+      "label": "语音",
+      "hint": "与助手语音对话：它会聆听，静默 3 秒后发送，并朗读回复。Chrome 和 Edge 会在云端识别语音。",
+      "unsupported": "语音需要 Chrome、Edge 或 Safari",
+      "locked": "助手回复结束后才能关闭语音。可以用“停止”立即结束回复。",
+      "placeholder": "请说话…",
+      "clear": "清除",
+      "sendNow": "立即发送",
+      "retry": "重试",
+      "tapToHear": "点击收听回复",
+      "status": {
+        "listening": "正在聆听…",
+        "hearing": "正在听你说…",
+        "sendingIn": "{{seconds}} 秒后发送",
+        "thinking": "思考中…",
+        "working": "处理中…",
+        "speaking": "正在朗读…",
+        "approval": "等待你的批准：请使用上方的卡片",
+        "paused": "已暂停"
+      },
+      "error": {
+        "blocked": "麦克风权限被阻止。请在浏览器的网站设置中允许。",
+        "noMicrophone": "未找到麦克风。",
+        "unavailable": "语音识别不可用。",
+        "notConfigured": "ElevenLabs 未配置，改用浏览器语音。"
+      },
+      "settings": {
+        "title": "语音设置",
+        "speakWith": "朗读回复使用",
+        "auto": "自动（ElevenLabs，否则浏览器）",
+        "elevenlabs": "ElevenLabs",
+        "browser": "浏览器语音",
+        "browserVoice": "浏览器语音",
+        "choose": "选择语音",
+        "search": "搜索语音",
+        "noMatch": "未找到语音",
+        "noVoices": "此浏览器没有可用语音",
+        "online": "在线（Google / Microsoft）",
+        "device": "本设备",
+        "previewText": "你好，我是你的助手。"
+      },
+      "look": {
+        "table_one": "请看一下这个表格。",
+        "table_other": "请看一下这 {{count}} 个表格。",
+        "code_one": "请看一下这段代码。",
+        "code_other": "请看一下这 {{count}} 段代码。",
+        "form_one": "这需要你的批准。请看一下这个表单。",
+        "form_other": "这些需要你的批准。请看一下这 {{count}} 个表单。",
+        "diagram_one": "请看一下这张图。",
+        "diagram_other": "请看一下这 {{count}} 张图。",
+        "formula_one": "请看一下这个公式。",
+        "formula_other": "请看一下这 {{count}} 个公式。",
+        "image_one": "请看一下这张图片。",
+        "image_other": "请看一下这 {{count}} 张图片。",
+        "error": "出了点问题。请看一下屏幕。"
+      }
     }
   }
 }

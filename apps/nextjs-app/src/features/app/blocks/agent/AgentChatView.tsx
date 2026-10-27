@@ -13,6 +13,7 @@ import { AgentComposer, type IAgentSkillOption } from './components/AgentCompose
 import { AgentMessageView } from './components/AgentMessageView';
 import { useAgentChat } from './useAgentChat';
 import { useThreadMessages } from './useAgentData';
+import { useVoiceConversation } from './voice/useVoiceConversation';
 
 export interface IAgentChatViewProps {
   threadId?: string;
@@ -42,6 +43,19 @@ export const AgentChatView = ({
   const busy = chat.status === 'submitted' || chat.status === 'streaming';
   const respond = (approvalId: string, approved: boolean) => {
     void chat.respond(approvalId, approved).then(onTurnFinished);
+  };
+  const send = (text: string) => void chat.send(text).then(onTurnFinished);
+  const voice = useVoiceConversation({
+    messages: chat.messages,
+    busy,
+    error: chat.error,
+    disabled,
+    send,
+  });
+  /** Stop also ends what the agent is saying (voice design §4.2). */
+  const stop = () => {
+    voice.stopSpeech();
+    return chat.stop();
   };
 
   return (
@@ -79,9 +93,10 @@ export const AgentChatView = ({
         busy={busy}
         disabled={disabled}
         skills={skills}
-        onSend={(text) => void chat.send(text).then(onTurnFinished)}
-        onStop={() => void chat.stop()}
-        onClear={onClear && (() => void chat.stop().then(onClear))}
+        voice={voice}
+        onSend={send}
+        onStop={() => void stop()}
+        onClear={onClear && (() => void stop().then(onClear))}
       />
     </div>
   );
