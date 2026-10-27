@@ -145,6 +145,75 @@ describe('Agent installation (e2e)', () => {
     expect(after.records.find((r) => r.id === first.id)!.fields[body]).toBe('my own instructions');
   });
 
+  describe('built-in skill upgrades', () => {
+    const skillsByName = async () => {
+      const { tableMap, fieldMap } = await ensure.status();
+      const fm = fieldMap.agent_skills;
+      const rows = (await records(tableMap.agent_skills)).records;
+      return {
+        table: tableMap.agent_skills,
+        fm,
+        byName: new Map(rows.map((r) => [r.fields[fm.name] as string, r])),
+      };
+    };
+    const reseed = async () => {
+      await prisma.agentInstallation.update({ where: { id: 'agent' }, data: { seededVersion: 0 } });
+      await ensure.ensure('e2e');
+    };
+
+    it('renames an unedited built-in in place and removes the copies earlier seeds added', async () => {
+      const { table, fm, byName } = await skillsByName();
+      const documents = byName.get('document-search')!;
+      const recordsApi = app.get(RecordOpenApiService);
+      // what an install seeded before the rename holds: the old name and version, plus a -v2 copy
+      await asAgent(async () => {
+        await recordsApi.updateRecord(table, documents.id, {
+          fieldKeyType: 'id' as never,
+          record: { fields: { [fm.name]: 'rag-search', [fm.version]: 1 } },
+        });
+        await recordsApi.createRecords(table, {
+          fieldKeyType: 'id' as never,
+          typecast: true,
+          records: [
+            {
+              fields: {
+                [fm.name]: 'rag-search-v2',
+                [fm.body]: documents.fields[fm.body],
+                [fm.source]: 'builtin',
+                [fm.version]: 2,
+              },
+            },
+          ],
+        });
+      });
+      await reseed();
+
+      const after = (await skillsByName()).byName;
+      expect(after.get('document-search')?.id).toBe(documents.id);
+      expect(after.get('document-search')?.fields[fm.version]).toBe(2);
+      expect(after.has('rag-search')).toBe(false);
+      expect(after.has('rag-search-v2')).toBe(false);
+    });
+
+    it('offers a newer version of an edited built-in as an inactive copy', async () => {
+      const { table, fm, byName } = await skillsByName();
+      const knowledge = byName.get('knowledge-search')!;
+      await asAgent(() =>
+        app.get(RecordOpenApiService).updateRecord(table, knowledge.id, {
+          fieldKeyType: 'id' as never,
+          record: { fields: { [fm.body]: 'my own search steps', [fm.version]: 1 } },
+        })
+      );
+      await reseed();
+
+      const after = (await skillsByName()).byName;
+      expect(after.get('knowledge-search')?.fields[fm.body]).toBe('my own search steps');
+      const offered = after.get('knowledge-search-v2');
+      expect(offered).toBeDefined();
+      expect(offered!.fields[fm.is_active]).toBeFalsy();
+    });
+  });
+
   it('removes anyone who is not an instance admin', async () => {
     const view = await ensure.status();
     const outsider = await prisma.user.findFirstOrThrow({

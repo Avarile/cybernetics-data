@@ -4,39 +4,65 @@ import { RecordOpenApiService } from '../../../record/open-api/record-open-api.s
 import { RecordService } from '../../../record/record.service';
 import { DEFAULT_AGENT_SETUP } from '../../pack/agent-defaults';
 import { AGENT_TABLES } from '../../pack/agent-pack';
-import { BUILTIN_SKILLS } from '../../pack/builtin-skills';
+import { BUILTIN_SKILLS, skillBodyHash } from '../../pack/builtin-skills';
 import type { IBuiltinSkill } from '../../pack/builtin-skills';
 import type { IFieldMap, ITableMap } from './pack-verify';
 
 export interface IExistingSkill {
+  id: string;
   name: string;
   source?: string;
   version?: number;
+  body?: string;
 }
 
+export interface ISkillSeedPlan {
+  create: { skill: IBuiltinSkill; name: string; active: boolean }[];
+  /** Unedited built-ins brought up to the shipped version (and name), keeping their record id. */
+  upgrade: { id: string; skill: IBuiltinSkill }[];
+  /** Unedited `name-vN` copies earlier seeds added next to a built-in. */
+  remove: string[];
+}
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /**
- * Which built-in skills to insert. A missing one is added active. When a newer version ships and a
- * skill of that name already exists, the new version is added as a separate inactive row
- * (`name-v2`): an admin's edits are never overwritten (design §7.4 step 5).
+ * What to do with the built-in skills (current-design §3.1). A missing one is added active. One
+ * nobody edited (its body is one we shipped) is upgraded in place, renamed if the skill was, and
+ * the `name-vN` copies earlier seeds put next to it go. An edited one is never touched: a newer
+ * version is offered as a separate inactive row `name-vN`.
  */
 export function planSkillSeeds(
   existing: IExistingSkill[],
   builtins: IBuiltinSkill[] = BUILTIN_SKILLS
-): { skill: IBuiltinSkill; name: string; active: boolean }[] {
+): ISkillSeedPlan {
+  const plan: ISkillSeedPlan = { create: [], upgrade: [], remove: [] };
   const byName = new Map(existing.map((s) => [s.name, s]));
-  const out: { skill: IBuiltinSkill; name: string; active: boolean }[] = [];
   for (const skill of builtins) {
-    const current = byName.get(skill.name);
+    const names = [skill.name, ...(skill.renamedFrom ?? [])];
+    const shipped = new Set([skillBodyHash(skill.body), ...(skill.previous ?? [])]);
+    const unedited = (row: IExistingSkill) =>
+      row.source === 'builtin' && row.body != null && shipped.has(skillBodyHash(row.body));
+    const current = names.map((n) => byName.get(n)).find(Boolean);
+    const copyName = new RegExp(`^(?:${names.map(escapeRegExp).join('|')})-v\\d+$`);
+    const copies = existing.filter((row) => row !== current && copyName.test(row.name));
+
     if (!current) {
-      out.push({ skill, name: skill.name, active: true });
+      plan.create.push({ skill, name: skill.name, active: true });
+    } else if (unedited(current)) {
+      if (current.name !== skill.name || (current.version ?? 1) < skill.version) {
+        plan.upgrade.push({ id: current.id, skill });
+      }
+    } else {
+      const versioned = `${skill.name}-v${skill.version}`;
+      if ((current.version ?? 1) < skill.version && !byName.has(versioned)) {
+        plan.create.push({ skill, name: versioned, active: false });
+      }
       continue;
     }
-    const versioned = `${skill.name}-v${skill.version}`;
-    if ((current.version ?? 1) < skill.version && !byName.has(versioned)) {
-      out.push({ skill, name: versioned, active: false });
-    }
+    plan.remove.push(...copies.filter(unedited).map((row) => row.id));
   }
-  return out;
+  return plan;
 }
 
 /** Seeds the default agent profile and the built-in skills into the Agent base. */
@@ -83,39 +109,79 @@ export class AgentSeeder {
     const existing = await this.recordService.getRecords(skillTable, {
       fieldKeyType: FieldKeyType.Id,
       take: 1000,
-      projection: [f(t, 'name'), f(t, 'source'), f(t, 'version')],
+      projection: [f(t, 'name'), f(t, 'source'), f(t, 'version'), f(t, 'body')],
     });
     const plan = planSkillSeeds(
       existing.records.map((r) => ({
+        id: r.id,
         name: String(r.fields[f(t, 'name')] ?? ''),
         source: r.fields[f(t, 'source')] as string | undefined,
         version: r.fields[f(t, 'version')] as number | undefined,
+        body: r.fields[f(t, 'body')] as string | undefined,
       }))
     );
-    if (plan.length) {
-      await this.create(
+    const skillFields = (skill: IBuiltinSkill) => ({
+      [f(t, 'name')]: skill.name,
+      [f(t, 'description')]: skill.description,
+      [f(t, 'body')]: skill.body,
+      [f(t, 'invocation')]: skill.invocation,
+      [f(t, 'toolkits')]: skill.toolkits,
+      [f(t, 'category')]: skill.category,
+      [f(t, 'version')]: skill.version,
+    });
+
+    if (plan.create.length) {
+      const created = await this.create(
         skillTable,
-        plan.map(({ skill, name, active }) => ({
+        plan.create.map(({ skill, name }) => ({
+          ...skillFields(skill),
           [f(t, 'name')]: name,
-          [f(t, 'description')]: skill.description,
-          [f(t, 'body')]: skill.body,
-          [f(t, 'invocation')]: skill.invocation,
-          [f(t, 'toolkits')]: skill.toolkits,
-          [f(t, 'category')]: skill.category,
           [f(t, 'source')]: 'builtin',
-          [f(t, 'version')]: skill.version,
-          [f(t, 'is_active')]: active,
         }))
       );
+      // is_active defaults to true, and a false checkbox is an empty cell, so a create cannot
+      // store false: switch the inactive copies off afterwards (an update applies no default)
+      const inactive = created.filter((_, i) => !plan.create[i].active);
+      if (inactive.length) {
+        await this.update(
+          skillTable,
+          inactive.map((id) => ({ id, fields: { [f(t, 'is_active')]: false } }))
+        );
+      }
     }
-    return { setup, skills: plan.length };
+    if (plan.upgrade.length) {
+      await this.update(
+        skillTable,
+        plan.upgrade.map(({ id, skill }) => ({ id, fields: skillFields(skill) }))
+      );
+    }
+    if (plan.remove.length) {
+      await this.recordOpenApiService.deleteRecords(skillTable, plan.remove);
+    }
+    return {
+      setup,
+      skills: plan.create.length + plan.upgrade.length + plan.remove.length,
+    };
   }
 
+  /** Creates the rows and returns their ids, in order. */
   private async create(tableId: string, rows: Record<string, unknown>[]) {
-    await this.recordOpenApiService.createRecords(tableId, {
+    const { records } = await this.recordOpenApiService.createRecords(tableId, {
       fieldKeyType: FieldKeyType.Id,
       typecast: true,
       records: rows.map((fields) => ({ fields })),
+    });
+    return records.map((r) => r.id);
+  }
+
+  private async update(
+    tableId: string,
+    records: { id: string; fields: Record<string, unknown> }[]
+  ) {
+    await this.recordOpenApiService.updateRecords(tableId, {
+      fieldKeyType: FieldKeyType.Id,
+      typecast: true,
+      records,
     });
   }
 }

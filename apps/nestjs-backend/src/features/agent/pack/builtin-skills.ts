@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { createHash } from 'crypto';
+
 /**
- * Skills the agent ships with. EnsureInstallation seeds them once; a newer `version` is added as
- * a separate inactive row when an admin has edited the installed one (design §7.4 step 5).
+ * Skills the agent ships with. EnsureInstallation seeds them; an installed copy nobody edited is
+ * upgraded in place, an edited one gets the newer version as a separate inactive row (design §7.4
+ * step 5, current-design §3).
  */
 export interface IBuiltinSkill {
   name: string;
@@ -11,7 +14,13 @@ export interface IBuiltinSkill {
   toolkits: string[];
   category: 'knowledge' | 'data' | 'schema' | 'integration' | 'memory' | 'general';
   version: number;
+  /** sha256 of bodies shipped before this one: an installed row with one of them is unedited. */
+  previous?: string[];
+  /** Names this skill shipped under before; an unedited row is renamed. */
+  renamedFrom?: string[];
 }
+
+export const skillBodyHash = (body: string) => createHash('sha256').update(body).digest('hex');
 
 export const BUILTIN_SKILLS: IBuiltinSkill[] = [
   {
@@ -22,6 +31,7 @@ export const BUILTIN_SKILLS: IBuiltinSkill[] = [
     toolkits: ['knowledge', 'data_read'],
     category: 'knowledge',
     version: 2,
+    previous: ['6ac10c3ca6f22cb58c009992477a6a0f187a2156f08e2c018b1851835b00ac63'],
     body: `# Knowledge search
 
 1. Call \`search\` with the key words of the question and \`collections: ["kb_records"]\`. It is a
@@ -33,13 +43,15 @@ export const BUILTIN_SKILLS: IBuiltinSkill[] = [
    Never fill gaps with general knowledge while implying it came from the records.`,
   },
   {
-    name: 'rag-search',
+    name: 'document-search',
     description:
       'Use when the answer is likely inside uploaded documents (PDFs, reports, notes) rather than in table records.',
     invocation: 'auto',
     toolkits: ['knowledge'],
     category: 'knowledge',
     version: 2,
+    renamedFrom: ['rag-search'],
+    previous: ['1c8a092e0d6ea4ce12988d6ef519c71f7ec0f9bae45940e92ab77c0cf388e811'],
     body: `# Document search
 
 1. \`collection_list\` to see which document collections exist.
