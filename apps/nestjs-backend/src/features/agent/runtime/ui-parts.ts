@@ -71,14 +71,30 @@ export function denyPending(parts: UIMessage['parts'], reason: string) {
   return applyApprovals(parts, answers).parts;
 }
 
+/** The error a tool call gets when a stop cut it off before its result. */
+export const INTERRUPTED_TOOL_ERROR = 'Stopped before it finished; it may or may not have run.';
+const unfinishedStates = new Set(['input-streaming', 'input-available']);
+
 /**
- * Tool parts of tools the agent no longer has (a toolkit was switched off) become a short text,
- * because the AI SDK refuses history with tools it does not know.
+ * Tool calls a stop cut off (no result yet) get an error result: providers refuse a history with
+ * a tool call that has no result, which would break every later turn of the thread.
+ */
+export const settleInterruptedTools = (parts: UIMessage['parts']): UIMessage['parts'] =>
+  parts.map((part) =>
+    isToolPart(part) && unfinishedStates.has(part.state)
+      ? ({ ...part, state: 'output-error', errorText: INTERRUPTED_TOOL_ERROR } as IPart)
+      : part
+  );
+
+/**
+ * The history as the model gets it: tool parts of tools the agent no longer has (a toolkit was
+ * switched off) become a short text, because the AI SDK refuses history with tools it does not
+ * know, and tool calls a stop cut off get their error result.
  */
 export function dropUnknownTools(messages: UIMessage[], toolNames: Set<string>): UIMessage[] {
   return messages.map((m) => ({
     ...m,
-    parts: m.parts.map((part) => {
+    parts: settleInterruptedTools(m.parts).map((part) => {
       if (!isToolPart(part) || toolNames.has(toolNameOf(part))) return part;
       return {
         type: 'text',

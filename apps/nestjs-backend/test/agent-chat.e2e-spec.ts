@@ -55,6 +55,19 @@ describe('Agent chat (e2e)', () => {
         },
       },
       {
+        name: 'probe_wait',
+        description: 'Something slow',
+        input: z.object({ ms: z.number() }),
+        execute: (input, ctx) =>
+          new Promise((resolve, reject) => {
+            const timer = setTimeout(() => resolve({ waited: input.ms }), input.ms);
+            ctx.abortSignal?.addEventListener('abort', () => {
+              clearTimeout(timer);
+              reject(new Error('aborted'));
+            });
+          }),
+      },
+      {
         name: 'probe_delete',
         description: 'Delete something',
         input: z.object({ id: z.string() }),
@@ -220,6 +233,31 @@ describe('Agent chat (e2e)', () => {
     expect((await messagesOf(t.threadId)).at(-1)?.content).toBe('Short version.');
   });
 
+  it('a stop during a tool call leaves the thread usable', async () => {
+    play([call('probe_wait', { ms: 10_000 }, 'cw')]);
+    const t = await turn('Wait for it');
+    const reader = t.stream.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done || value.type === 'tool-input-available') break;
+    }
+    await app.get(CancelRun).execute(adminId(), t.runId);
+    reader.releaseLock();
+    await drain(t.stream);
+    expect((await runs.get(t.runId))?.status).toBe('cancelled');
+    expect((await messagesOf(t.threadId)).at(-1)?.parts).toContain('"state":"output-error"');
+
+    play([say('Fine, moving on.')]);
+    await drain((await turn('Next question', t.threadId)).stream);
+    // the provider sees a result for the call that was cut off
+    const prompt = current.prompts.at(-1) as { role: string; content: unknown }[];
+    const results = prompt
+      .filter((m) => m.role === 'tool')
+      .flatMap((m) => m.content as { type: string; toolCallId: string }[]);
+    expect(results).toEqual([expect.objectContaining({ type: 'tool-result', toolCallId: 'cw' })]);
+    expect((await messagesOf(t.threadId)).at(-1)?.content).toBe('Fine, moving on.');
+  });
+
   it('stops at the step cap', async () => {
     const profile = await store.getDefaultProfile();
     await store.updateProfile(profile!.id, { maxSteps: 2 });
@@ -360,8 +398,17 @@ describe('Agent chat (e2e)', () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
       expect(status).toBe('cancelled');
+      // the run is closed a moment before the thread lock is released
       play([say('Back again.')]);
-      await drain((await turn('Still there?', threadId)).stream);
+      let next: Awaited<ReturnType<typeof turn>> | undefined;
+      for (let i = 0; i < 50 && !next; i++) {
+        next = await turn('Still there?', threadId).catch(async (error) => {
+          if (error?.status !== 409) throw error;
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          return undefined;
+        });
+      }
+      await drain(next!.stream);
       expect((await messagesOf(threadId)).at(-1)?.content).toBe('Back again.');
     });
   });

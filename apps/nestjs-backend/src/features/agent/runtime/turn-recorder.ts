@@ -2,7 +2,7 @@ import { Logger } from '@nestjs/common';
 import type { UIMessage } from 'ai';
 import type { IThread } from '../domain/entities';
 import type { IAgentRun, IAgentStorePort, IRunStatus, IRunStorePort } from '../domain/ports';
-import { pendingApprovalsOf, textOf } from './ui-parts';
+import { pendingApprovalsOf, settleInterruptedTools, textOf } from './ui-parts';
 
 interface IStepUsage {
   inputTokens?: number;
@@ -77,9 +77,13 @@ export class TurnRecorder {
   }
 
   async finish(event: { responseMessage: UIMessage; isContinuation: boolean; isAborted: boolean }) {
-    await this.saveAssistant(event.responseMessage, event.isContinuation);
-    const pending = pendingApprovalsOf(event.responseMessage.parts);
     const cancelled = event.isAborted || (await this.cancelRequested());
+    // a stop can land while a tool runs: its call is saved with an error result
+    const message = cancelled
+      ? { ...event.responseMessage, parts: settleInterruptedTools(event.responseMessage.parts) }
+      : event.responseMessage;
+    await this.saveAssistant(message, event.isContinuation);
+    const pending = pendingApprovalsOf(message.parts);
     // a stop wins over the error it causes
     const status: IRunStatus = cancelled
       ? 'cancelled'

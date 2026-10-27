@@ -6,6 +6,7 @@ import {
   denyPending,
   dropUnknownTools,
   pendingApprovalsOf,
+  settleInterruptedTools,
   textOf,
 } from './ui-parts';
 
@@ -72,6 +73,27 @@ describe('ui parts', () => {
       new Set(['delete_records'])
     );
     expect(kept.parts).toEqual(parts);
+  });
+
+  it('gives tool calls a stop cut off an error result, and leaves the rest alone', () => {
+    const cut = [
+      { type: 'text', text: 'Looking it up' },
+      { type: 'tool-query_records', toolCallId: 'c1', state: 'input-available', input: {} },
+      { type: 'tool-query_records', toolCallId: 'c2', state: 'input-streaming', input: {} },
+      { type: 'tool-query_records', toolCallId: 'c3', state: 'output-available', output: 1 },
+      ...parts.slice(2),
+    ] as UIMessage['parts'];
+    const settled = settleInterruptedTools(cut);
+    expect(settled.slice(1, 3)).toEqual([
+      expect.objectContaining({ toolCallId: 'c1', state: 'output-error' }),
+      expect.objectContaining({ toolCallId: 'c2', state: 'output-error' }),
+    ]);
+    expect([settled[0], ...settled.slice(3)]).toEqual([cut[0], ...cut.slice(3)]);
+    const [read] = dropUnknownTools(
+      [{ id: 'm', role: 'assistant', parts: cut }],
+      new Set(['query_records', 'delete_records'])
+    );
+    expect(read.parts).toEqual(settled);
   });
 
   it('a turn signal aborts on cancel and on timeout', async () => {
