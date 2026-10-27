@@ -1,8 +1,8 @@
 import type { IMemory } from '../entities';
 
 /**
- * MemoryRanking (design §10.1 step 3). v1 ranks by word overlap with the message, importance and
- * recency; P4 replaces the overlap with hybrid (vector + full-text) search over the same rows.
+ * MemoryRanking (design §10.1 step 3): ranks by word overlap with the message, importance and
+ * recency. The agent can also look memories up with `search` (the agent_memory collection).
  */
 export const RELEVANT_MEMORY_LIMIT = 8;
 

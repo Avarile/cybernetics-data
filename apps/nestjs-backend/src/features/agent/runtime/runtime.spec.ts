@@ -71,7 +71,7 @@ describe('buildSystemPrompt', () => {
       focus: { baseId: 'bse1', tableId: 'tbl1' },
       pinned: [memory({ title: 'Prefers metric', content: 'kg' })],
       relevant: [memory({ title: 'Office in Sydney' })],
-      catalog: [skill({ name: 'rag-search', description: 'Search documents' })],
+      catalog: [skill({ name: 'document-search', description: 'Search documents' })],
       always: [skill({ name: 'house-style', body: 'Be brief.' })],
       summary: 'They asked about invoices.',
     });
@@ -82,7 +82,7 @@ describe('buildSystemPrompt', () => {
       'base bse1, table tbl1',
       '- Prefers metric: kg',
       'Possibly relevant:',
-      '- rag-search: Search documents',
+      '- document-search: Search documents',
       '## Skill: house-style\nBe brief.',
       'They asked about invoices.',
     ].map((s) => prompt.indexOf(s));

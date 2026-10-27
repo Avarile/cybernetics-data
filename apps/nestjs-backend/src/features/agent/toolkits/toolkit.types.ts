@@ -50,7 +50,7 @@ export interface IToolkit {
   id: IToolkitId;
   title: string;
   tools: IAgentToolDef[];
-  /** Why the toolkit cannot run with this profile (e.g. no embedding model), or undefined. */
+  /** Why the toolkit cannot run with this profile (e.g. memory switched off), or undefined. */
   unavailable?(profile: IAgentProfile): string | undefined;
 }
 

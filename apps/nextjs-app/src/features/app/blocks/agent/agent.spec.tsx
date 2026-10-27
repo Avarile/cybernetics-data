@@ -117,10 +117,17 @@ describe('AgentToolStep', () => {
 
 describe('helpers', () => {
   it('matches skills after a slash', () => {
-    const skills = [{ name: 'rag-search' }, { name: 'reports' }, { name: 'memory-hygiene' }];
-    expect(matchSkills('/r', skills).map((s) => s.name)).toEqual(['rag-search', 'reports']);
+    const skills = [
+      { name: 'data-navigation' },
+      { name: 'document-search' },
+      { name: 'memory-hygiene' },
+    ];
+    expect(matchSkills('/d', skills).map((s) => s.name)).toEqual([
+      'data-navigation',
+      'document-search',
+    ]);
     expect(matchSkills('/', skills)).toHaveLength(3);
-    expect(matchSkills('hello /r', skills)).toEqual([]);
+    expect(matchSkills('hello /d', skills)).toEqual([]);
   });
 
   it('formats thread usage', () => {

@@ -187,9 +187,9 @@ describe('built-in toolkits', () => {
       f.credentials.push({ id: 'recCred', name: 'github' } as ICredentialRef);
       f.skills.push({
         id: 'recS1',
-        name: 'rag-search',
+        name: 'document-search',
         description: 'Search documents',
-        body: 'Use rag_search',
+        body: 'Use search',
         invocation: 'auto',
         isActive: true,
         version: 1,
@@ -199,8 +199,8 @@ describe('built-in toolkits', () => {
       const kit = new SkillsToolkit(registry(), f.store);
       const c = ctx(f.profile);
       expect((await run(kit, 'skill_list', {}, c)).skills).toHaveLength(1);
-      expect(await run(kit, 'skill_load', { name: 'rag-search' }, c)).toMatchObject({
-        body: 'Use rag_search',
+      expect(await run(kit, 'skill_load', { name: 'document-search' }, c)).toMatchObject({
+        body: 'Use search',
         credentials: ['github'],
       });
       await expect(run(kit, 'skill_load', { name: 'nope' }, c)).rejects.toThrow(/No skill/);
