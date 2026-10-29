@@ -1760,7 +1760,8 @@
       "label": "需要审批",
       "title": "智能体想要运行",
       "approve": "批准",
-      "deny": "拒绝"
+      "deny": "拒绝",
+      "denied": "已拒绝。"
     },
     "composer": {
       "skills": "技能",
@@ -1898,6 +1899,71 @@
         "image_one": "请看一下这张图片。",
         "image_other": "请看一下这 {{count}} 张图片。",
         "error": "出了点问题。请看一下屏幕。"
+      }
+    },
+    "cockpit": {
+      "title": "智能体驾驶舱",
+      "label": "智能体驾驶舱",
+      "toggle": "智能体驾驶舱（Ctrl/⌘ J）",
+      "offButton": "关闭驾驶舱（Ctrl/⌘ J）",
+      "thread": "会话",
+      "newThread": "新对话",
+      "focus": "焦点",
+      "clearFocus": "忽略焦点",
+      "table": "表",
+      "rows": "行",
+      "status": "智能体状态",
+      "linking": "连接中",
+      "live": "在线",
+      "working": "处理中",
+      "needsSetup": "需要设置",
+      "off": "未启用",
+      "diag": {
+        "status": "状态",
+        "checked": "检查于",
+        "error": "错误",
+        "warning": "警告"
+      },
+      "palette": "配色",
+      "stage": "搜索面板",
+      "standby": "待命",
+      "standbyText": "可以询问你的工作、知识或财务。智能体会逐表规划搜索，找到的每条记录都会以卡片形式出现在这里。",
+      "lens": {
+        "label": "视图",
+        "answer": "答案",
+        "retrieved": "已检索",
+        "searching": "搜索中"
+      },
+      "lane": {
+        "running": "搜索中…",
+        "empty": "无记录",
+        "failed": "失败",
+        "needs_choice": "请选择",
+        "cancelled": "已停止"
+      },
+      "noRecords": "没有记录。",
+      "openTable": "打开表",
+      "openRecord": "打开记录",
+      "via": "来自",
+      "pick": "选择",
+      "archived": "已归档",
+      "overdue": "已逾期",
+      "missing": "此数据库中没有",
+      "runLog": "运行日志",
+      "ask": "询问智能体",
+      "askLabel": "询问智能体",
+      "new": "新建",
+      "plan": "计划",
+      "planLabel": "搜索计划",
+      "question": "智能体提问",
+      "orType": "也可以直接输入或说出你的回答。",
+      "picked": "已选择",
+      "thinking": "思考中",
+      "suggest": {
+        "project": "我最近的项目进展如何？",
+        "tasks": "哪些任务正在进行，由谁负责？",
+        "knowledge": "关于部署我写过哪些内容？",
+        "money": "过去 30 天我花了多少钱？"
       }
     }
   }

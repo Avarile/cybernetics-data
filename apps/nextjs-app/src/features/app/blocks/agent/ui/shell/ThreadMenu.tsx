@@ -4,6 +4,7 @@ import { Archive, ArchiveRestore, ChevronDown, Plus } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';
 import { formatUsage } from '../../model/format';
+import s from '../theme/cockpit.module.css';
 
 export interface IThreadMenuProps {
   threads: IAgentThreadVo[];
@@ -30,13 +31,13 @@ export const ThreadMenu = (p: IThreadMenuProps) => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button type="button" className={cn('ck-menu-button', p.className)} aria-haspopup="listbox">
+        <button type="button" className={cn(s.menuButton, p.className)} aria-haspopup="listbox">
           <small>{t('agent.cockpit.thread', 'THREAD')}</small>
           <b>{p.title}</b>
           <ChevronDown className="size-3" aria-hidden />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="ck-popover w-80 p-2">
+      <PopoverContent align="start" className="dark w-80 p-2">
         <div className="flex gap-1">
           <Input
             value={search}
@@ -63,7 +64,7 @@ export const ThreadMenu = (p: IThreadMenuProps) => {
               aria-selected={thread.id === p.activeId}
               className={cn(
                 'group flex items-center gap-1 rounded px-2 py-1',
-                thread.id === p.activeId && 'ck-selected'
+                thread.id === p.activeId && 'bg-accent'
               )}
             >
               <button

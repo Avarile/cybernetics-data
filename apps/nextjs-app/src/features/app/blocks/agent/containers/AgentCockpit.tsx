@@ -1,26 +1,48 @@
+import type { IClarifyOption } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
 import { useEffect, useRef } from 'react';
+import { useAgentSession } from '../hooks/useAgentSession';
+import { useCockpitKeys } from '../hooks/useCockpitKeys';
+import { useCockpitStore } from '../state/cockpit-store';
+import s from '../ui/theme/cockpit.module.css';
+import { cockpitFonts } from '../ui/theme/fonts';
 import { AnnunciatorContainer } from './AnnunciatorContainer';
 import { AskContainer } from './AskContainer';
+import { StageContainer } from './StageContainer';
 
 /**
- * The cockpit: one full-screen surface over the app, on or off (cockpit design §4). While on,
+ * The cockpit: one full-screen surface over the app, on or off (cockpit design §4, §5). While on,
  * the page beneath is inert; focus comes back to where it was when it turns off.
  */
 export const AgentCockpit = () => {
   const { t } = useTranslation('common');
   const root = useRef<HTMLDivElement>(null);
+  const palette = useCockpitStore((st) => st.palette);
+  const selectSearch = useCockpitStore((st) => st.selectSearch);
+  const chat = useAgentSession();
+  useCockpitKeys(root);
 
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null;
     const app = document.getElementById('__next');
     app?.setAttribute('inert', '');
-    root.current?.querySelector<HTMLElement>('textarea, input')?.focus();
+    root.current?.querySelector<HTMLElement>('textarea')?.focus();
     return () => {
       app?.removeAttribute('inert');
       before?.focus?.();
     };
   }, []);
+
+  /** An option of a clarify card (or a PICK on a card): the admin's answer, with its choice. */
+  const pick = (option: IClarifyOption, clarifyId: string) => {
+    selectSearch(undefined);
+    void chat.send(option.label, {
+      clarifyId,
+      optionId: option.id,
+      label: option.label,
+      ...(option.recordRef ? { recordRef: option.recordRef } : {}),
+    });
+  };
 
   return (
     <div
@@ -28,12 +50,14 @@ export const AgentCockpit = () => {
       role="dialog"
       aria-modal="true"
       aria-label={t('agent.cockpit.label', 'Agent cockpit')}
-      className="fixed inset-0 z-50 flex flex-col bg-background text-foreground"
+      data-palette={palette}
+      className={`dark ${s.cockpit} ${cockpitFonts}`}
     >
       <AnnunciatorContainer />
-      <main className="flex min-h-0 flex-1 flex-col">
-        <AskContainer />
-      </main>
+      <div className={s.deck}>
+        <StageContainer onPick={pick} />
+        <AskContainer onPick={pick} />
+      </div>
     </div>
   );
 };

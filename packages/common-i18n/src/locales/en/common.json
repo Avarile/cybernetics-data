@@ -1763,7 +1763,8 @@
       "label": "Approval needed",
       "title": "The agent wants to run",
       "approve": "Approve",
-      "deny": "Deny"
+      "deny": "Deny",
+      "denied": "Denied."
     },
     "composer": {
       "skills": "Skills",
@@ -1901,6 +1902,71 @@
         "image_one": "Please take a look at this image.",
         "image_other": "Please take a look at these {{count}} images.",
         "error": "Something went wrong. Please take a look at the screen."
+      }
+    },
+    "cockpit": {
+      "title": "AGENT COCKPIT",
+      "label": "Agent cockpit",
+      "toggle": "Agent cockpit (Ctrl/⌘ J)",
+      "offButton": "Turn the cockpit off (Ctrl/⌘ J)",
+      "thread": "THREAD",
+      "newThread": "New conversation",
+      "focus": "FOCUS",
+      "clearFocus": "Forget the focus",
+      "table": "TABLE",
+      "rows": "ROWS",
+      "status": "Agent status",
+      "linking": "LINKING",
+      "live": "LIVE",
+      "working": "WORKING",
+      "needsSetup": "NEEDS SETUP",
+      "off": "NOT ENABLED",
+      "diag": {
+        "status": "STATUS",
+        "checked": "CHECKED",
+        "error": "ERROR",
+        "warning": "WARNING"
+      },
+      "palette": "Colour theme",
+      "stage": "Search board",
+      "standby": "STANDBY",
+      "standbyText": "Ask about your work, knowledge or money. The agent plans a search table by table, and every record it finds lands here as a card.",
+      "lens": {
+        "label": "Lens",
+        "answer": "ANSWER",
+        "retrieved": "RETRIEVED",
+        "searching": "SEARCHING"
+      },
+      "lane": {
+        "running": "SEARCHING…",
+        "empty": "NO RECORDS",
+        "failed": "FAILED",
+        "needs_choice": "PICK ONE",
+        "cancelled": "STOPPED"
+      },
+      "noRecords": "No records.",
+      "openTable": "Open the table",
+      "openRecord": "Open the record",
+      "via": "via",
+      "pick": "PICK",
+      "archived": "ARCHIVED",
+      "overdue": "OVERDUE",
+      "missing": "Not in this base",
+      "runLog": "RUN LOG",
+      "ask": "ASK THE AGENT",
+      "askLabel": "Ask the agent",
+      "new": "NEW",
+      "plan": "PLAN",
+      "planLabel": "Search plan",
+      "question": "The agent asks",
+      "orType": "Or type or say your answer.",
+      "picked": "picked",
+      "thinking": "THINKING",
+      "suggest": {
+        "project": "How is my latest project going?",
+        "tasks": "Which tasks are in progress, and who is on them?",
+        "knowledge": "What do I have written about deployment?",
+        "money": "How much did I spend in the last 30 days?"
       }
     }
   }

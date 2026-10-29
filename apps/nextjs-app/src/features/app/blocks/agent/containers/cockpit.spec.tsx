@@ -16,7 +16,13 @@ vi.mock('next/router', () => ({
 }));
 vi.mock('@teable/openapi', async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  getAgentStatus: vi.fn(async () => ({ enabled: true, status: 'ok', tables: {} })),
+  getAgentStatus: vi.fn(async () => ({
+    enabled: true,
+    status: 'ok',
+    tables: {},
+    models: [],
+    warnings: [],
+  })),
   listAgentThreads: vi.fn(async () => ({
     threads: [{ id: 'recT1', title: 'Cockpit progress', status: 'active' }],
     nextCursor: null,
@@ -26,6 +32,7 @@ vi.mock('@teable/openapi', async (importOriginal) => ({
   })),
 }));
 vi.mock('./AskContainer', () => ({ AskContainer: () => <textarea aria-label="ask" /> }));
+vi.mock('../ui/theme/fonts', () => ({ cockpitFonts: '' }));
 
 const pressToggle = () => userEvent.keyboard('{Control>}j{/Control}');
 

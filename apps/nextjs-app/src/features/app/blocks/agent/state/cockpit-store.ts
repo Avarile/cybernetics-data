@@ -1,6 +1,7 @@
 import { LocalStorageKeys } from '@cybernetics/sdk/config';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { ILensMode } from '../model/lens';
 import { rememberedThread, useSessionStore } from './session-store';
 
 /** Where the cockpit was opened from: a hint for the agent, never a limit (cockpit design §4.5). */
@@ -28,12 +29,21 @@ interface ICockpitState {
   focus?: IAgentFocus;
   palette: ICockpitPalette;
   view: ICockpitView;
+  /** The search on the stage; undefined follows the latest one. */
+  selectedSearch?: string;
+  /** undefined: the board's own default (answer once cited). */
+  lens?: ILensMode;
+  /** A card whose trace stays lit (clicked). */
+  pinned?: string;
   open: (options?: IOpenCockpit) => void;
   close: () => void;
   toggle: (options?: IOpenCockpit) => void;
   clearFocus: () => void;
   setPalette: (palette: ICockpitPalette) => void;
   setView: (view: ICockpitView) => void;
+  selectSearch: (searchId?: string) => void;
+  setLens: (lens?: ILensMode) => void;
+  pin: (key?: string) => void;
 }
 
 export const useCockpitStore = create<ICockpitState>()(
@@ -54,6 +64,9 @@ export const useCockpitStore = create<ICockpitState>()(
       clearFocus: () => set({ focus: undefined }),
       setPalette: (palette) => set({ palette }),
       setView: (view) => set({ view }),
+      selectSearch: (selectedSearch) => set({ selectedSearch, lens: undefined, pinned: undefined }),
+      setLens: (lens) => set({ lens }),
+      pin: (pinned) => set({ pinned }),
     }),
     {
       name: LocalStorageKeys.AgentCockpit,

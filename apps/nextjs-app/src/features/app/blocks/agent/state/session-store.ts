@@ -1,9 +1,11 @@
 import type { IAgentChatContext } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import { create } from 'zustand';
-import { cancelRun, fetchThreadMessages } from '../data/agent-api';
+import { cancelRun, fetchSearch, fetchThreadMessages } from '../data/agent-api';
 import { createAgentChat, type AgentChat, type IAgentDataChunk } from '../data/agent-chat';
+import { boardEventOf } from '../data/stream-events';
 import type { IAgentChoice } from '../model/agent-request';
+import { emptyBoard, reduceBoard, type IBoard, type IBoardEvent } from '../model/search-board';
 
 const threadKey = 'agent.cockpit.thread';
 const remember = (threadId?: string) => {
@@ -33,6 +35,11 @@ export class AgentSession {
   runId?: string;
   /** Read when a message is sent: focus hint and voice. */
   context?: IAgentChatContext;
+  /** The searches of this conversation, live or replayed (cockpit design §10.3). */
+  boards: Record<string, IBoard> = {};
+  /** The search the latest reply made. */
+  latestSearchId?: string;
+  private readonly loading = new Set<string>();
   private readonly listeners = new Set<() => void>();
   private readonly dataListeners = new Set<(part: IAgentDataChunk) => void>();
   private version = 0;
@@ -50,7 +57,11 @@ export class AgentSession {
         }
         this.emit();
       },
-      onData: (part) => this.dataListeners.forEach((l) => l(part)),
+      onData: (part) => {
+        const event = boardEventOf(part);
+        if (event) this.apply(event);
+        this.dataListeners.forEach((l) => l(part));
+      },
     });
   }
 
@@ -65,6 +76,28 @@ export class AgentSession {
   };
 
   getVersion = () => this.version;
+
+  /** A search event onto its board. */
+  apply(event: IBoardEvent) {
+    const id = event.type === 'replay' ? event.search.id : event.searchId;
+    const before = this.boards[id];
+    this.boards = { ...this.boards, [id]: reduceBoard(before ?? emptyBoard(id), event) };
+    if (!before && event.type !== 'replay') this.latestSearchId = id;
+    this.emit();
+  }
+
+  /** A stored search onto the board (a reopened thread, or an earlier plan clicked). */
+  async loadSearch(searchId: string) {
+    if (this.boards[searchId]?.plan || this.loading.has(searchId)) return;
+    this.loading.add(searchId);
+    try {
+      this.apply({ type: 'replay', search: await fetchSearch(searchId) });
+    } catch {
+      // gone or not ours: the plan legs in the transcript still show what it was
+    } finally {
+      this.loading.delete(searchId);
+    }
+  }
 
   /** Search progress, clarify cards and lenses as they stream (transient parts included). */
   onData(listener: (part: IAgentDataChunk) => void) {
