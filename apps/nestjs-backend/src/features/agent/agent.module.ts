@@ -25,15 +25,16 @@ import { TurnGate } from './application/chat/turn-gate';
 import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
 import { AgentExposureService } from './application/installation/exposure';
-import { AgentMembershipScheduler } from './application/installation/membership-scheduler';
 import { AgentMembershipService } from './application/installation/membership';
+import { AgentMembershipScheduler } from './application/installation/membership-scheduler';
 import { AGENT_JOBS_QUEUE, AgentJobs } from './application/jobs/agent-jobs';
 import { TurnJobs } from './application/jobs/turn-jobs';
 import { KnowledgeIngest } from './application/knowledge/knowledge-ingest';
+import { KnowledgeSearch } from './application/knowledge/knowledge-search';
 import { KnowledgeSync } from './application/knowledge/knowledge-sync';
 import { KnowledgeSyncScheduler } from './application/knowledge/knowledge-sync.scheduler';
-import { KnowledgeSearch } from './application/knowledge/knowledge-search';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
+import { GetSearch } from './application/search/get-search.query';
 import { AgentStatusQuery } from './application/status/agent-status.query';
 import { ManageThreads } from './application/threads/manage-threads.usecase';
 import {
@@ -46,6 +47,7 @@ import {
   RAG_SOURCE_READER_PORT,
   RAG_STORE_PORT,
   RUN_STORE_PORT,
+  SEARCH_LOG_PORT,
   SECRET_VAULT_PORT,
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
@@ -56,17 +58,19 @@ import { OutboundHttp } from './infrastructure/http/outbound-http';
 import { AgentJobsProcessor } from './infrastructure/jobs/agent-jobs.processor';
 import { RagJobsProcessor } from './infrastructure/jobs/rag-jobs.processor';
 import { KnowledgeSyncListener } from './infrastructure/knowledge/knowledge-sync.listener';
-import { SearchTables } from './infrastructure/knowledge/search-tables';
 import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
+import { SearchTables } from './infrastructure/knowledge/search-tables';
 import { RagSourceReader } from './infrastructure/knowledge/source-reader';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
+import { PrismaSearchLog } from './infrastructure/search/prisma-search-log';
 import { PrismaSecretVault } from './infrastructure/secrets/prisma-secret-vault';
 import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentChatController } from './interface/agent-chat.controller';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
+import { AgentSearchController } from './interface/agent-search.controller';
 import { AgentSettingsController } from './interface/agent-settings.controller';
 import { AgentRuntime } from './runtime/agent-runtime';
 import { ContextBuilder } from './runtime/context-builder';
@@ -88,7 +92,12 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
  * Layers: interface → application → domain ← infrastructure.
  */
 @Module({
-  controllers: [AgentLifecycleController, AgentChatController, AgentSettingsController],
+  controllers: [
+    AgentLifecycleController,
+    AgentChatController,
+    AgentSettingsController,
+    AgentSearchController,
+  ],
   imports: [
     EventJobModule.registerQueue(AGENT_JOBS_QUEUE),
     EventJobModule.registerQueue(RAG_JOBS_QUEUE),
@@ -149,6 +158,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     ResumeTurn,
     CancelRun,
     ManageThreads,
+    GetSearch,
     ConfigureAgent,
     ManageCredentials,
     AgentAdminGuard,
@@ -157,6 +167,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: AGENT_LAYOUT_PORT, useExisting: EnsureInstallation },
     { provide: AGENT_STORE_PORT, useClass: AgentTableStore },
     { provide: RUN_STORE_PORT, useClass: PrismaRunStore },
+    { provide: SEARCH_LOG_PORT, useClass: PrismaSearchLog },
     { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
     { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
     { provide: HTTP_PORT, useClass: OutboundHttp },

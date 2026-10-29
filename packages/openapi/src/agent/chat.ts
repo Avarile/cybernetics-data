@@ -2,6 +2,7 @@ import type { RouteConfig } from '@asteasolutions/zod-to-openapi';
 import { axios } from '../axios';
 import { registerRoute, urlBuilder } from '../utils';
 import { z } from '../zod';
+import { recordRefSchema } from './search';
 
 /** Design §10.1, §12: one turn, streamed as an AI SDK UI message stream (SSE). */
 export const agentChatContextSchema = z
@@ -33,7 +34,19 @@ export const agentChatRoSchema = z
   .object({
     threadId: z.string().startsWith('rec').optional(),
     message: z
-      .object({ text: z.string().min(1).max(100_000) })
+      .object({
+        text: z.string().min(1).max(100_000),
+        /** Cockpit design §6.4: the option of a clarify card the admin picked. */
+        choice: z
+          .object({
+            clarifyId: z.string().min(1),
+            optionId: z.string().min(1),
+            label: z.string().min(1).max(500),
+            recordRef: recordRefSchema.optional(),
+          })
+          .strict()
+          .optional(),
+      })
       .strict()
       .optional(),
     approvals: z.array(agentApprovalSchema).min(1).max(50).optional(),

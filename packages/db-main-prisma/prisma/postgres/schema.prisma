@@ -1077,3 +1077,24 @@ model AgentAuditLog {
   @@index([createdTime])
   @@map("agent_audit_log")
 }
+
+model AgentSearch {
+  id               String    @id @default(cuid())
+  runId            String    @map("run_id")
+  threadRecordId   String    @map("thread_record_id")
+  intent           String
+  // the plan (JSON): steps, sources, tables
+  plan             String
+  // per step: state and the cards sent (JSON)
+  steps            String    @default("[]")
+  // card keys the answer cites (JSON)
+  lens             String?
+  // planned | running | done | needs_choice | empty | failed | cancelled
+  status           String    @default("planned")
+  createdTime      DateTime  @default(now()) @map("created_time")
+  lastModifiedTime DateTime? @updatedAt @map("last_modified_time")
+
+  @@index([threadRecordId])
+  @@index([runId])
+  @@map("agent_search")
+}
