@@ -72,6 +72,8 @@ export const searchStepSchema = z.object({
   source: stepSourceSchema,
   /** Most cards sent for the step. */
   limit: z.number().int(),
+  /** Number fields summed over the step's records (e.g. Amount), for the model. */
+  totals: z.array(z.string()).optional(),
 });
 export type ISearchStep = z.infer<typeof searchStepSchema>;
 
@@ -83,6 +85,8 @@ export const searchPlanSchema = z.object({
   steps: z.array(searchStepSchema),
   /** Tables or fields the recipe expects that the base does not have. */
   missing: z.array(z.string()),
+  /** Archived records (is_active off, deleted_at set) are searched too. */
+  includeArchived: z.boolean().optional(),
 });
 export type ISearchPlan = z.infer<typeof searchPlanSchema>;
 
