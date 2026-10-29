@@ -1974,7 +1974,14 @@
         "tasks": "Which tasks are in progress, and who is on them?",
         "knowledge": "What do I have written about deployment?",
         "money": "How much did I spend in the last 30 days?"
-      }
+      },
+      "view": {
+        "label": "View",
+        "board": "BOARD",
+        "constellation": "CONSTELLATION",
+        "tree": "TREE"
+      },
+      "showing": "SHOWING {{shown}} OF {{total}}"
     }
   }
 }

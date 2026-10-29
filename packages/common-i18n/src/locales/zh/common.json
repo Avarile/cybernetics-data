@@ -1971,7 +1971,14 @@
         "tasks": "哪些任务正在进行，由谁负责？",
         "knowledge": "关于部署我写过哪些内容？",
         "money": "过去 30 天我花了多少钱？"
-      }
+      },
+      "view": {
+        "label": "视图",
+        "board": "面板",
+        "constellation": "星图",
+        "tree": "树形"
+      },
+      "showing": "显示 {{shown}} / {{total}}"
     }
   }
 }

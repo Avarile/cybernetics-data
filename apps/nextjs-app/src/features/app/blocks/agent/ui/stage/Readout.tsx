@@ -9,10 +9,13 @@ export const Readout = ({
   plan,
   metrics,
   lensLabel,
+  note,
 }: {
   plan?: ISearchPlan;
   metrics: IMetric[];
   lensLabel: string;
+  /** e.g. the render budget: SHOWING 240 OF 600. */
+  note?: string;
 }) => {
   const { t } = useTranslation('common');
   return (
@@ -26,6 +29,8 @@ export const Readout = ({
           {t('agent.cockpit.missing', 'Not in this base')}: {plan.missing.join(', ')}
         </span>
       ) : null}
+      {note && <span className={s.note}>{note}</span>}
+      {note && <span className={s.note}>{note}</span>}
       <dl className={s.kpis}>
         {metrics.map((m) => (
           <div key={m.k} data-tone={m.tone}>
