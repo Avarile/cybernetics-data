@@ -1865,7 +1865,8 @@
         "working": "Working…",
         "speaking": "Speaking…",
         "approval": "Waiting for your approval: use the card above",
-        "paused": "Paused"
+        "paused": "Paused",
+        "searching": "Searching {{table}}…"
       },
       "error": {
         "blocked": "Microphone access is blocked. Allow it in the browser's site settings.",
@@ -1901,8 +1902,14 @@
         "formula_other": "Please take a look at these {{count}} formulas.",
         "image_one": "Please take a look at this image.",
         "image_other": "Please take a look at these {{count}} images.",
-        "error": "Something went wrong. Please take a look at the screen."
-      }
+        "error": "Something went wrong. Please take a look at the screen.",
+        "board": "I found {{found}}. They're on the board.",
+        "empty": "I found nothing for that.",
+        "choice_one": "{{question}} {{options}} Please pick it, or just say it.",
+        "choice_other": "{{question}} {{options}} Please pick one of these {{count}}, or just say it."
+      },
+      "and": "and",
+      "or": "or"
     },
     "cockpit": {
       "title": "AGENT COCKPIT",

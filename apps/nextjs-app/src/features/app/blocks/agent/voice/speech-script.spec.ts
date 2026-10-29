@@ -211,3 +211,143 @@ describe('block kinds', () => {
     expect(classifyBlock('Plain words | with a pipe')).toBe('prose');
   });
 });
+
+describe('search and question pointers (cockpit design §8)', () => {
+  const plan = {
+    id: 'srch1',
+    intent: 'project_progress',
+    summary: 's',
+    baseId: 'b',
+    missing: [],
+    steps: [
+      {
+        id: 's1',
+        table: { id: 'p', name: 'projects' },
+        role: 'anchor',
+        purpose: '',
+        source: { kind: 'search', text: 'x' },
+        limit: 10,
+      },
+      {
+        id: 's2',
+        table: { id: 't', name: 'tasks' },
+        role: 'related',
+        purpose: '',
+        source: { kind: 'follow', from: [] },
+        limit: 50,
+      },
+      {
+        id: 's3',
+        table: { id: 'c', name: 'contacts' },
+        role: 'actor',
+        purpose: '',
+        source: { kind: 'follow', from: [] },
+        limit: 50,
+      },
+    ],
+  };
+  const reply = (status: string, extra: object[] = []) =>
+    ({
+      id: 'a1',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'data-search-plan',
+          id: 'srch1',
+          data: {
+            searchId: 'srch1',
+            plan,
+            status,
+            states: [
+              { stepId: 's1', status: 'done', found: 1, shown: 1 },
+              {
+                stepId: 's2',
+                status: status === 'done' ? 'done' : 'running',
+                found: 14,
+                shown: 14,
+              },
+              { stepId: 's3', status: 'pending', found: 0, shown: 0 },
+            ],
+          },
+        },
+        ...extra,
+      ],
+    }) as unknown as UIMessage;
+
+  it('says what a finished search found, once it has finished', () => {
+    expect(buildSpeechScript(reply('running'), { final: false })).toEqual([]);
+    expect(buildSpeechScript(reply('done'), { final: false })).toEqual([
+      {
+        id: '0:board',
+        kind: 'pointer',
+        text: "I found 1 project and 14 tasks. They're on the board.",
+      },
+    ]);
+  });
+
+  it('reads a question back with up to three options', () => {
+    const clarify = {
+      type: 'data-clarify',
+      id: 'clr1',
+      data: {
+        clarifyId: 'clr1',
+        question: 'Which project?',
+        reason: 'anchor',
+        options: [
+          { id: 'o1', label: 'Cockpit' },
+          { id: 'o2', label: 'Theme' },
+        ],
+      },
+    };
+    const script = buildSpeechScript(reply('needs_choice', [clarify]), { final: true });
+    expect(script).toEqual([
+      {
+        id: '1:choice',
+        kind: 'pointer',
+        text: 'Which project? Cockpit or Theme? Please pick one of these 2, or just say it.',
+      },
+    ]);
+  });
+});
+
+describe('searching phase (cockpit design §8)', () => {
+  it('says which table a running search is on', async () => {
+    const { searchingTable, voicePhase } = await import('./useVoiceConversation');
+    const message = {
+      id: 'a1',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'data-search-plan',
+          data: {
+            searchId: 's',
+            status: 'running',
+            plan: {
+              steps: [
+                { id: 's1', table: { name: 'projects' } },
+                { id: 's2', table: { name: 'tasks' } },
+              ],
+            },
+            states: [
+              { stepId: 's1', status: 'done', found: 1, shown: 1 },
+              { stepId: 's2', status: 'running', found: 0, shown: 0 },
+            ],
+          },
+        },
+      ],
+    } as unknown as UIMessage;
+    expect(searchingTable(message)).toBe('tasks');
+    const listener = { status: 'paused', draft: '', interim: '' } as never;
+    const base = {
+      enabled: true,
+      busy: true,
+      speaking: false,
+      toolRunning: true,
+      awaitingApproval: false,
+      hidden: false,
+      listener,
+    };
+    expect(voicePhase({ ...base, searching: 'tasks' })).toBe('searching');
+    expect(voicePhase(base)).toBe('working');
+  });
+});

@@ -212,3 +212,33 @@ describe('transcript (cockpit design §5.5)', () => {
     expect(openClarify([reply, answer])).toBeUndefined();
   });
 });
+
+describe('answers to a question (cockpit design §8)', () => {
+  const part = {
+    clarifyId: 'clr1',
+    question: 'Which project?',
+    reason: 'anchor' as const,
+    options: [
+      {
+        id: 'o1',
+        label: 'Cybernetics Cockpit',
+        recordRef: { tableId: 'tblP', table: 'projects', recordId: 'recP1' },
+      },
+      { id: 'o2', label: 'Cockpit theme' },
+    ],
+  };
+  it('names one option by its label or its place', async () => {
+    const { matchOption, choiceFor } = await import('./transcript');
+    expect(matchOption(part, 'the cybernetics cockpit one')?.id).toBe('o1');
+    expect(matchOption(part, 'Cockpit theme.')?.id).toBe('o2');
+    expect(matchOption(part, 'cockpit')).toBeUndefined();
+    expect(matchOption(part, 'the second one')?.id).toBe('o2');
+    expect(matchOption(part, 'neither')).toBeUndefined();
+    expect(choiceFor('clr1', part.options[0])).toEqual({
+      clarifyId: 'clr1',
+      optionId: 'o1',
+      label: 'Cybernetics Cockpit',
+      recordRef: { tableId: 'tblP', table: 'projects', recordId: 'recP1' },
+    });
+  });
+});

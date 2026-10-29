@@ -1,3 +1,5 @@
+import type { IClarifyPart, ISearchPlanPart } from '@teable/openapi';
+import { AGENT_DATA_PART } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import { parseMarkdownIntoBlocks } from 'streamdown';
 import { isToolPart } from '../model/agent-request';
@@ -31,6 +33,44 @@ export interface ISpeechScriptOptions {
   error?: boolean;
   /** The words of a pointer; English by default, the UI language in the app. */
   pointer?: (kind: ISpeechPointerKind, count: number) => string;
+  /** What a finished search and a question back say (cockpit design §8); English by default. */
+  describe?: ISpeechDescriber;
+}
+
+/** Counts per table of a finished search, e.g. [["tasks", 14], ["contacts", 2]]. */
+export type IFoundCounts = [table: string, count: number][];
+
+export interface ISpeechDescriber {
+  board: (found: IFoundCounts) => string;
+  empty: () => string;
+  choice: (question: string, labels: string[]) => string;
+}
+
+/** "1 project", "14 tasks": a table name for a count (names are plural). */
+export const counted = ([table, n]: [string, number]) => {
+  const name = table.replace(/_/g, ' ');
+  return `${n} ${n === 1 && /[^s]s$/i.test(name) ? name.slice(0, -1) : name}`;
+};
+export const listed = (words: string[], and: string) =>
+  words.length > 1 ? `${words.slice(0, -1).join(', ')} ${and} ${words.at(-1)}` : words[0] ?? '';
+
+export const defaultDescriber: ISpeechDescriber = {
+  board: (found) => `I found ${listed(found.map(counted), 'and')}. They're on the board.`,
+  empty: () => 'I found nothing for that.',
+  choice: (question, labels) =>
+    `${question} ${labels.length && labels.length <= 3 ? `${listed(labels, 'or')}? ` : ''}Please pick one${labels.length > 1 ? ` of these ${labels.length}` : ''}, or just say it.`,
+};
+
+/** What a search part says once it has finished, keyed so it is said once. */
+function searchItem(part: ISearchPlanPart, i: number, describe: ISpeechDescriber) {
+  if (part.status === 'empty') return { id: `${i}:board`, part: i, say: describe.empty() };
+  if (part.status !== 'done') return undefined;
+  const found = new Map<string, number>();
+  for (const state of part.states) {
+    const table = part.plan.steps.find((st) => st.id === state.stepId)?.table.name;
+    if (table && state.found) found.set(table, (found.get(table) ?? 0) + state.found);
+  }
+  return found.size ? { id: `${i}:board`, part: i, say: describe.board([...found]) } : undefined;
 }
 
 const nouns: Record<ISpeechPointerKind, [string, string]> = {
@@ -161,6 +201,8 @@ interface IItem {
   part: number;
   text?: string;
   pointer?: ISpeechPointerKind;
+  /** A pointer whose words are already made (board, choice). */
+  say?: string;
 }
 
 /** The items of one text part, and the kind of its unfinished last block if it is still growing. */
@@ -197,6 +239,7 @@ export function buildSpeechScript(
   options: ISpeechScriptOptions
 ): ISpeechSegment[] {
   const pointerText = options.pointer ?? defaultPointerText;
+  const describe = options.describe ?? defaultDescriber;
   const items: IItem[] = [];
   const pendingOf = new Map<number, IBlockKind | undefined>();
   const parts = message.parts;
@@ -209,6 +252,19 @@ export function buildSpeechScript(
     } else if (isToolPart(part) && part.state === 'approval-requested' && options.final) {
       // a run stops right after asking, so forms are said once the stream has ended
       items.push({ id: `${i}:form`, part: i, pointer: 'form' });
+    } else if (part.type === AGENT_DATA_PART.searchPlan) {
+      const item = searchItem((part as { data: ISearchPlanPart }).data, i, describe);
+      if (item) items.push(item);
+    } else if (part.type === AGENT_DATA_PART.clarify) {
+      const { question, options: choices } = (part as { data: IClarifyPart }).data;
+      items.push({
+        id: `${i}:choice`,
+        part: i,
+        say: describe.choice(
+          question,
+          choices.map((o) => o.label)
+        ),
+      });
     }
   });
   if (options.error) items.push({ id: 'error', part: parts.length, pointer: 'error' });
@@ -216,6 +272,10 @@ export function buildSpeechScript(
   const segments: ISpeechSegment[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    if (item.say) {
+      segments.push({ id: item.id, kind: 'pointer', text: item.say });
+      continue;
+    }
     if (!item.pointer) {
       segments.push({ id: item.id, kind: 'prose', text: item.text! });
       continue;

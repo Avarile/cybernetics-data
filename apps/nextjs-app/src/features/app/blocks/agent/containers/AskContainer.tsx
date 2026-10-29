@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { useEffect, useState } from 'react';
 import { useAgentSkills, useAgentStatus } from '../hooks/useAgentData';
 import { useAgentSession } from '../hooks/useAgentSession';
+import { choiceFor, matchOption, openClarify } from '../model/transcript';
 import { useCockpitStore } from '../state/cockpit-store';
 import { useAgentVoiceStore } from '../state/voice-store';
 import { AgentComposer } from '../ui/ask/Composer';
@@ -41,9 +42,12 @@ export const AskContainer = ({
     };
   }, [chat.session, focus, voiceOn]);
 
+  /** Typed or spoken: an answer that names an option of the open question sends it as the choice. */
   const send = (text: string) => {
     selectSearch(undefined);
-    void chat.send(text);
+    const clarify = openClarify(chat.messages);
+    const option = clarify && matchOption(clarify, text);
+    void chat.send(text, option ? choiceFor(clarify.clarifyId, option) : undefined);
   };
   const voice = useVoiceConversation({
     messages: chat.messages,

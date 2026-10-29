@@ -3,6 +3,7 @@ import { useTranslation } from 'next-i18next';
 import { useEffect, useRef } from 'react';
 import { useAgentSession } from '../hooks/useAgentSession';
 import { useCockpitKeys } from '../hooks/useCockpitKeys';
+import { choiceFor } from '../model/transcript';
 import { useCockpitStore } from '../state/cockpit-store';
 import s from '../ui/theme/cockpit.module.css';
 import { cockpitFonts } from '../ui/theme/fonts';
@@ -36,12 +37,7 @@ export const AgentCockpit = () => {
   /** An option of a clarify card (or a PICK on a card): the admin's answer, with its choice. */
   const pick = (option: IClarifyOption, clarifyId: string) => {
     selectSearch(undefined);
-    void chat.send(option.label, {
-      clarifyId,
-      optionId: option.id,
-      label: option.label,
-      ...(option.recordRef ? { recordRef: option.recordRef } : {}),
-    });
+    void chat.send(option.label, choiceFor(clarifyId, option));
   };
 
   return (

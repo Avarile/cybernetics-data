@@ -1,7 +1,7 @@
-import type { IChoicePart, IClarifyPart, ISearchPlanPart } from '@teable/openapi';
+import type { IChoicePart, IClarifyOption, IClarifyPart, ISearchPlanPart } from '@teable/openapi';
 import { AGENT_DATA_PART } from '@teable/openapi';
 import type { UIMessage } from 'ai';
-import { isToolPart, toolNameOf, type IAgentToolPart } from './agent-request';
+import { isToolPart, toolNameOf, type IAgentChoice, type IAgentToolPart } from './agent-request';
 
 /** Tools the cockpit shows as their own data parts, not as tool rows. */
 const shownAsData = new Set(['plan_search', 'clarify', 'highlight_records']);
@@ -84,3 +84,38 @@ export function searchesOf(messages: UIMessage[]): ISearchPlanPart[] {
       .filter((d): d is ISearchPlanPart => Boolean(d))
   );
 }
+
+const squash = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+const ordinals = [/\b(?:first|1st)\b/, /\b(?:second|2nd)\b/, /\b(?:third|3rd)\b/];
+
+/**
+ * The option a typed or spoken answer names (cockpit design §8): its label, or "the first /
+ * second / third one". Only an answer that names exactly one option counts.
+ */
+export function matchOption(part: IClarifyPart, text: string): IClarifyOption | undefined {
+  const said = squash(text);
+  if (!said) return undefined;
+  const named = part.options.filter((o) => {
+    const label = squash(o.label);
+    return (
+      label &&
+      (said === label || said.includes(label) || (label.includes(said) && said.length >= 4))
+    );
+  });
+  if (named.length === 1) return named[0];
+  if (named.length) return undefined;
+  const nth = ordinals.findIndex((re) => re.test(said));
+  return nth >= 0 ? part.options[nth] : undefined;
+}
+
+/** The choice a picked option sends with the message. */
+export const choiceFor = (clarifyId: string, option: IClarifyOption): IAgentChoice => ({
+  clarifyId,
+  optionId: option.id,
+  label: option.label,
+  ...(option.recordRef ? { recordRef: option.recordRef } : {}),
+});

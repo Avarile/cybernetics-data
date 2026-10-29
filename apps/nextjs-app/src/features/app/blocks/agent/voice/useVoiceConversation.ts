@@ -1,14 +1,22 @@
+import type { ISearchPlanPart } from '@teable/openapi';
+import { AGENT_DATA_PART } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import { useTranslation } from 'next-i18next';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { isToolPart, waitingApprovals } from '../model/agent-request';
 import { useAgentVoiceStore } from '../state/voice-store';
 import { BrowserVoiceEngine } from './engines/browser-engine';
 import { ElevenLabsEngine } from './engines/elevenlabs-engine';
 import type { IEngineId, ISpeechEngine, ISpeechQueueState } from './speech-queue';
 import { SpeechQueue } from './speech-queue';
-import type { ISpeechPointerKind, ISpeechSegment } from './speech-script';
-import { buildSpeechScript, defaultPointerText } from './speech-script';
+import {
+  buildSpeechScript,
+  counted,
+  defaultDescriber,
+  defaultPointerText,
+  listed,
+} from './speech-script';
+import type { ISpeechPointerKind, ISpeechSegment, type ISpeechDescriber } from './speech-script';
 import type { IListenerError, IListenerState } from './voice-listener';
 import { speechRecognitionSupported, VoiceListener } from './voice-listener';
 
@@ -20,6 +28,7 @@ export type IVoicePhase =
   | 'listening'
   | 'hearing'
   | 'thinking'
+  | 'searching'
   | 'working'
   | 'speaking'
   | 'approval'
@@ -36,12 +45,15 @@ export interface IVoicePhaseInput {
   awaitingApproval: boolean;
   hidden: boolean;
   listener: IListenerState;
+  /** The table a running search is on (cockpit design §8). */
+  searching?: string;
 }
 
 /** What the status line says (voice design §8, §9). */
 export function voicePhase(s: IVoicePhaseInput): IVoicePhase {
   if (!s.enabled) return 'off';
   if (s.speaking) return 'speaking';
+  if (s.busy && s.searching) return 'searching';
   if (s.busy) return s.toolRunning ? 'working' : 'thinking';
   if (s.awaitingApproval) return 'approval';
   if (s.hidden || s.listener.status === 'failed') return 'paused';
@@ -53,6 +65,24 @@ export const switchLocked = (s: { enabled: boolean; busy: boolean; speaking: boo
   s.enabled && (s.busy || s.speaking);
 
 const RUNNING_TOOL_STATES = new Set(['input-streaming', 'input-available']);
+
+/** The table a search in this reply is running on, if one runs. */
+export function searchingTable(message?: UIMessage): string | undefined {
+  if (message?.role !== 'assistant') return undefined;
+  for (const part of [...message.parts].reverse()) {
+    if (part.type !== AGENT_DATA_PART.searchPlan) continue;
+    const data = (part as { data?: ISearchPlanPart }).data;
+    if (data?.status !== 'running') return undefined;
+    const running =
+      data.states.find((st) => st.status === 'running') ??
+      data.states.find((st) => st.status === 'pending');
+    return (
+      data.plan.steps.find((st) => st.id === running?.stepId)?.table.name ??
+      data.plan.steps[0]?.table.name
+    );
+  }
+  return undefined;
+}
 const toolRunning = (message?: UIMessage) =>
   message?.role === 'assistant' &&
   message.parts.some((p) => isToolPart(p) && RUNNING_TOOL_STATES.has(p.state));
@@ -78,6 +108,8 @@ export interface IVoiceConversation {
   enabled: boolean;
   lang: string;
   phase: IVoicePhase;
+  /** The table a running search is on, for the status line. */
+  searching?: string;
   /** On, and the agent is responding: the switch cannot be turned off (Stop can end it). */
   locked: boolean;
   listener: IListenerState;
@@ -156,6 +188,28 @@ export function useVoiceConversation(options: IVoiceConversationOptions): IVoice
     [t]
   );
 
+  const describe = useMemo<ISpeechDescriber>(
+    () => ({
+      board: (found) =>
+        t('agent.voice.look.board', {
+          found: listed(found.map(counted), t('agent.voice.and', 'and')),
+          defaultValue: defaultDescriber.board(found),
+        }),
+      empty: () => t('agent.voice.look.empty', { defaultValue: defaultDescriber.empty() }),
+      choice: (question, labels) =>
+        t('agent.voice.look.choice', {
+          question,
+          options:
+            labels.length && labels.length <= 3
+              ? `${listed(labels, t('agent.voice.or', 'or'))}?`
+              : '',
+          count: labels.length,
+          defaultValue: defaultDescriber.choice(question, labels),
+        }),
+    }),
+    [t]
+  );
+
   const { busy, error, disabled } = options;
   const last = options.messages.at(-1);
   const failed = !busy && !!error;
@@ -164,13 +218,13 @@ export function useVoiceConversation(options: IVoiceConversationOptions): IVoice
     (final: boolean): [string, ISpeechSegment[]] | undefined => {
       if (!last) return undefined;
       if (last.role === 'assistant') {
-        return [last.id, buildSpeechScript(last, { final, error: failed, pointer })];
+        return [last.id, buildSpeechScript(last, { final, error: failed, pointer, describe })];
       }
       return failed
         ? [last.id, [{ id: 'error', kind: 'pointer', text: pointer('error', 1) }]]
         : undefined;
     },
-    [last, failed, pointer]
+    [last, failed, pointer, describe]
   );
 
   const locked = switchLocked({ enabled, busy, speaking: speech.active });
@@ -278,7 +332,9 @@ export function useVoiceConversation(options: IVoiceConversationOptions): IVoice
       awaitingApproval,
       hidden,
       listener: listenerState,
+      searching: searchingTable(last),
     }),
+    searching: searchingTable(last),
     locked,
     listener: listenerState,
     speech,

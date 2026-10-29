@@ -1862,7 +1862,8 @@
         "working": "处理中…",
         "speaking": "正在朗读…",
         "approval": "等待你的批准：请使用上方的卡片",
-        "paused": "已暂停"
+        "paused": "已暂停",
+        "searching": "正在搜索 {{table}}…"
       },
       "error": {
         "blocked": "麦克风权限被阻止。请在浏览器的网站设置中允许。",
@@ -1898,8 +1899,14 @@
         "formula_other": "请看一下这 {{count}} 个公式。",
         "image_one": "请看一下这张图片。",
         "image_other": "请看一下这 {{count}} 张图片。",
-        "error": "出了点问题。请看一下屏幕。"
-      }
+        "error": "出了点问题。请看一下屏幕。",
+        "board": "我找到了 {{found}}，都在面板上。",
+        "empty": "没有找到相关内容。",
+        "choice_one": "{{question}} {{options}} 请选择它，或者直接说出来。",
+        "choice_other": "{{question}} {{options}} 请从这 {{count}} 项中选择一项，或者直接说出来。"
+      },
+      "and": "和",
+      "or": "或"
     },
     "cockpit": {
       "title": "智能体驾驶舱",

@@ -23,6 +23,7 @@ const PhaseIcon = ({ phase }: { phase: IVoicePhase }) => {
     case 'hearing':
       return <Mic className={cn(className, 'text-destructive')} />;
     case 'thinking':
+    case 'searching':
     case 'working':
       return <Loader2 className={cn(className, 'animate-spin')} />;
     case 'speaking':
@@ -55,6 +56,10 @@ export const VoiceComposer = ({
     listening: t('agent.voice.status.listening', 'Listening…'),
     hearing: t('agent.voice.status.hearing', 'Hearing you…'),
     thinking: t('agent.voice.status.thinking', 'Thinking…'),
+    searching: t('agent.voice.status.searching', {
+      table: voice.searching ?? '',
+      defaultValue: `Searching ${voice.searching ?? ''}…`,
+    }),
     working: t('agent.voice.status.working', 'Working…'),
     speaking: t('agent.voice.status.speaking', 'Speaking…'),
     approval: t('agent.voice.status.approval', 'Waiting for your approval: use the card above'),
