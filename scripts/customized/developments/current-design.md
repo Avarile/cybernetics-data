@@ -1,98 +1,126 @@
-# Agent voice conversation: talk to the agent hands-free
+# Agent cockpit: a full-screen agent that plans its searches and shows them
 
-Status: **designed, approved and built 2026-10-27; P0–P4 done, P5 (the manual run in real
-browsers, §11.3) waits for the admin.** Commits and as-built notes are in §14. Branch:
-`feat/agentic-database`.
-The previous content of this file (the follow-up design, P0–P5 done) is in git history:
-`git show 629680a1:scripts/customized/developments/current-design.md`.
+Status: **designed 2026-10-30, not started.** Decisions waiting for the admin are in §14. Branch:
+`feat/voice-conversation`.
+The previous content of this file (voice conversation, as built) is in git history:
+`git show 18999448:scripts/customized/developments/current-design.md`.
 
-Every "today" statement was read from the working tree on 2026-10-27 (HEAD `fd8e3ff3`). Paths are
-relative to `apps/nextjs-app/src/features/app/blocks/agent/` unless they start with `apps/` or
-`packages/`.
+Every "today" statement was read from the working tree on 2026-10-30 (HEAD `18999448`). Paths are
+relative to `apps/nextjs-app/src/features/app/blocks/agent/` (frontend) or
+`apps/nestjs-backend/src/features/agent/` (backend) unless they start with `apps/` or `packages/`.
+The reference design is `/home/avarile/Documents/agentic-centre/ai-cockpit/` ("the cockpit").
 
 ---
 
 ## 1. Summary
 
-A **Voice** switch in the agent composer turns the chat into a spoken conversation. While it is on:
+The agent stops being a chat panel. It becomes the **Agent Cockpit**: one full-screen surface,
+switched on and off, in the cockpit's glass-instrument look. When the admin asks something, the
+agent first works out what they mean (and asks if it can't tell), then makes a search plan over the
+tables, runs it step by step, and the screen shows each table as it is searched, with every record
+it finds landing as a card in that table's lane.
 
-- the admin speaks; each sentence is transcribed onto the screen, and the whole input is sent once
-  they have been silent for 3 seconds (Feature 1);
-- the agent's reply is read aloud. Tables, code and forms are not read out: the agent says
-  "Please take a look at this table / code / form" in their place (Feature 2);
-- the reply is spoken by ElevenLabs or by the browser's own voice, such as Chrome's "Google US
-  English". The admin picks the engine and the voice (§6.7);
-- the switch cannot be turned off while the agent is responding.
+| Part | What changes | § |
+|---|---|---|
+| A. Full screen | One overlay over the whole app, on/off only; no side panel, no resize, no expand | 4 |
+| B. Cockpit screen | Annunciator strip, a stage (search board, constellation), the ask rail; MONO and CYBERPUNK palettes | 5 |
+| C. Answer protocol | Intent → clarify or plan → run the plan table by table → answer, enforced on the server | 6 |
+| D. Stream and storage | New data parts for plan, steps, hits, clarify and lens; search runs kept in Prisma for replay | 7 |
+| E. Voice | Kept as built; new spoken pointers for the board and for questions back to the admin | 8 |
+| F. Modules and layers | Backend: a `search` domain slice inside the existing layers. Frontend: everything in one folder, split into six layers with enforced import rules | 9, 10 |
 
-| Part | What changes |
-|---|---|
-| A. Switch | Voice switch, its lock while the agent responds, on/off behaviour (§4) |
-| B. Listening | Continuous recognition, sentence transcripts, 3-second silence send, mic paused while the agent talks (§5) |
-| C. Speaking | Reply turned into a speech script, with pointers for tables, code and forms; queued playback through either engine: ElevenLabs or the browser voice (§6) |
-| D. Server | `POST /api/agent/tts` for the admin-only agent; optional voice hint in the system prompt (§7) |
-| E. UI | Voice composer, status line, countdown, voice settings (§8) |
-
-The state machine is in §9, files and phases in §10, tests in §11, decisions in §12 and risks in §13.
+API changes are in §11, files and phases in §12, tests in §13, decisions in §14, risks in §15.
 
 ---
 
 ## 2. Current state
 
-### 2.1 Voice input
+### 2.1 Frontend
 
-- `components/AgentComposer.tsx:116` renders the shared `SpeechInput`
-  (`apps/nextjs-app/src/components/ai-elements/speech-input.tsx`).
-- It uses the browser's Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) with
-  `continuous = true` and `interimResults = true`. Only final results are used. Each one is
-  appended to the textarea. Nothing is sent automatically.
-- The language is always `en-US`, because the composer passes no `lang`. The button is disabled
-  while a reply streams.
-- In Firefox the button is disabled. The component's MediaRecorder fallback needs an
-  `onAudioRecorded` transcriber, which the composer doesn't pass, and the server has no
-  speech-to-text endpoint.
+- Two shells host the same chat (`AgentChatView.tsx`):
+  - `AgentPanel.tsx` (217 lines): a resizable side panel, mounted only in
+    `apps/nextjs-app/src/features/app/blocks/table/Table.tsx:134` for admins. It has three sizes
+    (`open`, `expanded`, `close`) from `useChatPanelStore`, which lives **outside** the agent folder
+    (`apps/nextjs-app/src/features/app/components/sidebar/useChatPanelStore.ts`, persisted in
+    `LocalStorageKeys.ChatPanel`). It remembers one thread per base in localStorage.
+  - `AgentPage.tsx` (181 lines): `/agent` (`apps/nextjs-app/src/pages/agent.tsx`, `AgentLayout`),
+    a thread list plus a full-width chat.
+- Openers: the table header button (`table-header/TableHeader.tsx:192,227`, `toggleVisible`) and
+  the grid's "add to chat" record menu (`view/grid/GridViewBaseInner.tsx:642,687`, which puts the
+  selection in `ReactQueryKeys.gridSelection(baseId)` and calls `open()`). No other code uses
+  `useChatPanelStore`.
+- Chat state: `useAgentChat.ts` wraps the AI SDK `AbstractChat` (`ai` 6.0.169) in a
+  `StoreChatState` that React subscribes to. The instance lives inside the component, so closing
+  the panel or navigating away unmounts it, and the cleanup calls `chat.stop()`: the reply stops.
+- Rendering uses the shared `@/components/ai-elements/*` (Conversation, Message, Tool, Reasoning)
+  and `components/AgentToolStep.tsx`, `ApprovalCard.tsx`, `ContextChip.tsx`, `AgentComposer.tsx`
+  (skill picker on `/`, `/clear`).
+- Voice (`voice/`, about 1,500 lines plus specs): `VoiceListener`, `SpeechQueue`, two engines,
+  `buildSpeechScript` with pointers (table, code, form, error), `useVoiceConversation`,
+  `VoiceSwitch`, `VoiceComposer`, `VoiceSettings`, and `voice-store.ts` (zustand, persisted engine
+  and browser voice).
+- The app has no `d3` (only `d3-force-3d`); `motion` 12 and `zustand` 4.5 are installed. No
+  `next/font` is used anywhere.
 
-### 2.2 Voice output
+### 2.2 Backend
 
-- Nothing on the agent page speaks.
-- `POST /api/:baseId/ai/tts` (`apps/nestjs-backend/src/features/ai/ai.controller.ts:37`,
-  permission `base|read`) streams `audio/mpeg` from ElevenLabs through `TtsService`
-  (`apps/nestjs-backend/src/features/ai/service/tts.service.ts`).
-  - Configuration is `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` and `ELEVENLABS_MODEL_ID`
-    (default `eleven_turbo_v2`, English only). It returns 503 when the key is unset.
-  - The key is set in `apps/nextjs-app/.env.development.local`.
-- `AiModule` provides `TtsService` but exports only `AiService`. `AgentModule` already imports
-  `AiModule`.
-- The only caller of that endpoint, `VoiceParser.tsx` in the old table chat panel, was deleted in
-  `960c33bb`. Its `stripForTts` markdown cleanup is reused in §6.3.
-- The browser's own text-to-speech (`window.speechSynthesis`) isn't used anywhere in
-  `apps/nextjs-app/src`.
-- `apps/nextjs-app/src/components/ai-elements/voice-selector.tsx` (483 lines) is unused. It is a
-  searchable picker dialog with name, gender, accent and preview slots, but no data source. It is
-  reused for the voice picker (§8).
+- The agent module is already layered: `domain/` (entities, policies, ports), `application/`
+  (use cases), `infrastructure/` (Prisma, Teable tables, BullMQ, HTTP), `interface/`
+  (controllers), `runtime/` (one turn), `toolkits/` (tools by toolkit) and `pack/` (seeded tables,
+  skills, defaults). About 10,000 lines.
+- A turn (`runtime/agent-runtime.ts`): `ContextBuilder` builds the system prompt, `ToolAssembler`
+  wraps the profile's toolkits (`wrapTool`: run as the agent principal, cap, mark untrusted, audit),
+  and a `ToolLoopAgent` streams through `createUIMessageStream`. The first chunk is a transient
+  `data-run` part. Steps are saved as they finish (`TurnRecorder`); `agent_messages.parts` is capped
+  at 64 KB per message (`infrastructure/store/fit-parts.ts`).
+- Reading data: `data_read` (`list_*`, `describe_table`, `query_records` by field name with Teable
+  filters, `get_records`, `aggregate`, `search_everywhere`), `sql_read`, and `knowledge.search`
+  (PostgreSQL full text over every table, kept in sync; no vectors, by the admin's decision of
+  2026-10-27).
+- Nothing plans a search or tells the UI which table is being searched: the model calls tools in
+  whatever order it likes, and the UI shows each call as a collapsible JSON step.
+- `ai` 6.0.169 supports `prepareStep` (per-step `activeTools`, `toolChoice`), `hasToolCall` stop
+  conditions, and data parts with ids (a later chunk with the same id replaces the part).
+- Runs and audit rows are in Prisma (`AgentRun`, `AgentAuditLog`); threads, messages, memories and
+  skills are rows in the Agent base.
 
-### 2.3 Chat and replies
+### 2.3 The data in the example
 
-- `useAgentChat.ts` wraps the AI SDK `AbstractChat` (`ai` 6.0.169). Its status is `submitted`,
-  `streaming`, `ready` or `error`. `AgentChatView.tsx:42` sets `busy = submitted || streaming`.
-  Stop calls `chat.stop()` and then `cancelAgentRun`.
-- A reply is a list of parts. Text parts are rendered by `MessageResponse` (Streamdown: GFM
-  tables, Shiki code, mermaid, math). Text parts carry `state: 'streaming' | 'done'`.
-  - Reasoning parts are collapsible.
-  - Tool parts render as `AgentToolStep` (collapsible JSON input and output). When the state is
-    `approval-requested`, an `ApprovalCard` with Approve and Deny buttons is shown as well.
-- **Approvals**
-  - While an approval waits, the run is paused as `awaiting_approval` and the client status
-    returns to `ready`.
-  - Answers are sent automatically (`useAgentChat.ts:115`, `sendAutomaticallyWhen`), and the
-    reply continues in the same assistant message.
-  - A **new message while an approval waits denies it** ("The admin sent a new message instead
-    of answering", `apps/nestjs-backend/src/features/agent/application/chat/run-turn.usecase.ts:77`).
-- `AgentChatView` is shared by the `/agent` page (`AgentPage.tsx`) and the table side panel
-  (`AgentPanel.tsx:166`). `AgentThreadChat` remounts when the thread changes or a new chat starts.
-- `streamdown` exports `parseMarkdownIntoBlocks`, the same splitter the renderer uses. Tested on
-  2026-10-27:
-  - Prose, a table and a code block come back as separate blocks.
-  - A half-streamed table (`"| Name | To"`) comes back as its own last block.
+Read live from `data-centre` (`bseJEuE54y5caWO0Xc8`) on 2026-10-30. Every table has `title`
+(primary), `context` (markdown), `created_at`, `updated_at`, `deleted_at`, `is_active`, `id`
+(auto number).
+
+| Table | Own fields | Links |
+|---|---|---|
+| `goals` | `deadline` | `projects` (one→many), `refer_knowledge` (many→many, one-way) |
+| `projects` | `progress` (backlog … finalized, onhold, cancelled) | `belong_goals` → goals, `lead_by` → contacts, `tasks` (one→many), `refer_knowledge` (one-way) |
+| `tasks` | `progress`, `priority` (urgent … can wait), `started_at`, `finished_at` | `belong_project` → projects, `assigned_to` → contacts, `refer_knowledge` (one-way) |
+| `contacts` | `email`, `firstname`, `lastname`, `mobile` | `contact_type`, `contact_profession`, `contact_company`, `tasks`, `projects` (back-links of `assigned_to`, `lead_by`) |
+| `knowledges` | — | `knowledge_type`, `knowledge_parent` / `knowledges` (tree), `related_knowledge` (many→many) |
+
+So "people of a project" means `projects.lead_by` plus `tasks.assigned_to` of its tasks, and
+"knowledge of a project" means `refer_knowledge` on the project and on its tasks. `refer_knowledge`
+is one-way: a knowledge record doesn't know who refers to it.
+
+### 2.4 The reference: what we take from the cockpit
+
+The cockpit is a static page (TypeScript, D3 7.9 from a CDN) that draws Cybernetics data as a
+radial constellation, with an "ask" panel that sends questions to Claude with read-only tools; the
+chart follows what the tools retrieve.
+
+| Cockpit | Agent cockpit |
+|---|---|
+| Deck: annunciator strip on top, stage in the middle, instrument rail on the right | Same grid (§5.1) |
+| Dataset menu (WORK, GOALS, KNOWLEDGE, FINANCE, CUSTOM) | Thread menu; the "dataset" of a turn is its search plan |
+| Link chip and diagnostics panel, zulu clock | Agent status chip (model, health, last error) and its panel; same clock |
+| MONO and CYBERPUNK palettes over shared tokens; Tektur, Martian Mono, IBM Plex Sans | Same tokens, palettes and fonts, scoped to the overlay |
+| Ask panel: input, trace, answer, lens ANSWER / RETRIEVED / FULL MAP, NEW, suggestion chips | Ask rail: transcript, plan legs (the trace), answer, lens ANSWER / RETRIEVED / ALL, NEW, chips |
+| Constellation: `d3.cluster` / `d3.tree`, bundled edges, rotation, lens, render budget of 900 | Constellation view of the retrieved records (§5.4), ported, not reinvented |
+| Readout with up to seven KPIs | Readout per intent, e.g. tasks by progress, people, knowledge (§5.6) |
+| Branch vectors (mix bars per branch), flight log | Mix bar in each lane header; run log |
+| Symbology: dot, hub, diamond actor, ring, halo; colour by meaning, not by hue | Same marks on cards and nodes |
+| Keyboard: `1`–`4`, `[` `]`, `Esc`, `T`, `0`, `F` | Adapted (§5.8) |
+| Not taken: demo signal, the spec article under the deck, QUICK/THOROUGH tier, Claude sampling on the viewer's account | — |
 
 ---
 
@@ -100,698 +128,869 @@ The state machine is in §9, files and phases in §10, tests in §11, decisions 
 
 Goals:
 
-- **G1.** One switch turns voice conversation on and off. It is the same switch on the page and in
-  the side panel.
-- **G2.** Each spoken sentence is transcribed and shown. After 3 seconds without speech, the whole
-  input is sent.
-- **G3.** The reply is spoken. Tables, code and forms are not read out; the agent asks the admin to
-  look at them instead.
-- **G4.** The switch cannot be turned off while the agent is responding.
-- **G5.** Replies can be spoken by ElevenLabs or by the browser's own voice, such as Chrome's Google
-  voices. The admin chooses the engine and the browser voice.
+1. The agent is one full-screen component with exactly two states, on and off (Feature 1).
+2. The screen follows the cockpit's layout, look and interaction model (Feature 2).
+3. Voice keeps working exactly as built (Feature 2.1).
+4. Data questions follow intent → clarify or plan → table-by-table search → answer (Feature 2.2).
+5. While a table is searched its lane is visible, and every hit arrives as its own card (Feature 2.3).
+6. Clear modules and layers on both sides, with the import rules checked by tests (Feature 3).
+7. All frontend agent code, state included, lives in one folder (Feature 3).
 
-Non-goals for v1:
-
-- Interrupting the agent by voice (barge-in).
-- Answering approvals by voice.
-- Firefox support, which would need server-side speech-to-text.
-- A wake word.
-- Choosing an ElevenLabs voice in the UI. That stays `ELEVENLABS_VOICE_ID` (§7.2).
-- Rate and pitch controls.
-- Voice on the admin pages.
-- Keeping the switch on across page reloads.
+Non-goals: non-admin access (still admin-only); new write powers (writes keep their approvals);
+vector search; changing the admin settings page (`blocks/admin/agent/`); a light palette.
 
 ---
 
-## 4. Part A: the switch
+## 4. Part A: full screen, on and off
 
-### 4.1 Placement and state
+### 4.1 Behaviour
 
-- **Placement.** The switch sits in a slim footer row under the composer, labelled "Voice" with
-  the `AudioLines` icon. It uses the shadcn `Switch` from `@teable/ui-lib`. `AgentComposer` is
-  shared, so the page and the side panel both get it.
-- **State.** `voice/voice-store.ts` is a zustand store holding `{ enabled, setEnabled }`. It
-  follows the pattern of `useChatPanelStore`.
-  - It is not persisted. It survives thread switches and `/clear` (which remount
-    `AgentThreadChat`).
-  - It resets on reload, because microphone start and audio playback both need a fresh click.
+- The cockpit is a fixed overlay over the whole viewport (`position: fixed; inset: 0`, above the
+  app's own layers), rendered in a portal. It has two states, **on** and **off**. There are no
+  other sizes, no resize handle, no expand or minimise button.
+- **On**: from the toggle button (§4.2), the shortcut `Mod+J`, a deep link (§4.4) or "add to
+  chat" on grid rows.
+- **Off**: the same toggle (the power button in the annunciator, or `Mod+J`). `Esc` never turns
+  it off; it closes menus and clears the lens first (§5.8), so a stray `Esc` doesn't hide a
+  conversation.
+- While on, the page underneath is inert (`inert` on the app root): no grid shortcuts, no focus
+  behind the overlay. The overlay is a modal dialog to assistive tech (`role="dialog"`,
+  `aria-modal`, labelled "Agent cockpit"), focus moves to the composer on open and back to the
+  toggle on close.
 
-### 4.2 Rules
+### 4.2 Entry points
 
-| Situation | Switch |
-|---|---|
-| Browser has no `SpeechRecognition` (Firefox) | Disabled. Tooltip: "Voice needs Chrome, Edge or Safari" |
-| Chat disabled (agent off or not healthy: the composer's `disabled`) | Disabled |
-| Off → on | Allowed whenever the switch isn't disabled for the reasons above, including while a reply streams (D3) |
-| On → off while **responding** | **Disabled.** Tooltip: "Voice can be turned off when the agent has finished. Use Stop to end the reply now." |
-| On → off otherwise (listening, countdown, waiting for an approval, paused) | Allowed |
+- `AgentToggle` (exported from the agent folder): an icon button with the on/off state, placed in
+  the table header where the chat button is today, and in the space and admin sidebars, for admins
+  only.
+- Grid "add to chat" calls `openAgentCockpit({ focus: { baseId, tableId, viewId, recordIds } })`
+  instead of writing `gridSelection` and opening the panel.
+- `useChatPanelStore`, `LocalStorageKeys.ChatPanel` and the panel are deleted (§12, P3).
 
-- **Responding** means from the moment a turn is sent until the stream has ended **and** every
-  queued speech segment has played: `busy || speaker.active`.
-- Waiting for an approval is not responding. The run is paused for the admin, so the switch works
-  then.
-- **Stop is the way out.** It ends the run (as today) and the speech, so the agent is no longer
-  responding and the switch unlocks.
+### 4.3 The session survives off, and navigation
 
-### 4.3 Turning on
+Today a closed panel stops the reply. Here, **off only hides**:
 
-These steps run inside the click handler, so they count as a user gesture:
+- The live chat (the `AbstractChat` instance), the board and the thread id live in a module-level
+  session store (`state/session-store.ts`, §10.2), not in a component. Turning off, switching
+  pages or moving between layouts keeps the reply streaming and the search running.
+- Off pauses what can't run unseen: the microphone pauses and speech stops (the voice hook already
+  pauses when `hidden`; "cockpit off" becomes one more source of `hidden`), the constellation stops
+  rotating, and stagger animations finish instantly.
+- The annunciator toggle shows a busy dot while a hidden reply is still running.
+- Stop ends the reply, not the session. The session ends on NEW, `/clear`, switching thread,
+  sign-out or closing the tab.
 
-1. `speaker.unlock()`: play a silent clip on the shared `HTMLAudioElement`, and call
-   `speechSynthesis.speak()` with an empty utterance for the browser fallback. Later `play()`
-   calls then pass the autoplay policy.
-2. `listener.start()`. The first time, the browser asks for microphone permission.
-3. Any text already typed in the textarea becomes the start of the voice draft.
-4. If a reply is streaming, listening waits until it ends. That reply is spoken from its beginning
-   (D3).
+### 4.4 Routes
 
-### 4.4 Turning off
+- `AgentCockpitHost` is mounted once in each layout that has a session (`BaseLayout`,
+  `SpaceLayout`, `SettingLayout`, `AdminLayout`) and renders the overlay for admins when it is on.
+- `/agent` and `/agent?thread=<id>` stay as deep links: the page's `getServerSideProps` keeps the
+  admin check and redirects to `/space?agent=on&thread=<id>`; the host reads that query, turns the
+  cockpit on with the thread and removes the query. `AgentLayout` and `AgentPage.tsx` go away; the
+  page file stays in `pages/` because Next.js routing needs it there.
 
-- Recognition stops and the countdown is cancelled.
-- The current draft moves back into the textarea, so nothing is lost.
-- Nothing is playing at this point, because the switch is locked while speech plays.
+### 4.5 Focus hint
 
----
-
-## 5. Part B: listening (Feature 1)
-
-### 5.1 Engine
-
-`voice/useVoiceListener.ts` wraps the Web Speech API:
-
-- `continuous = true`, `interimResults = true`, `maxAlternatives = 1`;
-- `lang = navigator.language` (D4).
-
-It does not reuse `SpeechInput`. Voice mode needs pause and resume, interim tracking and a silence
-timer. `SpeechInput` stays as the mic button for text mode and is hidden in voice mode.
-
-### 5.2 Sentence transcription
-
-- Each **final** result (one phrase or sentence) is appended to the draft with a single space and
-  shown at once.
-- The latest **interim** result is shown greyed after the draft and replaced on every event.
-- Results that arrive while the listener is paused are dropped (§5.5).
-
-### 5.3 The 3-second rule
-
-`SILENCE_MS = 3000`, exported for tests.
-
-- **Every** result event, interim or final, restarts the timer.
-- When the timer expires:
-  - a pending interim result is taken as final;
-  - if the trimmed draft is not empty, the **whole draft is sent as one message**
-    (`chat.send(draft)`) and the draft is cleared;
-  - if the draft is empty, nothing happens.
-- Chrome emits no result events during silence, so "no event for 3 s" means "no speech for 3 s".
-- Pausing mid-sentence doesn't send, because interim results keep arriving until the phrase is
-  finalised (about 0.5–1 s after the speaker stops).
-- A thin bar under the transcript drains over the 3 seconds after the last result. It refills when
-  the admin speaks again.
-
-### 5.4 Manual controls
-
-| Control | What it does |
-|---|---|
-| **Send now** | Sends the draft immediately |
-| **Clear** | Drops the draft and cancels the countdown |
-
-There is no typing in voice mode; the textarea is replaced by the transcript (§8).
-
-### 5.5 Half-duplex: the mic pauses while the agent talks
-
-- From the send until the reply has finished playing, plus a 400 ms grace period, the listener is
-  paused with `recognition.abort()`.
-- Otherwise the agent's own voice would be transcribed and sent back as a new message, an echo
-  loop. Web Speech capture doesn't reliably apply echo cancellation.
-- Barge-in is a non-goal. The Stop button ends the reply instead.
-
-### 5.6 Approvals
-
-- While a tool waits for approval, the listener stays paused.
-- A spoken message would supersede the approval, and the server would deny it (§2.3).
-- The admin answers by clicking the card. The answer is sent automatically, the reply continues
-  and is spoken, and listening resumes afterwards.
-- Spoken approvals are a non-goal: a misheard "yes" must never approve a delete.
-
-### 5.7 Restarts and errors
-
-| Event | Handling |
-|---|---|
-| `end` while listening (Chrome stops after about 60 s, or after a long silence) | Restart at once |
-| Error `no-speech` or `aborted` | Restart |
-| Error `network` (also how Brave reports that it has no speech service) | Restart after 1 s, 2 s, then 4 s. After 3 failures in a row: paused, banner "Voice recognition is unavailable", **Retry** button |
-| Error `not-allowed` or `service-not-allowed` | Switch off. Inline error: "Microphone access is blocked. Allow it in the browser's site settings." |
-| Error `audio-capture` | Switch off. Inline error: "No microphone found." |
-| Error `language-not-supported` | Retry once with `en-US` |
-| Page hidden (`visibilitychange`) | Pause listening and cancel the countdown; the draft is kept. When the page is visible again, listening resumes and the countdown restarts if the draft isn't empty |
-
-### 5.8 Browser support
-
-| Browser | Voice mode |
-|---|---|
-| Chrome, Edge | Yes. The audio is recognised by the vendor's cloud service. Chrome's Google voices and Edge's "Microsoft … Online" voices can speak the reply (§6.7). |
-| Safari 14.1+ (macOS, iOS) | Yes, via `webkitSpeechRecognition`. Continuous mode drops more often; §5.7 restarts it. |
-| Firefox | No. The switch is disabled (§4.2). |
+The cockpit opened from a table sends `context.baseId/tableId/viewId` as today, plus `recordIds`
+for "add to chat". The annunciator shows it as a chip (`FOCUS · TASKS · 3 ROWS ✕`), replacing
+`ContextChip`; dismissing it sends no context. It stays a hint, never a limit.
 
 ---
 
-## 6. Part C: speaking (Feature 2)
+## 5. Part B: the cockpit screen
 
-### 6.1 What is spoken
+### 5.1 Layout
 
-- Only the assistant reply to a turn sent while voice is on. This includes a reply that was
-  streaming when voice was turned on (D3) and the continuation after an approval.
-- History loaded from the server is never spoken.
-- Text parts are spoken in order.
-- Reasoning and tool steps are not spoken. While tools run the status line says "Working…" (§8).
-- A tool part in `approval-requested` is spoken as the **form** pointer.
-- A stream error is spoken as the error pointer.
-
-### 6.2 Speech script (`voice/speech-script.ts`, pure)
-
-`buildSpeechScript(message, { final, error }): ISpeechSegment[]` returns segments of the form
-`{ id, kind: 'prose' | 'pointer', text }`.
-
-- Ids are stable as the message grows (`${partIndex}:${blockIndex}:${sentenceIndex}`).
-- The queue enqueues each id once, so the function can run on every streamed update.
-
-For each text part:
-
-1. **Split** with `parseMarkdownIntoBlocks(part.text)` and drop whitespace-only blocks.
-2. **Settle.**
-   - Every block except the last is settled.
-   - The last block settles when the part's `state` is `'done'`, or when `final` is true (the
-     stream has ended).
-   - For speed: if the unsettled last block is prose (§6.2 step 3), its complete sentences settle
-     already. A sentence is complete when it ends in `. ! ? 。 ！ ？` followed by whitespace.
-   - A half-streamed table or code fence is never spoken early, because it isn't prose.
-3. **Classify** each settled block by how it starts.
-
-| Block | Detected by | Spoken |
-|---|---|---|
-| prose: paragraph, heading, list, quote | anything not below | the cleaned text (§6.3) |
-| **table** | the first line starts with `\|` | "Please take a look at this table." |
-| **code** | ```` ``` ```` or `~~~` fence (not mermaid), or a 4-space indent | "Please take a look at this code." |
-| **form**: a tool part in `approval-requested` | the part itself, not markdown | "I need your approval for this. Please take a look at this form." |
-| diagram | ```` ```mermaid ```` | "Please take a look at this diagram." |
-| formula | `$$` | "Please take a look at this formula." |
-| image | the block is only `![…](…)` | "Please take a look at this image." |
-| raw HTML | `<` | nothing |
-| stream error | `chat.error` | "Something went wrong. Please take a look at the screen." |
-
-4. **Merge.** Consecutive pointers of the same kind become one plural pointer: "Please take a look
-   at these 2 tables."
-5. **Pack.** Prose is split into sentences and packed into segments. The size limit depends on the
-   engine: up to 300 characters for ElevenLabs, 180 for the browser voice (§6.7).
-   - The first segment of a reply is its first sentence alone, so speech starts quickly.
-   - With the browser voice, a single sentence longer than 180 characters is split at its last
-     comma or space before the limit.
-
-Example:
-
-````
-Here are your top customers this quarter.          →  "Here are your top customers this quarter."
-
-| Name | Revenue |                                  →  "Please take a look at this table."
-|---|---|
-| Acme | 12,400 |
-
-The query I used:                                   →  "The query I used:"
-
-```sql                                              →  "Please take a look at this code."
-select …
+```text
+┌ ANNUNCIATOR ─────────────────────────────────────────────────────────────────────────────┐
+│ ◇ AGENT  THREAD ▾ Cockpit progress   FOCUS · TASKS · 3 ✕   ● LIVE · MODEL   MONO│CYBERPUNK  30 OCT 2026 · 04:12:09Z  ⏻ │
+├──────────────────────────────────────────────────────────────────────┬──────────────────┤
+│ STAGE                                          [ BOARD │ CONSTELLATION ] │ ASK THE AGENT    │
+│ PROJECT PROGRESS · "Cybernetics Cockpit"                               │ ▸ How is the…    │
+│ 1 PROJECT · 14 TASKS · 3 PEOPLE · 5 KNOWLEDGE  (readout + KPIs)        │ PLAN             │
+│ ┌ 01 PROJECTS ─┐ ┌ 02 TASKS ────┐ ┌ 03 CONTACTS ─┐ ┌ 04 KNOWLEDGES ┐   │ 01 projects ✓ 1  │
+│ │ ▣ card       │ │ ▣ card       │ │ ◆ card       │ │ ░ SEARCHING…  │   │ 02 tasks    ✓ 14 │
+│ │              │ │ ▣ card       │ │ ◆ card       │ │               │   │ 03 contacts ▶ 2  │
+│ │              │ │ ▣ card …     │ │              │ │               │   │ 04 knowledges ·  │
+│ └──────────────┘ └──────────────┘ └──────────────┘ └───────────────┘   │ answer · lens    │
+│ legend                                                     run log ▾   │ composer · voice │
+└──────────────────────────────────────────────────────────────────────┴──────────────────┘
 ```
 
-Acme leads by 40%. Want the full list?              →  "Acme leads by 40%. Want the full list?"
-````
+- Grid like the cockpit's `.deck`: annunciator row, then stage and a right rail of about
+  360–420 px. On screens under 900 px the rail becomes a bottom sheet over the stage (§5.9).
+- The stage shows the **selected search**: the latest turn's by default, or the one whose plan the
+  admin clicks in the transcript.
 
-### 6.3 Prose cleanup
+### 5.2 Annunciator strip
 
-This is a port of `stripForTts` from the deleted `VoiceParser.tsx`.
+From left to right: product mark; **thread menu** (the cockpit's dataset dropdown pattern: a
+listbox with the current thread, search, NEW, archived toggle, archive/restore per row, usage per
+thread as `formatUsage` today); focus chip; **status chip** (`● LIVE · <model>`, `NEEDS SETUP`,
+`ERROR`; click opens a diagnostics panel with installation health, toolkits, last error and a
+link to Admin ▸ Agent, the way the cockpit's link chip opens its diag panel); palette switch;
+zulu clock; power toggle.
 
-- Heading markers, bold and italic markers, and HTML tags are removed.
-- `[label](url)` is spoken as the label only. A bare URL is spoken as "the link on screen".
-- Inline code is spoken as its content with `_` turned into a space (`agent_skills` → "agent
-  skills"). Inline code longer than 40 characters is spoken as "this code".
-- Each list item ends with a period if it doesn't end in punctuation, so items are read as
-  separate sentences.
-- Emoji, variation selectors and zero-width joiners are removed, and whitespace is collapsed.
+When the agent isn't enabled or not healthy, the stage shows the reason and the Admin ▸ Agent
+link (today's `NotReady`), and the composer is disabled.
 
-### 6.4 Pointer wording
+### 5.3 Stage: the search board (Feature 2.3)
 
-- Pointers are i18n strings `agent.voice.look.{table,code,form,diagram,formula,image,error}`,
-  with `_other` plural forms, added in every locale that has an `agent` section.
-- They use the UI language, so a Chinese UI speaks Chinese pointers. The TTS model must then be
-  multilingual (D5).
+The board is the main view and the one that satisfies "show the table being searched".
 
-### 6.5 Why the client says it, not the model
+- **One lane per table** of the plan, in plan order, laid out left to right (horizontal scroll if
+  they don't fit; two steps on the same table share one lane with both step chips).
+- A lane **appears when its step starts**, not before. Pending steps are listed in the plan legs
+  only. The running lane has the active frame (route colour, a blinking `SEARCHING…` line, as the
+  cockpit's busy note); finished lanes keep their cards.
+- **Lane header**: step number and table name (`02 TASKS`), what the step does
+  (`linked from PROJECTS · tasks`), the count (`14` or `50 of 132`), a mix bar of the cards' tones
+  (the cockpit's branch vector), and "open table" (turns the cockpit off and opens the grid).
+- **Cards**: every hit is its own card, appended under the previous one as it arrives, so the lane
+  grows card by card (the stack in §14 D9). The server sends each hit as its own chunk (§7.1); the
+  client staggers the entrance (60 ms apart, at most 1.5 s per lane, then the rest at once; none
+  under reduced motion).
+- **Card content** (§6.7): key line (`TASK · #42` and a state badge in its tone), title, up to four
+  fields (priority, person, dates), a snippet of `context`, and provenance (`via PROJECT Cybernetics
+  Cockpit · tasks`). Archived records, when included, are faint and labelled.
+- **Hover** a card: the card it came from and the cards that came from it light up in the other
+  lanes (the cockpit's hover trace); others dim. **Click**: pins that trace. **Open**: the record in
+  its table.
+- **Lens** (the cockpit's ANSWER / RETRIEVED / FULL MAP): `ANSWER` keeps the records the answer
+  cites bright and dims the rest; `RETRIEVED` shows everything found; `ALL` drops the lens. During
+  the search the lens is `SEARCHING` (everything so far).
+- A step that needs a choice (§6.4) shows its candidates in the anchor lane with a `PICK` button on
+  each card; the same choice appears as the clarify card in the rail.
+- An empty step shows `NO RECORDS` in its lane; a failed one shows the error code, like the
+  cockpit's link panel.
 
-- It is deterministic: the model can't forget, and the pointer always matches what is rendered.
-- It costs no tokens.
-- It leaves the on-screen text unchanged. If the model were prompted to write "please look at this
-  table", that sentence would appear in the transcript and the thread history too.
+### 5.4 Stage: the constellation
 
-### 6.6 Speech queue (`voice/useSpeechQueue.ts`)
+A second view of the same retrieved records, switched with `BOARD │ CONSTELLATION` or `V`. It is
+the cockpit's chart, ported:
 
-The queue plays segments in order through one of two engines. Both implement the same small
-interface:
+- Graph contract from the cockpit's `types.ts` / `graph.ts` (`GNode`, `GLink`, `finishGraph`,
+  `toneOf`, `sizeOfPriority`), the render budget (`limit.ts`, 900 nodes plus links, "+N more"),
+  the rotator (`rotate.ts`, one turn per four minutes, held while hovering) and the layout of
+  `tree.ts` (cluster for BUNDLE, tree for TREE, bundled edges with `curveBundle.beta(0.85)`).
+- The board becomes a graph by the plan's structure (`model/graph/from-board.ts`): context steps
+  (goals) are branches, the anchor's records hang under them (or are branches themselves), linked
+  steps hang under the record they were followed from, actor tables (contacts) sit on a `PEOPLE`
+  branch as diamonds with links (assigned, leads), knowledge sits on a `KNOWLEDGE` branch with refer
+  links as edges.
+- Rendering is React SVG; d3 only computes (`d3-hierarchy`, `d3-shape`) and zooms (`d3-zoom`,
+  `d3-selection`). The view is loaded with `next/dynamic`, so the board doesn't pay for d3.
+- The lens, hover tooltip, `T` (bundle/tree), `0` (reset zoom) and `[` `]` work as in the cockpit.
+
+### 5.5 The ask rail
+
+The cockpit's ask panel grown into a conversation:
+
+- **Transcript** of the thread. Each turn: the question; its **plan legs** (the cockpit's trace,
+  an FMS legs page: one row per step with table, how it was reached, count and state; collapsed
+  once the answer arrives; clicking it puts that search on the stage); the answer as markdown
+  (the shared Streamdown renderer); tool steps that aren't part of a plan as one-line rows
+  (`READ tasks · 12`) that expand to their JSON; **clarify cards** (§6.4) and **approval cards**
+  (as today, restyled).
+- Under the latest answer: lens buttons `ANSWER n`, `RETRIEVED n`, `ALL`, and `NEW`.
+- **Composer**: input, send/stop, the `/` skill picker and `/clear` (moved from `AgentComposer`),
+  and the voice controls exactly as today: `VoiceSwitch`, `VoiceComposer` in place of the input
+  while voice is on, `VoiceSettings`.
+- **Suggestion chips** before the first question, per intent (§6.2), with names from recently
+  updated projects and goals when the status call has them.
+
+### 5.6 Readout, legend and run log
+
+- **Readout** (top-left of the stage, as the cockpit's): the intent and anchor
+  (`PROJECT PROGRESS · "Cybernetics Cockpit"`), then up to seven numbers computed on the client
+  from the cards (`model/metrics.ts`). Project progress: tasks finished, in progress, backlog, on
+  hold, people, knowledge, `% done`. Other intents: count per table. Under a lens it counts the
+  lens.
+- **Legend** at the bottom-left: the marks used on this board.
+- **Run log** (the cockpit's flight log), collapsible at the bottom-right: every tool call of the
+  current run with UTC time, verb (`PLAN`, `SEARCH`, `FOLLOW`, `READ`, `WRITE`, `ASK`) and a
+  summary; rows from a hidden run light up when the cockpit is turned back on.
+
+### 5.7 Look and motion
+
+- **Palettes**: the cockpit's tokens (`--void`, `--glass`, `--bezel`, `--ink`, `--route`,
+  `--target`, `--caution`, …) in `ui/theme/cockpit.module.css`, scoped to the overlay root, never
+  to `:root`, so the app's theme is untouched. MONO is the default; CYBERPUNK refills the same
+  tokens. Dark only, as the cockpit ("instrument lighting"). The choice is kept per browser.
+- **Meaning by tone**: settled (done, finalized), active (in progress), next (todo, preparing),
+  backlog, caution (on hold, overdue, past deadline: halo ring), faint (cancelled, archived). The
+  mapping is the cockpit's `toneOf` (by words in the select value), so any status-like select
+  works without configuration.
+- **Fonts**: Tektur (display numbers), Martian Mono (data, labels), IBM Plex Sans (answer text),
+  through `next/font/google` so they are self-hosted at build time.
+- **Motion**: only for real changes. Cards enter with a short rise (stagger above); a lane's count
+  ticks; the running lane's frame pulses. The constellation follows the cockpit's motion rules
+  (glide only under 400 elements, flowing dashes, rotation). `prefers-reduced-motion`: no
+  stagger, no pulse, no rotation, positions jump.
+
+### 5.8 Keyboard
+
+| Key | Action |
+|---|---|
+| `Mod+J` | Cockpit on / off (works everywhere in the app) |
+| `/` | Focus the composer (when not typing) |
+| `Esc` | Close a menu or panel; else clear a pinned trace; else set the lens to ALL. Never turns off |
+| `V` | Board ↔ constellation |
+| `[` `]` | Previous / next lane (board) or actor (constellation) |
+| `T`, `0` | Bundle ↔ tree, reset zoom (constellation) |
+| `F` | Browser full screen for the overlay (Fullscreen API), as the cockpit's `F` |
+| `Mod+Shift+O` | NEW conversation |
+
+Keys don't fire while typing in an input, as in the cockpit's `keydown` guard.
+
+### 5.9 Narrow screens and touch
+
+Under 900 px: annunciator collapses to mark, thread menu, status dot, power; lanes become tabs
+(one lane visible, swipe between); the ask rail is a bottom sheet with the composer always
+visible; the constellation is hidden behind the view switch. 16 px side gutters, no horizontal
+page scroll (lanes scroll inside the stage).
+
+---
+
+## 6. Part C: how the agent answers (Feature 2.2)
+
+### 6.1 The protocol
+
+```text
+admin message
+   │
+   ▼
+[intent]  the model decides what is asked ──── unclear ───► clarify (card with options) ─► turn ends
+   │ data needed                                                ▲
+   ▼                                                            │ anchor ambiguous / empty
+[plan_search] server builds the plan (recipe or custom steps), emits it, runs it step by step:
+   step 1 anchor search ─► step 2 follow links ─► step 3 … ─► results to the model
+   │
+   ▼
+[answer]  text answer citing records; highlight_records sets the ANSWER lens;
+          follow-up reads, writes (with approval) or another plan_search allowed
+```
+
+- No data needed ("hi", "how do skills work"): the model answers directly; no plan, no board.
+- The protocol is enforced on the server, not only asked for in the prompt (§6.8).
+
+### 6.2 Intents and recipes
+
+Recipes name tables and fields **by name** and are resolved against the live schema when used, as
+the cockpit's presets are, so they hold no ids and survive renames of other fields. A table or
+field a recipe expects but can't find is skipped and listed in the plan's `missing`.
+
+| Intent | Example question | Steps (anchor first) |
+|---|---|---|
+| `project_progress` | "How is the cockpit project going?" | 1 `projects` search → 2 `tasks` via `projects.tasks` → 3 `contacts` via `tasks.assigned_to` + `projects.lead_by` → 4 `knowledges` via `projects.refer_knowledge` + `tasks.refer_knowledge` → 5 `goals` via `projects.belong_goals` (context) |
+| `goal_progress` | "Am I on track for the Q4 goal?" | 1 `goals` → 2 `projects` via `goals.projects` → 3 `tasks` via `projects.tasks` → 4 `contacts` → 5 `knowledges` via all three `refer_knowledge` |
+| `task_lookup` | "Where is the TTS task at?" | 1 `tasks` → 2 `projects` via `belong_project` → 3 `contacts` via `assigned_to` → 4 `knowledges` via `refer_knowledge` |
+| `person_work` | "What is Alice working on?" | 1 `contacts` → 2 `tasks` via `contacts.tasks` (open ones first) → 3 `projects` via `contacts.projects` + `tasks.belong_project` |
+| `knowledge_lookup` | "What do I know about Docker?" | 1 `knowledges` search → 2 `knowledges` via `related_knowledge`, `knowledge_parent` → 3 `projects`, `tasks` that refer to them (reverse `refer_knowledge`) |
+| `finance_query` | "How much did I spend on food?" | 1 `finance_Transactions` filter (date window, category) → 2 `finance_Categories` → 3 `finance_Payees`; an `aggregate` in the result |
+| `record_lookup` | any other table | 1 full-text anchor over all searchable tables → 2 one hop over the anchor's links |
+| `custom` | anything else | steps given by the model, validated against the relation graph (§6.5) |
+| `action` | "Mark the TTS task done" | the anchor step to find the target, then the write tool (with its approval) |
+
+The recipes live in `domain/search/recipes.ts`. Adding an intent is adding one entry.
+
+### 6.3 The example in full: "How is the Cybernetics Cockpit project going?"
+
+1. **Intent**: `project_progress`, anchor text "Cybernetics Cockpit". The model calls
+   `plan_search({ intent: 'project_progress', anchor: { text: 'Cybernetics Cockpit' } })`.
+2. **Plan** (emitted first, shown as legs, no lane yet):
+   `s1 projects · search "Cybernetics Cockpit"`, `s2 tasks · via projects.tasks`,
+   `s3 contacts · via tasks.assigned_to, projects.lead_by`,
+   `s4 knowledges · via projects.refer_knowledge, tasks.refer_knowledge`,
+   `s5 goals · via projects.belong_goals (context)`.
+3. **s1 runs**: the `PROJECTS` lane appears and blinks. Title match plus full-text find one
+   project; its card lands. One clear hit, so the anchor is chosen (§6.6).
+4. **s2 runs**: `TASKS` lane appears. The ids in the project's `tasks` link cell are fetched
+   (100 per call); each task lands as a card, with progress tone and priority.
+5. **s3 runs**: `CONTACTS`. Ids from every task's `assigned_to` and the project's `lead_by`,
+   deduplicated; each person is a card with "assigned 6 tasks · leads the project".
+6. **s4 runs**: `KNOWLEDGES`, from `refer_knowledge` of the project and its tasks.
+7. **s5 runs**: `GOALS`, the project's goal with its deadline (halo if passed).
+8. The model gets a compact result (§6.6), writes the answer (progress, what's in flight, what's
+   on hold, who does what, relevant notes), and calls `highlight_records` with the records it cites.
+   The lens switches to `ANSWER`.
+
+### 6.4 Asking the admin (clarify)
+
+The model calls `clarify` when:
+
+- the intent is unclear ("show me the cockpit" — the project, the goal, or the knowledge entry?);
+- a required anchor is missing ("how is the project going?" with no project in focus or history);
+- the anchor step is ambiguous or empty (§6.6). The run stops after the anchor and the next model
+  step is **forced** to `clarify` (`toolChoice`), with the candidates as options.
+
+`clarify({ question, reason: 'intent' | 'anchor' | 'missing', options: [{ label, detail?,
+recordRef? }] })` emits a `data-clarify` part and ends the turn (`stopWhen: hasToolCall('clarify')`).
+The rail shows a clarify card: the question, up to six option buttons (record options show the
+record's card line), and "or type your answer". Clicking sends a normal message whose text is the
+label and whose `choice` field (§11) names the option. The server passes the choice to the model as
+`[chose projects rec… "Cybernetics Cockpit"]`, and the next plan pins that record as the anchor
+(`source: { kind: 'records' }`), so the search isn't repeated by text.
+
+### 6.5 The plan model
+
+Shared types (zod in `packages/openapi/src/agent/search.ts`, §9.4):
 
 ```ts
-interface ISpeechEngine {
-  id: 'elevenlabs' | 'browser';
-  maxSegmentChars: number;                 // 300 | 180 (§6.2 step 5)
-  unlock(): void;                          // called in the switch click (§4.3)
-  speak(text: string, signal: AbortSignal): Promise<void>;  // resolves when playback ends
-  prefetch?(text: string): void;           // ElevenLabs only
-  stop(): void;
+type ISearchIntent = 'project_progress' | 'goal_progress' | 'task_lookup' | 'person_work'
+  | 'knowledge_lookup' | 'finance_query' | 'record_lookup' | 'custom' | 'action';
+
+interface ISearchPlan {
+  id: string;                       // the AgentSearch id
+  intent: ISearchIntent;
+  summary: string;                  // "Progress of project Cybernetics Cockpit"
+  baseId: string;
+  steps: ISearchStep[];
+  missing: string[];                // recipe tables/fields not found
+}
+interface ISearchStep {
+  id: string;                       // s1, s2, …
+  table: { id: string; name: string };
+  role: 'anchor' | 'related' | 'actor' | 'context';
+  purpose: string;                  // "tasks of the project"
+  source: IStepSource;
+  limit: number;                    // cards to show (default 50, anchor 10)
+}
+type IStepSource =
+  | { kind: 'search'; text: string; filter?: unknown }               // anchor: title + full text
+  | { kind: 'records'; recordIds: string[] }                         // anchor pinned by a choice
+  | { kind: 'filter'; filter: unknown; orderBy?: IOrder[] }          // e.g. transactions this month
+  | { kind: 'follow'; from: { stepId: string; field: string }[] }    // link cells of earlier steps
+  | { kind: 'reverse'; from: { stepId: string; field: string }[] };  // this table's link field points at earlier records
+interface IStepState {
+  stepId: string;
+  status: 'pending' | 'running' | 'done' | 'empty' | 'needs_choice' | 'skipped' | 'failed' | 'cancelled';
+  found: number;                    // records the step reached
+  shown: number;                    // cards sent (≤ limit)
+  error?: string;
 }
 ```
 
-- **ElevenLabs engine** (`voice/engines/elevenlabs-engine.ts`)
-  - Playback:
-    - There is one `HTMLAudioElement`, created and unlocked in the switch click.
-    - For each segment: `agentTts(text, signal)`, then a blob, then an object URL, then `play()`.
-    - The next segment is prefetched while the current one plays (at most 2 requests in flight).
-    - Object URLs are revoked when their segment ends.
-  - Cache: pointer audio is cached in memory by text, because the same phrases repeat.
-  - Autoplay blocked anyway (rare, mostly iOS): if `play()` rejects with `NotAllowedError`, the
-    status line shows a "Tap to hear the reply" button. Tapping it plays the queue.
-- **Browser engine** (`voice/engines/browser-engine.ts`): the browser's `speechSynthesis`, covered
-  in §6.7.
-- **Choosing the engine.** The voice settings (§8) have three choices:
+Validation (`domain/search/planner.ts`, pure): every `follow` field must be a link field on the
+source step's table that points at this step's table; every `reverse` field a link on this table
+pointing at the source's table; steps only reference earlier steps; at most 8 steps; tables in the
+Agent space, system tables (`system_info`, `system_status`, `auditlog`, `table_references`,
+`template_table`) and `search_exclude` are refused. A custom plan that fails validation comes back
+to the model as a tool error naming the bad field, with the table's links listed.
 
-  | Choice | What happens |
-  |---|---|
-  | **Auto** (default, D11) | ElevenLabs. The first 503 (not configured) switches to the browser voice for the rest of the session. |
-  | **ElevenLabs** | The same, but a 503 also shows the note "ElevenLabs isn't configured; using the browser voice". |
-  | **Browser voice** | Never calls `/api/agent/tts`, so it is free and needs no key. |
+### 6.6 Running a plan
 
-- **Per-segment failures.**
-  - If ElevenLabs fails on a segment (anything other than 503), that segment is spoken by the
-    browser voice.
-  - If the browser voice fails, it retries once with an offline voice of the same language
-    (§6.7).
-  - If that fails too, the segment is skipped. Its text is on screen.
-- **`active`** is true while the queue isn't empty, a request is in flight, or audio is playing.
-  This drives the switch lock (§4.2).
-- **`stop()`** stops the current engine and clears the queue. It runs on Stop and on unmount
-  (thread switch, `/clear`, leaving the page).
+`RunSearch` (`application/search/run-search.usecase.ts`) runs the steps in order. Each step: emit
+`running`, read, emit every hit as its own chunk, emit the final state, save the step to the log.
 
-### 6.7 Browser voice (Chrome's Google voices)
+- **Anchor `search`**: (1) a primary-field `contains` query on the table (precise, cheap) and (2)
+  the full-text index (`KnowledgeSearch`, `tableIds: [table]`, records and kb_records), merged,
+  deduplicated and ranked (exact title first, then full-text rank, then recency); top 10.
+- **Anchor choice** (`domain/search/anchor-choice.ts`, pure): one case-insensitive exact title →
+  chosen; else one hit, or a top rank at least twice the second → chosen; else, for single-entity
+  intents (`*_progress`, `task_lookup`, `person_work`), `needs_choice` with up to six candidates
+  and the run stops; list intents (`knowledge_lookup`, `finance_query`, `record_lookup`) keep all.
+  No hits → `empty`, the run stops, and the model may retry once with other words or clarify.
+- **`follow`**: the ids in the source records' link cells (`get_records` returns them by field
+  name), deduplicated in source order, fetched 100 at a time. `found` is the full count; only
+  `limit` cards are sent. Each card carries `via` (source step, record and field).
+- **`reverse`**: a query on this table filtered by the link field against the source ids
+  (`hasAnyOf`/`isAnyOf`; which operator Teable accepts for each link relationship is checked in P1).
+- **Archived** records (`is_active` false or `deleted_at` set) are left out unless the question
+  asks for them; then they are faint cards.
+- **Budgets**: 15 s per step, 60 s per run, abort on Stop; at most 3 `plan_search` calls per turn;
+  at most 500 cards per run.
+- **What the model gets back** (capped by the existing `maxResultChars`, marked untrusted): per
+  step `{ table, status, found, records: [{ id, title, fields }] }` with up to six short fields per
+  record (values cut to 200 characters) and no `context` bodies. For detail it calls `get_records`
+  in the answer phase.
 
-**This is possible.** Chrome exposes its voices to web pages through the Web Speech synthesis API
-(`window.speechSynthesis`, `SpeechSynthesisUtterance`). The same code also serves Edge, Safari and
-any other browser that has the API.
+### 6.7 Cards
 
-**Voices.** `speechSynthesis.getVoices()` lists the voices.
+`domain/search/card-projection.ts` (pure) turns a record (fields by name) and its table schema
+into a card, the way the cockpit's "automatic encoding" does:
 
-| Browser | Voices |
-|---|---|
-| Google Chrome (desktop) | Google voices, about 20 languages: "Google US English", "Google UK English Female", "Google 普通话（中国大陆）" and others. `localService: false`: they are synthesised on Google's servers, need a connection and send the text to Google. Also the system's own voices (`localService: true`): offline, usually plainer. |
-| Chromium builds (not Google Chrome) | No Google voices. Only the system's voices. On Linux these come from speech-dispatcher and are often missing. |
-| Edge | "Microsoft … Online (Natural)" voices (online), plus the system's voices. |
-| Safari | The system's voices (macOS and iOS), offline. |
-
-**How the engine handles Chrome's behaviour:**
-
-| Chrome behaviour | Handling |
-|---|---|
-| `getVoices()` returns `[]` until the voices have loaded | Wait for the `voiceschanged` event, with a 2 s timeout, before the first `speak` and before opening the picker |
-| `speak()` is refused without a user gesture on the page (Chrome 71+) | The switch click is the gesture. `unlock()` speaks an empty utterance inside it (§4.3). |
-| Google voices stop mid-utterance after about 15 seconds of speech | Segments are at most 180 characters (§6.2 step 5): well under 15 s at normal rate |
-| An utterance that is garbage-collected never fires `end` | Each utterance is kept in a field until its `end` or `error` |
-| A queue left stuck by an earlier page | `speechSynthesis.cancel()` once when the engine starts |
-| `error` with `interrupted` or `canceled` | Caused by our own `stop()`; ignored |
-| `error` with `network` (Google voice offline) or `synthesis-failed` | Retry that segment once with an offline voice of the same language; otherwise skip it |
-| `error` with `not-allowed` | Show "Tap to hear the reply" (as in §6.6) |
-
-**Playback.**
-
-- One utterance is spoken at a time. `speak()` resolves on `end`. Chrome's own queue is not used,
-  so Stop and `active` stay exact.
-- There is no audio stream to measure, so the "Speaking…" level bars animate on the utterance's
-  `start` and `boundary` events instead.
-
-**Default voice.**
-
-- The first time, the engine picks a voice by language, using the recognition language (§5.1):
-  1. a Google voice for that language;
-  2. otherwise the system's default voice for that language;
-  3. otherwise the browser's default voice.
-- The admin can choose another voice in the picker (§8). The choice is saved by `voiceURI`.
-- If the saved voice isn't on this machine, the engine picks a default as above.
-
----
-
-## 7. Part D: server
-
-### 7.1 `POST /api/agent/tts`
-
-- **Route.** Added to `interface/agent-chat.controller.ts` (116 lines today), which uses
-  `AgentAdminGuard`, so it is admin-only like the rest of the agent.
-- **Body.** `agentTtsRoSchema = z.object({ text: z.string().trim().min(1).max(1000) }).strict()`.
-  The limit allows a 300-character segment with room to spare.
-- **Response.** An `audio/mpeg` stream. 400 for invalid input, 503 when `ELEVENLABS_API_KEY` is
-  unset, 502 for an upstream error. These come from the existing `TtsService`, unchanged.
-- **Wiring.** Add `TtsService` to `AiModule`'s `exports` and inject it in the agent controller.
-  `AgentModule` already imports `AiModule`.
-- **Contract.** `packages/openapi/src/agent/voice.ts` defines `AGENT_TTS = '/agent/tts'`, the
-  schema, route registration and `agentTts(text, signal)`.
-  - `agentTts` uses `fetch`, like the old `aiTtsStream`, because the body is binary.
-  - It is exported from `packages/openapi/src/agent/index.ts`.
-- **Why not reuse `/api/:baseId/ai/tts`.**
-  - It is scoped to a base, and `/agent` has none.
-  - It lets any base reader in, not only the admin.
-  - Leave it alone for now (D7).
-- **Cost.** ElevenLabs bills per character, so a 600-character reply costs about 600 credits.
-  Pointer audio is cached on the client.
-
-### 7.2 Voice and model
-
-- `ELEVENLABS_MODEL_ID` defaults to `eleven_turbo_v2`, which is English only.
-- For other languages, set `eleven_flash_v2_5` (multilingual, low latency) (D5).
-- The voice comes from `ELEVENLABS_VOICE_ID`.
-- Neither needs a code change.
-- The browser voice (§6.7) needs nothing on the server.
-
-### 7.3 Voice hint for the model (optional, D9)
-
-- **Schema.** `agentChatContextSchema` (`packages/openapi/src/agent/chat.ts:7`, strict) gains
-  `voice: z.boolean().optional()`. The client sends `context.voice = true` while voice is on.
-- **Prompt.** `RunTurn` and `ResumeTurn` pass the flag through `gate.launch` to
-  `buildSystemPrompt` (`apps/nestjs-backend/src/features/agent/runtime/context-builder.ts:73`) as
-  `IPromptParts.voice`.
-- **Placement.** It is added as the **last** section, so turning voice on or off doesn't change
-  the cached prompt prefix:
-
-  ```
-  ## Voice
-  The admin is talking to you by voice and hears your reply read aloud. Answer in short, plain
-  spoken sentences. Put tables, code and long lists in markdown as usual; the app asks the admin
-  to look at them, so do not repeat their contents in prose.
-  ```
-
-- The flag applies per turn. It is not stored on the thread.
-
----
-
-## 8. Part E: UI
-
-Text mode (voice off): today's composer plus the footer row.
-
-```
-┌──────────────────────────────────────────────────────────┐
-│ Ask the agent… type / for skills, /clear for a new chat  │ [🎙]
-│                                                          │ [↑]
-├──────────────────────────────────────────────────────────┤
-│ 〰 Voice ○                                                │
-└──────────────────────────────────────────────────────────┘
-```
-
-Voice mode (voice on): the textarea becomes the live transcript.
-
-```
-┌──────────────────────────────────────────────────────────┐
-│ ● Hearing you…                                           │
-│ Show me the top five customers by revenue this quarter   │
-│ and compare them with last quarter                        │  ← interim, grey
-│ ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▭▭▭▭▭▭  sending in 2 s     [Clear] [Send now]│
-├──────────────────────────────────────────────────────────┤
-│ 〰 Voice ●                                                │
-└──────────────────────────────────────────────────────────┘
-```
-
-| Phase | Status line | Buttons | Switch |
-|---|---|---|---|
-| listening, empty draft | 🎙 Listening… (pulsing) | none | can turn off |
-| hearing or countdown | ● Hearing you… / sending in N s | Clear, Send now | can turn off |
-| thinking (`submitted`, or streaming before any speakable text) | Thinking… | Stop | locked |
-| working (a tool step is running) | Working… | Stop | locked |
-| speaking | 🔊 Speaking… (level bars) | Stop | locked |
-| approval | Waiting for your approval: use the card above | none | can turn off |
-| paused (error or hidden page) | the reason | Retry, where it applies | can turn off |
-
-- The status line is `aria-live="polite"`.
-- The switch's tooltip explains the lock and is linked with `aria-describedby`.
-- The message list is unchanged: the reply renders as it does today while it is spoken.
-
-**Voice settings.** A gear button next to the switch opens a popover (`VoiceSettings.tsx`). It is
-disabled while the switch is locked, so the engine never changes mid-reply.
-
-```
-┌ Voice ─────────────────────────────────────┐
-│ Speak replies with                         │
-│ (•) Auto (ElevenLabs, else browser)        │
-│ ( ) ElevenLabs                             │
-│ ( ) Browser voice                          │
-│                                            │
-│ Browser voice  [Google US English    ▾] ▶  │  ← opens the picker; ▶ preview
-└────────────────────────────────────────────┘
-```
-
-- **The picker.** The browser voice opens the existing `VoiceSelector` dialog
-  (`components/ai-elements/voice-selector.tsx`) with search.
-  - Voices are grouped as "Online (Google / Microsoft)" (`localService: false`) and "This device"
-    (`localService: true`).
-  - The recognition language's voices are listed first.
-  - Each row shows the voice name and language, and has a preview button that says "Hello, I'm
-    your agent." in that voice.
-- **Storage.** The settings `{ engine, browserVoiceURI }` are stored per browser in `localStorage`
-  (`agent.voice.settings`). They are kept across reloads (D12), unlike the on/off switch (D8).
-- **When the picker is empty.** If the browser has no voices (for example Chromium on Linux
-  without speech-dispatcher), the picker says "This browser has no voices" and Auto keeps using
-  ElevenLabs.
-
----
-
-## 9. State machine
-
-`voice/useVoiceConversation.ts` composes `useAgentChat`, `useVoiceListener` and `useSpeechQueue`.
-The phase comes from a pure function, so it can be tested on its own:
+- **title**: the primary field; **key**: the table's short name and the auto number (`TASK · #42`).
+- **tone**: the first single select named like status, progress, state or stage, through `toneOf`;
+  **size**: a priority select or an amount field.
+- **fields** (up to four): priority, the link to a person, the first date (deadline, due,
+  started_at, finished_at), an amount; link values as titles.
+- **snippet**: the first 200 characters of `context` (or the first long text), markdown stripped.
+- **alert**: deadline or due date passed and not done.
+- **never shown**: fields whose names match credential, password, secret, token, api key, private
+  key (the cockpit's `SECRET` rule) and attachments.
 
 ```ts
-voicePhase({ enabled, busy, speakerActive, awaitingApproval, listener })
-  → 'off' | 'listening' | 'hearing' | 'thinking' | 'working' | 'speaking' | 'approval' | 'paused'
-switchLocked = enabled && (busy || speakerActive)
+interface ISearchCard {
+  key: string;                       // `${stepId}:${recordId}`
+  recordId: string; tableId: string; table: string;
+  title: string; short: string | null;
+  tone: 'ink' | 'route' | 'target' | 'caution' | 'dim' | 'faint' | 'none';
+  alert?: boolean; archived?: boolean;
+  badges: { label: string; tone: string }[];
+  fields: { name: string; value: string }[];
+  snippet?: string; date?: string;
+  via?: { stepId: string; recordId: string; field: string };
+  links?: { field: string; ids: string[] };  // for the constellation's edges
+}
 ```
 
-| From | Event | To | Side effects |
-|---|---|---|---|
-| off | switch on | listening | unlock audio, start recognition (§4.3) |
-| listening | result event | hearing | append or show text, restart the 3 s timer |
-| hearing | 3 s without results, draft not empty | thinking | `chat.send(draft)`, clear draft, pause mic |
-| hearing | Send now | thinking | the same |
-| hearing | Clear | listening | drop the draft, stop the timer |
-| thinking / working | first settled segment | speaking | queue starts |
-| speaking | stream ends, queue drains | listening | resume mic after 400 ms |
-| any responding phase | Stop | listening | `chat.stop()` + cancel run, `speaker.stop()` |
-| speaking or thinking | tool part `approval-requested` | approval | speak the form pointer, keep the mic paused |
-| approval | admin clicks Approve or Deny | thinking | auto-send (existing) |
-| any | mic error (§5.7) | paused or off | inline error |
-| any phase that isn't locked | switch off | off | draft back to the textarea (§4.4) |
+### 6.8 Enforcement
+
+`domain/search/turn-protocol.ts` (pure) keeps the phase of the turn and answers `prepareStep`:
+
+| Phase | Entered when | Active tools |
+|---|---|---|
+| `intent` | a new admin message | `clarify`, `plan_search`, and the toolkits that don't read data (memory, skills, threads, setup, credentials) |
+| `choice` | a step returned `needs_choice` | only `clarify` (`toolChoice` forced) |
+| `answer` | a plan ran | everything the profile allows, plus `highlight_records` |
+
+- Data tools (`data_read`, `sql_read`, `knowledge.search`, `data_write`, `schema`, `http`) are not
+  offered before a plan has run in this turn, so the model can't skip the plan.
+- A turn resumed after approvals starts in `answer` (approvals only happen there); the phase is
+  read back from the last assistant message's parts (a `data-search-plan` part with a finished
+  status), so nothing new is stored for it.
+- The protocol can be switched off in `agent_setup.search_protocol` (`plan` default, `free`), for
+  models that cope badly. With `free` every tool is always offered and the prompt section below
+  still asks for plans.
+- The system prompt gets a fixed `## How you answer` section (placed before memories, so the
+  prompt-cache prefix stays stable): the protocol, the intent list with one line per recipe, the
+  clarify rules, and "cite the records you used with highlight_records".
+
+### 6.9 Follow-ups and writes
+
+- In the `answer` phase the model may call `plan_search` again (for example, "and what about its
+  budget?"); the new steps add lanes to the same board (same search id, numbered on).
+- Writes (`data_write`, `schema`) keep their approval cards. A write intent first finds its
+  target through the anchor step, so the admin sees the record being changed as a card.
 
 ---
 
-## 10. Files and phases
+## 7. Part D: stream and storage
 
-New files, all under `voice/` (each well under 500 lines):
+### 7.1 Data parts
 
-| File | Purpose |
+| Part | Id | Stored in the message? | Payload |
+|---|---|---|---|
+| `data-run` (exists) | — | no (transient) | `{ threadId, runId }` |
+| `data-search-plan` | search id | yes; replaced as steps progress | `{ searchId, plan, states: IStepState[], status }` — a few KB |
+| `data-search-step` | `${searchId}:${stepId}` | no (transient) | `IStepState` with the step's lane header |
+| `data-search-hit` | `${searchId}:${card.key}` | no (transient) | `{ searchId, stepId, card }` |
+| `data-search-lens` | search id | yes | `{ searchId, recordKeys, view? }` |
+| `data-clarify` | clarify id | yes | `{ clarifyId, question, reason, options }` |
+| `data-choice` (user message) | — | yes | `{ clarifyId, optionId, recordRef? }` |
+
+- Hits are transient because a run can produce hundreds of cards and `agent_messages.parts` is
+  capped at 64 KB. The plan part stays small and is the message's record of the search.
+- The frontend receives transient parts in `onData` (as `data-run` today) and feeds them to the
+  board reducer (§10.3); stored parts come in `message.parts`.
+
+### 7.2 One turn
+
+```text
+browser                     AgentChatController   AgentRuntime / ToolLoopAgent        RunSearch
+  │ POST /api/agent/chat ─────────►│ RunTurn ──────────────►│ prepareStep: phase intent
+  │◄── data-run ───────────────────┤                        │ model → plan_search(...)
+  │                                │                        │─────────────────────────────► plan
+  │◄── data-search-plan (planned) ─┼────────────────────────┼──────────── sink ◄────────────┤
+  │◄── data-search-step s1 running ┼────────────────────────┼──────────── sink ◄── step s1  │
+  │◄── data-search-hit × n ────────┼────────────────────────┼──────────── sink ◄────────────┤
+  │◄── data-search-step s1 done ───┤   … s2, s3, s4, s5 …   │                               │
+  │◄── data-search-plan (done) ────┤                        │◄── compact result ────────────┘
+  │                                │                        │ prepareStep: phase answer
+  │◄── text deltas ────────────────┤                        │ model → answer text
+  │◄── data-search-lens ───────────┤                        │ model → highlight_records
+  │◄── finish ─────────────────────┘                        │ TurnRecorder saves the message
+```
+
+The tools can write to the stream because the runtime gives them a `DeferredUiSink`
+(`infrastructure/search/ui-stream-sink.ts`) through the tool context: it buffers until the UI
+stream's `writer` exists (inside `createUIMessageStream`'s `execute`) and then writes through it.
+Tools only run after that point, so in practice nothing is buffered; the buffer only makes the
+order safe.
+
+### 7.3 Persistence and replay
+
+A new Prisma model in the main database, next to `AgentRun`:
+
+```prisma
+model AgentSearch {
+  id               String    @id @default(cuid())
+  runId            String    @map("run_id")
+  threadRecordId   String    @map("thread_record_id")
+  intent           String
+  // the plan (JSON): steps, sources, tables
+  plan             String
+  // per step: state and the cards sent (JSON, at most 500 cards in all)
+  steps            String    @default("[]")
+  // record keys the answer cites (JSON)
+  lens             String?
+  // planned | running | done | needs_choice | failed | cancelled
+  status           String    @default("planned")
+  createdTime      DateTime  @default(now()) @map("created_time")
+  lastModifiedTime DateTime? @updatedAt @map("last_modified_time")
+
+  @@index([threadRecordId])
+  @@index([runId])
+  @@map("agent_search")
+}
+```
+
+- Saved after every step, so a stopped run or a closed tab keeps what was found.
+- **Replay**: opening an old thread, the board loads the latest search through
+  `GET /api/agent/searches/:searchId` (the id is in the stored `data-search-plan` part). Cards are
+  the snapshot taken at search time; the lane header offers "refresh" (re-run the stored plan with
+  the same anchor records, a new search id, no model call).
+- Deleting a thread deletes its searches (`ManageThreads.delete`); archived threads keep them.
+
+### 7.4 Limits
+
+Cards per step 50 (anchor 10), cards per run 500, snippet 200 characters, four fields per card,
+`data-search-plan` part under 8 KB, `AgentSearch.steps` under 1 MB.
+
+---
+
+## 8. Part E: voice (kept)
+
+- Unchanged: the switch and its lock, listening with the 3-second silence send, the half-duplex
+  mic, ElevenLabs and browser voices, the Auto engine, approvals by click only, the voice hint in
+  the prompt, every class in `voice/` and its specs.
+- New pointer kinds in `buildSpeechScript`:
+  - `board`: when a plan finishes, "I found 14 tasks, 2 people and 5 notes. They're on the board."
+    once per search (the counts come from the plan part, not the model).
+  - `choice`: a clarify card is read as its question plus "Please pick one of these 3, or just
+    say it." Option labels are read when there are three or fewer.
+- Clarify is **voice-friendly**, unlike approvals: the mic stays on, and whatever the admin says is
+  sent as the answer. The client matches the words to an option label and sends `choice` when
+  exactly one matches; otherwise the words go as free text.
+- `IVoicePhase` gains `searching` (a plan is running: "Searching tasks…" with the running table),
+  shown by `VoiceComposer`.
+- Cockpit off pauses the mic and stops speech (§4.3).
+- The voice files move with the rest (§10.1) but keep their names and tests.
+
+---
+
+## 9. Part F: modules and layers (Feature 3)
+
+### 9.1 Principles
+
+- **Layers depend downward only.** Pure model at the bottom, framework at the top. A lower layer
+  never imports a higher one.
+- **Modules are vertical slices** inside the layers (search, voice, threads, constellation), each
+  with its own small public surface.
+- **One contract** between frontend and backend: zod schemas in `packages/openapi`.
+- **Rules are tested**: a `layers.spec.ts` on each side reads the imports and fails on a wrong
+  direction (simple, no ESLint plugin needed).
+
+### 9.2 Backend
+
+The agent module keeps its layers; the search slice is added to each.
+
+```text
+apps/nestjs-backend/src/features/agent/
+├── domain/                                pure TypeScript: no Nest, Prisma or AI SDK
+│   ├── search/                            NEW
+│   │   ├── search.types.ts                plan, step, source, state, card (inferred from the openapi zod)
+│   │   ├── relation-graph.ts              table schemas → link edges (field, from, to, relationship, one-way)
+│   │   ├── recipes.ts                     the intent catalog, by table and field names
+│   │   ├── planner.ts                     recipe or custom steps + anchor + graph → validated plan
+│   │   ├── anchor-choice.ts               chosen | needs_choice | empty
+│   │   ├── card-projection.ts             record + schema → card (tone, badges, snippet, secrets out)
+│   │   ├── tone.ts                        toneOf, sizeOfPriority (ported from the cockpit)
+│   │   └── turn-protocol.ts               phase → active tools, forced clarify
+│   └── ports/
+│       ├── schema-catalog.port.ts         NEW: resolve the data base, table schemas by name, links
+│       ├── search-log.port.ts             NEW: create, save step, set lens, get, list by thread
+│       └── search-events.port.ts          NEW: plan, step, hit, lens, clarify → somewhere
+├── application/search/                    NEW: use cases over ports only
+│   ├── plan-search.usecase.ts             schemas → planner → log → emit plan
+│   ├── run-search.usecase.ts              the executor (§6.6)
+│   └── get-search.query.ts                replay and list for the UI
+├── infrastructure/search/                 NEW: adapters
+│   ├── schema-catalog.ts                  over the data gateway; 60 s cache, cleared on table/field events
+│   ├── prisma-search-log.ts               AgentSearch
+│   └── ui-stream-sink.ts                  DeferredUiSink over the UI stream writer
+├── toolkits/investigate/                  NEW toolkit id `investigate`
+│   └── investigate.toolkit.ts             clarify, plan_search, highlight_records
+├── runtime/                               changed: prepareStep + stopWhen (agent-runtime), "How you answer"
+│                                          section (context-builder), data-choice → model text (message-mapper)
+└── interface/
+    └── agent-search.controller.ts         NEW: GET searches (§11)
+```
+
+Rules (checked by `agent/layers.spec.ts`):
+
+| Layer | May import |
 |---|---|
-| `voice-store.ts` | zustand `enabled` |
-| `speech-script.ts` | `buildSpeechScript`, prose cleanup, block classification |
-| `useVoiceListener.ts` | recognition, draft, interim, silence timer, restarts |
-| `useSpeechQueue.ts` | segment queue, engine choice, fallbacks |
-| `engines/elevenlabs-engine.ts` | `/api/agent/tts` fetch, prefetch, cache, audio element |
-| `engines/browser-engine.ts` | `speechSynthesis`: voice loading, default voice, Chrome workarounds (§6.7) |
-| `voice-settings.ts` | `{ engine, browserVoiceURI }` in `localStorage` |
-| `useVoiceConversation.ts` | phase, lock, wiring to the chat |
-| `VoiceComposer.tsx` | transcript, status line, countdown, buttons |
-| `VoiceSwitch.tsx` | the switch and its lock tooltip |
-| `VoiceSettings.tsx` | engine choice and the browser voice picker (reuses `VoiceSelector`) |
-| `voice.spec.tsx` | tests (§11) |
+| `domain` | nothing in the agent module outside `domain` |
+| `application` | `domain` |
+| `infrastructure` | `domain`, `application` types |
+| `toolkits` | `domain`, `application`, `toolkits` |
+| `runtime` | `domain`, `toolkits`, `infrastructure` |
+| `interface` | `application`, `domain` types |
 
-Changed files:
+Today's code doesn't follow these everywhere: `application` imports `infrastructure`
+(`execution-context`, `run-registry`, `agent-home`, `search-tables`, `chunker`, `pg-rag-store`)
+and `runtime` (`ui-parts`, `agent-runtime`); `toolkits` import `infrastructure` (`search-tables`,
+`execution-context`); `interface/agent-settings.controller` imports `execution-context`. The spec
+starts with today's imports frozen in an allow-list (it fails on any new one), the search slice
+adds none, and the old ones are left for a later clean-up.
 
-- `components/AgentComposer.tsx`: footer row with the switch; renders `VoiceComposer` when voice
-  is on.
-- `AgentChatView.tsx`: runs `useVoiceConversation`; sends `context.voice`.
-- `packages/openapi/src/agent/voice.ts` (new) and `index.ts`.
-- `packages/openapi/src/agent/chat.ts`: `voice` flag (P4 only).
-- `apps/nestjs-backend/src/features/ai/ai.module.ts`: export `TtsService`.
-- `apps/nestjs-backend/src/features/agent/interface/agent-chat.controller.ts`: `POST tts`.
-- `context-builder.ts`, `run-turn.usecase.ts`, `resume-turn.usecase.ts`: the voice section (P4
-  only).
-- `packages/common-i18n/src/locales/*/common.json`: `agent.voice.*`.
+The `investigate` toolkit joins `TOOLKIT_IDS` and the default `agent_setup.toolkits`; the seed
+version goes up by one, and installations get it through the existing pack upgrade. Two optional
+`agent_setup` fields come with it: `search_protocol` (`plan` | `free`) and `data_base_id` (pins the
+base the recipes use; empty means "the base outside the Agent space with the most recipe tables").
 
-Phases (one commit each):
+### 9.3 Frontend: one folder, six layers
+
+Everything agent-specific moves under `blocks/agent/`, state included. Outside it remain only what
+Next.js or other features need: the page file `pages/agent.tsx`, the layouts that mount the host,
+the admin settings page `blocks/admin/agent/`, and shared libraries (`@teable/ui-lib`, the shared
+Streamdown renderer in `@/components/ai-elements/message`).
+
+```text
+apps/nextjs-app/src/features/app/blocks/agent/
+├── index.ts                         public surface: AgentCockpitHost, AgentToggle, openAgentCockpit
+├── model/                           L1 pure TypeScript: types, reducers, mappings; no React, no fetch
+│   ├── search-board.ts              board reducer: plan/step/hit/lens events → IBoard
+│   ├── transcript.ts                UIMessage[] → transcript items (text, plan legs, clarify, approval, tool rows)
+│   ├── agent-request.ts             (moved) request body, approvals, choice
+│   ├── cards.ts                     card display helpers (badges, dates, provenance text)
+│   ├── metrics.ts                   readout numbers per intent
+│   ├── lens.ts                      ANSWER / RETRIEVED / ALL / SEARCHING sets
+│   ├── keymap.ts                    key → command
+│   └── graph/                       constellation, ported from the cockpit
+│       ├── types.ts  finish-graph.ts  tone.ts  limit.ts  rotate.ts
+│       ├── from-board.ts            board → graph by the plan's structure
+│       └── layout.ts                d3-hierarchy + d3-shape, pure
+├── data/                            L2 data access: HTTP and the stream; no components, no stores
+│   ├── agent-api.ts                 openapi calls + query keys (status, threads, messages, skills, searches)
+│   ├── agent-chat.ts                AgentChat (AbstractChat) + StoreChatState + transport (from useAgentChat)
+│   └── stream-events.ts             onData chunk → validated board event (openapi zod)
+├── state/                           L3 state: zustand stores and the live session
+│   ├── cockpit-store.ts             on/off, view, palette (persisted), lens, pinned trace, selected search
+│   ├── session-store.ts             the live session: thread id, AgentChat, board; survives off and navigation
+│   └── voice-store.ts               (moved from voice/)
+├── hooks/                           L4 application hooks: state + data for the UI
+│   ├── useAgentSession.ts  useSearchBoard.ts  useThreads.ts  useAgentStatus.ts
+│   ├── useCockpitKeys.ts   useStagger.ts      useConstellation.ts
+├── voice/                           the voice slice, as built (engines, queue, listener, script, hook, UI)
+├── ui/                              L5 presentational: props in, callbacks out; no stores, no fetch
+│   ├── theme/   cockpit.module.css  palettes.module.css  fonts.ts  Symbol.tsx
+│   ├── shell/   CockpitFrame  Annunciator  ThreadMenu  StatusChip  DiagPanel  ZuluClock  PaletteSwitch  PowerToggle
+│   ├── stage/   SearchBoard  TableLane  RecordCard  Readout  Legend  Constellation  StandbyStage
+│   ├── ask/     AskRail  Transcript  PlanLegs  ClarifyCard  ApprovalCard  ToolRow  AnswerBlock  LensSwitch  Composer  Suggestions
+│   └── log/     RunLog
+└── containers/                      L6 wiring: hooks → ui, one per region
+    ├── AgentCockpitHost.tsx         mounted by layouts; admin check; portal; inert background
+    ├── AgentCockpit.tsx             the overlay: frame, keys, focus
+    ├── AnnunciatorContainer.tsx  StageContainer.tsx  AskContainer.tsx
+    └── AgentToggle.tsx              the on/off button used by headers and sidebars
+```
+
+| Layer | May import (inside the folder) | Outside the folder |
+|---|---|---|
+| `model` | `model` | `@teable/openapi` types and zod, `ai` types, d3 compute packages |
+| `data` | `model` | `@teable/openapi`, `ai` |
+| `state` | `model`, `data` | `zustand` |
+| `hooks` | `model`, `data`, `state`, `voice` | React, `@tanstack/react-query`, `@cybernetics/sdk` hooks |
+| `voice` | `model`, `state` (its store) | React, ui-lib |
+| `ui` | `model` (types and pure helpers), `ui` | React, ui-lib, `motion`, i18n |
+| `containers` | everything above | Next.js router, portals |
+
+Specs sit next to the files, as today (`*.spec.ts`, `*.spec.tsx`); `layers.spec.ts` at the folder
+root.
+
+### 9.4 Shared contract
+
+`packages/openapi/src/agent/search.ts` (new, exported from `agent/index.ts`):
+
+- zod: `searchIntentSchema`, `searchPlanSchema`, `searchStepSchema`, `stepSourceSchema`,
+  `stepStateSchema`, `searchCardSchema`;
+- the data part payloads: `searchPlanPartSchema`, `searchStepPartSchema`, `searchHitPartSchema`,
+  `searchLensPartSchema`, `clarifyPartSchema`, `choicePartSchema`;
+- `agentSearchVoSchema` (replay), `agentSearchListVoSchema`, routes `AGENT_SEARCH`,
+  `AGENT_THREAD_SEARCHES`, and the calls `getAgentSearch`, `listAgentThreadSearches`.
+
+The backend's `domain/search/search.types.ts` re-exports the inferred types, so both sides compile
+against the same shapes and the frontend validates every stream chunk before it reaches a store.
+
+---
+
+## 10. State management (frontend)
+
+### 10.1 Stores
+
+| Store | Holds | Lifetime | Persisted |
+|---|---|---|---|
+| `cockpit-store` | `on`, `view` (board, constellation), `palette`, `lens`, pinned trace, selected search id, focus hint | app session | `palette` only (localStorage) |
+| `session-store` | the live session (§10.2) | until NEW, `/clear`, thread switch or sign-out | thread id (sessionStorage, to reopen after reload) |
+| `voice-store` | as today | as today | engine, browser voice |
+| React Query | status, threads, stored messages, skills, replayed searches | cache | no |
+
+### 10.2 The live session
+
+```ts
+interface IAgentSession {
+  threadId?: string;
+  chat: AgentChat;                 // AbstractChat with its StoreChatState (moved from useAgentChat)
+  board: IBoard;                   // model/search-board.ts
+  runId?: string;
+  dispose(): Promise<void>;        // stop the stream, cancel the run
+}
+```
+
+- `session-store` holds at most one session. `openThread(id)` disposes the current one and
+  creates a new one from the thread's messages (fetched fresh, as `AgentThreadChat` does today).
+- `AgentChat.onData` routes chunks: `data-run` → run id and thread id (as today);
+  `data-search-*` and `data-clarify` → `stream-events.ts` (zod check) → `board` reducer.
+- Components subscribe with selectors (`useSessionStore(s => s.board.lanes)`), so a hit
+  re-renders only its lane.
+
+### 10.3 The board reducer
+
+`model/search-board.ts`, pure, tested on its own:
+
+```ts
+type IBoardEvent =
+  | { type: 'plan'; plan: ISearchPlan; states: IStepState[] }
+  | { type: 'step'; state: IStepState }
+  | { type: 'hit'; stepId: string; card: ISearchCard }
+  | { type: 'lens'; recordKeys: string[] }
+  | { type: 'replay'; search: IAgentSearchVo }
+  | { type: 'reset' };
+
+interface IBoard {
+  searchId?: string;
+  plan?: ISearchPlan;
+  lanes: ILane[];                  // one per table, in plan order, created on the first `running`
+  cards: Map<string, ISearchCard>; // by key; a hit already present is ignored (replays are safe)
+  answer: Set<string>;             // lens keys
+  status: 'idle' | 'running' | 'needs_choice' | 'done' | 'failed' | 'cancelled';
+}
+```
+
+`replay` builds the same board from `GET /api/agent/searches/:id`, so a live board and a reopened
+one are the same object.
+
+---
+
+## 11. API changes
+
+| Change | Where |
+|---|---|
+| `IAgentChatRo.message.choice?: { clarifyId, optionId }` | `packages/openapi/src/agent/chat.ts`; `RunTurn` stores it as a `data-choice` part |
+| `GET /api/agent/searches/:searchId` → `IAgentSearchVo` | `interface/agent-search.controller.ts`, `AgentAdminGuard` |
+| `GET /api/agent/threads/:threadId/searches` → list (id, intent, summary, status, time) | same |
+| Stream: the data parts of §7.1 | `runtime/`, `infrastructure/search/ui-stream-sink.ts` |
+| `agent_setup.search_protocol`, `agent_setup.data_base_id` (optional) | pack seed v+1 |
+| Prisma `AgentSearch` + migration | `packages/db-main-prisma` |
+
+---
+
+## 12. Files and phases
+
+One commit per step, as before; lower-case commit subjects; tsc before each commit.
 
 | Phase | Content | Done when |
 |---|---|---|
-| P0 | `POST /api/agent/tts` and the openapi client | e2e: 403 for non-admins, 400 for an empty or too long text, 503 without a key |
-| P1 | `speech-script.ts` | unit table of §11 passes |
-| P2 | `useVoiceListener`, `useSpeechQueue` and both engines | fake-timer, fake-audio and fake-`speechSynthesis` tests pass |
-| P3 | conversation hook, switch, voice composer, voice settings and picker, i18n | component tests pass; manual run in Chrome with a Google voice and with ElevenLabs |
-| P4 | voice hint in the system prompt (D9) | context-builder unit test passes |
-| P5 | manual matrix (§11.3) and notes in this file | every row checked |
+| **P0 Contract and storage** | `packages/openapi/src/agent/search.ts`; Prisma `AgentSearch` + migration; search-log port and Prisma adapter; replay endpoints; backend `layers.spec.ts` | openapi builds, migration applies on the disposable DB, endpoints return 404/200 in e2e |
+| **P1 Search domain** | `relation-graph`, `recipes`, `planner`, `anchor-choice`, `card-projection`, `tone`, `turn-protocol`, with unit tests on a fixture of the live `data-centre` schema; spike: the link filter operator for `reverse` | the §6.3 plan comes out of the planner for the fixture; all domain specs pass |
+| **P2 Search on the server** | `SchemaCatalog`, `PlanSearch`, `RunSearch`, `DeferredUiSink`, `investigate` toolkit, `prepareStep` / `stopWhen`, prompt section, `data-choice` mapping, seed v+1 | e2e on the disposable DB runs §6.3 through the tools (no model) and through a mock model (AI SDK mock provider) that must plan before reading |
+| **P3 Folder and full screen** (Feature 1) | move files into the six layers without changing behaviour; `session-store`, `cockpit-store`; `AgentCockpitHost`, `AgentToggle`, `openAgentCockpit`; mount in layouts; `/agent` deep link; delete `AgentPanel`, `AgentPage`, `AgentLayout`, `useChatPanelStore`, `ContextChip`; frontend `layers.spec.ts` | the existing chat works inside the full-screen overlay, on/off only, survives off and navigation; all old specs pass after the move |
+| **P4 Cockpit shell and ask rail** | theme, fonts, tokens, palettes; annunciator, thread menu, status chip and diag panel; transcript, plan legs, clarify card, approval card, tool rows, composer with voice; run log; i18n keys | the screen of §5.1 minus the board, with today's features |
+| **P5 Search board** | `stream-events`, board reducer, lanes, cards, stagger, hover trace, lens, readout metrics, replay | §6.3 shows lane by lane, card by card; reopening the thread shows the same board |
+| **P6 Voice additions** | `board` and `choice` pointers, `searching` phase, clarify by voice, off pauses voice | voice specs pass, new cases included |
+| **P7 Constellation** | port graph, limit, rotate, layout from the cockpit; `from-board`; view switch; lens; lazy load | the §6.3 search draws as a radial tree with people and knowledge links |
+| **P8 Manual run and as-built** | the matrix in §13.3; as-built notes in this file | admin signs off |
+
+Files deleted: `AgentPanel.tsx`, `AgentPage.tsx`, `AgentChatView.tsx` (split into containers and
+`ui/ask`), `components/AgentMessageView.tsx`, `components/AgentToolStep.tsx`,
+`components/ContextChip.tsx`, `panel-selection.ts`, `useAgentChat.ts` (into `data/agent-chat.ts`
+and `state/session-store.ts`), `useAgentData.ts` (into `data/agent-api.ts` and `hooks/`),
+`apps/nextjs-app/src/features/app/layouts/AgentLayout.tsx`,
+`apps/nextjs-app/src/features/app/components/sidebar/useChatPanelStore.ts` and its
+`LocalStorageKeys.ChatPanel` entry.
+
+New dependencies (frontend): `d3-hierarchy`, `d3-shape`, `d3-zoom`, `d3-selection`,
+`d3-interpolate` and their `@types`, exact versions pinned; no `d3` bundle.
 
 ---
 
-## 11. Testing
+## 13. Testing
 
-### 11.1 Frontend (vitest, `@/test-utils`, as in `agent.spec.tsx`)
+### 13.1 Backend
 
-- **Speech script.**
-  - Prose only. A table between two paragraphs. A sql fence. A mermaid fence. Two tables in a row
-    become the plural pointer.
-  - An approval tool part gives the form pointer.
-  - A half-streamed table is not spoken until settled.
-  - Sentences of a streaming paragraph settle one by one, and their ids stay stable as text grows.
-  - Prose cleanup: links, bare URLs, `agent_skills`, list items, emoji.
-  - `state: 'done'` settles the last block.
-- **Listener**, with a fake `SpeechRecognition` and `vi.useFakeTimers()`:
-  - a final result followed by 3 s of silence sends once, with the whole draft;
-  - an interim result at 2.9 s resets the timer;
-  - an empty draft never sends;
-  - a pending interim result is included at expiry;
-  - results while paused are dropped;
-  - `end` restarts recognition;
-  - `not-allowed` turns voice off.
-- **Queue**, with fake `fetch` and `Audio`:
-  - segments play in order with one request prefetched;
-  - with Auto, a 503 switches to the browser engine;
-  - with Browser voice, `/api/agent/tts` is never called;
-  - `stop()` aborts everything;
-  - pointer audio is fetched once.
-- **Browser engine**, with a fake `speechSynthesis`:
-  - `speak` waits for `voiceschanged` when `getVoices()` is empty at first;
-  - a Google voice is preferred for the language;
-  - a saved `voiceURI` that has gone falls back to a default;
-  - a 400-character sentence is spoken as segments of at most 180 characters;
-  - `interrupted` after `stop()` is not an error;
-  - a `network` error retries the segment once with an offline voice.
-- **Phase and lock.**
-  - `switchLocked` is true while busy or speaking.
-  - It is false during an approval and after Stop.
-  - The switch is disabled when `SpeechRecognition` is missing.
+- Domain units: planner (every recipe against the schema fixture; custom plans with a bad field,
+  a forward reference, a system table), relation graph (one-way links, back-links), anchor choice
+  (exact, dominant, tie, empty), card projection (tone mapping, secret fields dropped, snippet
+  cut), turn protocol (phases, forced clarify, resume after approvals).
+- Application: `RunSearch` with a fake gateway and sink: event order (plan, running, hits, done),
+  caps, archived filter, abort mid-step, log saved after each step, compact result size.
+- e2e (the disposable `agent-e2e-pg` database, never the K3s dev DB or the platform Redis; blank
+  `BACKEND_CACHE_REDIS_URI` and `BACKEND_PERFORMANCE_CACHE`; at most two agent suites per vitest
+  process): create the five tables with links,
+  run `plan_search` for §6.3 directly, then through `POST /api/agent/chat` with a mock model;
+  check the stream parts, the `AgentSearch` row, the replay endpoint, and that a data tool called
+  in the `intent` phase is not offered.
+- `layers.spec.ts`.
 
-### 11.2 Backend
+### 13.2 Frontend (vitest, `@/test-utils`)
 
-- e2e in the style of `apps/nestjs-backend/test/agent-chat.e2e-spec.ts`: `/api/agent/tts` returns
-  403 for a non-admin, 400 for empty or 1,001-character text, and 503 when the key is unset (the
-  test env doesn't set it).
-- Unit test in `runtime.spec.ts`: the voice section is last when `voice` is true and absent
-  otherwise.
+- Model: board reducer (lanes appear on `running`, duplicate hits ignored, replay equals live),
+  transcript mapping, metrics, lens, `from-board`, `limit` (port the cockpit's
+  `tests/limit.test.mjs` and `rotate.test.mjs`).
+- Components: `TableLane` renders cards in arrival order and counts; `ClarifyCard` sends the
+  choice; `AgentCockpit` on/off with the toggle and `Mod+J`, `Esc` never turns it off; the session
+  keeps streaming while off; focus goes to the composer and back.
+- Voice: the existing specs, moved, plus `board` and `choice` pointers and the `searching` phase.
+- `layers.spec.ts`.
 
-### 11.3 Manual matrix
+### 13.3 Manual matrix
 
-| Check | Chrome | Edge | Safari | Firefox |
-|---|---|---|---|---|
-| Switch on, permission prompt, listening | ✓ | ✓ | ✓ | disabled |
-| Speak two sentences with a pause; sent after 3 s as one message | ✓ | ✓ | ✓ | – |
-| Reply with a table and code: pointers spoken, rest read aloud | ✓ | ✓ | ✓ | – |
-| Switch locked while speaking; Stop unlocks it | ✓ | ✓ | ✓ | – |
-| Approval: form pointer spoken, mic paused, click, reply continues | ✓ | ✓ | ✓ | – |
-| Microphone denied: switch off with an inline error | ✓ | ✓ | ✓ | – |
-| `ELEVENLABS_API_KEY` unset: browser voice used | ✓ | ✓ | ✓ | – |
-| Browser voice chosen: a Google voice (Chrome) or Online voice (Edge) speaks a long reply without cutting off | ✓ | ✓ | system voice | – |
-| Picker: voices listed and grouped, preview plays, choice kept after a reload | ✓ | ✓ | ✓ | – |
-| Offline with a Google voice: falls back to a device voice, or the segment is skipped | ✓ | – | – | – |
-| Hidden tab pauses listening; returning resumes it | ✓ | ✓ | ✓ | – |
+Chrome, Firefox, Safari; 1440 px, 1024 px, 390 px; MONO and CYBERPUNK; reduced motion on; voice
+on in Chrome (real mic); a project with 100+ tasks (caps and "50 of 132"); an ambiguous project
+name; turning off mid-search and back on; switching pages mid-reply; reopening an old thread.
 
 ---
 
-## 12. Decisions (confirmed 2026-10-27)
+## 14. Decisions to confirm
 
-| # | Question | Decision |
+Defaults are what this design assumes.
+
+| # | Decision | Default |
 |---|---|---|
-| D1 | What is a "form"? | The approval card: the only form-like UI in a reply today. Any future ask-the-admin form would use the same pointer. |
-| D2 | When does "responding" end? | When the reply has finished **playing**, not just streaming. Stop ends it early. |
-| D3 | Can voice be turned on mid-reply? | Yes. That reply is spoken from its start. |
-| D4 | Recognition language | `navigator.language`. The composer mic in text mode keeps `en-US`. |
-| D5 | Text-to-speech engines | Two engines: ElevenLabs through `/api/agent/tts`, and the browser voice (Chrome's Google voices, §6.7). The admin chooses in the voice settings. Set `ELEVENLABS_MODEL_ID=eleven_flash_v2_5` if the admin speaks anything other than English. |
-| D6 | Where does voice appear? | The `/agent` page and the table side panel (shared composer). |
-| D7 | The old `/api/:baseId/ai/tts` | Keep it for now. Remove it in a separate cleanup once nothing needs it. |
-| D8 | Keep the switch on across reloads? | No, because the mic and audio need a fresh click. |
-| D9 | Voice hint in the system prompt | Yes (P4), so spoken replies stay short. |
-| D10 | Approvals by voice? | No. Click only. |
-| D11 | Default engine | **Auto**: ElevenLabs when configured, otherwise the browser voice. Choose **Browser voice** to use Chrome's Google voices with no ElevenLabs cost. |
-| D12 | Where are voice settings kept? | Per browser, in `localStorage`. Voices differ between machines, so the choice isn't stored on the server. |
-
-## 13. Risks
-
-- **Privacy.** Chrome and Edge send microphone audio to their cloud recognisers. The agent is
-  admin-only, and the switch tooltip says so the first time.
-- **Noise.** Steady background noise can keep producing interim results, so the timer never
-  expires. Send now covers this, and the status line shows "Hearing you…" so the cause is
-  visible.
-- **Safari continuous mode** stops more often. The restarts in §5.7 hide it, at the cost of a
-  short gap.
-- **Autoplay** can still be refused on iOS after a long silence. "Tap to hear the reply" covers it
-  (§6.6).
-- **Cost.** Every spoken character is billed by ElevenLabs. The voice hint keeps replies short, and
-  pointers are cached. The browser voice costs nothing.
-- **Browser voice privacy.** Chrome's Google voices and Edge's Online voices send the reply text to
-  Google or Microsoft. The picker labels them "Online". The device voices stay on the machine.
-- **Browser voice quality varies by machine.** A Google voice in Chrome sounds good. Chromium on
-  Linux may have no voices at all. Safari uses the system's voices. If no voice is available, the
-  reply is shown and not spoken.
-- **Chrome's 15-second cut-off.** Google voices stop after about 15 seconds of speech. This is an
-  old, unfixed Chrome bug and is handled by the 180-character segments. If it shows up again (for
-  example with a slow speaking rate), the segment limit is the setting to lower.
+| D1 | "Full screen" means a full-viewport overlay over the app; `F` additionally offers the browser's Fullscreen API | yes |
+| D2 | Off hides but keeps the reply and the search running; mic and speech pause | yes (today, closing stops the reply) |
+| D3 | `Esc` never turns the cockpit off; only the toggle and `Mod+J` do | yes |
+| D4 | The side panel, `/agent`'s own layout and `useChatPanelStore` are removed; `/agent` is a deep link | yes |
+| D5 | Dark only, MONO default, CYBERPUNK option, cockpit fonts via `next/font` | yes |
+| D6 | The protocol is enforced on the server (tools hidden until a plan ran), with `search_protocol: free` as the escape hatch | yes |
+| D7 | One `plan_search` call plans **and** runs the whole plan (one model round trip), rather than one model call per step | yes |
+| D8 | Recipes are code, by table and field names; no recipes table in v1 | yes |
+| D9 | In a lane, each new card goes under the previous one (top to bottom, staggered). The alternative is a pile, new card on top | top to bottom |
+| D10 | Archived records are left out unless asked for | yes |
+| D11 | "Same folder" = all agent code under `blocks/agent/` in layer sub-folders; the page file, layouts, admin settings and shared libraries stay outside | yes |
+| D12 | The constellation view is included, after the board (P7) | yes |
+| D13 | Clarify can be answered by voice; approvals stay click-only | yes |
+| D14 | The recipe base is detected (outside the Agent space, most recipe tables), pinnable in `agent_setup.data_base_id` | yes |
+| D15 | Goals is a fifth, context step in the project-progress recipe, after the four steps of the goal text | yes |
 
 ---
 
-## 14. As built (2026-10-27)
+## 15. Risks
 
-### 14.1 Commits
-
-| Phase | Commit | Tests |
-|---|---|---|
-| Design | `b5fcf2a3` | |
-| P0 `POST /api/agent/tts` | `a1c80abb` | `test/agent-voice.e2e-spec.ts`: 5 |
-| P1 speech script | `0e3a9eb1` | `voice/speech-script.spec.ts`: 17 |
-| P2 listener, queue, engines | `33ba8795` | `voice-listener.spec.ts` 13, `speech-queue.spec.ts` 10, `engines/engines.spec.ts` 14 |
-| P3 switch, composer, settings | `d701c226` | `voice/voice.spec.tsx`: 13 |
-| P4 voice hint | `f690d4c5` | `runtime.spec.ts` +1, `agent-chat.e2e-spec.ts` +1 |
-| i18n types | `c55b3640` | |
-
-All 79 frontend agent tests and both agent e2e suites (21 tests) pass. The app, backend, openapi
-and sdk typecheck and lint cleanly.
-
-### 14.2 Differences from the design
-
-- **§6.2 step 5, packing.** The script gives **one segment per sentence**, and the queue joins
-  them. Packing in the script would change ids while a paragraph grows, so a sentence that settled
-  later would never be spoken.
-  - The queue joins only prose that is already queued, up to the engine's length.
-  - Pointers stay separate, so their cached audio is reused.
-  - With nothing else queued, the first sentence is spoken alone.
-- **§6.2, forms.** The form pointer is added only after the stream has ended. A run always stops
-  right after asking for approval, so this costs nothing and keeps the "2 forms" count right.
-- **§10, files.**
-  - The listener and the queue are plain classes, `voice-listener.ts` and `speech-queue.ts`, with
-    `subscribe`/`getSnapshot` methods. One hook, `useVoiceConversation.ts`, wraps them; there is
-    no `useVoiceListener` or `useSpeechQueue`.
-  - There is no `voice-settings.ts`. The settings live in `voice-store.ts` (zustand `persist`,
-    only `engine` and `browserVoiceURI`), under `LocalStorageKeys.AgentVoice` = `ls_agent_voice`.
-  - The tests are split per module (§14.1).
-- **§5.7, network errors.** Retries come after 1 s, 2 s and 4 s; the fourth error in a row
-  fails. A result in between resets the count.
-- **§4.2, Stop.** Stop (and `/clear`) also marks the reply as silenced, so what is left of it is
-  never spoken, even though the stream sends a last update after the stop.
-- **§7.3, focus.** The turn gate splits `voice` from the context, so it never reaches the tools or
-  the "Where the admin is" section.
-- **§7.1, status code.** The route answers 200 (`@HttpCode(200)`), not Nest's default 201 for a
-  POST.
-- **§8, notices.** A mic error is shown in the footer row next to the switch, so it stays visible
-  after the error has turned voice off.
-
-### 14.3 Still to check by hand (P5)
-
-The §11.3 matrix needs a real microphone, Google Chrome (Chromium has no Google voices or speech
-service) and someone listening. Two settings matter while testing:
-
-- `ELEVENLABS_API_KEY` is set in `apps/nextjs-app/.env.development.local`. Unset it to test the
-  browser-voice fallback.
-- `ELEVENLABS_MODEL_ID` defaults to `eleven_turbo_v2`, which is English only (D5).
+| Risk | Mitigation |
+|---|---|
+| Weaker models loop or call `plan_search` with bad custom steps | validation errors name the field and list the links; 3 plans per turn; `free` mode |
+| Two extra phases add latency before the first words | the plan streams at once, lanes fill while the model waits; one model round trip for plan + run (D7) |
+| A project with hundreds of tasks floods the board and the model | 50 cards per step, `found` counts all; compact results without bodies; render budget on the constellation |
+| Recipes break when the admin renames `tasks` or `belong_project` | `missing` shows on the readout ("not found: tasks.belong_project"); custom plans still work |
+| `reverse` link filters differ by relationship in Teable | P1 spike; until it passes, `knowledge_lookup` skips step 3 |
+| The overlay fights the grid's global key handlers | the background is `inert` while on; the cockpit's keys stop propagation |
+| Hidden-but-running sessions leak memory or keep the stream after sign-out | one session at most; disposed on sign-out, NEW, thread switch |
+| Build needs Google Fonts reachable (`next/font/google`) | fall back to `@fontsource` packages if the build host is offline |
+| d3 adds weight | compute-only modules, lazy-loaded with the constellation |
+| Transient hits are lost if the browser drops mid-run | the board reloads from `AgentSearch`, saved after each step |
+| Migration on the K3s database | additive table only; `prisma migrate deploy` is safe there (never `migrate dev` or `reset`) |
