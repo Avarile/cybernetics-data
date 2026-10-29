@@ -22,10 +22,10 @@ import {
   VoiceSelectorName,
   VoiceSelectorPreview,
 } from '@/components/ai-elements/voice-selector';
+import { useAgentVoiceStore } from '../state/voice-store';
 import { isGoogleVoice, pickVoice } from './engines/browser-engine';
 import type { IEngineChoice } from './speech-queue';
 import type { IVoiceConversation } from './useVoiceConversation';
-import { useAgentVoiceStore } from './voice-store';
 
 const ENGINES: IEngineChoice[] = ['auto', 'elevenlabs', 'browser'];
 const baseLang = (lang: string) => lang.toLowerCase().split(/[-_]/)[0];

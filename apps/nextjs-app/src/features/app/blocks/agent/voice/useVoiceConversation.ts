@@ -1,7 +1,8 @@
 import type { UIMessage } from 'ai';
 import { useTranslation } from 'next-i18next';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { isToolPart, waitingApprovals } from '../agent-request';
+import { isToolPart, waitingApprovals } from '../model/agent-request';
+import { useAgentVoiceStore } from '../state/voice-store';
 import { BrowserVoiceEngine } from './engines/browser-engine';
 import { ElevenLabsEngine } from './engines/elevenlabs-engine';
 import type { IEngineId, ISpeechEngine, ISpeechQueueState } from './speech-queue';
@@ -10,7 +11,6 @@ import type { ISpeechPointerKind, ISpeechSegment } from './speech-script';
 import { buildSpeechScript, defaultPointerText } from './speech-script';
 import type { IListenerError, IListenerState } from './voice-listener';
 import { speechRecognitionSupported, VoiceListener } from './voice-listener';
-import { useAgentVoiceStore } from './voice-store';
 
 /** Listening resumes this long after the agent has stopped talking (voice design §5.5). */
 export const RESUME_GRACE_MS = 400;

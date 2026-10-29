@@ -3,7 +3,8 @@ import type { UIMessage } from 'ai';
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, render, renderHook, screen, userEvent } from '@/test-utils';
-import { AgentComposer } from '../components/AgentComposer';
+import { useAgentVoiceStore } from '../state/voice-store';
+import { AgentComposer } from '../ui/ask/Composer';
 import type { IEngineId, ISpeechEngine } from './speech-queue';
 import type { IVoiceConversation, IVoiceConversationOptions } from './useVoiceConversation';
 import {
@@ -14,7 +15,6 @@ import {
 } from './useVoiceConversation';
 import type { IListenerState } from './voice-listener';
 import { SILENCE_MS } from './voice-listener';
-import { useAgentVoiceStore } from './voice-store';
 
 const quiet: IListenerState = { status: 'listening', draft: '', interim: '' };
 

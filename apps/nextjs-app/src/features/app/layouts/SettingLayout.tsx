@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import React from 'react';
 import { AppLayout } from '@/features/app/layouts';
+import { AgentCockpitHost } from '../blocks/agent';
 import { Sidebar } from '../components/sidebar/Sidebar';
 import { SidebarContent } from '../components/sidebar/SidebarContent';
 import { SidebarHeaderLeft } from '../components/sidebar/SidebarHeaderLeft';
@@ -41,6 +42,7 @@ export const SettingLayout: React.FC<{
             </Sidebar>
             {children}
           </div>
+          <AgentCockpitHost />
         </SessionProvider>
       </AppProvider>
     </AppLayout>

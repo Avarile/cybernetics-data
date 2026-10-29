@@ -6,6 +6,7 @@ import { useTranslation } from 'next-i18next';
 import React, { Fragment } from 'react';
 import { LicenseExpiryBanner } from '@/features/app/components/LicenseExpiryBanner';
 import { AppLayout } from '@/features/app/layouts';
+import { AgentCockpitHost } from '../blocks/agent';
 import { SpaceSideBar } from '../blocks/space/space-side-bar/SpaceSideBar';
 import { Sidebar } from '../components/sidebar/Sidebar';
 import { SidebarHeaderLeft } from '../components/sidebar/SidebarHeaderLeft';
@@ -40,6 +41,7 @@ export const SpaceLayout: React.FC<{
               {children}
             </div>
           </NotificationProvider>
+          <AgentCockpitHost />
         </SessionProvider>
       </AppProvider>
     </AppLayout>

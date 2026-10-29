@@ -1,6 +1,6 @@
 import type { UIMessage } from 'ai';
 import { parseMarkdownIntoBlocks } from 'streamdown';
-import { isToolPart } from '../agent-request';
+import { isToolPart } from '../model/agent-request';
 
 /** What the agent asks the admin to look at instead of reading it out (voice design §6.2). */
 export type ISpeechPointerKind =

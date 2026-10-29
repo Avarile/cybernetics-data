@@ -6,8 +6,8 @@ import {
   ToolInput,
   ToolOutput,
 } from '@/components/ai-elements/tool';
-import type { IAgentToolPart } from '../agent-request';
-import { toolNameOf } from '../agent-request';
+import type { IAgentToolPart } from '../../model/agent-request';
+import { toolNameOf } from '../../model/agent-request';
 import { ApprovalCard } from './ApprovalCard';
 
 export interface IAgentToolStepProps {

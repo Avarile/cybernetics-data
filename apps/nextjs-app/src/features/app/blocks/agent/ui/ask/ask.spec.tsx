@@ -2,11 +2,16 @@
 import type { UIMessage } from 'ai';
 import { describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, userEvent } from '@/test-utils';
-import { answeredApprovals, buildAgentRequestBody, waitingApprovals } from './agent-request';
-import { formatUsage } from './AgentPage';
-import { AgentComposer, isClearCommand, matchSkills } from './components/AgentComposer';
-import { AgentToolStep } from './components/AgentToolStep';
-import { ApprovalCard } from './components/ApprovalCard';
+import {
+  answeredApprovals,
+  buildAgentRequestBody,
+  waitingApprovals,
+} from '../../model/agent-request';
+import { formatUsage } from '../../model/format';
+import { isClearCommand, matchSkills } from '../../model/skills';
+import { ApprovalCard } from './ApprovalCard';
+import { AgentComposer } from './Composer';
+import { AgentToolStep } from './ToolStep';
 
 const user = (text: string): UIMessage => ({
   id: 'u1',

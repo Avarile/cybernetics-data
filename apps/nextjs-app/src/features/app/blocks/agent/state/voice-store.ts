@@ -1,7 +1,7 @@
 import { LocalStorageKeys } from '@cybernetics/sdk/config';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { IEngineChoice } from './speech-queue';
+import type { IEngineChoice } from '../model/voice';
 
 interface IAgentVoiceState {
   /**

@@ -3,11 +3,10 @@ import {
   useIsHydrated,
   useIsReadOnlyPreview,
   useIsTouchDevice,
-  useSession,
   useTemplate,
   useView,
 } from '@cybernetics/sdk/hooks';
-import { Copy, HelpCircle, MessageSquare, MoreHorizontal, UserPlus } from '@teable/icons';
+import { Copy, HelpCircle, MoreHorizontal, UserPlus } from '@teable/icons';
 import { BaseNodeResourceType } from '@teable/openapi';
 import {
   Button,
@@ -29,12 +28,12 @@ import { useTranslation } from 'next-i18next';
 import { Fragment, useEffect, useState } from 'react';
 import { ShareBasePopover } from '@/features/app/components/collaborator/share/ShareBasePopover';
 import { PublicOperateButton } from '@/features/app/components/PublicOperateButton';
-import { useChatPanelStore } from '@/features/app/components/sidebar/useChatPanelStore';
-import type { IBaseResourceTable } from '@/features/app/hooks/useBaseResource';
 import { useBaseResource } from '@/features/app/hooks/useBaseResource';
+import type { IBaseResourceTable } from '@/features/app/hooks/useBaseResource';
 import { useIsInIframe } from '@/features/app/hooks/useIsInIframe';
 import { useHelpStore } from '@/features/help';
 import { tableConfig } from '@/features/i18n/table.config';
+import { AgentToggle } from '../../agent';
 import { BaseNodeMore } from '../../base/base-side-bar/BaseNodeMore';
 import { ShowInGraphButton } from '../../base-graph/ShowInGraphButton';
 import { EmailSyncStatus } from '../../email';
@@ -50,8 +49,6 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
   const base = useBase();
   const { t } = useTranslation(tableConfig.i18nNamespaces);
   const [open, setOpen] = useState(false);
-  const { status: chatStatus, toggleVisible: toggleChat } = useChatPanelStore();
-  const isAdmin = Boolean(useSession().user?.isAdmin);
   const { setOpen: openHelp } = useHelpStore();
   const { baseId, tableId, viewId } = useBaseResource() as IBaseResourceTable;
   const isTouchDevice = useIsTouchDevice();
@@ -184,17 +181,7 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
               <span className="hidden @md/view-header:inline">{t('space:action.invite')}</span>
             </Button>
           </ShareBasePopover>
-          {isAdmin && (
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              title={t('common:agent.panel.title', 'Agent')}
-              className={cn(chatStatus !== 'close' && 'bg-accent text-accent-foreground')}
-              onClick={toggleChat}
-            >
-              <MessageSquare className="size-4" />
-            </Button>
-          )}
+          <AgentToggle focus={{ baseId, tableId, viewId }} />
           <Button
             variant="ghost"
             size="icon-xs"
@@ -219,17 +206,7 @@ const RightActions = ({ setIsEditing }: { setIsEditing?: (isEditing: boolean) =>
       {/* Collapsed menu for small screens (only on touch devices) */}
       {isTouchDevice && (
         <div className="flex items-center gap-1">
-          {isAdmin && (
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              title={t('common:agent.panel.title', 'Agent')}
-              className={cn(chatStatus !== 'close' && 'bg-accent text-accent-foreground')}
-              onClick={toggleChat}
-            >
-              <MessageSquare className="size-4" />
-            </Button>
-          )}
+          <AgentToggle focus={{ baseId, tableId, viewId }} />
           {collapsedContent}
         </div>
       )}

@@ -13,6 +13,7 @@ import React, { Fragment, useCallback, useMemo } from 'react';
 import { AppLayout } from '@/features/app/layouts';
 import { HelpModal } from '@/features/help';
 import { WorkFlowPanelModal } from '../automation/workflow-panel/WorkFlowPanelModal';
+import { AgentCockpitHost } from '../blocks/agent';
 import { BaseNodeProvider } from '../blocks/base/base-node/BaseNodeProvider';
 import { BaseSideBar } from '../blocks/base/base-side-bar/BaseSideBar';
 import { BaseSidebarHeaderLeft } from '../blocks/base/base-side-bar/BaseSidebarHeaderLeft';
@@ -132,6 +133,7 @@ export const BaseLayout: React.FC<{
                 </BaseProvider>
               </AnchorContext.Provider>
             </NotificationProvider>
+            <AgentCockpitHost />
           </SessionProvider>
         </AppProvider>
       </AppLayout>

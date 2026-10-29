@@ -3,15 +3,11 @@ import { ArrowUp, Square } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';
 import { SpeechInput } from '@/components/ai-elements/speech-input';
-import type { IVoiceConversation } from '../voice/useVoiceConversation';
-import { VoiceComposer } from '../voice/VoiceComposer';
-import { VoiceSettings } from '../voice/VoiceSettings';
-import { VoiceSwitch } from '../voice/VoiceSwitch';
-
-export interface IAgentSkillOption {
-  name: string;
-  description?: string | null;
-}
+import { isClearCommand, matchSkills, type IAgentSkillOption } from '../../model/skills';
+import type { IVoiceConversation } from '../../voice/useVoiceConversation';
+import { VoiceComposer } from '../../voice/VoiceComposer';
+import { VoiceSettings } from '../../voice/VoiceSettings';
+import { VoiceSwitch } from '../../voice/VoiceSwitch';
 
 export interface IAgentComposerProps {
   busy: boolean;
@@ -24,16 +20,6 @@ export interface IAgentComposerProps {
   /** Voice conversation (voice design §4); without it there is no Voice switch. */
   voice?: IVoiceConversation;
 }
-
-/** Skills that match what follows a leading `/`. */
-export const matchSkills = (value: string, skills: IAgentSkillOption[]) => {
-  const m = /^\/([\w-]*)$/.exec(value.trim());
-  if (!m) return [];
-  return skills.filter((s) => s.name.startsWith(m[1].toLowerCase())).slice(0, 8);
-};
-
-/** A chat command the composer handles itself: start a new conversation. */
-export const isClearCommand = (text: string) => /^\/(?:clear|new)$/i.test(text.trim());
 
 /**
  * Input with send/stop, voice, and a `/` picker for commands and skills (design §13). With voice

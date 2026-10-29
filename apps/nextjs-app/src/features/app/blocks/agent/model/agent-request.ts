@@ -45,9 +45,15 @@ export const waitingApprovals = (message: UIMessage | undefined) =>
     ? message.parts.filter(isToolPart).filter((p) => p.state === 'approval-requested')
     : [];
 
+/** The option of a clarify card the admin picked, carried in the user message's metadata. */
+export type IAgentChoice = NonNullable<NonNullable<IAgentChatRo['message']>['choice']>;
+
+export const choiceOf = (message: UIMessage | undefined): IAgentChoice | undefined =>
+  (message?.metadata as { choice?: IAgentChoice } | undefined)?.choice;
+
 /**
  * The server keeps the conversation (design §10.1), so a request carries only what is new:
- * the user's message, or the answers to the approvals the last reply asked for.
+ * the user's message (with the option picked, if any), or the answers to pending approvals.
  */
 export function buildAgentRequestBody(
   messages: UIMessage[],
@@ -60,6 +66,9 @@ export function buildAgentRequestBody(
   };
   const approvals = answeredApprovals(last);
   if (last?.role === 'assistant' && approvals.length) return { ...base, approvals };
-  if (last?.role === 'user') return { ...base, message: { text: textOf(last) } };
+  if (last?.role === 'user') {
+    const choice = choiceOf(last);
+    return { ...base, message: { text: textOf(last), ...(choice ? { choice } : {}) } };
+  }
   throw new Error('Nothing to send');
 }

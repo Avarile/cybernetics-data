@@ -1,8 +1,8 @@
 import type { UIMessage } from 'ai';
 import { Message, MessageContent, MessageResponse } from '@/components/ai-elements/message';
 import { Reasoning, ReasoningContent, ReasoningTrigger } from '@/components/ai-elements/reasoning';
-import { isToolPart } from '../agent-request';
-import { AgentToolStep } from './AgentToolStep';
+import { isToolPart } from '../../model/agent-request';
+import { AgentToolStep } from './ToolStep';
 
 export interface IAgentMessageViewProps {
   message: UIMessage;

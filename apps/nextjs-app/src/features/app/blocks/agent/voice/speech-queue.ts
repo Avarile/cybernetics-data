@@ -1,8 +1,7 @@
+import type { IEngineChoice, IEngineId } from '../model/voice';
 import type { ISpeechSegment } from './speech-script';
 
-export type IEngineId = 'elevenlabs' | 'browser';
-/** The admin's choice in the voice settings (voice design §6.6, D11). */
-export type IEngineChoice = 'auto' | IEngineId;
+export type { IEngineChoice, IEngineId };
 
 /** not-configured: ElevenLabs has no key (503). blocked: the browser refused to play. */
 export class SpeechError extends Error {

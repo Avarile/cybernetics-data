@@ -12,6 +12,7 @@ import { Sidebar } from '@/features/app/components/sidebar/Sidebar';
 import { SidebarHeaderLeft } from '@/features/app/components/sidebar/SidebarHeaderLeft';
 import { useSdkLocale } from '@/features/app/hooks/useSdkLocale';
 import { AppLayout } from '@/features/app/layouts';
+import { AgentCockpitHost } from '../blocks/agent';
 import { SidebarContent } from '../components/sidebar/SidebarContent';
 
 export const AdminLayout: React.FC<{
@@ -76,6 +77,7 @@ export const AdminLayout: React.FC<{
             </Sidebar>
             {children}
           </div>
+          <AgentCockpitHost />
         </SessionProvider>
       </AppProvider>
     </AppLayout>

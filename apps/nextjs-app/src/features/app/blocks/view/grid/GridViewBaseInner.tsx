@@ -97,10 +97,10 @@ import { useTranslation } from 'next-i18next';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { usePrevious, useClickAway } from 'react-use';
+import { openAgentCockpit } from '@/features/app/blocks/agent';
 import { computeFrozenColumnCount } from '@/features/app/blocks/view/grid/utils/computeFrozenFields';
 import { ExpandRecordContainer } from '@/features/app/components/expand-record-container';
 import type { IExpandRecordContainerRef } from '@/features/app/components/expand-record-container/types';
-import { useChatPanelStore } from '@/features/app/components/sidebar/useChatPanelStore';
 import { useShareAllowCopy, useShareContext } from '@/features/app/context/ShareContext';
 import { useBaseUsage } from '@/features/app/hooks/useBaseUsage';
 import { useDisableAIAction } from '@/features/app/hooks/useDisableAIAction';
@@ -633,14 +633,23 @@ export const GridViewBaseInner: React.FC<IGridViewBaseInnerProps> = (
           isMultipleSelected,
           addToChat: () => {
             const rowRanges = getRowRangesFromSelection(selection);
-            if (rowRanges && baseId) {
-              queryClient.setQueryData(ReactQueryKeys.gridSelection(baseId), {
-                rows: rowRanges,
-                timestamp: Date.now(),
-                addToChat: true,
-              });
-              useChatPanelStore.getState().open();
-            }
+            if (!rowRanges || !baseId) return;
+            // the agent gets the rows as a hint: the ids of the ones loaded, at most 100
+            const recordIds = rowRanges
+              .flatMap(([start, end]) =>
+                Array.from({ length: end - start + 1 }, (_, i) => recordMap[start + i]?.id)
+              )
+              .filter((id): id is string => Boolean(id))
+              .slice(0, 100);
+            openAgentCockpit({
+              focus: {
+                baseId,
+                tableId,
+                viewId: view?.id,
+                rows: rowRanges.reduce((n, [start, end]) => n + end - start + 1, 0),
+                recordIds,
+              },
+            });
           },
           deleteRecords: async () => {
             const deleteRows = getEffectRows(selection, realRowCount);
@@ -678,14 +687,23 @@ export const GridViewBaseInner: React.FC<IGridViewBaseInnerProps> = (
           neighborRecords,
           addToChat: () => {
             const rowRanges = getRowRangesFromSelection(selection);
-            if (rowRanges && baseId) {
-              queryClient.setQueryData(ReactQueryKeys.gridSelection(baseId), {
-                rows: rowRanges,
-                timestamp: Date.now(),
-                addToChat: true,
-              });
-              useChatPanelStore.getState().open();
-            }
+            if (!rowRanges || !baseId) return;
+            // the agent gets the rows as a hint: the ids of the ones loaded, at most 100
+            const recordIds = rowRanges
+              .flatMap(([start, end]) =>
+                Array.from({ length: end - start + 1 }, (_, i) => recordMap[start + i]?.id)
+              )
+              .filter((id): id is string => Boolean(id))
+              .slice(0, 100);
+            openAgentCockpit({
+              focus: {
+                baseId,
+                tableId,
+                viewId: view?.id,
+                rows: rowRanges.reduce((n, [start, end]) => n + end - start + 1, 0),
+                recordIds,
+              },
+            });
           },
           insertRecord: (anchorId, position, num: number) => {
             if (!tableId || !view?.id || !record) return;
