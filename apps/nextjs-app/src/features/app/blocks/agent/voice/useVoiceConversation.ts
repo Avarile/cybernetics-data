@@ -16,7 +16,7 @@ import {
   defaultPointerText,
   listed,
 } from './speech-script';
-import type { ISpeechPointerKind, ISpeechSegment, type ISpeechDescriber } from './speech-script';
+import type { ISpeechDescriber, ISpeechPointerKind, ISpeechSegment } from './speech-script';
 import type { IListenerError, IListenerState } from './voice-listener';
 import { speechRecognitionSupported, VoiceListener } from './voice-listener';
 
