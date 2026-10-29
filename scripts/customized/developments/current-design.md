@@ -1,7 +1,8 @@
 # Agent cockpit: a full-screen agent that plans its searches and shows them
 
-Status: **designed 2026-10-30, not started.** Decisions waiting for the admin are in §14. Branch:
-`feat/voice-conversation`.
+Status: **designed and approved 2026-10-30 (all defaults of §14 accepted); P0–P7 built the same
+day, P8 (the manual run in real browsers, §13.3) waits for the admin.** Commits and as-built notes
+are in §16. Branch: `feat/agent-cockpit` (cut from `feat/voice-conversation` at `0785a451`).
 The previous content of this file (voice conversation, as built) is in git history:
 `git show 18999448:scripts/customized/developments/current-design.md`.
 
@@ -994,3 +995,67 @@ Defaults are what this design assumes.
 | d3 adds weight | compute-only modules, lazy-loaded with the constellation |
 | Transient hits are lost if the browser drops mid-run | the board reloads from `AgentSearch`, saved after each step |
 | Migration on the K3s database | additive table only; `prisma migrate deploy` is safe there (never `migrate dev` or `reset`) |
+
+---
+
+## 16. As built (2026-10-30)
+
+### 16.1 Commits
+
+| Phase | Commit | What |
+|---|---|---|
+| P0 | `97803bb8` | search contract in `packages/openapi/src/agent/search.ts`, `agent_search` (Prisma, postgres and sqlite migrations), replay endpoints, backend `layers.spec.ts` |
+| P1 | `3c7f29e3` | `domain/search/`: relation graph, recipes, planner, anchor choice, card projection, tone, turn protocol (16 specs on a fixture of the live schema) |
+| P2 | `d2b646ee` | `investigate` toolkit, `PlanSearch`, `RunSearch`, schema catalog, search reader, stream sink, `prepareStep` and `hasToolCall('clarify')`, prompt section, picked options, pack v4 |
+| P3 | `c2235695` | frontend in one folder and six layers, session and cockpit stores, the full-screen overlay (on/off), host in four layouts, `/agent` redirect, old panel and page removed |
+| P4, P5 | `ff404016` | cockpit look (palettes, fonts, annunciator, ask rail) and the search board (lanes, cards, trace, lens, readout, run log, PICK); committed together, they ended up intertwined |
+| P6 | `6a7304a2`, `3be2a758` | voice: board and question lines, `searching` phase, answers matched to options; the second commit fixes a type import that a lint auto-fix broke in the first |
+| P7 | `17b5420e` | the constellation (graph, budget, rotation ported from the cockpit; d3-hierarchy, d3-shape, d3-zoom, d3-selection) |
+
+Nothing is pushed. The migration `20261030000000_add_agent_search` was applied to the disposable
+`teable` and `cybernetics_k3s` databases in `agent-e2e-pg` only.
+
+### 16.2 Tests
+
+- Backend unit: 179 agent specs pass (`domain/search`, `RunSearch`, runtime, layers).
+- Backend e2e (`agent-e2e-pg`): `agent-search` (5: the §6.3 plan table by table, reverse links
+  over one-way `refer_knowledge`, data tools hidden until a plan ran, clarify forced after an
+  ambiguous anchor and the picked option, replay to the owner only) and every other agent suite
+  (chat, data-read, installation, admin, store, voice, knowledge-toolkit, lockdown, lifecycle,
+  injection, data-write, sql-read, credentials, knowledge-sync) pass.
+- Frontend: 96 specs in `blocks/agent/` pass, including the layer rules, the board reducer, the
+  constellation graph and layout, the on/off overlay and the voice additions.
+- Typecheck and lint pass for both apps.
+- `next build` of the app passes (2026-10-30): next/font fetched and self-hosted the three faces,
+  and the cockpit's CSS module is in its own chunk; the constellation's d3 is in a separate chunk.
+
+### 16.3 Differences from the design
+
+- **`investigate` is always on** (`ALWAYS_TOOLKIT_IDS`), not a choice in `agent_setup.toolkits`:
+  installs get it without a migration of that multi-select, and the protocol cannot be broken by
+  switching it off. `search_protocol: free` is the switch for the protocol.
+- **A follow-up `plan_search` makes a new search** (its own board) instead of adding lanes to the
+  first one; the transcript's plan legs switch between the searches of a thread (§6.9).
+- **Lens: ANSWER and RETRIEVED** only. ALL would equal RETRIEVED, since the stage only draws what
+  the search found.
+- **Searches stay when a thread is deleted**: deleting puts the thread in the trash, where it can
+  be restored, so its boards stay with it (§7.3 said they are deleted).
+- **No "refresh" of a stored search** in the lane header yet (§7.3); a reopened thread shows the
+  cards as they were.
+- **Schema cache**: 60 s, without invalidation on table or field events.
+- **Focus chip**: the grid sends the ids of the loaded rows it adds (at most 100); the chip shows
+  the row count, and "TABLE" instead of the table's name.
+- **Constellation motion**: rotation re-renders at 8 fps instead of turning a GPU layer; charts
+  over 400 nodes plus links do not turn or flow.
+- **Session end**: sign-out reloads the app, which ends the session; there is no separate
+  disposal.
+- **Run log** lists the steps of the search on the stage with their UTC times; other tool calls
+  stay in the transcript as rows.
+
+### 16.4 Still to check by hand (P8)
+
+The matrix of §13.3 needs the admin: Chrome, Firefox and Safari; 1440, 1024 and 390 px; MONO and
+CYBERPUNK; reduced motion; voice in Chrome with a real mic; a project with 100+ tasks; an
+ambiguous project name; turning the cockpit off mid-search; changing pages mid-reply; reopening
+an old thread; the constellation's look and rotation. The cockpit was not opened in a browser
+during the build (no dev server was started, as agreed earlier).
