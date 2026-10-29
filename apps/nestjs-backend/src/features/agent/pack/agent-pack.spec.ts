@@ -29,6 +29,8 @@ describe('agent schema pack', () => {
         'memory_mode',
         'search_scope',
         'search_exclude',
+        'search_protocol',
+        'data_base_id',
       ])
     );
     expect(fields('agent_messages')).toEqual(

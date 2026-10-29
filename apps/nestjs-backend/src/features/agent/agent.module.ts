@@ -35,6 +35,8 @@ import { KnowledgeSync } from './application/knowledge/knowledge-sync';
 import { KnowledgeSyncScheduler } from './application/knowledge/knowledge-sync.scheduler';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
 import { GetSearch } from './application/search/get-search.query';
+import { PlanSearch } from './application/search/plan-search.usecase';
+import { RunSearch } from './application/search/run-search.usecase';
 import { AgentStatusQuery } from './application/status/agent-status.query';
 import { ManageThreads } from './application/threads/manage-threads.usecase';
 import {
@@ -47,7 +49,9 @@ import {
   RAG_SOURCE_READER_PORT,
   RAG_STORE_PORT,
   RUN_STORE_PORT,
+  SCHEMA_CATALOG_PORT,
   SEARCH_LOG_PORT,
+  SEARCH_READER_PORT,
   SECRET_VAULT_PORT,
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
@@ -65,6 +69,8 @@ import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapte
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
 import { PrismaSearchLog } from './infrastructure/search/prisma-search-log';
+import { SchemaCatalog } from './infrastructure/search/schema-catalog';
+import { SearchReader } from './infrastructure/search/search-reader';
 import { PrismaSecretVault } from './infrastructure/secrets/prisma-secret-vault';
 import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
@@ -79,6 +85,7 @@ import { CredentialsToolkit } from './toolkits/credentials/credentials.toolkit';
 import { DataReadToolkit } from './toolkits/data-read/data-read.toolkit';
 import { DataWriteToolkit, SchemaToolkit } from './toolkits/data-write/data-write.toolkits';
 import { HttpToolkit } from './toolkits/http/http.toolkit';
+import { InvestigateToolkit } from './toolkits/investigate/investigate.toolkit';
 import { KnowledgeToolkit } from './toolkits/knowledge/knowledge.toolkit';
 import { MemoryToolkit } from './toolkits/memory/memory.toolkit';
 import { SetupToolkit } from './toolkits/setup/setup.toolkit';
@@ -138,6 +145,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     SqlReadToolkit,
     HttpToolkit,
     KnowledgeToolkit,
+    InvestigateToolkit,
     UnrestrictedDataWriter,
     ToolAssembler,
     ContextBuilder,
@@ -159,6 +167,8 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     CancelRun,
     ManageThreads,
     GetSearch,
+    PlanSearch,
+    RunSearch,
     ConfigureAgent,
     ManageCredentials,
     AgentAdminGuard,
@@ -168,6 +178,8 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: AGENT_STORE_PORT, useClass: AgentTableStore },
     { provide: RUN_STORE_PORT, useClass: PrismaRunStore },
     { provide: SEARCH_LOG_PORT, useClass: PrismaSearchLog },
+    { provide: SCHEMA_CATALOG_PORT, useClass: SchemaCatalog },
+    { provide: SEARCH_READER_PORT, useClass: SearchReader },
     { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
     { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
     { provide: HTTP_PORT, useClass: OutboundHttp },

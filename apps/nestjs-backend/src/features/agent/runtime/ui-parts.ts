@@ -86,15 +86,30 @@ export const settleInterruptedTools = (parts: UIMessage['parts']): UIMessage['pa
       : part
   );
 
+/** The option the admin picked (a `data-choice` part), as words the model reads. */
+export function choiceText(data: unknown): string {
+  const d = (data ?? {}) as {
+    label?: string;
+    recordRef?: { table?: string; recordId?: string };
+  };
+  const record = d.recordRef?.recordId
+    ? `: ${d.recordRef.table ?? 'record'} ${d.recordRef.recordId}`
+    : '';
+  return `[The admin picked the option "${d.label ?? ''}"${record}]`;
+}
+
 /**
  * The history as the model gets it: tool parts of tools the agent no longer has (a toolkit was
  * switched off) become a short text, because the AI SDK refuses history with tools it does not
- * know, and tool calls a stop cut off get their error result.
+ * know; tool calls a stop cut off get their error result; the admin's picked option becomes text.
  */
 export function dropUnknownTools(messages: UIMessage[], toolNames: Set<string>): UIMessage[] {
   return messages.map((m) => ({
     ...m,
     parts: settleInterruptedTools(m.parts).map((part) => {
+      if (part.type === 'data-choice') {
+        return { type: 'text', text: choiceText((part as { data?: unknown }).data) } as IPart;
+      }
       if (!isToolPart(part) || toolNames.has(toolNameOf(part))) return part;
       return {
         type: 'text',

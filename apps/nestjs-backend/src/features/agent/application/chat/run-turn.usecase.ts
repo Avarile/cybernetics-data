@@ -1,6 +1,7 @@
 import { HttpErrorCode } from '@cybernetics/core';
 import { Inject, Injectable } from '@nestjs/common';
-import type { IAgentChatRo } from '@teable/openapi';
+import type { IAgentChatRo, IChoicePart, IClarifyPart } from '@teable/openapi';
+import { AGENT_DATA_PART } from '@teable/openapi';
 import { CustomHttpException } from '../../../../custom.exception';
 import type { IThread } from '../../domain/entities';
 import {
@@ -48,9 +49,16 @@ export class RunTurn {
         });
     const release = await this.gate.lock(thread.id);
     try {
+      const choice = ro.message?.choice
+        ? await this.resolveChoice(thread.id, ro.message.choice)
+        : undefined;
       await this.closeWaitingRun(thread.id);
+      const parts = [
+        { type: 'text', text },
+        ...(choice ? [{ type: AGENT_DATA_PART.choice, data: choice }] : []),
+      ];
       await this.store.appendMessages(thread.id, [
-        { role: 'user', content: text, parts: JSON.stringify([{ type: 'text', text }]) },
+        { role: 'user', content: text, parts: JSON.stringify(parts) },
       ]);
       const run = await this.runs.create({
         threadId: thread.id,
@@ -71,6 +79,29 @@ export class RunTurn {
       await release();
       throw error;
     }
+  }
+
+  /**
+   * The option the admin picked, as the agent's question offered it (cockpit design §6.4): the
+   * label and record come from the stored clarify card, not from the request.
+   */
+  private async resolveChoice(
+    threadId: string,
+    choice: NonNullable<NonNullable<IAgentChatRo['message']>['choice']>
+  ): Promise<IChoicePart | undefined> {
+    const [last] = await this.store.listMessages(threadId, { last: 1 });
+    if (last?.role !== 'assistant') return undefined;
+    const card = parseParts(last.parts)
+      .map((p) => p as { type?: string; data?: IClarifyPart })
+      .find((p) => p.type === AGENT_DATA_PART.clarify && p.data?.clarifyId === choice.clarifyId);
+    const option = card?.data?.options.find((o) => o.id === choice.optionId);
+    if (!option) return undefined;
+    return {
+      clarifyId: choice.clarifyId,
+      optionId: option.id,
+      label: option.label,
+      ...(option.recordRef ? { recordRef: option.recordRef } : {}),
+    };
   }
 
   /** Approvals left unanswered are denied, so the history the model sees stays complete. */

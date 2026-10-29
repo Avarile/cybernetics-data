@@ -1,6 +1,6 @@
 {
   "id": "agent",
-  "version": 3,
+  "version": 4,
   "tables": [
     {
       "key": "agent_setup",
@@ -75,6 +75,24 @@
           "name": "search_exclude",
           "type": "longText",
           "description": "Base ids (bse...) or table ids (tbl...) that search never indexes, one per line"
+        },
+        {
+          "key": "search_protocol",
+          "name": "search_protocol",
+          "type": "singleSelect",
+          "description": "How the agent answers data questions. plan (or empty): it states the intent, plans a search table by table and shows it in the cockpit before it may read data. free: every tool from the start",
+          "options": {
+            "choices": [
+              { "name": "plan", "color": "blueLight2" },
+              { "name": "free", "color": "greenLight2" }
+            ]
+          }
+        },
+        {
+          "key": "data_base_id",
+          "name": "data_base_id",
+          "type": "singleLineText",
+          "description": "The base (bse...) the cockpit's search recipes use. Empty: the base outside the Agent space with the most recipe tables (projects, tasks, contacts...)"
         },
         {
           "key": "temperature",

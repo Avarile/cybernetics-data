@@ -9,7 +9,15 @@ import {
   historyBudget,
 } from '../domain/policies/context-budget';
 import { inScope, isLive, rankMemories } from '../domain/policies/memory-ranking';
-import { AGENT_STORE_PORT, type IAgentStorePort } from '../domain/ports';
+import {
+  AGENT_STORE_PORT,
+  SCHEMA_CATALOG_PORT,
+  type IAgentStorePort,
+  type ISchemaCatalogPort,
+} from '../domain/ports';
+import { RECIPES } from '../domain/search/recipes';
+import { systemTable } from '../domain/search/schema';
+import type { ISearchProtocolMode } from '../domain/search/turn-protocol';
 import type { IToolContext } from '../toolkits/toolkit.types';
 import { messageTokens, toUIMessages } from './message-mapper';
 
@@ -31,6 +39,10 @@ export interface IPromptParts {
   summary: string | null;
   /** The admin talks by voice and hears the reply (voice design §7.3). */
   voice?: boolean;
+  /** How data questions are answered (cockpit design §6.8); undefined without plan_search. */
+  protocol?: ISearchProtocolMode;
+  /** The tables plan_search can use. */
+  dataTables?: { base: string; tables: string[] };
 }
 
 const memoryLine = (m: IMemory) => `- ${m.title}${m.content ? `: ${m.content}` : ''}`;
@@ -71,6 +83,25 @@ export function requestedSkill(text: string, skills: ISkill[]): ISkill | undefin
   return name ? skills.find((s) => s.name === name) : undefined;
 }
 
+/** Cockpit design §6.8: intent → clarify or plan → answer. Fixed text, so the prompt caches. */
+export function answerSection(mode: ISearchProtocolMode, data?: IPromptParts['dataTables']) {
+  return [
+    '## How you answer data questions',
+    '1. Work out what the admin wants. When it is unclear what or which record they mean, call clarify with options instead of guessing.',
+    '2. When the answer needs data, call plan_search first, with the intent and the anchor (the words or records the question is about). It plans the search table by table and runs it; the admin watches each table and every record appear in the cockpit.',
+    `   Intents: ${RECIPES.map((r) => `${r.intent} (${r.hint})`).join('; ')}.`,
+    '3. plan_search status needs_choice: call clarify with the candidates as options. empty: try once more with other words, or ask the admin.',
+    '4. Answer from the records it returned, and cite the ones you use with highlight_records.',
+    mode === 'plan'
+      ? '5. The other data tools open up once a plan has run: use them for details, follow-ups and changes.'
+      : '5. Use the other data tools for details, follow-ups and changes.',
+    'When the admin picked an option of your question, plan with anchor.recordIds of that record.',
+    data?.tables.length ? `Tables of the ${data.base} base: ${data.tables.join(', ')}.` : undefined,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 const voiceSection = [
   '## Voice',
   'The admin is talking to you by voice and hears your reply read aloud. Answer in short, plain spoken sentences. Put tables, code and long lists in markdown as usual; the app asks the admin to look at them, so do not repeat their contents in prose.',
@@ -90,6 +121,7 @@ export function buildSystemPrompt(p: IPromptParts): string {
   return [
     p.persona?.trim() || 'You are the workspace agent.',
     rules,
+    p.protocol ? answerSection(p.protocol, p.dataTables) : undefined,
     focusSection(p.focus),
     memorySection(p.pinned, p.relevant),
     skillsSection(p.catalog),
@@ -117,7 +149,25 @@ export interface IBuiltContext {
 /** Gathers what a turn needs from the store and fits it into the budget. */
 @Injectable()
 export class ContextBuilder {
-  constructor(@Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort) {}
+  constructor(
+    @Inject(AGENT_STORE_PORT) private readonly store: IAgentStorePort,
+    @Inject(SCHEMA_CATALOG_PORT) private readonly catalog: ISchemaCatalogPort
+  ) {}
+
+  /** Table names of the data base for the answer section (best effort). */
+  private async dataTables(profile: IAgentProfile) {
+    try {
+      const base = await this.catalog.dataBase(profile.dataBaseId);
+      if (!base) return undefined;
+      const schema = await this.catalog.schema(base.id);
+      const tables = schema.tables
+        .filter((t) => !schema.excluded.has(t.id) && !systemTable.test(t.name))
+        .map((t) => t.name);
+      return { base: base.name, tables };
+    } catch {
+      return undefined;
+    }
+  }
 
   async build(input: {
     profile: IAgentProfile;
@@ -127,6 +177,7 @@ export class ContextBuilder {
     summary?: string | null;
     now?: Date;
     voice?: boolean;
+    protocol?: ISearchProtocolMode;
   }): Promise<IBuiltContext> {
     const { profile, ctx } = input;
     const now = input.now ?? new Date();
@@ -163,6 +214,8 @@ export class ContextBuilder {
       requested,
       summary: input.summary ?? null,
       voice: input.voice,
+      protocol: input.protocol,
+      dataTables: input.protocol ? await this.dataTables(profile) : undefined,
     });
 
     let history: IMessage[] = [];

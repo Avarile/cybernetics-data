@@ -1,7 +1,13 @@
 import { HttpErrorCode } from '@cybernetics/core';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { UIMessageChunk } from 'ai';
-import { createAgentUIStream, createUIMessageStream, stepCountIs, ToolLoopAgent } from 'ai';
+import {
+  createAgentUIStream,
+  createUIMessageStream,
+  hasToolCall,
+  stepCountIs,
+  ToolLoopAgent,
+} from 'ai';
 import { CustomHttpException } from '../../../custom.exception';
 import type { IAgentProfile, IThread } from '../domain/entities';
 import {
@@ -14,6 +20,13 @@ import {
   type IRunStatus,
   type IRunStorePort,
 } from '../domain/ports';
+import {
+  CLARIFY_TOOL,
+  startPhase,
+  stepTools,
+  type IToolOutcome,
+} from '../domain/search/turn-protocol';
+import { DeferredUiSink } from '../infrastructure/search/ui-stream-sink';
 import type { IToolContext } from '../toolkits/toolkit.types';
 import { ContextBuilder } from './context-builder';
 import { ToolAssembler } from './tool-assembler';
@@ -47,6 +60,8 @@ export interface ITurnInput {
   focus?: IToolContext['focus'];
   /** The admin talks by voice: the prompt asks for short spoken answers. */
   voice?: boolean;
+  /** The turn goes on after approvals: its plan already ran (cockpit design §6.8). */
+  resumed?: boolean;
   /** The admin's latest message: ranks memories. */
   userText: string;
   controller: AbortController;
@@ -79,6 +94,7 @@ export class AgentRuntime {
       );
     }
     const { model } = await this.models.resolve(profile.model);
+    const sink = new DeferredUiSink();
     const ctx: IToolContext = {
       runId: run.id,
       actorUserId: input.actorUserId,
@@ -86,6 +102,7 @@ export class AgentRuntime {
       profile,
       focus: input.focus,
       abortSignal: input.controller.signal,
+      events: sink,
     };
     const assembled = this.toolAssembler.assemble(ctx);
     const built = await this.contextBuilder.build({
@@ -95,6 +112,9 @@ export class AgentRuntime {
       userText: input.userText,
       summary: thread.summary,
       voice: input.voice,
+      protocol: assembled.toolkitOf.has(CLARIFY_TOOL)
+        ? profile.searchProtocol ?? 'plan'
+        : undefined,
     });
     const history = dropUnknownTools(built.messages, new Set(Object.keys(assembled.tools)));
     const recorder = new TurnRecorder(
@@ -111,8 +131,24 @@ export class AgentRuntime {
       tools: assembled.tools,
       stopWhen: [
         stepCountIs(profile.maxSteps ?? DEFAULT_MAX_STEPS),
+        hasToolCall(CLARIFY_TOOL),
         () => recorder.cancelRequested(),
       ],
+      prepareStep: ({ steps }) => {
+        const outcomes: IToolOutcome[] = steps.flatMap((step) =>
+          step.toolResults.map((r) => ({ toolName: r.toolName, output: r.output }))
+        );
+        const { activeTools, forceTool } = stepTools({
+          mode: profile.searchProtocol ?? 'plan',
+          start: startPhase(Boolean(input.resumed)),
+          outcomes,
+          toolkitOf: assembled.toolkitOf,
+        });
+        return {
+          ...(activeTools ? { activeTools } : {}),
+          ...(forceTool ? { toolChoice: { type: 'tool' as const, toolName: forceTool } } : {}),
+        };
+      },
       ...(profile.maxOutputTokens ? { maxOutputTokens: profile.maxOutputTokens } : {}),
       ...(profile.temperature !== null ? { temperature: profile.temperature } : {}),
     });
@@ -122,6 +158,7 @@ export class AgentRuntime {
     return createUIMessageStream({
       originalMessages: history,
       execute: async ({ writer }) => {
+        sink.attach(writer);
         writer.write({
           type: 'data-run',
           data: { threadId: thread.id, runId: run.id },

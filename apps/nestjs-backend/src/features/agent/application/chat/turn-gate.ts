@@ -102,6 +102,8 @@ export class TurnGate {
     context?: IAgentChatContext;
     /** The thread had no reply before this turn (title job). */
     firstTurn?: boolean;
+    /** The turn goes on after approvals. */
+    resumed?: boolean;
     release: () => Promise<void>;
   }): Promise<ITurn> {
     const controller = this.registry.open(input.run.id);
@@ -125,6 +127,7 @@ export class TurnGate {
         actorUserId: input.actorUserId,
         focus: input.context ? focus : undefined,
         voice,
+        resumed: input.resumed,
         userText: input.userText,
         controller,
         onSettled: settle,

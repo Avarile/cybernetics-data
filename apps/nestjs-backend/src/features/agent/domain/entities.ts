@@ -19,6 +19,8 @@ export type ICredentialAuthKind =
   | 'oauth2_client_credentials';
 export type ICredentialStatus = 'missing' | 'set' | 'invalid' | 'expired';
 export type ISearchScope = 'all' | 'knowledge';
+/** Cockpit design §6.8: plan before reading data, or every tool from the start. */
+export type ISearchProtocol = 'plan' | 'free';
 
 export interface IAgentProfile {
   id: string;
@@ -34,6 +36,10 @@ export interface IAgentProfile {
   searchScope: ISearchScope | null;
   /** Base or table ids never indexed. */
   searchExclude: string[];
+  /** How data questions are answered; null means plan (cockpit design §6.8). */
+  searchProtocol: ISearchProtocol | null;
+  /** The base the search recipes use; null means detect it (cockpit design §9.2). */
+  dataBaseId: string | null;
   temperature: number | null;
   maxSteps: number | null;
   maxOutputTokens: number | null;

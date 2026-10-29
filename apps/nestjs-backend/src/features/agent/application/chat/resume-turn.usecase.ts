@@ -82,6 +82,7 @@ export class ResumeTurn {
         actorUserId,
         userText: lastUser?.content ?? '',
         context: ro.context,
+        resumed: true,
         release,
       });
     } catch (error) {

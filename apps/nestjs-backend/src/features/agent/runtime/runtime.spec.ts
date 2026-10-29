@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { z } from 'zod';
 import type { IAgentProfile, IMemory, IMessage, ISkill } from '../domain/entities';
-import type { IAgentStorePort } from '../domain/ports';
+import type { IAgentStorePort, ISchemaCatalogPort } from '../domain/ports';
 import type { AgentExecutionContext } from '../infrastructure/execution-context';
 import { ToolkitRegistry } from '../toolkits/toolkit.registry';
 import type { IToolkit } from '../toolkits/toolkit.types';
@@ -20,6 +20,8 @@ const profile = (over: Partial<IAgentProfile> = {}): IAgentProfile => ({
   knowledgeTables: [],
   searchScope: null,
   searchExclude: [],
+  searchProtocol: null,
+  dataBaseId: null,
   temperature: null,
   maxSteps: 25,
   maxOutputTokens: 8000,
@@ -65,6 +67,30 @@ const message = (seq: number, chars: number): IMessage =>
   }) as IMessage;
 
 describe('buildSystemPrompt', () => {
+  it('tells how data questions are answered when plan_search is there (cockpit §6.8)', () => {
+    const base = {
+      persona: null,
+      now: new Date('2026-10-30T00:00:00Z'),
+      toolkits: [],
+      pinned: [],
+      relevant: [],
+      catalog: [],
+      always: [],
+      summary: null,
+    };
+    const prompt = buildSystemPrompt({
+      ...base,
+      protocol: 'plan',
+      dataTables: { base: 'data-centre', tables: ['projects', 'tasks'] },
+    });
+    expect(prompt).toContain('## How you answer data questions');
+    expect(prompt).toContain('project_progress (');
+    expect(prompt).toContain('open up once a plan has run');
+    expect(prompt).toContain('Tables of the data-centre base: projects, tasks.');
+    expect(buildSystemPrompt({ ...base, protocol: 'free' })).not.toContain('open up once');
+    expect(buildSystemPrompt(base)).not.toContain('How you answer');
+  });
+
   it('puts persona, rules, focus, memories, skills and summary in a fixed order', () => {
     const prompt = buildSystemPrompt({
       persona: 'You are Ada.',
@@ -145,6 +171,10 @@ describe('ContextBuilder', () => {
       listSkills: vi.fn(async () => skills),
       listMessages: vi.fn(async () => messages),
     }) as unknown as IAgentStorePort;
+  const noCatalog = {
+    dataBase: vi.fn(async () => undefined),
+    schema: vi.fn(),
+  } as unknown as ISchemaCatalogPort;
 
   it('trims history to the budget, newest first, and reports what was used', async () => {
     const messages = Array.from({ length: 10 }, (_, i) => message(i + 1, 2000)); // 500 tokens each
@@ -156,7 +186,8 @@ describe('ContextBuilder', () => {
           memory({ id: 'other', title: 'Unrelated', scope: 'user', scopeRef: 'usrZ' }),
         ],
         messages
-      )
+      ),
+      noCatalog
     );
     const built = await builder.build({
       profile: profile({ contextBudgetTokens: 3000 }),
@@ -173,7 +204,7 @@ describe('ContextBuilder', () => {
 
   it('skips memories entirely when memory is off', async () => {
     const s = store([memory({ id: 'pin', pinned: true, title: 'x' })], []);
-    const built = await new ContextBuilder(s).build({
+    const built = await new ContextBuilder(s, noCatalog).build({
       profile: profile({ memoryMode: 'off' }),
       ctx: { runId: 'r', actorUserId: 'usrA', profile: profile() },
       toolkits: [],
@@ -230,7 +261,9 @@ describe('ToolAssembler', () => {
       { id: 'knowledge', reason: 'no small model' },
       { id: 'http', reason: 'not available in this version' },
       { id: 'bogus', reason: 'unknown toolkit' },
+      { id: 'investigate', reason: 'not available in this version' },
     ]);
+    expect([...out.toolkitOf]).toEqual([['memory_search', 'memory']]);
   });
 
   it('refuses duplicate toolkits and tool names', () => {

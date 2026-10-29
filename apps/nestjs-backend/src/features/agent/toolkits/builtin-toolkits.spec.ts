@@ -35,6 +35,8 @@ function fakeStore() {
     knowledgeTables: [],
     searchScope: null,
     searchExclude: [],
+    searchProtocol: null,
+    dataBaseId: null,
     temperature: null,
     maxSteps: 25,
     maxOutputTokens: 8000,

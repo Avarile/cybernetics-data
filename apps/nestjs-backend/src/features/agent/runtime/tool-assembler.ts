@@ -6,13 +6,15 @@ import { AgentExecutionContext } from '../infrastructure/execution-context';
 import { wrapTool } from '../toolkits/tool-wrapper';
 import { ToolkitRegistry } from '../toolkits/toolkit.registry';
 import type { IToolContext, IToolkitId } from '../toolkits/toolkit.types';
-import { TOOLKIT_IDS } from '../toolkits/toolkit.types';
+import { ALWAYS_TOOLKIT_IDS, TOOLKIT_IDS } from '../toolkits/toolkit.types';
 
 export interface IAssembledTools {
   tools: Record<string, Tool>;
   toolkits: { id: IToolkitId; title: string }[];
   /** Turned on in the profile but not usable right now, with the reason (shown in status). */
   skipped: { id: string; reason: string }[];
+  /** Tool name → toolkit id, for the turn protocol (cockpit design §6.8). */
+  toolkitOf: Map<string, string>;
 }
 
 /** The profile's toolkits as AI SDK tools, each wrapped (design §5.1 runtime/ToolAssembler). */
@@ -26,14 +28,15 @@ export class ToolAssembler {
   ) {}
 
   assemble(ctx: IToolContext): IAssembledTools {
-    const out: IAssembledTools = { tools: {}, toolkits: [], skipped: [] };
+    const out: IAssembledTools = { tools: {}, toolkits: [], skipped: [], toolkitOf: new Map() };
     const deps = {
       audit: this.audit,
       execution: this.execution,
       maxResultChars: this.limits.maxResponseChars,
     };
-    for (const id of ctx.profile.toolkits) {
-      if (!(TOOLKIT_IDS as readonly string[]).includes(id)) {
+    const ids = [...new Set([...ctx.profile.toolkits, ...ALWAYS_TOOLKIT_IDS])];
+    for (const id of ids) {
+      if (![...TOOLKIT_IDS, ...ALWAYS_TOOLKIT_IDS].includes(id as IToolkitId)) {
         out.skipped.push({ id, reason: 'unknown toolkit' });
         continue;
       }
@@ -48,7 +51,10 @@ export class ToolAssembler {
         continue;
       }
       out.toolkits.push({ id: toolkit.id, title: toolkit.title });
-      for (const def of toolkit.tools) out.tools[def.name] = wrapTool(def, ctx, deps);
+      for (const def of toolkit.tools) {
+        out.tools[def.name] = wrapTool(def, ctx, deps);
+        out.toolkitOf.set(def.name, toolkit.id);
+      }
     }
     return out;
   }

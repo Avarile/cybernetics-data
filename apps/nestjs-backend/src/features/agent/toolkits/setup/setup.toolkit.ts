@@ -24,6 +24,8 @@ const profileView = (p: IAgentProfile) => ({
   knowledgeTables: p.knowledgeTables,
   searchScope: p.searchScope ?? 'all',
   searchExclude: p.searchExclude,
+  searchProtocol: p.searchProtocol ?? 'plan',
+  dataBaseId: p.dataBaseId,
   temperature: p.temperature,
   maxSteps: p.maxSteps,
   maxOutputTokens: p.maxOutputTokens,
@@ -90,6 +92,18 @@ export class SetupToolkit implements IToolkit, OnModuleInit {
             .max(500)
             .optional()
             .describe('Bases or tables search never indexes'),
+          searchProtocol: z
+            .enum(['plan', 'free'])
+            .optional()
+            .describe(
+              'plan: plan a search before reading data (default); free: every tool at once'
+            ),
+          dataBaseId: z
+            .string()
+            .regex(/^bse\w+$/, 'a base id')
+            .nullable()
+            .optional()
+            .describe('The base the cockpit search recipes use; null detects it'),
           temperature: z.number().min(0).max(2).nullable().optional(),
           maxSteps: z.number().int().min(1).max(100).optional(),
           maxOutputTokens: z.number().int().min(256).max(128_000).optional(),
