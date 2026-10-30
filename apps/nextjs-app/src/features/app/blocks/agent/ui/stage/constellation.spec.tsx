@@ -2,9 +2,22 @@ import { useRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, userEvent } from '@/test-utils';
 import { useCockpitKeys } from '../../hooks/useCockpitKeys';
+import type * as LayoutModule from '../../model/graph/layout';
 import { finishGraph, type IGNode } from '../../model/graph/types';
 import { useCockpitStore } from '../../state/cockpit-store';
 import { Constellation } from './Constellation';
+
+const layouts = vi.hoisted(() => ({ count: 0 }));
+vi.mock('../../model/graph/layout', async (importOriginal) => {
+  const real = await importOriginal<typeof LayoutModule>();
+  return {
+    ...real,
+    layoutGraph: (...args: Parameters<typeof real.layoutGraph>) => {
+      layouts.count++;
+      return real.layoutGraph(...args);
+    },
+  };
+});
 
 const node = (id: string, kind: IGNode['kind'], parent: string | null): IGNode => ({
   id,
@@ -77,6 +90,15 @@ describe('constellation (cockpit design §5.4)', () => {
     expect(useCockpitStore.getState().pinned).toBe('s3:Bo');
     await userEvent.keyboard('[[');
     expect(useCockpitStore.getState().pinned).toBe('s3:Ava');
+  });
+
+  it('turns as one layer: the layout is not run again while the chart turns', async () => {
+    const { container } = render(<Chart />);
+    const before = layouts.count;
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const turn = container.querySelector('[data-turn]')!;
+    expect(turn.getAttribute('transform')).toMatch(/^rotate\(0\.\d+\)$/);
+    expect(layouts.count).toBe(before);
   });
 
   it("pins into the overview's own slot on the overview", async () => {

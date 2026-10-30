@@ -104,6 +104,8 @@ describe('constellation graph (cockpit design §5.4)', () => {
     expect(layout.edges.every((e) => e.d.startsWith('M'))).toBe(true);
     const left = layout.nodes.find((n) => n.angle > Math.PI)!;
     expect(labelTransform(left, 6).anchor).toBe('end');
+    // turned half a turn as one layer, the same label shows on the right half
+    expect(labelTransform(left, 6, Math.PI).anchor).toBe('start');
     const narrowed = layoutGraph(g, { mode: 'tree', radius: 300, lens: new Set(['T1']) });
     // the people's branch cites no one: it is not drawn
     expect(narrowed.nodes.map((n) => n.id).sort()).toEqual(['G', 'P', 'T1', 'root'].sort());

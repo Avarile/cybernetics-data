@@ -31,6 +31,8 @@ export interface IConstellationProps {
 
 /** Charts up to this many nodes plus links turn and flow; larger ones hold still. */
 const MOTION_MAX = 400;
+/** Labels re-flip when the turn passes a step this size, not on every frame (design §9.5). */
+const LABEL_STEP = (5 * Math.PI) / 180;
 /** Past this many nodes the records lose their labels; branches keep theirs. */
 const LABELS_MAX = 260;
 
@@ -57,9 +59,23 @@ export const Constellation = memo(
     const svgRef = useRef<SVGSVGElement>(null);
     const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown>>();
     const [size, setSize] = useState({ w: 0, h: 0 });
-    const [rotation, setRotation] = useState(0);
+    const turnRef = useRef<SVGGElement>(null);
+    const [labelTurn, setLabelTurn] = useState(0);
     const [transform, setTransform] = useState<ZoomTransform>(zoomIdentity);
-    const rotator = useMemo(() => createRotator(setRotation), []);
+    // the chart turns as one layer: the frame sets a transform, it lays nothing out and renders
+    // nothing; labels render again only when the turn passes a step, to flip sides
+    const rotator = useMemo(
+      () =>
+        createRotator(
+          (radians) => {
+            turnRef.current?.setAttribute('transform', `rotate(${(radians * 180) / Math.PI})`);
+            const step = Math.floor(radians / LABEL_STEP) * LABEL_STEP;
+            setLabelTurn((prev) => (prev === step ? prev : step));
+          },
+          { fps: 30 }
+        ),
+      []
+    );
 
     useEffect(() => {
       const el = svgRef.current;
@@ -97,8 +113,8 @@ export const Constellation = memo(
     const measured = size.w > 0 && size.h > 0;
     const radius = Math.max(80, Math.min(size.w, size.h) / 2 - 16);
     const layout = useMemo(
-      () => layoutGraph(graph, { mode, radius, lens: lens?.size ? lens : null, rotation }),
-      [graph, mode, radius, lens, rotation]
+      () => layoutGraph(graph, { mode, radius, lens: lens?.size ? lens : null }),
+      [graph, mode, radius, lens]
     );
     const dim = (id?: string) => Boolean(lit?.size && id && !lit.has(id));
     const showLabel = (n: ILaidNode) =>
@@ -124,72 +140,74 @@ export const Constellation = memo(
         {measured && (
           <g transform={transform.toString()}>
             <g transform={`translate(${size.w / 2},${size.h / 2})`}>
-              {layout.branches.map((b) => (
-                <path key={b.id} d={b.d} className={s.branch} />
-              ))}
-              {layout.edges.map((e) => (
-                <path
-                  key={e.id}
-                  d={e.d}
-                  className={s.edge}
-                  data-tone={e.link.tone}
-                  data-dim={dim(e.link.source) && dim(e.link.target) ? 'true' : undefined}
-                >
-                  <title>{e.link.label}</title>
-                </path>
-              ))}
-              {layout.nodes.map((n) => {
-                if (!n.node) return <circle key={n.id} r={4} className={s.core} />;
-                const node = n.node;
-                const label = labelTransform(n, node.kind === 'hub' ? 8 : 6);
-                return (
-                  <g
-                    key={n.id}
-                    className={s.node}
-                    data-tone={node.tone}
-                    data-kind={node.kind}
-                    data-key={node.cardKey ?? node.id}
-                    data-context={n.context ? 'true' : undefined}
-                    data-dim={dim(node.id) ? 'true' : undefined}
-                    onMouseEnter={() => {
-                      rotator.hold();
-                      onHover(node.id);
-                    }}
-                    onMouseLeave={() => {
-                      rotator.release();
-                      onHover(undefined);
-                    }}
-                    onClick={() => onPin(node.id)}
+              <g ref={turnRef} data-turn>
+                {layout.branches.map((b) => (
+                  <path key={b.id} d={b.d} className={s.branch} />
+                ))}
+                {layout.edges.map((e) => (
+                  <path
+                    key={e.id}
+                    d={e.d}
+                    className={s.edge}
+                    data-tone={e.link.tone}
+                    data-dim={dim(e.link.source) && dim(e.link.target) ? 'true' : undefined}
                   >
-                    <g transform={`translate(${n.x},${n.y})`}>
-                      {node.alert && <circle r={nodeRadius(node) + 3.5} className={s.halo} />}
-                      {node.kind === 'actor' ? (
-                        <rect x={-4} y={-4} width={8} height={8} transform="rotate(45)" />
-                      ) : (
-                        <circle
-                          r={node.kind === 'hub' ? 4 : nodeRadius(node)}
-                          data-ring={node.tone === 'target' ? 'true' : undefined}
-                        />
+                    <title>{e.link.label}</title>
+                  </path>
+                ))}
+                {layout.nodes.map((n) => {
+                  if (!n.node) return <circle key={n.id} r={4} className={s.core} />;
+                  const node = n.node;
+                  const label = labelTransform(n, node.kind === 'hub' ? 8 : 6, labelTurn);
+                  return (
+                    <g
+                      key={n.id}
+                      className={s.node}
+                      data-tone={node.tone}
+                      data-kind={node.kind}
+                      data-key={node.cardKey ?? node.id}
+                      data-context={n.context ? 'true' : undefined}
+                      data-dim={dim(node.id) ? 'true' : undefined}
+                      onMouseEnter={() => {
+                        rotator.hold();
+                        onHover(node.id);
+                      }}
+                      onMouseLeave={() => {
+                        rotator.release();
+                        onHover(undefined);
+                      }}
+                      onClick={() => onPin(node.id)}
+                    >
+                      <g transform={`translate(${n.x},${n.y})`}>
+                        {node.alert && <circle r={nodeRadius(node) + 3.5} className={s.halo} />}
+                        {node.kind === 'actor' ? (
+                          <rect x={-4} y={-4} width={8} height={8} transform="rotate(45)" />
+                        ) : (
+                          <circle
+                            r={node.kind === 'hub' ? 4 : nodeRadius(node)}
+                            data-ring={node.tone === 'target' ? 'true' : undefined}
+                          />
+                        )}
+                      </g>
+                      {showLabel(n) && (
+                        <text transform={label.transform} textAnchor={label.anchor} dy="0.32em">
+                          {truncate(node.label, node.kind === 'hub' ? 28 : 22)}
+                        </text>
                       )}
+                      <title>
+                        {[
+                          node.short,
+                          node.label,
+                          node.state,
+                          ...(node.meta ?? []).map(([k, v]) => `${k}: ${v}`),
+                        ]
+                          .filter(Boolean)
+                          .join('\n')}
+                      </title>
                     </g>
-                    {showLabel(n) && (
-                      <text transform={label.transform} textAnchor={label.anchor} dy="0.32em">
-                        {truncate(node.label, node.kind === 'hub' ? 28 : 22)}
-                      </text>
-                    )}
-                    <title>
-                      {[
-                        node.short,
-                        node.label,
-                        node.state,
-                        ...(node.meta ?? []).map(([k, v]) => `${k}: ${v}`),
-                      ]
-                        .filter(Boolean)
-                        .join('\n')}
-                    </title>
-                  </g>
-                );
-              })}
+                  );
+                })}
+              </g>
             </g>
           </g>
         )}

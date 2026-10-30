@@ -138,9 +138,11 @@ export function layoutGraph(
 }
 
 /** Text placement that stays readable: labels on the left half are flipped. */
-export function labelTransform(n: ILaidNode, offset: number) {
+export function labelTransform(n: ILaidNode, offset: number, turn = 0) {
   const deg = (n.angle * 180) / Math.PI - 90;
-  const flip = n.angle > Math.PI;
+  // the chart may be turned as one layer: the half a label is on is where it shows, not drawn
+  const shown = (((n.angle + turn) % TAU) + TAU) % TAU;
+  const flip = shown > Math.PI;
   return {
     transform: `rotate(${deg}) translate(${n.radius + offset},0)${flip ? ' rotate(180)' : ''}`,
     anchor: flip ? 'end' : 'start',
