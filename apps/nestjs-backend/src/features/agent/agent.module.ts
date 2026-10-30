@@ -5,6 +5,7 @@ import { AiModule } from '../ai/ai.module';
 import { AiDataModule } from '../ai-data/ai-data.module';
 import { StorageModule } from '../attachments/plugins/storage.module';
 import { BaseModule } from '../base/base.module';
+import { BaseGraphModule } from '../base-graph/base-graph.module';
 import { BaseSqlExecutorModule } from '../base-sql-executor/base-sql-executor.module';
 import { ChatFileModule } from '../chat-file/chat-file.module';
 import { FieldOpenApiModule } from '../field/open-api/field-open-api.module';
@@ -34,6 +35,7 @@ import { KnowledgeSearch } from './application/knowledge/knowledge-search';
 import { KnowledgeSync } from './application/knowledge/knowledge-sync';
 import { KnowledgeSyncScheduler } from './application/knowledge/knowledge-sync.scheduler';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
+import { GetOverview } from './application/overview/get-overview.query';
 import { GetSearch } from './application/search/get-search.query';
 import { PlanSearch } from './application/search/plan-search.usecase';
 import { RunSearch } from './application/search/run-search.usecase';
@@ -46,6 +48,7 @@ import {
   DATA_GATEWAY_PORT,
   HTTP_PORT,
   MODEL_PORT,
+  OVERVIEW_GRAPH_PORT,
   RAG_SOURCE_READER_PORT,
   RAG_STORE_PORT,
   RUN_STORE_PORT,
@@ -66,6 +69,7 @@ import { PgRagStore } from './infrastructure/knowledge/pg-rag-store';
 import { SearchTables } from './infrastructure/knowledge/search-tables';
 import { RagSourceReader } from './infrastructure/knowledge/source-reader';
 import { ProviderModelAdapter } from './infrastructure/llm/provider-model.adapter';
+import { BaseGraphOverviewReader } from './infrastructure/overview/base-graph-reader';
 import { PrismaRunStore } from './infrastructure/runs/prisma-run-store';
 import { RunRegistry } from './infrastructure/runs/run-registry';
 import { PrismaSearchLog } from './infrastructure/search/prisma-search-log';
@@ -76,6 +80,7 @@ import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentChatController } from './interface/agent-chat.controller';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
+import { AgentOverviewController } from './interface/agent-overview.controller';
 import { AgentSearchController } from './interface/agent-search.controller';
 import { AgentSettingsController } from './interface/agent-settings.controller';
 import { AgentRuntime } from './runtime/agent-runtime';
@@ -104,6 +109,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     AgentChatController,
     AgentSettingsController,
     AgentSearchController,
+    AgentOverviewController,
   ],
   imports: [
     EventJobModule.registerQueue(AGENT_JOBS_QUEUE),
@@ -113,6 +119,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     SchemaPackModule,
     SpaceModule,
     BaseModule,
+    BaseGraphModule,
     FieldOpenApiModule,
     RecordModule,
     RecordOpenApiModule,
@@ -167,6 +174,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     CancelRun,
     ManageThreads,
     GetSearch,
+    GetOverview,
     PlanSearch,
     RunSearch,
     ConfigureAgent,
@@ -180,6 +188,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: SEARCH_LOG_PORT, useClass: PrismaSearchLog },
     { provide: SCHEMA_CATALOG_PORT, useClass: SchemaCatalog },
     { provide: SEARCH_READER_PORT, useClass: SearchReader },
+    { provide: OVERVIEW_GRAPH_PORT, useClass: BaseGraphOverviewReader },
     { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
     { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
     { provide: HTTP_PORT, useClass: OutboundHttp },

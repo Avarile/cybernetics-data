@@ -1,0 +1,42 @@
+import { createHash } from 'crypto';
+import { Controller, Get, HttpStatus, Param, Req, Res, UseGuards } from '@nestjs/common';
+import { overviewDatasetSchema } from '@teable/openapi';
+import type { IAgentOverviewVo, IOverviewDatasetId } from '@teable/openapi';
+import type { Request, Response } from 'express';
+import { ClsService } from 'nestjs-cls';
+import type { IClsStore } from '../../../types/cls';
+import { ZodValidationPipe } from '../../../zod.validation.pipe';
+import { GetOverview } from '../application/overview/get-overview.query';
+import { AgentAdminGuard } from './agent-admin.guard';
+
+/** Same content, same tag: builtAt is left out, so a rebuilt but unchanged overview is a 304. */
+const etagOf = ({ builtAt: _builtAt, ...content }: IAgentOverviewVo) =>
+  `"${createHash('sha1').update(JSON.stringify(content)).digest('hex').slice(0, 16)}"`;
+
+/** Overview design §8.3: one dataset of the data base, for the cockpit's default stage. */
+@Controller('api/agent')
+@UseGuards(AgentAdminGuard)
+export class AgentOverviewController {
+  constructor(
+    private readonly overview: GetOverview,
+    private readonly cls: ClsService<IClsStore>
+  ) {}
+
+  @Get('overview/:dataset')
+  async get(
+    @Param('dataset', new ZodValidationPipe(overviewDatasetSchema)) dataset: IOverviewDatasetId,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<IAgentOverviewVo | undefined> {
+    const vo = await this.overview.get(this.cls.get('user.id'), dataset);
+    const etag = etagOf(vo);
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'private, no-cache');
+    res.setHeader('Vary', 'Cookie, Authorization');
+    if (req.headers['if-none-match'] === etag) {
+      res.status(HttpStatus.NOT_MODIFIED);
+      return undefined;
+    }
+    return vo;
+  }
+}
