@@ -1,56 +1,8 @@
-/* The overview stage (overview design §4.2, §6, §7): dataset chips, the minute's progress, the
-   pinned node's strip and the chart's fade. Tokens come from cockpit.module.css's scope. */
-
-.head {
-  display: grid;
-  gap: 6px;
-  justify-items: end;
-}
-
-.timer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--f-data);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  color: var(--dim);
-}
-
-.track {
-  position: relative;
-  width: 160px;
-  height: 2px;
-  background: var(--bezel);
-  overflow: hidden;
-}
-
-.progress {
-  position: absolute;
-  inset: 0;
-  background: var(--route);
-  transform-origin: left center;
-  animation-name: fill;
-  animation-timing-function: linear;
-  animation-fill-mode: both;
-}
-
-@keyframes fill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.countdown {
-  min-width: 150px;
-  text-align: right;
-}
+/* The overview stage (overview design §6, §7): the chart's fade between datasets, the pinned
+   node's strip under the readout, and the stage's message. Tokens come from cockpit.module.css. */
 
 /* a new dataset fades in (none under reduced motion: the cockpit stops every animation) */
-.chart {
+.fade {
   flex: 1;
   display: flex;
   min-width: 0;
@@ -67,19 +19,19 @@
   }
 }
 
+/* the pinned node, in the readout's column */
 .detail {
-  position: absolute;
-  left: 12px;
-  bottom: 10px;
-  z-index: 2;
+  pointer-events: auto;
   display: grid;
   gap: 3px;
-  max-width: min(360px, calc(100% - 24px));
+  width: 224px;
+  margin-top: 12px;
   padding: 8px 10px;
   border: 1px solid var(--bezel-2);
-  background: var(--glass);
+  background: color-mix(in srgb, var(--void) 88%, transparent);
   font-family: var(--f-data);
   font-size: 10px;
+  letter-spacing: normal;
   color: var(--ink-2);
 }
 
@@ -107,13 +59,12 @@
   margin-top: 4px;
 }
 
-.info {
-  margin-left: auto;
-  color: var(--dim);
-}
-
+/* what the stage says when it has nothing to draw */
 .message {
+  position: absolute;
+  inset: 0;
   margin: auto;
+  height: max-content;
   max-width: 520px;
   display: grid;
   gap: 6px;
@@ -122,15 +73,4 @@
   font-family: var(--f-data);
   font-size: 10px;
   letter-spacing: 0.08em;
-}
-
-@media (max-width: 899px) {
-  .head {
-    justify-items: stretch;
-    overflow-x: auto;
-  }
-
-  .track {
-    width: 100px;
-  }
 }

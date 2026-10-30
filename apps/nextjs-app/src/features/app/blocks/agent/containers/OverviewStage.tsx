@@ -1,15 +1,16 @@
 import type { IOverviewDatasetId } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useOverview, useOverviewCycle } from '../hooks/useOverview';
+import type { IFrame } from '../model/graph/layout';
 import type { IGNode } from '../model/graph/types';
 import { OVERVIEW_ORDER, datasetInfo } from '../model/overview/datasets';
+import { overviewFeed, overviewVectors } from '../model/panels';
 import { useCockpitStore } from '../state/cockpit-store';
+import { FlightLog, VectorsPanel } from '../ui/rail/RailPanels';
 import { NodeDetail } from '../ui/stage/NodeDetail';
-import { OverviewHead } from '../ui/stage/OverviewHead';
-import { Legend, Readout } from '../ui/stage/Readout';
+import { StageDeck } from '../ui/stage/StageDeck';
 import { StageKnobs, type IStageView } from '../ui/stage/StageHead';
-import s from '../ui/theme/cockpit.module.css';
 import o from '../ui/theme/overview.module.css';
 import { LazyConstellation } from './LazyConstellation';
 
@@ -20,26 +21,29 @@ const recordsOf = (counts: Record<string, number>) =>
 
 /**
  * The stage when no search is on it (overview design §4): the data base, one dataset a minute,
- * as a constellation with its readout, legend and the pinned node's strip.
+ * as a constellation with the HUD's readout, legend and pinned node, and the dataset's branches
+ * and latest records in the rail.
  */
-export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
+export const OverviewStage = ({
+  hasSearch,
+  rail,
+}: {
+  hasSearch: boolean;
+  rail: HTMLElement | null;
+}) => {
   const { t } = useTranslation('common');
   const ov = useOverview(true);
   useOverviewCycle(true);
   const store = useCockpitStore();
   const { cycle, cycleEvent, setStage, setView, setFocus, setDraft, pinOverview } = store;
+  const info = datasetInfo(ov.dataset);
   const chip = (id: IOverviewDatasetId) => t(`agent.cockpit.overview.${id}`, datasetInfo(id).chip);
-
-  const pick = useCallback(
-    (id: IOverviewDatasetId) => cycleEvent({ type: 'pick', id }),
-    [cycleEvent]
+  const vectors = useMemo(
+    () => (ov.graph ? overviewVectors(ov.graph, info) : []),
+    [ov.graph, info]
   );
-  const toggle = useCallback(() => {
-    const held = useCockpitStore
-      .getState()
-      .cycle.holds.some((h) => h === 'paused' || h === 'picked');
-    cycleEvent(held ? { type: 'resume' } : { type: 'hold', reason: 'paused' });
-  }, [cycleEvent]);
+  const feed = useMemo(() => (ov.vo ? overviewFeed(ov.vo, info) : []), [ov.vo, info]);
+
   const unpin = useCallback(() => pinOverview(undefined), [pinOverview]);
   const pointer = useCallback(
     (inside: boolean) => cycleEvent({ type: inside ? 'hold' : 'release', reason: 'pointer' }),
@@ -82,31 +86,36 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
       })
     : undefined;
   const stale = ov.error && ov.vo ? `STALE · ${ov.error}` : undefined;
+  const truncated = ov.vo?.truncated
+    ? t('agent.cockpit.overview.truncated', 'MORE NOT READ')
+    : undefined;
+  const updated = ov.vo
+    ? ` · ${t('agent.cockpit.overview.updated', 'UPDATED')} ${ov.vo.builtAt.slice(11, 16)}Z`
+    : '';
 
-  let body;
-  if (!ov.available.length) {
-    body = (
-      <div className={o.message}>
-        <b>{t('agent.cockpit.overview.nothing', 'NOTHING TO SHOW')}</b>
-        {OVERVIEW_ORDER.map((d) => (
-          <span key={d.id}>
-            {chip(d.id)} · {ov.failed[d.id]}
-          </span>
-        ))}
-      </div>
-    );
-  } else if (!ov.limited) {
-    body = (
-      <div className={o.message}>
-        {t('agent.cockpit.overview.reading', {
-          dataset: chip(ov.dataset),
-          defaultValue: `READING ${chip(ov.dataset)}…`,
-        })}
-      </div>
-    );
-  } else {
-    body = (
-      <div key={ov.dataset} className={o.chart}>
+  const chart = (frame: IFrame | null) => {
+    if (!ov.available.length)
+      return (
+        <div className={o.message}>
+          <b>{t('agent.cockpit.overview.nothing', 'NOTHING TO SHOW')}</b>
+          {OVERVIEW_ORDER.map((d) => (
+            <span key={d.id}>
+              {chip(d.id)} · {ov.failed[d.id]}
+            </span>
+          ))}
+        </div>
+      );
+    if (!ov.limited)
+      return (
+        <div className={o.message}>
+          {t('agent.cockpit.overview.reading', {
+            dataset: chip(ov.dataset),
+            defaultValue: `READING ${chip(ov.dataset)}…`,
+          })}
+        </div>
+      );
+    return (
+      <div key={ov.dataset} className={o.fade}>
         <LazyConstellation
           graph={ov.limited.graph}
           mode={store.layout}
@@ -117,64 +126,71 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
           onClear={unpin}
           onPointerInside={pointer}
           labels={!ov.narrow}
+          frame={frame}
         />
       </div>
     );
-  }
+  };
 
   return (
-    <section
-      className={`${s.panel} ${s.stage}`}
-      data-stage="overview"
-      aria-label={t('agent.cockpit.overview.label', 'Overview')}
-    >
-      <div className={s.stageHead}>
-        <Readout
-          top={`${t('agent.cockpit.overview.title', 'OVERVIEW')} · ${chip(ov.dataset)}`}
-          title={ov.vo?.path}
-          notes={[missing, showing, stale]}
-          metrics={ov.metrics}
-          live={cycle.holds.includes('picked') ? 'polite' : 'off'}
-        />
-        <span className={s.spacer} />
-        <div className={o.head}>
-          <span>
-            <StageKnobs
-              mode="overview"
-              hasSearch={hasSearch}
-              view={store.view}
-              layout={store.layout}
-              onOverview={() => undefined}
-              onView={showSearch}
-              onLayout={store.setLayout}
-            />
-          </span>
-          <OverviewHead cycle={cycle} failed={ov.failed} onPick={pick} onToggle={toggle} />
-        </div>
-      </div>
-      <div className={s.stageBody}>
-        {body}
-        {ov.pinned && ov.vo && (
+    <StageDeck
+      stage="overview"
+      label={t('agent.cockpit.overview.label', 'Overview')}
+      title={chip(ov.dataset)}
+      path={ov.vo?.path}
+      readout={{
+        top: `${t('agent.cockpit.overview.title', 'OVERVIEW')}${updated}`,
+        count: ov.vo ? recordsOf(ov.vo.counts) : '—',
+        unit: t('agent.cockpit.overview.records', 'RECORDS'),
+        notes: [missing, showing, truncated, stale],
+        live: cycle.holds.includes('picked') ? 'polite' : 'off',
+      }}
+      metrics={ov.metrics}
+      chart={chart}
+      aside={
+        ov.pinned &&
+        ov.vo && (
           <NodeDetail
             node={ov.pinned}
             kind={kindOf(ov.pinned.id)}
             baseId={ov.vo.baseId}
             onLeave={store.close}
             onAsk={ask}
-            onClose={() => pinOverview(undefined)}
+            onClose={unpin}
           />
-        )}
-      </div>
-      <div className={s.stageFoot}>
-        <Legend entries={datasetInfo(ov.dataset).legend} />
-        {ov.vo && (
-          <span className={o.info}>
-            {t('agent.cockpit.overview.updated', 'UPDATED')} {ov.vo.builtAt.slice(11, 16)}Z ·{' '}
-            {recordsOf(ov.vo.counts)} {t('agent.cockpit.overview.records', 'RECORDS')}
-            {ov.vo.truncated ? ` · ${t('agent.cockpit.overview.truncated', 'MORE NOT READ')}` : ''}
-          </span>
-        )}
-      </div>
-    </section>
+        )
+      }
+      knobs={
+        <StageKnobs
+          mode="overview"
+          hasSearch={hasSearch}
+          view={store.view}
+          layout={store.layout}
+          onOverview={() => undefined}
+          onView={showSearch}
+          onLayout={store.setLayout}
+        />
+      }
+      legend={info.legend}
+      rail={rail}
+      panels={
+        <>
+          <VectorsPanel
+            title={t(`agent.cockpit.rail.branches.${ov.dataset}`, info.branchTitle)}
+            hint={t('agent.cockpit.rail.branchHint', 'HOVER TO LIGHT BRANCH')}
+            vectors={vectors}
+            selected={store.overviewPinned}
+            onHover={ov.setHover}
+            onSelect={ov.pin}
+          />
+          <FlightLog
+            title={t(`agent.cockpit.rail.feed.${ov.dataset}`, info.feedTitle)}
+            hint={t('agent.cockpit.rail.feedHint', 'LATEST · UTC')}
+            rows={feed}
+            empty={t('agent.cockpit.rail.noFeed', 'No dated records yet.')}
+          />
+        </>
+      }
+    />
   );
 };

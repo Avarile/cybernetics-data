@@ -1,5 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import type { ILayoutMode, ITreeNode } from '../../model/graph/layout';
+import type { IFrame, ILayoutMode, ITreeNode } from '../../model/graph/layout';
 import type { IGraph } from '../../model/graph/types';
 import c from '../theme/constellation.module.css';
 import { ConstellationChart } from './constellation-chart';
@@ -22,6 +22,8 @@ export interface IConstellationProps {
   onPointerInside?: (inside: boolean) => void;
   /** Record labels (branches keep theirs); off on narrow screens. */
   labels?: boolean;
+  /** The free area of the full-bleed stage to centre in, clear of the readout. */
+  frame?: IFrame | null;
 }
 
 /** Records that arrive together beyond this many land without a pulse each. */
@@ -33,12 +35,14 @@ interface ITip {
   y: number;
 }
 
-const tipKey = (n: ITreeNode) =>
-  n.kind === 'root'
-    ? ''
-    : [n.short ?? n.table?.toUpperCase(), n.alert ? 'OVERDUE' : n.state]
-        .filter(Boolean)
-        .join(' · ');
+/** The card's head, as the cockpit's tip(): what the node is, and its state. */
+const tipHead = (n: ITreeNode): [string, string] => {
+  if (n.kind === 'root') return [n.label, ''];
+  const what =
+    n.short ?? n.table?.toUpperCase() ?? (n.kind === 'hub' ? 'GROUP' : n.kind.toUpperCase());
+  const state = n.state ?? (n.kind === 'hub' ? 'GROUP' : n.kind === 'actor' ? 'LINKED' : '');
+  return [what, state];
+};
 
 /**
  * The search or the data base as a radial constellation (cockpit design §5.4), drawn by D3 as
@@ -60,6 +64,7 @@ export const Constellation = memo(
     onClear,
     onPointerInside,
     labels = true,
+    frame = null,
   }: IConstellationProps) => {
     const frameRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
@@ -106,6 +111,10 @@ export const Constellation = memo(
     }, [rotator]);
 
     useEffect(() => {
+      chartRef.current?.setFrame(frame);
+    }, [frame]);
+
+    useEffect(() => {
       chartRef.current?.setView({ mode, lens: lens?.size ? lens : null, labels });
     }, [mode, lens, labels]);
 
@@ -147,20 +156,30 @@ export const Constellation = memo(
         {tip && (
           <div
             className={c.tip}
-            data-tone={tip.node.tone}
             style={{
               top: tip.y + 14,
               ...(flip ? { right: width - tip.x + 14 } : { left: tip.x + 14 }),
             }}
           >
-            {tipKey(tip.node) && <span className={c.tipKey}>{tipKey(tip.node)}</span>}
-            <b>{tip.node.label}</b>
+            <div className={c.k}>
+              <span>{tipHead(tip.node)[0]}</span>
+              <span data-tone={tip.node.tone}>{tipHead(tip.node)[1]}</span>
+            </div>
+            <div className={c.n}>{tip.node.label}</div>
             {tip.node.kind !== 'root' &&
-              tip.node.meta?.map(([k, v]) => (
-                <span key={k}>
-                  <i>{k}</i> {v}
-                </span>
-              ))}
+              tip.node.meta
+                ?.filter(([, v]) => v !== '')
+                .slice(0, 5)
+                .map(([k, v]) => (
+                  <div key={k} className={c.m}>
+                    {k}: {v}
+                  </div>
+                ))}
+            {tip.node.alert && (
+              <div className={c.m} data-tone="caution">
+                Needs attention
+              </div>
+            )}
           </div>
         )}
       </div>

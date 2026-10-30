@@ -24,6 +24,26 @@ export interface IRim {
   label: string;
 }
 
+/** Where each node is (angle, radius), by id. */
+export type IPos = Map<string, { x: number; y: number }>;
+
+/**
+ * Where each node glides from and to: from where it was, else from its nearest ancestor that
+ * was drawn, else up out of the core.
+ */
+export function glideEnds(h: IPoint, pos: IPos) {
+  const to: IPos = new Map();
+  const from: IPos = new Map();
+  h.each((d) => {
+    to.set(d.data.id, { x: d.x, y: d.y });
+    const prev = pos.get(d.data.id);
+    let anc = d.parent;
+    while (!prev && anc && !pos.has(anc.data.id)) anc = anc.parent;
+    from.set(d.data.id, prev ?? (anc && pos.get(anc.data.id)) ?? { x: d.x, y: 0 });
+  });
+  return { from, to };
+}
+
 export const norm = (a: number) => ((a % TAU) + TAU) % TAU;
 export const lerpAngle = (a: number, b: number, t: number) => {
   let d = norm(b - a);

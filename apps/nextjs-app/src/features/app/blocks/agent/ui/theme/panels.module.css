@@ -1,0 +1,255 @@
+/* The instrument rail (the ai-cockpit's cockpit.css): corner-marked panels, transparent over
+   the chart; the ask panel, which enlarges; the vectors and the flight log. Tokens come from
+   cockpit.module.css. */
+
+.panel {
+  --c: var(--bezel-2);
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 7px var(--void);
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bezel);
+  padding: 9px 11px 8px;
+  background:
+    linear-gradient(var(--c) 0 0) 0 0 / 7px 1px,
+    linear-gradient(var(--c) 0 0) 0 0 / 1px 7px,
+    linear-gradient(var(--c) 0 0) 100% 0 / 7px 1px,
+    linear-gradient(var(--c) 0 0) 100% 0 / 1px 7px,
+    linear-gradient(var(--c) 0 0) 0 100% / 7px 1px,
+    linear-gradient(var(--c) 0 0) 0 100% / 1px 7px,
+    linear-gradient(var(--c) 0 0) 100% 100% / 7px 1px,
+    linear-gradient(var(--c) 0 0) 100% 100% / 1px 7px,
+    transparent;
+  background-repeat: no-repeat;
+}
+.panel h2 {
+  margin: 0 0 7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font: 600 9.5px/1.2 var(--f-data);
+  letter-spacing: 0.16em;
+  color: var(--ink);
+}
+.panel h2 small {
+  font-weight: 400;
+  color: var(--dim);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bezel-2) transparent;
+}
+.vectorsBody {
+  max-height: 30vh;
+}
+.note {
+  color: var(--dim);
+  font-size: 10px;
+  padding: 8px 0;
+  margin: 0;
+}
+ol.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- the ask panel, and enlarged ---------- */
+.ask h2 {
+  align-items: center;
+}
+.ask h2 > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ask h2 :global(button) {
+  padding: 1px 5px;
+  font-size: 8px;
+}
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: color-mix(in srgb, var(--void) 70%, transparent);
+  backdrop-filter: blur(2px);
+}
+.ask[data-expanded='true'] {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 50;
+  width: 60vw;
+  height: 60vh;
+  max-width: 60vw;
+  max-height: 60vh;
+  background-color: color-mix(in srgb, var(--glass) 96%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--void) 80%, transparent);
+}
+
+/* ---------- vectors: a branch and its mix ---------- */
+.vec {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--bezel);
+  padding: 5px 2px 7px;
+  cursor: pointer;
+}
+.vec:hover {
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+.vec:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.vec header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.vec .nm {
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vec .nm span {
+  color: var(--dim);
+  margin-left: 6px;
+}
+.vec .pc {
+  font: 600 13px/1 var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+.vec[data-on='true'] .nm {
+  color: var(--target);
+}
+.stack {
+  display: flex;
+  height: 6px;
+  margin: 5px 0 4px;
+  gap: 1px;
+  background: var(--void);
+}
+.stack i {
+  display: block;
+  height: 100%;
+  min-width: 0;
+}
+.stack [data-tone='ink'] {
+  background: var(--ink);
+}
+.stack [data-tone='target'] {
+  background: var(--target);
+}
+/* hatched: tells active work from landed white */
+.stack [data-tone='route'] {
+  background: repeating-linear-gradient(-45deg, var(--route) 0 2px, var(--faint) 2px 3.5px);
+}
+.stack [data-tone='caution'] {
+  background: var(--caution);
+}
+.stack [data-tone='dim'] {
+  background: var(--faint);
+}
+.stack [data-tone='faint'] {
+  background: var(--bezel-2);
+}
+.vec .meta {
+  font-size: 8.5px;
+  color: var(--dim);
+  letter-spacing: 0.04em;
+}
+.vec .meta [data-tone] {
+  color: var(--c);
+}
+
+/* ---------- flight log ---------- */
+.log li {
+  display: grid;
+  grid-template-columns: 42px 54px minmax(0, 1fr);
+  gap: 7px;
+  padding: 2.5px 3px;
+  align-items: baseline;
+}
+.log .tm {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.log .vb {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-size: 9.5px;
+  color: var(--c, var(--ink-2));
+}
+.log .tx {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink-2);
+}
+.log .tx b {
+  color: var(--ink);
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+:global([data-palette='cyberpunk']) .panel {
+  --c: var(--chrome);
+  border-color: color-mix(in srgb, var(--chrome-2) 70%, transparent);
+}
+:global([data-palette='cyberpunk']) .panel.ask {
+  --c: var(--route);
+  border-color: color-mix(in srgb, var(--route) 35%, transparent);
+}
+:global([data-palette='cyberpunk']) .panel h2 {
+  color: var(--chrome);
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 10px var(--glow);
+}
+:global([data-palette='cyberpunk']) .ask h2 {
+  color: var(--route);
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 10px color-mix(in srgb, var(--route) 45%, transparent);
+}
+:global([data-palette='cyberpunk']) .log .vb[data-tone='target'] {
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 10px color-mix(in srgb, var(--target) 55%, transparent);
+}
+
+@media (max-width: 1180px) {
+  .body {
+    max-height: 330px;
+  }
+  .ask {
+    height: min(70vh, 560px);
+  }
+}
+@media (max-width: 720px) {
+  .ask[data-expanded='true'] {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+}

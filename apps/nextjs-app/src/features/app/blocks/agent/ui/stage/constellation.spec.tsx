@@ -79,7 +79,7 @@ describe('constellation (cockpit design §5.4)', () => {
     const { container } = render(<Chart />);
     const zoomed = container.querySelector('svg')!.firstElementChild!;
     expect(zoomed.getAttribute('transform')).toBe('translate(0,0) scale(1)');
-    expect(zoomed.firstElementChild!.getAttribute('transform')).toBe('translate(400,300)');
+    expect(zoomed.firstElementChild!.getAttribute('transform')).toBe('translate(400,304)');
   });
 
   it('pins the people in turn with ] and [', async () => {

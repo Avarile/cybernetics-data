@@ -105,7 +105,10 @@ describe('constellation graph (cockpit design §5.4)', () => {
     expect(h.leaves().every((d) => Math.abs(d.y - 200) < 1e-9)).toBe(true);
     expect(h.leaves().every((d) => d.x >= 0 && d.x <= TAU)).toBe(true);
     const wide = geometry(1200, 800, h.leaves().length);
-    expect(wide).toMatchObject({ cx: 600, cy: 400, r: 382, narrow: false });
+    expect(wide).toMatchObject({ cx: 600, cy: 404, r: 374, narrow: false });
+    // full-bleed: centred in the free area, the ring clear of the readout's corner
+    const framed = geometry(1200, 800, 10, { x0: 300, x1: 1100, clear: { x: 400, y: 500 } });
+    expect(framed).toMatchObject({ cx: 700, cy: 400, r: 288 });
     expect(wide.rIn).toBeLessThan(wide.r);
     expect(geometry(390, 600, 10).narrow).toBe(true);
     const fit = labelFit(wide, h.leaves().length, false);

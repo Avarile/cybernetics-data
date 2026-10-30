@@ -1,0 +1,93 @@
+/* The dataset menu of the annunciator (the ai-cockpit's ds-menu): the four datasets with their
+   keys, and the minute's progress beside it. Tokens come from cockpit.module.css. */
+
+.dsMenu {
+  position: relative;
+}
+/* the open list is solid enough to read over the chart; no backdrop blur */
+.dsList {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: color-mix(in srgb, var(--glass) 96%, transparent);
+  border: 1px solid var(--bezel-2);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--void) 80%, transparent);
+}
+.dsList li {
+  display: grid;
+  grid-template-columns: 14px auto;
+  column-gap: 10px;
+  padding: 6px 14px 6px 10px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+}
+.dsList li:hover,
+.dsList li[data-active='true'] {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+.dsList li[aria-selected='true'] {
+  border-left-color: var(--route);
+}
+.dsList li[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.dsList kbd {
+  grid-row: 1 / span 2;
+  align-self: center;
+  font: 400 8.5px var(--f-data);
+  color: var(--faint);
+}
+.dsList b {
+  font-weight: 600;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+}
+.dsList li[aria-selected='true'] b {
+  color: var(--ink);
+}
+.dsList small {
+  grid-column: 2;
+  font-size: 8px;
+  color: var(--dim);
+  letter-spacing: 0.1em;
+}
+.dsNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--dim);
+  letter-spacing: 0.08em;
+}
+.track {
+  position: relative;
+  width: 90px;
+  height: 2px;
+  background: var(--bezel);
+  overflow: hidden;
+}
+.progress {
+  position: absolute;
+  inset: 0;
+  background: var(--route);
+  transform-origin: left center;
+  animation-name: fill;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

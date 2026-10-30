@@ -6,25 +6,31 @@ import { useTranslation } from 'next-i18next';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import s from '../theme/cockpit.module.css';
+import d from '../theme/deck.module.css';
 
 export type IPalette = 'mono' | 'cyberpunk';
 
-/** The strip on top (cockpit design §5.2); the thread menu comes in as a child. */
-export const Annunciator = ({ children }: { children: ReactNode }) => (
-  <header className={s.annunciator}>{children}</header>
-);
-
-export const Mark = () => {
+/**
+ * The strip on top (cockpit design §5.2, the cockpit's annunciator): the sources (thread,
+ * dataset, focus) on the left, the link (palette, status, clock, power) on the right.
+ */
+export const Annunciator = ({ sources, link }: { sources: ReactNode; link: ReactNode }) => {
   const { t } = useTranslation('common');
-  return <h1 className={s.mark}>◇ {t('agent.cockpit.title', 'AGENT COCKPIT')}</h1>;
+  return (
+    <header className={`${s.annunciator} ${d.top}`} data-annunciator>
+      <h1 className="sr-only">{t('agent.cockpit.title', 'AGENT COCKPIT')}</h1>
+      <nav className={s.sources} aria-label={t('agent.cockpit.sources', 'Thread and dataset')}>
+        {sources}
+      </nav>
+      <div className={s.link}>{link}</div>
+    </header>
+  );
 };
-
-export const Spacer = () => <span className={s.spacer} />;
 
 export const FocusChip = ({ text, onClear }: { text: string; onClear: () => void }) => {
   const { t } = useTranslation('common');
   return (
-    <span className={`${s.chip} ${s.hideNarrow}`}>
+    <span className={s.chip}>
       {t('agent.cockpit.focus', 'FOCUS')} · {text}
       <button
         type="button"
@@ -121,11 +127,7 @@ export const PaletteSwitch = ({
 }) => {
   const { t } = useTranslation('common');
   return (
-    <span
-      className={`${s.knobs} ${s.hideNarrow}`}
-      role="group"
-      aria-label={t('agent.cockpit.palette', 'Colour theme')}
-    >
+    <span className={s.knobs} role="group" aria-label={t('agent.cockpit.palette', 'Colour theme')}>
       {(['mono', 'cyberpunk'] as const).map((p) => (
         <button
           key={p}

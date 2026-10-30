@@ -53,7 +53,8 @@ export function useOverview(active: boolean) {
   const cycleEvent = useCockpitStore((s) => s.cycleEvent);
   const pinned = useCockpitStore((s) => s.overviewPinned);
   const [hover, setHover] = useState<string>();
-  const [failed, setFailed] = useState<Partial<Record<IOverviewDatasetId, string>>>({});
+  const failed = useCockpitStore((s) => s.overviewFailed);
+  const failDataset = useCockpitStore((s) => s.failDataset);
   const narrow = useNarrow();
   const dataset = currentDataset(cycle) ?? OVERVIEW_ORDER[0].id;
   const query = useQuery({ ...overviewQuery(dataset), enabled: active });
@@ -65,8 +66,8 @@ export function useOverview(active: boolean) {
     if (query.error) reason = reasonOf(query.error);
     else if (vo && !vo.nodes.length)
       reason = vo.missing.length ? `NOT IN THIS BASE: ${vo.missing.join(', ')}` : 'NOTHING TO DRAW';
-    if (reason) setFailed((f) => ({ ...f, [dataset]: reason }));
-  }, [query.error, vo, dataset]);
+    if (reason) failDataset(dataset, reason);
+  }, [query.error, vo, dataset, failDataset]);
   const available = useMemo(
     () => OVERVIEW_ORDER.map((d) => d.id).filter((id) => !failed[id]),
     [failed]

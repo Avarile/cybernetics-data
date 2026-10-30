@@ -16,7 +16,9 @@ import {
   labelFit,
   labelOf,
   layoutTree,
+  sameFrame,
   type IDatum,
+  type IFrame,
   type IGeometry,
   type ILayoutMode,
   type IPoint,
@@ -25,6 +27,7 @@ import {
 import type { IGLink, IGraph } from '../../model/graph/types';
 import {
   arcPath,
+  glideEnds,
   glyph,
   keyOf,
   leavesOf,
@@ -32,12 +35,12 @@ import {
   nodeClass,
   norm,
   rimsOf,
+  type IPos,
   type IRim,
 } from './constellation-marks';
 
 type ILink = HierarchyPointLink<IDatum>;
 type IGroup = Selection<SVGGElement, unknown, null, undefined>;
-type IPos = Map<string, { x: number; y: number }>;
 interface IEdge {
   id: string;
   link: IGLink;
@@ -90,6 +93,7 @@ export class ConstellationChart {
   private view: IChartView = { mode: 'bundle', lens: null, lit: null, labels: true };
   private width = 0;
   private height = 0;
+  private frame: IFrame | null = null;
   private geo: IGeometry = geometry(0, 0, 1);
   private reduced = false;
   private glide: Timer | null = null;
@@ -154,6 +158,16 @@ export class ConstellationChart {
   setModel(graph: IGraph, options: { fresh?: boolean; changed?: Set<string> } = {}) {
     this.graph = graph;
     this.rebuild(options.changed, options.fresh);
+  }
+
+  /**
+   * The free area of a full-bleed chart (beside the floating panels, clear of the readout), or
+   * null to centre on the whole box: the cockpit's setFrame.
+   */
+  setFrame(frame: IFrame | null) {
+    const same = sameFrame(frame, this.frame);
+    this.frame = frame;
+    if (!same) this.rebuild();
   }
 
   /** Mode, lens and labels change the tree (a rebuild); the lit trace only the focus. */
@@ -230,18 +244,10 @@ export class ConstellationChart {
     if (!this.graph || !this.width) return;
     if (fresh) this.pos.clear();
     const data = buildTree(this.graph, this.view.lens);
-    this.geo = geometry(this.width, this.height, leavesOf(data));
+    this.geo = geometry(this.width, this.height, leavesOf(data), this.frame);
     this.gc.attr('transform', `translate(${this.geo.cx},${this.geo.cy})`);
     const h = layoutTree(data, this.view.mode, this.geo.rIn);
-    const to: IPos = new Map();
-    const from: IPos = new Map();
-    h.each((d) => to.set(d.data.id, { x: d.x, y: d.y }));
-    h.each((d) => {
-      const prev = this.pos.get(d.data.id);
-      let anc = d.parent;
-      while (!prev && anc && !this.pos.has(anc.data.id)) anc = anc.parent;
-      from.set(d.data.id, prev ?? (anc && this.pos.get(anc.data.id)) ?? { x: d.x, y: 0 });
-    });
+    const { from, to } = glideEnds(h, this.pos);
     this.joins(h);
     for (const id of [...this.pos.keys()]) if (!to.has(id)) this.pos.delete(id);
     this.animate(from, to, () => this.pulse(changed), fresh);

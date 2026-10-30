@@ -103,6 +103,7 @@ describe('agent cockpit (cockpit design §4)', () => {
       view: 'board',
       overviewPinned: undefined,
       draft: undefined,
+      overviewFailed: {},
       cycle: startCycle(['work', 'knowledge', 'people', 'finance']),
     });
   });
@@ -138,6 +139,42 @@ describe('agent cockpit (cockpit design §4)', () => {
     act(() => chat.onData(part));
     expect(useCockpitStore.getState().stage).toBe('search');
     expect(await screen.findAllByRole('region', { name: 'Search board' })).not.toHaveLength(0);
+  });
+
+  it('lays the overview out as the ai-cockpit: rail panels under the ask, a dataset menu', async () => {
+    render(<AgentCockpitHost />);
+    act(() => useCockpitStore.getState().open());
+    const rail = (await screen.findByRole('region', { name: 'GOAL VECTORS' })).parentElement!;
+    expect(rail.firstElementChild?.getAttribute('aria-label')).toBe('ask');
+    expect(screen.getByRole('region', { name: 'RECENT WORK' })).toBeTruthy();
+    expect(screen.getByText('No dated records yet.')).toBeTruthy();
+    // a branch in the vectors stays lit when clicked
+    await userEvent.click(await screen.findByRole('button', { name: /Ship/ }));
+    expect(useCockpitStore.getState().overviewPinned).toBe('rec:G');
+    // the dataset menu lists the four; a pick holds that one
+    await userEvent.click(screen.getByRole('button', { name: 'DATASET WORK' }));
+    expect(screen.getAllByRole('option')).toHaveLength(4);
+    await userEvent.click(screen.getByRole('option', { name: /KNOWLEDGE/ }));
+    const cycle = useCockpitStore.getState().cycle;
+    expect([cycle.order[cycle.index], cycle.holds]).toEqual([
+      'knowledge',
+      expect.arrayContaining(['picked']),
+    ]);
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('takes a dataset key from a search back to the overview', async () => {
+    const { live } = liveSearch();
+    useSessionStore.setState({ session: live, loading: false, error: undefined });
+    useCockpitStore.setState({ stage: 'search', view: 'board' });
+    render(<AgentCockpitHost />);
+    act(() => useCockpitStore.getState().open());
+    await screen.findAllByRole('region', { name: 'Search board' });
+    expect(screen.getByRole('region', { name: 'TABLES' })).toBeTruthy();
+    act(() => (document.activeElement as HTMLElement | null)?.blur());
+    await userEvent.keyboard('3');
+    const { stage, cycle } = useCockpitStore.getState();
+    expect([stage, cycle.order[cycle.index]]).toEqual(['overview', 'people']);
   });
 
   it('drives the overview by key: T, 0, a dataset by number, P and Escape', async () => {

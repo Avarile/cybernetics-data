@@ -28,6 +28,8 @@ export interface IGNode {
   overflow?: boolean;
   /** 0-4: priority or amount. */
   size?: number;
+  /** A money amount (finance), summed per branch. */
+  amount?: number;
   date?: number;
   state?: string;
   table?: string;
@@ -53,6 +55,8 @@ export interface IBranch {
   count: number;
   mix: Record<ITone, number>;
   alert: number;
+  /** The amounts of its records, unsigned. */
+  sum: number;
 }
 
 export interface IGraphInput {
@@ -86,6 +90,7 @@ export function finishGraph(input: IGraphInput): IGraph {
     const mix = Object.fromEntries(TONES.map((t) => [t, 0])) as Record<ITone, number>;
     let count = 0;
     let alert = 0;
+    let sum = 0;
     const seen = new Set<string>();
     const stack = [r];
     while (stack.length) {
@@ -97,8 +102,9 @@ export function finishGraph(input: IGraphInput): IGraph {
       count++;
       mix[n.tone]++;
       if (n.alert) alert++;
+      sum += Math.abs(n.amount ?? 0);
     }
-    return { id: r.id, label: r.label, count, mix, alert };
+    return { id: r.id, label: r.label, count, mix, alert, sum };
   });
   return { ...input, byId, kids, branches };
 }

@@ -1,0 +1,429 @@
+/* The cockpit's deck, ported from the ai-cockpit's cockpit.css and cyberpunk.css: the chart is a
+   full-bleed layer under everything; the annunciator and the instrument rail float over it,
+   transparent, with corner-marked panels; the HUD sits in the free area beside the rail.
+   Tokens, knobs and chips come from cockpit.module.css. */
+
+.deck {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--gap);
+  height: 100%;
+  min-height: 560px;
+  padding-block: 10px 12px;
+}
+
+/* the strip and the grid float over the chart; only their instruments take the pointer */
+.top,
+.grid {
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+.top {
+  z-index: 4;
+}
+.top > *,
+.rail > * {
+  pointer-events: auto;
+}
+.top,
+.hud {
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 7px var(--void);
+}
+
+/* ---------- the grid: free area, then the rail ---------- */
+.grid {
+  display: grid;
+  gap: var(--gap);
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr) var(--rail);
+  grid-template-rows: minmax(0, 1fr);
+}
+.rail {
+  grid-column: 2;
+  display: grid;
+  gap: var(--gap);
+  min-height: 0;
+  min-width: 0;
+  /* the cockpit's min-content ask panel holds one answer; this one a whole conversation, so it
+     takes a share and scrolls */
+  grid-template-rows: minmax(240px, 3fr) auto minmax(0, 2fr);
+}
+
+/* ---------- the stage: the chart under everything ---------- */
+.stage {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: 0;
+  left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  overflow: hidden;
+  contain: strict;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 42% 50%, var(--wash) 0, transparent 40%),
+    radial-gradient(circle, color-mix(in srgb, var(--ink) 9%, transparent) 0.6px, transparent 0.9px)
+      0 0 / 14px 14px,
+    var(--void);
+}
+.stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 42% 50%,
+    transparent 55%,
+    color-mix(in srgb, var(--void) 80%, transparent) 100%
+  );
+}
+.chart {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+/* the search board in the free area, right of the readout and under the knobs */
+.boardArea {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--hud-t, 0px) + 40px);
+  right: var(--hud-r, 0px);
+  bottom: calc(var(--hud-b, 0px) + 40px);
+  left: calc(var(--hud-l, 0px) + 262px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------- HUD: corner overlays in the free area ---------- */
+.hud {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  top: var(--hud-t, 0px);
+  right: var(--hud-r, 0px);
+  bottom: var(--hud-b, 0px);
+  left: var(--hud-l, 0px);
+}
+.ov {
+  position: absolute;
+  z-index: 2;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+}
+.ovTl {
+  top: 10px;
+  left: 12px;
+  display: grid;
+  justify-items: start;
+}
+.ovTl > b {
+  display: block;
+  color: var(--ink);
+  font: 600 11px/1.2 var(--f-data);
+  letter-spacing: 0.16em;
+}
+.ovTl > span {
+  color: var(--dim);
+  font-size: 8.5px;
+}
+.ovTr {
+  top: 10px;
+  right: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  pointer-events: auto;
+}
+.ovBl {
+  left: 12px;
+  bottom: 10px;
+}
+
+/* the readout: name, count and unit, fixed in the corner while the chart turns */
+.readout {
+  display: grid;
+  gap: 10px;
+  width: 224px;
+  margin-top: 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--bezel-2);
+}
+.readout[data-lens='true'] {
+  border-left-color: var(--route);
+}
+.readout .head {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+}
+.coreTop,
+.coreUnit {
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--dim);
+}
+.readout[data-lens='true'] .coreTop {
+  color: var(--route);
+}
+.coreN {
+  font: 600 34px/1 var(--f-display);
+  font-stretch: 85%;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.coreNote {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--caution);
+}
+/* totals: one row per metric, label left and value right */
+.kpis {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--bezel);
+}
+.kpis:empty {
+  display: none;
+}
+.kpis > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+}
+.kpis dt {
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpis dd {
+  margin: 0;
+  font: 600 12.5px/1.2 var(--f-display);
+  font-stretch: 85%;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.kpis dd small {
+  margin-left: 5px;
+  font: 400 8.5px var(--f-data);
+  letter-spacing: 0.06em;
+  color: var(--dim);
+}
+.kpis [data-tone='route'] dd {
+  color: var(--route);
+}
+.kpis [data-tone='target'] dd {
+  color: var(--target);
+}
+.kpis [data-tone='caution'] dd {
+  color: var(--caution);
+}
+.kpis [data-tone='dim'] dd {
+  color: var(--ink-2);
+}
+.kpiSlot {
+  display: none;
+}
+
+/* the lens chip: what the chart is narrowed to, with the way back */
+.lensChip {
+  pointer-events: auto;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: min(520px, 60vw);
+  border: 1px solid var(--route);
+  background: color-mix(in srgb, var(--void) 88%, transparent);
+  padding: 3px 4px 3px 8px;
+  color: var(--ink);
+}
+.lensChip i {
+  width: 6px;
+  height: 6px;
+  background: var(--route);
+  transform: rotate(45deg);
+  flex: none;
+}
+.lensChip[data-kind='searching'] i {
+  animation: blink 0.8s steps(1) infinite;
+}
+.lensChip span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 9px;
+}
+.lensChip button {
+  background: none;
+  border: 0;
+  color: var(--dim);
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 11px;
+}
+.lensChip button:hover {
+  color: var(--ink);
+}
+
+/* ---------- legend and symbology ---------- */
+.legend {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 3px 14px;
+}
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8.5px;
+  color: var(--dim);
+}
+.sym {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c, var(--ink-2));
+}
+.sym[data-mark='ring'] {
+  background: transparent;
+  border: 1.5px solid var(--c);
+}
+.sym[data-mark='halo'] {
+  box-shadow:
+    0 0 0 2px var(--void),
+    0 0 0 3px var(--caution);
+}
+.sym[data-mark='diamond'] {
+  border-radius: 0;
+  transform: rotate(45deg) scale(0.82);
+}
+.sym[data-mark='hatch'] {
+  background: repeating-linear-gradient(-45deg, var(--c) 0 2px, var(--faint) 2px 4px);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* ---------- CYBERPUNK: red draws the frame; the count and the ask panel read in yellow ---------- */
+:global([data-palette='cyberpunk']) .stage {
+  background:
+    radial-gradient(circle at 42% 50%, var(--wash) 0, transparent 46%),
+    radial-gradient(
+      ellipse at 100% 0%,
+      color-mix(in srgb, var(--chrome) 16%, transparent) 0,
+      transparent 50%
+    ),
+    radial-gradient(
+      ellipse at 0% 100%,
+      color-mix(in srgb, var(--chrome-2) 24%, transparent) 0,
+      transparent 48%
+    ),
+    radial-gradient(
+        circle,
+        color-mix(in srgb, var(--chrome) 30%, transparent) 0.6px,
+        transparent 0.9px
+      )
+      0 0 / 14px 14px,
+    var(--void);
+}
+:global([data-palette='cyberpunk']) .ovTl > b {
+  color: var(--chrome);
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 10px var(--glow);
+}
+:global([data-palette='cyberpunk']) .readout {
+  border-left-color: var(--chrome);
+}
+:global([data-palette='cyberpunk']) .coreN {
+  color: var(--route);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--route) 45%, transparent);
+}
+:global([data-palette='cyberpunk']) .kpis [data-tone='target'] dd {
+  text-shadow:
+    0 0 3px var(--void),
+    0 0 10px color-mix(in srgb, var(--target) 55%, transparent);
+}
+
+/* ---------- stacked: the chart boxed in the flow, totals above it, the rail below ---------- */
+@media (max-width: 1180px) {
+  .deck {
+    height: auto;
+    min-height: 0;
+    grid-template-rows: auto;
+  }
+  .top {
+    order: 1;
+  }
+  .kpiSlot {
+    display: block;
+    order: 2;
+  }
+  .kpiSlot .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .ovTl .kpis {
+    display: none;
+  }
+  .stage {
+    position: relative;
+    order: 3;
+    left: auto;
+    right: auto;
+    height: min(86vw, 680px);
+    min-height: 400px;
+    border: 1px solid var(--bezel);
+  }
+  .grid {
+    order: 4;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+  .grid,
+  .rail {
+    pointer-events: auto;
+  }
+  .rail {
+    grid-column: 1;
+    grid-template-rows: auto;
+  }
+  .boardArea {
+    top: 120px;
+    left: 12px;
+    right: 12px;
+  }
+}
+@media (max-width: 720px) {
+  .stage {
+    height: min(118vw, 560px);
+    min-height: 380px;
+  }
+  .legend {
+    grid-template-columns: auto;
+  }
+  .legend span:nth-child(n + 5) {
+    display: none;
+  }
+}

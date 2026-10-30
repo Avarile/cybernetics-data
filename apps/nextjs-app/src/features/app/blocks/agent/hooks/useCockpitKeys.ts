@@ -106,11 +106,13 @@ const resetZoom: IKeyAction = (root) => {
   useCockpitStore.getState().resetZoom();
   return true;
 };
-/** `1`–`4`: that dataset of the overview, held there. */
-const pickDataset: IKeyAction = (root, key) => {
+/** `1`–`4`: that dataset of the overview, held there; from a search, back to the overview. */
+const pickDataset: IKeyAction = (_root, key) => {
   const dataset = OVERVIEW_ORDER[Number(key) - 1];
-  if (!onOverview(root) || !dataset) return false;
-  useCockpitStore.getState().cycleEvent({ type: 'pick', id: dataset.id });
+  if (!dataset) return false;
+  const store = useCockpitStore.getState();
+  store.setStage('overview');
+  store.cycleEvent({ type: 'pick', id: dataset.id });
   return true;
 };
 /** `P`: the overview's cycle paused or going on. */
@@ -167,8 +169,8 @@ const actions: Record<string, IKeyAction> = {
 /**
  * Keys inside the cockpit (cockpit design §5.8, overview design §7): `/` composer, `V` overview,
  * board or constellation, `[` `]` lanes (board) or people (charts), `T` bundle or tree, `0` reset
- * the zoom, `1`–`4` a dataset and `P` pause (overview), `F` browser full screen, `Mod+Shift+O`
- * new conversation, `Esc` unpins, then drops the lens or resumes the cycle.
+ * the zoom, `1`–`4` a dataset (from anywhere), `P` pause (overview), `F` browser full screen,
+ * `Mod+Shift+O` new conversation, `Esc` unpins, then drops the lens or resumes the cycle.
  */
 export function useCockpitKeys(root: RefObject<HTMLElement>) {
   useEffect(() => {

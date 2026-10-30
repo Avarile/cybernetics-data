@@ -1,4 +1,5 @@
 import { LocalStorageKeys } from '@cybernetics/sdk/config';
+import type { IOverviewDatasetId } from '@teable/openapi';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ILayoutMode } from '../model/graph/layout';
@@ -52,6 +53,8 @@ interface ICockpitState {
   overviewPinned?: string;
   /** Text the composer takes up once (ASK on an overview node). */
   draft?: string;
+  /** Overview datasets that cannot be shown, and why (no access, nothing to draw). */
+  overviewFailed: Partial<Record<IOverviewDatasetId, string>>;
   open: (options?: IOpenCockpit) => void;
   close: () => void;
   toggle: (options?: IOpenCockpit) => void;
@@ -69,6 +72,7 @@ interface ICockpitState {
   pinOverview: (id?: string) => void;
   setFocus: (focus?: IAgentFocus) => void;
   setDraft: (draft?: string) => void;
+  failDataset: (id: IOverviewDatasetId, reason: string) => void;
 }
 
 export const useCockpitStore = create<ICockpitState>()(
@@ -81,6 +85,7 @@ export const useCockpitStore = create<ICockpitState>()(
       zoomResets: 0,
       stage: 'overview',
       cycle: startCycle(OVERVIEW_ORDER.map((d) => d.id)),
+      overviewFailed: {},
       open: (options = {}) => {
         const sessions = useSessionStore.getState();
         const threadId = options.threadId ?? (sessions.session ? undefined : rememberedThread());
@@ -109,6 +114,10 @@ export const useCockpitStore = create<ICockpitState>()(
       pinOverview: (overviewPinned) => set({ overviewPinned }),
       setFocus: (focus) => set({ focus }),
       setDraft: (draft) => set({ draft }),
+      failDataset: (id, reason) =>
+        get().overviewFailed[id] === reason
+          ? undefined
+          : set({ overviewFailed: { ...get().overviewFailed, [id]: reason } }),
     }),
     {
       name: LocalStorageKeys.AgentCockpit,

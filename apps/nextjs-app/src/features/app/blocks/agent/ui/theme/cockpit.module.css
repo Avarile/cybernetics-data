@@ -20,20 +20,19 @@
   --chrome-2: var(--bezel-2);
   --action: var(--ink-2);
   --glow: transparent;
-  --rail: clamp(320px, 30vw, 420px);
+  --wash: color-mix(in srgb, var(--ink) 3%, transparent);
+  --rail: clamp(300px, 26vw, 360px);
   --gap: 10px;
   --f-display: var(--font-tektur), 'Arial Narrow', system-ui, sans-serif;
   --f-data: var(--font-martian), ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --f-body: var(--font-plex), system-ui, -apple-system, 'Segoe UI', sans-serif;
 
+  /* the page of the ai-cockpit: the deck fills it, the chart runs under everything */
   position: fixed;
   inset: 0;
   z-index: 50;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: var(--gap);
-  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 12px
-    max(16px, env(safe-area-inset-left, 0px));
+  overflow: hidden;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
   background: var(--void);
   color: var(--ink);
   color-scheme: dark;
@@ -60,6 +59,7 @@
   --chrome: #c5003c;
   --chrome-2: #880425;
   --action: var(--route);
+  --wash: color-mix(in srgb, var(--target) 15%, transparent);
   --glow: color-mix(in srgb, #c5003c 70%, transparent);
 }
 .cockpit :focus-visible {
@@ -100,51 +100,79 @@
   color: var(--c, var(--ink));
 }
 
-/* ---------- annunciator ---------- */
+/* ---------- annunciator: the dataset bar left, the link and clock right ---------- */
 .annunciator {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+  border-bottom: 1px solid var(--bezel);
+  padding-bottom: 10px;
+}
+.sources {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.sources .lbl {
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  color: var(--dim);
+}
+.link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 14px;
-  min-width: 0;
-  border-bottom: 1px solid var(--chrome-2);
-  padding: 2px 0 8px;
-}
-.mark {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: var(--f-display);
-  font-size: 15px;
-  letter-spacing: 0.12em;
-  color: var(--chrome);
-  white-space: nowrap;
-  text-shadow: 0 0 8px var(--glow);
 }
 .menuButton {
+  /* the cockpit's dataset button: name, source, caret */
   display: inline-flex;
   align-items: baseline;
   gap: 8px;
-  min-width: 0;
-  max-width: 34vw;
+  min-width: 220px;
+  max-width: 30vw;
   border: 1px solid var(--bezel-2);
   background: transparent;
-  padding: 4px 9px;
+  color: var(--ink);
+  padding: 5px 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
   cursor: pointer;
-}
-.menuButton small {
-  color: var(--dim);
-  letter-spacing: 0.14em;
-  font-size: 9px;
 }
 .menuButton b {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 600;
-  letter-spacing: 0.04em;
 }
-.menuButton:hover {
+.menuButton small {
+  font-size: 8px;
+  color: var(--dim);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+.menuButton:hover,
+.menuButton[aria-expanded='true'] {
   border-color: var(--ink-2);
+}
+.caret {
+  margin-left: auto;
+  align-self: center;
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-right: 1px solid var(--ink-2);
+  border-bottom: 1px solid var(--ink-2);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.15s;
+}
+.menuButton[aria-expanded='true'] .caret {
+  transform: translateY(2px) rotate(-135deg);
 }
 .chip {
   display: inline-flex;
@@ -181,21 +209,23 @@
   cursor: pointer;
   padding: 0;
 }
-.spacer {
-  flex: 1;
-}
 .knobs {
   display: inline-flex;
   gap: 3px;
 }
 .knob {
+  /* the cockpit's knob: glass over the chart, dim until pointed at or pressed */
   border: 1px solid var(--bezel-2);
-  background: transparent;
-  color: var(--ink-2);
-  padding: 2px 7px;
+  background: color-mix(in srgb, var(--void) 80%, transparent);
+  color: var(--dim);
+  padding: 3px 7px;
   font-size: 9px;
   letter-spacing: 0.12em;
   cursor: pointer;
+}
+.knob:hover {
+  color: var(--ink);
+  border-color: var(--ink-2);
 }
 .knob[aria-pressed='true'] {
   background: var(--action);
@@ -207,9 +237,10 @@
   cursor: not-allowed;
 }
 .zulu {
-  color: var(--dim);
+  color: var(--ink-2);
   font-size: 10px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .power {
@@ -246,162 +277,6 @@
 .diag dd {
   margin: 0;
   overflow-wrap: anywhere;
-}
-
-/* ---------- deck: stage + rail ---------- */
-.deck {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--rail);
-  gap: var(--gap);
-  min-height: 0;
-}
-.panel {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-  border: 1px solid var(--bezel);
-  background: var(--glass);
-}
-.panel h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--bezel);
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  color: var(--chrome);
-  text-shadow: 0 0 6px var(--glow);
-}
-.panel h2 small {
-  font-weight: 400;
-  color: var(--dim);
-  letter-spacing: 0.08em;
-}
-
-/* ---------- stage ---------- */
-.stage {
-  background: radial-gradient(
-      circle at 42% 50%,
-      color-mix(in srgb, var(--ink) 3%, transparent) 0,
-      transparent 46%
-    ),
-    var(--void);
-}
-.stageHead {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 12px 6px;
-}
-.readout {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-.readout .top {
-  color: var(--dim);
-  letter-spacing: 0.16em;
-  font-size: 9px;
-}
-.readout .title {
-  font-family: var(--f-display);
-  font-size: 18px;
-  letter-spacing: 0.06em;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.readout .note {
-  color: var(--caution);
-  font-size: 9px;
-  letter-spacing: 0.06em;
-}
-.kpis {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  margin: 0;
-}
-.kpis div {
-  display: grid;
-}
-.kpis dt {
-  color: var(--dim);
-  font-size: 8.5px;
-  letter-spacing: 0.14em;
-}
-.kpis dd {
-  margin: 0;
-  font-family: var(--f-display);
-  font-size: 20px;
-  line-height: 1.1;
-  color: var(--c, var(--ink));
-  font-variant-numeric: tabular-nums;
-}
-.kpis dd small {
-  font-family: var(--f-data);
-  font-size: 9px;
-  color: var(--dim);
-  margin-left: 4px;
-}
-.stageBody {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-}
-.stageFoot {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 6px 12px;
-  border-top: 1px solid var(--bezel);
-  font-size: 9px;
-  color: var(--dim);
-  letter-spacing: 0.08em;
-  flex-wrap: wrap;
-}
-.legend {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* symbology */
-.sym {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--c, var(--ink));
-  flex: none;
-}
-.sym[data-mark='ring'] {
-  background: transparent;
-  border: 1.5px solid var(--c);
-}
-.sym[data-mark='halo'] {
-  box-shadow:
-    0 0 0 2px var(--void),
-    0 0 0 3px var(--caution);
-}
-.sym[data-mark='diamond'] {
-  border-radius: 0;
-  transform: rotate(45deg) scale(0.85);
-}
-.sym[data-mark='hatch'] {
-  background: repeating-linear-gradient(-45deg, var(--c) 0 2px, var(--faint) 2px 4px);
 }
 
 /* standby */
@@ -682,13 +557,6 @@
   overflow-x: auto;
 }
 
-/* ---------- ask rail ---------- */
-.rail {
-  background: var(--glass);
-}
-.rail h2 {
-  color: var(--route);
-}
 .transcript {
   padding: 10px;
   display: flex;
@@ -865,7 +733,7 @@
 .lensRow {
   display: flex;
   gap: 4px;
-  padding: 6px 10px;
+  padding: 6px 0;
   border-top: 1px solid var(--bezel);
   flex-wrap: wrap;
 }
@@ -888,47 +756,8 @@
   color: var(--ink);
 }
 .composer {
-  border-top: 1px solid var(--bezel);
-  padding: 8px;
-}
-
-/* ---------- run log ---------- */
-.log {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: 120px;
-  overflow-y: auto;
-  font-size: 9.5px;
-}
-.log li {
-  display: grid;
-  grid-template-columns: 54px 56px minmax(0, 1fr);
-  gap: 6px;
-  padding: 1px 0;
-}
-.log .tm {
-  color: var(--dim);
-  font-variant-numeric: tabular-nums;
-}
-.log .vb {
-  color: var(--c, var(--ink-2));
-  letter-spacing: 0.08em;
-}
-.log .tx {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.logBox {
-  border-top: 1px solid var(--bezel);
-  padding: 4px 12px 6px;
-}
-.logBox summary {
-  cursor: pointer;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  color: var(--chrome);
+  margin-inline: -11px;
+  margin-bottom: -8px;
 }
 
 /* ---------- motion ---------- */
@@ -965,42 +794,17 @@
   }
 }
 
-/* ---------- narrow screens: the rail is a bottom sheet, lanes become tabs ---------- */
-@media (max-width: 899px) {
-  .deck {
+/* stacked (the ai-cockpit's narrow layout): the page scrolls, the chart is boxed in the flow */
+@media (max-width: 1180px) {
+  .cockpit {
+    overflow-y: auto;
+  }
+}
+@media (max-width: 720px) {
+  .annunciator {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
   }
-  .rail {
-    max-height: 46vh;
-  }
-  .rail[data-sheet='closed'] .transcript,
-  .rail[data-sheet='closed'] .lensRow {
-    display: none;
-  }
-  .lane {
-    flex-basis: calc(100% - 4px);
-    scroll-snap-align: center;
-  }
-  .laneTabs {
-    display: flex;
-  }
-  .zulu,
-  .hideNarrow {
-    display: none;
-  }
-  .menuButton {
-    max-width: 46vw;
-  }
-}
-
-/* the rail's sheet handle exists on narrow screens only */
-.sheetToggle {
-  display: none;
-  margin-left: auto;
-}
-@media (max-width: 899px) {
-  .sheetToggle {
-    display: inline-block;
+  .link {
+    flex-wrap: wrap;
   }
 }

@@ -1,8 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { IAgentThreadVo } from '@teable/openapi';
 import { updateAgentThread } from '@teable/openapi';
+import type { IAgentThreadVo, IOverviewDatasetId } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { agentQueryKeys } from '../data/agent-api';
 import { useAgentStatus, useThreads } from '../hooks/useAgentData';
 import { useAgentSession } from '../hooks/useAgentSession';
@@ -10,16 +10,19 @@ import { useCockpitStore } from '../state/cockpit-store';
 import {
   Annunciator,
   FocusChip,
-  Mark,
   PaletteSwitch,
   PowerToggle,
-  Spacer,
   StatusChip,
   ZuluClock,
 } from '../ui/shell/Annunciator';
+import { DatasetMenu } from '../ui/shell/DatasetMenu';
 import { ThreadMenu } from '../ui/shell/ThreadMenu';
+import s from '../ui/theme/cockpit.module.css';
 
-/** The strip on top: threads, focus, link state, palette, clock, power (cockpit design §5.2). */
+/**
+ * The strip on top (cockpit design §5.2): the thread, the overview's dataset and the focus on
+ * the left; palette, link state, clock and power on the right.
+ */
 export const AnnunciatorContainer = () => {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
@@ -34,6 +37,11 @@ export const AnnunciatorContainer = () => {
   const palette = useCockpitStore((s) => s.palette);
   const setPalette = useCockpitStore((s) => s.setPalette);
   const selectSearch = useCockpitStore((s) => s.selectSearch);
+  const stage = useCockpitStore((s) => s.stage);
+  const cycle = useCockpitStore((s) => s.cycle);
+  const failed = useCockpitStore((s) => s.overviewFailed);
+  const cycleEvent = useCockpitStore((s) => s.cycleEvent);
+  const setStage = useCockpitStore((s) => s.setStage);
   const title: string =
     threads.find((th) => th.id === chat.threadId)?.title ??
     (chat.threadId ? '…' : t('agent.cockpit.newThread', 'New conversation'));
@@ -53,28 +61,57 @@ export const AnnunciatorContainer = () => {
     ? `${focus.tableName ?? t('agent.cockpit.table', 'TABLE')}${focus.rows ? ` · ${focus.rows} ${t('agent.cockpit.rows', 'ROWS')}` : ''}`
     : undefined;
 
+  /** A dataset picked from the menu: held on the stage, which goes back to the overview. */
+  const pickDataset = useCallback(
+    (id: IOverviewDatasetId) => {
+      setStage('overview');
+      cycleEvent({ type: 'pick', id });
+    },
+    [setStage, cycleEvent]
+  );
+  const toggleCycle = useCallback(() => {
+    const held = useCockpitStore
+      .getState()
+      .cycle.holds.some((h) => h === 'paused' || h === 'picked');
+    cycleEvent(held ? { type: 'resume' } : { type: 'hold', reason: 'paused' });
+  }, [cycleEvent]);
+
   return (
-    <Annunciator>
-      <Mark />
-      <ThreadMenu
-        threads={threads}
-        activeId={chat.threadId}
-        title={title}
-        showArchived={showArchived}
-        onShowArchived={setShowArchived}
-        onOpen={(id) => {
-          selectSearch(undefined);
-          void chat.openThread(id);
-        }}
-        onArchive={(thread) => void archive(thread)}
-        onNew={startNew}
-      />
-      {focusText && <FocusChip text={focusText} onClear={clearFocus} />}
-      <Spacer />
-      <StatusChip status={status} busy={chat.busy} onLeave={close} />
-      <PaletteSwitch value={palette} onChange={setPalette} />
-      <ZuluClock />
-      <PowerToggle busy={chat.busy} onOff={close} />
-    </Annunciator>
+    <Annunciator
+      sources={
+        <>
+          <span className={s.lbl}>{t('agent.cockpit.thread', 'THREAD')}</span>
+          <ThreadMenu
+            threads={threads}
+            activeId={chat.threadId}
+            title={title}
+            showArchived={showArchived}
+            onShowArchived={setShowArchived}
+            onOpen={(id) => {
+              selectSearch(undefined);
+              void chat.openThread(id);
+            }}
+            onArchive={(thread) => void archive(thread)}
+            onNew={startNew}
+          />
+          <DatasetMenu
+            cycle={cycle}
+            failed={failed}
+            onOverview={stage === 'overview'}
+            onPick={pickDataset}
+            onToggle={toggleCycle}
+          />
+          {focusText && <FocusChip text={focusText} onClear={clearFocus} />}
+        </>
+      }
+      link={
+        <>
+          <PaletteSwitch value={palette} onChange={setPalette} />
+          <StatusChip status={status} busy={chat.busy} onLeave={close} />
+          <ZuluClock />
+          <PowerToggle busy={chat.busy} onOff={close} />
+        </>
+      }
+    />
   );
 };

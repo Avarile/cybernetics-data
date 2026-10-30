@@ -17,6 +17,7 @@ export function overviewToGraph(vo: IAgentOverviewVo): IGraph {
     tone: n.tone,
     ...(n.alert ? { alert: true } : {}),
     ...(n.size !== undefined ? { size: n.size } : {}),
+    ...(n.amount !== undefined ? { amount: n.amount } : {}),
     ...(n.date ? { date: Date.parse(n.date) } : {}),
     ...(n.state ? { state: n.state.toUpperCase() } : {}),
     ...(n.table ? { table: n.table } : {}),

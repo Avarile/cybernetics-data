@@ -1,6 +1,6 @@
 import type { IAgentThreadVo } from '@teable/openapi';
 import { Button, Input, Popover, PopoverContent, PopoverTrigger, cn } from '@teable/ui-lib/shadcn';
-import { Archive, ArchiveRestore, ChevronDown, Plus } from 'lucide-react';
+import { Archive, ArchiveRestore, Plus } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
 import { useMemo, useState } from 'react';
 import { formatUsage } from '../../model/format';
@@ -19,11 +19,12 @@ export interface IThreadMenuProps {
   className?: string;
 }
 
-/** The thread dropdown of the annunciator (the cockpit's dataset menu pattern). */
+/** The thread dropdown of the annunciator (the cockpit's dataset button: name, usage, caret). */
 export const ThreadMenu = (p: IThreadMenuProps) => {
   const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const active = p.threads.find((th) => th.id === p.activeId);
   const threads = useMemo(() => {
     const q = search.trim().toLowerCase();
     return p.threads.filter((th) => !q || th.title.toLowerCase().includes(q));
@@ -32,9 +33,9 @@ export const ThreadMenu = (p: IThreadMenuProps) => {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button type="button" className={cn(s.menuButton, p.className)} aria-haspopup="listbox">
-          <small>{t('agent.cockpit.thread', 'THREAD')}</small>
           <b>{p.title}</b>
-          <ChevronDown className="size-3" aria-hidden />
+          <small>{active ? formatUsage(active) : t('agent.cockpit.new', 'NEW')}</small>
+          <i className={s.caret} aria-hidden />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="dark w-80 p-2">

@@ -1,12 +1,11 @@
 import type { IAgentOverviewVo, IOverviewNode, ISearchTone } from '@teable/openapi';
+import { money } from '../format';
 import type { IMetric } from '../metrics';
 
 type INodes = IOverviewNode[];
 
 const of = (nodes: INodes, table: string) => nodes.filter((n) => n.table === table && n.recordId);
 const toned = (nodes: INodes, tone: ISearchTone) => nodes.filter((n) => n.tone === tone).length;
-const money = (n: number) =>
-  new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n);
 const sum = (nodes: INodes) => nodes.reduce((s, n) => s + Math.abs(n.amount ?? 0), 0);
 const metric = (k: string, v: number | string, tone: ISearchTone = 'ink', s?: string): IMetric => ({
   k,

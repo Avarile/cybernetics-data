@@ -3,16 +3,24 @@ import { useTranslation } from 'next-i18next';
 import { useEffect, useState } from 'react';
 import { useAgentSkills, useAgentStatus } from '../hooks/useAgentData';
 import { useAgentSession } from '../hooks/useAgentSession';
+import { useSearchBoard } from '../hooks/useSearchBoard';
+import { defaultLens } from '../model/lens';
 import { choiceFor, matchOption, openClarify } from '../model/transcript';
 import { useCockpitStore } from '../state/cockpit-store';
 import { useAgentVoiceStore } from '../state/voice-store';
 import { AgentComposer } from '../ui/ask/Composer';
 import { Suggestions } from '../ui/ask/Suggestions';
 import { Transcript } from '../ui/ask/Transcript';
+import { LensKnobs } from '../ui/stage/StageHead';
 import s from '../ui/theme/cockpit.module.css';
+import p from '../ui/theme/panels.module.css';
 import { useVoiceConversation } from '../voice/useVoiceConversation';
 
-/** The ask rail: the conversation, its plans and the composer with voice (§5.5, §8). */
+/**
+ * The ask panel at the top of the rail (§5.5, §8; the cockpit's ASK panel): the conversation,
+ * its plans, the answer's lens and the composer with voice. It enlarges to the middle of the
+ * screen; Escape or the backdrop puts it back.
+ */
 export const AskContainer = ({
   onPick,
 }: {
@@ -28,7 +36,12 @@ export const AskContainer = ({
   const draft = useCockpitStore((st) => st.draft);
   const setDraft = useCockpitStore((st) => st.setDraft);
   const voiceOn = useAgentVoiceStore((st) => st.enabled);
-  const [sheet, setSheet] = useState<'open' | 'closed'>('open');
+  const [expanded, setExpanded] = useState(false);
+  const { board } = useSearchBoard();
+  const stage = useCockpitStore((st) => st.stage);
+  const lens = useCockpitStore((st) => st.lens);
+  const setLens = useCockpitStore((st) => st.setLens);
+  const showLens = stage === 'search' && Boolean(board?.plan) && Boolean(board?.cards.length);
   const disabled = agent ? !agent.enabled || agent.status !== 'ok' : false;
 
   // the focus hint and voice ride along with every message (voice design §7.3)
@@ -68,60 +81,91 @@ export const AskContainer = ({
     chat.startNew();
   };
 
+  // Escape puts the enlarged panel back before the cockpit's own keys see it
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      setExpanded(false);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [expanded]);
+
   return (
-    <aside
-      className={`${s.panel} ${s.rail}`}
-      data-sheet={sheet}
-      aria-label={t('agent.cockpit.askLabel', 'Ask the agent')}
-    >
-      <h2>
-        {t('agent.cockpit.ask', 'ASK THE AGENT')}
-        <small>{chat.busy ? t('agent.cockpit.working', 'WORKING') : ''}</small>
-        <button
-          type="button"
-          className={s.knob}
-          onClick={() => void stop().then(startNew)}
-          style={{ marginLeft: 'auto' }}
-        >
-          {t('agent.cockpit.new', 'NEW')}
-        </button>
-        <button
-          type="button"
-          className={`${s.knob} ${s.sheetToggle}`}
-          aria-expanded={sheet === 'open'}
-          onClick={() => setSheet(sheet === 'open' ? 'closed' : 'open')}
-        >
-          {sheet === 'open' ? '▾' : '▴'}
-        </button>
-      </h2>
-      <Transcript
-        messages={chat.messages}
-        busy={chat.busy}
-        error={chat.error}
-        selectedSearch={selectedSearch}
-        boards={chat.session?.boards}
-        onSelectSearch={selectSearch}
-        onRespond={(id, approved) => void chat.respond(id, approved)}
-        onPick={onPick}
-      />
-      {chat.messages.length === 0 && !disabled && (
-        <div className={s.lensRow}>
-          <Suggestions onAsk={send} />
-        </div>
+    <>
+      {expanded && (
+        // the panel's ✕ and Escape do the same from the keyboard
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+        <div className={p.backdrop} onClick={() => setExpanded(false)} />
       )}
-      <div className={s.composer}>
-        <AgentComposer
+      <section
+        className={`${p.panel} ${p.ask}`}
+        data-expanded={expanded}
+        aria-label={t('agent.cockpit.askLabel', 'Ask the agent')}
+      >
+        <h2>
+          {t('agent.cockpit.ask', 'ASK THE AGENT')}
+          <span>
+            {chat.busy && <small>{t('agent.cockpit.working', 'WORKING')}</small>}
+            <button type="button" className={s.knob} onClick={() => void stop().then(startNew)}>
+              {t('agent.cockpit.new', 'NEW')}
+            </button>
+            <button
+              type="button"
+              className={s.knob}
+              aria-pressed={expanded}
+              aria-label={
+                expanded
+                  ? t('agent.cockpit.collapse', 'Put the panel back')
+                  : t('agent.cockpit.expand', 'Enlarge the panel')
+              }
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? '✕' : '⤢'}
+            </button>
+          </span>
+        </h2>
+        <Transcript
+          messages={chat.messages}
           busy={chat.busy}
-          disabled={disabled || chat.loading}
-          skills={skills}
-          voice={voice}
-          onSend={send}
-          onStop={() => void stop()}
-          onClear={() => void stop().then(startNew)}
-          draft={draft}
-          onDraftTaken={() => setDraft(undefined)}
+          error={chat.error}
+          selectedSearch={selectedSearch}
+          boards={chat.session?.boards}
+          onSelectSearch={selectSearch}
+          onRespond={(id, approved) => void chat.respond(id, approved)}
+          onPick={onPick}
         />
-      </div>
-    </aside>
+        {showLens && board && (
+          <div className={s.lensRow}>
+            <LensKnobs
+              mode={lens ?? defaultLens(board)}
+              cited={board.lens.length}
+              found={board.cards.length}
+              onLens={setLens}
+            />
+          </div>
+        )}
+        {chat.messages.length === 0 && !disabled && (
+          <div className={s.lensRow}>
+            <Suggestions onAsk={send} />
+          </div>
+        )}
+        <div className={s.composer}>
+          <AgentComposer
+            busy={chat.busy}
+            disabled={disabled || chat.loading}
+            skills={skills}
+            voice={voice}
+            onSend={send}
+            onStop={() => void stop()}
+            onClear={() => void stop().then(startNew)}
+            draft={draft}
+            onDraftTaken={() => setDraft(undefined)}
+          />
+        </div>
+      </section>
+    </>
   );
 };

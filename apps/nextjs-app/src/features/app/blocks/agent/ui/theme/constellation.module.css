@@ -315,33 +315,37 @@
   stroke: var(--chrome);
 }
 
-/* the hover card: what a node is, beside the pointer */
+/* the hover card (the cockpit's tip): what a node is, its state, its lines */
 .tip {
   position: absolute;
-  z-index: 3;
-  display: grid;
-  gap: 2px;
-  max-width: 260px;
-  padding: 6px 8px;
-  border: 1px solid var(--bezel-2);
-  background: var(--glass);
+  z-index: 40;
+  max-width: 290px;
   pointer-events: none;
-  font-family: var(--f-data);
+  background: color-mix(in srgb, var(--void) 93%, transparent);
+  border: 1px solid var(--bezel-2);
+  padding: 8px 10px;
   font-size: 10px;
-  color: var(--ink-2);
+  line-height: 1.45;
 }
-.tip b {
-  color: var(--ink);
-  font-family: var(--f-body);
-  font-size: 12px;
-  font-weight: 500;
-}
-.tipKey {
-  color: var(--c, var(--dim));
+.k {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 9px;
   letter-spacing: 0.12em;
+  color: var(--ink-2);
 }
-.tip i {
-  font-style: normal;
+.k [data-tone] {
+  color: var(--c, var(--dim));
+}
+.n {
+  margin: 3px 0 5px;
+  color: var(--ink);
+}
+.m {
   color: var(--dim);
+  font-size: 9px;
+}
+.m[data-tone] {
+  color: var(--c);
 }

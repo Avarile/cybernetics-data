@@ -87,14 +87,50 @@ export interface IGeometry {
   narrow: boolean;
 }
 
-/** The cockpit's centre() and geo(): room for full names only when the ring can show them. */
-export function geometry(width: number, height: number, leaves: number): IGeometry {
-  const r = Math.max(80, Math.min(height / 2 - 18, width / 2 - 26));
+/**
+ * The free part of a full-bleed chart: x0..x1 is the horizontal range it centres in (beside the
+ * floating panels); clear is the readout box's bottom-right corner, which the ring stays outside.
+ */
+export interface IFrame {
+  x0: number;
+  x1: number;
+  clear?: { x: number; y: number };
+}
+
+const near = (a = 0, b = 0) => Math.abs(a - b) < 1;
+/** Two frames a pixel apart are the same: a resize that moved nothing redraws nothing. */
+export const sameFrame = (a: IFrame | null, b: IFrame | null) =>
+  a === b ||
+  Boolean(
+    a &&
+      b &&
+      near(a.x0, b.x0) &&
+      near(a.x1, b.x1) &&
+      near(a.clear?.x, b.clear?.x) &&
+      near(a.clear?.y, b.clear?.y)
+  );
+
+/**
+ * The cockpit's centre() and geo(): with a frame the chart centres on the free area and uses the
+ * full height (panels may overlap its edge); room for full names only when the ring can show them.
+ */
+export function geometry(
+  width: number,
+  height: number,
+  leaves: number,
+  frame?: IFrame | null
+): IGeometry {
+  const cx = frame ? (frame.x0 + frame.x1) / 2 : width / 2;
+  const cy = height / 2 + (frame ? 0 : 4);
+  let half = frame ? Math.min(cx, width - cx) - 12 : width / 2 - 26;
+  const c = frame?.clear;
+  if (c && cx > c.x) half = Math.min(half, Math.hypot(cx - c.x, Math.max(0, cy - c.y)) - 12);
+  const r = Math.max(80, Math.min(height / 2 - (frame ? 18 : 26), half));
   const narrow = width < 620;
   const fontAt = (m: number) => ((TAU * Math.max(50, r - m)) / Math.max(1, leaves)) * 0.9;
   let margin = narrow ? 30 : Math.max(96, Math.min(180, r * 0.38));
   if (!narrow && fontAt(margin) < 8) margin = Math.max(84, Math.min(120, r * 0.22));
-  return { cx: width / 2, cy: height / 2, r, rIn: Math.max(50, r - margin), margin, narrow };
+  return { cx, cy, r, rIn: Math.max(50, r - margin), margin, narrow };
 }
 
 /** The tree laid out in polar coordinates: x is the angle, y the radius. */

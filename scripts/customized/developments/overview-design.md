@@ -735,3 +735,52 @@ d3 only computed the layout and zoomed, and React drew the SVG. Now:
   not a key; the hover card and the pinned strip name the kind.
 - New dependencies, exact versions from the pnpm store: `d3-ease` 3.0.1, `d3-timer` 3.0.1,
   `d3-transition` 3.0.1, and their `@types`.
+
+### 15.6 The ai-cockpit's layout (after 15.5, at the admin's request)
+
+The admin asked for the layout and detail to match the ai-cockpit too. The cockpit is now laid
+out as its `index.html` and `cockpit.css`:
+
+- **Stage.** The chart is full-bleed under everything (dot grid, wash, vignette). It is centred
+  in the free area right of the readout and clear of its corner (the cockpit's `syncFrame` and
+  `centre()`): `ui/stage/stage-frame.ts` sets the HUD insets `--hud-t/r/b/l` from the
+  annunciator, the rail and the deck, and hands the chart its frame. The search board sits in
+  the same free area.
+- **HUD** (`ui/stage/StageDeck.tsx`):
+  - top-left: title, path, the readout (top line, 34px count, unit, notes), the totals, and the
+    lens chip or pinned node under it;
+  - top-right: OVERVIEW · BOARD · CONSTELLATION and BUNDLE · TREE;
+  - bottom-left: the legend in two columns.
+- **Annunciator.**
+  - Left: THREAD (the thread menu, styled as the cockpit's dataset button), then DATASET. This is
+    the cockpit's ds-menu: four options with keys `1`–`4`, a failed dataset listed with why,
+    and the minute's progress, countdown and pause beside it.
+  - Right: palette, link chip, zulu clock, power.
+  - Picking a dataset, or pressing `1`–`4`, from a search goes back to the overview.
+- **Rail** (transparent panels with corner marks):
+  - ASK THE AGENT, which enlarges to 60vw × 60vh over a backdrop. The answer's lens knobs
+    (ANSWER n · RETRIEVED n) moved here from the stage head.
+  - Vectors: the overview's branches as the cockpit's `panels.branches` (count, toned facts, share
+    done or money moved, a stacked mix bar; hover lights a branch, click pins it), or the tables
+    of a search.
+  - Flight log: the dataset's dated records, newest first (time today, else MM-DD, UTC), or the
+    search's steps. It replaces the RUN LOG.
+  - The rail belongs to `AgentCockpit` and outlives the stages; each stage portals its two
+    panels into it, so the conversation and voice are never remounted when the stage switches.
+- **Stacked under 1180px.** The chart is boxed in the flow, the totals sit above it, and the rail
+  goes below it, as in the cockpit. Under 720px the legend has one column.
+- **Differences from the cockpit.**
+  - The ask panel holds a whole conversation, not one answer, so it takes a share of the rail
+    and scrolls (`minmax(240px, 3fr)`) instead of `min-content`.
+  - The log's verb is a short word per tone and dataset (ACTIVE, NEXT, DONE, EXPENSE…), not the
+    first word of a state.
+  - There is no custom dataset picker.
+- **Files.**
+  - New: `model/panels.ts`; `ui/rail/RailPanels.tsx`; `ui/shell/DatasetMenu.tsx`;
+    `ui/stage/StageDeck.tsx`, `ui/stage/stage-frame.ts`.
+  - Styles: `ui/theme/deck.module.css` (deck, HUD, readout, legend), `panels.module.css` and
+    `dataset.module.css`.
+  - Removed: `OverviewHead.tsx`, `RunLog.tsx`.
+- **Tests.** 132 specs (`model/panels.spec.ts` is new; the cockpit spec checks the rail and the
+  dataset menu).
+- **Still to check by hand:** the frame at 1440 and 1024 px, and the stacked layout at 390 px.

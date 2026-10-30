@@ -1940,7 +1940,10 @@
         "label": "视图",
         "answer": "答案",
         "retrieved": "已检索",
-        "searching": "搜索中"
+        "searching": "搜索中",
+        "off": "显示全部结果",
+        "searchingChip": "搜索中 · 面板随搜索填充",
+        "answerChip": "答案 · 引用 {{n}} 条记录"
       },
       "lane": {
         "running": "搜索中…",
@@ -1957,7 +1960,6 @@
       "archived": "已归档",
       "overdue": "已逾期",
       "missing": "此数据库中没有",
-      "runLog": "运行日志",
       "ask": "询问智能体",
       "askLabel": "询问智能体",
       "new": "新建",
@@ -1978,13 +1980,13 @@
         "board": "面板",
         "constellation": "星图",
         "tree": "树形",
-        "overview": "总览"
+        "overview": "总览",
+        "bundle": "束状"
       },
       "showing": "显示 {{shown}} / {{total}}",
       "overview": {
         "label": "总览",
         "title": "总览",
-        "datasets": "数据集",
         "work": "工作",
         "knowledge": "知识",
         "people": "人员",
@@ -2007,6 +2009,37 @@
         "updated": "更新于",
         "records": "条记录",
         "truncated": "更多未读取"
+      },
+      "dataset": "数据集",
+      "sources": "会话与数据集",
+      "expand": "放大面板",
+      "collapse": "收回面板",
+      "readout": {
+        "cited": "条记录被引用",
+        "found": "条记录已找到"
+      },
+      "rail": {
+        "branches": {
+          "work": "目标向量",
+          "knowledge": "类型",
+          "people": "联系人类型",
+          "finance": "分类"
+        },
+        "feed": {
+          "work": "近期工作",
+          "knowledge": "最近更新",
+          "people": "近期工作",
+          "finance": "最新交易"
+        },
+        "branchHint": "悬停以点亮分支",
+        "feedHint": "最新 · UTC",
+        "noVectors": "此数据集暂无可显示的内容。",
+        "noFeed": "暂无带日期的记录。",
+        "tables": "数据表",
+        "tablesHint": "每一步找到的内容",
+        "log": "飞行日志",
+        "logHint": "步骤 · UTC",
+        "noSteps": "暂无步骤。"
       }
     }
   }

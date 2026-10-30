@@ -1943,7 +1943,10 @@
         "label": "Lens",
         "answer": "ANSWER",
         "retrieved": "RETRIEVED",
-        "searching": "SEARCHING"
+        "searching": "SEARCHING",
+        "off": "Show everything found",
+        "searchingChip": "SEARCHING · THE BOARD FILLS AS IT GOES",
+        "answerChip": "ANSWER · {{n}} RECORDS CITED"
       },
       "lane": {
         "running": "SEARCHING…",
@@ -1960,7 +1963,6 @@
       "archived": "ARCHIVED",
       "overdue": "OVERDUE",
       "missing": "Not in this base",
-      "runLog": "RUN LOG",
       "ask": "ASK THE AGENT",
       "askLabel": "Ask the agent",
       "new": "NEW",
@@ -1981,13 +1983,13 @@
         "board": "BOARD",
         "constellation": "CONSTELLATION",
         "tree": "TREE",
-        "overview": "OVERVIEW"
+        "overview": "OVERVIEW",
+        "bundle": "BUNDLE"
       },
       "showing": "SHOWING {{shown}} OF {{total}}",
       "overview": {
         "label": "Overview",
         "title": "OVERVIEW",
-        "datasets": "Datasets",
         "work": "WORK",
         "knowledge": "KNOWLEDGE",
         "people": "PEOPLE",
@@ -2010,6 +2012,37 @@
         "updated": "UPDATED",
         "records": "RECORDS",
         "truncated": "MORE NOT READ"
+      },
+      "dataset": "DATASET",
+      "sources": "Thread and dataset",
+      "expand": "Enlarge the panel",
+      "collapse": "Put the panel back",
+      "readout": {
+        "cited": "RECORDS CITED",
+        "found": "RECORDS FOUND"
+      },
+      "rail": {
+        "branches": {
+          "work": "GOAL VECTORS",
+          "knowledge": "TYPES",
+          "people": "CONTACT TYPES",
+          "finance": "CATEGORIES"
+        },
+        "feed": {
+          "work": "RECENT WORK",
+          "knowledge": "RECENTLY UPDATED",
+          "people": "RECENT WORK",
+          "finance": "LATEST TRANSACTIONS"
+        },
+        "branchHint": "HOVER TO LIGHT BRANCH",
+        "feedHint": "LATEST · UTC",
+        "noVectors": "Nothing to show for this dataset yet.",
+        "noFeed": "No dated records yet.",
+        "tables": "TABLES",
+        "tablesHint": "WHAT EACH STEP FOUND",
+        "log": "FLIGHT LOG",
+        "logHint": "STEPS · UTC",
+        "noSteps": "No steps yet."
       }
     }
   }
