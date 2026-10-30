@@ -80,6 +80,7 @@ export function useStage() {
     const { pinned, pin: setPinned } = useCockpitStore.getState();
     setPinned(pinned === key ? undefined : key);
   }, []);
+  const unpin = useCallback(() => useCockpitStore.getState().pin(undefined), []);
   const keyOfRecord = useCallback(
     (recordId?: string) => board?.cards.find((c) => c.recordId === recordId)?.key,
     [board]
@@ -120,5 +121,6 @@ export function useStage() {
     graphLit,
     hoverRecord,
     pinRecord,
+    unpin,
   };
 }

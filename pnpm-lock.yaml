@@ -931,6 +931,9 @@ importers:
       cmdk:
         specifier: 1.0.0
         version: 1.0.0(@types/react-dom@18.3.5(@types/react@18.3.18))(@types/react@18.3.18)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      d3-ease:
+        specifier: 3.0.1
+        version: 3.0.1
       d3-force-3d:
         specifier: 3.0.6
         version: 3.0.6
@@ -943,6 +946,12 @@ importers:
       d3-shape:
         specifier: 3.2.0
         version: 3.2.0
+      d3-timer:
+        specifier: 3.0.1
+        version: 3.0.1
+      d3-transition:
+        specifier: 3.0.1
+        version: 3.0.1(d3-selection@3.0.0)
       d3-zoom:
         specifier: 3.0.0
         version: 3.0.0
@@ -1181,6 +1190,9 @@ importers:
       '@types/cors':
         specifier: 2.8.17
         version: 2.8.17
+      '@types/d3-ease':
+        specifier: 3.0.2
+        version: 3.0.2
       '@types/d3-hierarchy':
         specifier: 3.1.7
         version: 3.1.7
@@ -1190,6 +1202,12 @@ importers:
       '@types/d3-shape':
         specifier: 3.1.6
         version: 3.1.6
+      '@types/d3-timer':
+        specifier: 3.0.2
+        version: 3.0.2
+      '@types/d3-transition':
+        specifier: 3.0.9
+        version: 3.0.9
       '@types/d3-zoom':
         specifier: 3.0.8
         version: 3.0.8

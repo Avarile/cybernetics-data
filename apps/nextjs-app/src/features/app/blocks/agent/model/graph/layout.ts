@@ -1,13 +1,11 @@
-/* The constellation's layout, ported from the ai-cockpit's tree.ts: the graph's parents form
-   one tree under a root; BUNDLE lays it out with d3.cluster and routes each link through the
-   tree (curveBundle), TREE uses d3.tree and draws the structure itself. Pure: positions and
-   path strings out, the view draws them. */
+/* The constellation's tree and geometry, ported from the ai-cockpit's tree.ts: the graph's
+   parents form one tree under a root; BUNDLE lays it out with d3.cluster, TREE with d3.tree.
+   Pure (d3-hierarchy computes, nothing is drawn): the D3 chart in ui/stage draws from this. */
 import { cluster, hierarchy, tree, type HierarchyPointNode } from 'd3-hierarchy';
-import { curveBundle, lineRadial, linkRadial } from 'd3-shape';
-import type { IGLink, IGNode, IGraph, ITone } from './types';
+import type { IGNode, IGraph, ITone } from './types';
 
 export type ILayoutMode = 'bundle' | 'tree';
-const TAU = Math.PI * 2;
+export const TAU = Math.PI * 2;
 const ORDER: Record<ITone, number> = {
   ink: 0,
   route: 1,
@@ -19,41 +17,30 @@ const ORDER: Record<ITone, number> = {
 };
 const KIND: Record<IGNode['kind'], number> = { hub: 0, item: 1, actor: 2 };
 
-interface IDatum {
+/** The point every branch grows from. */
+export interface IRootNode {
+  id: 'root';
+  kind: 'root';
+  label: string;
+  short: null;
+  tone: ITone;
+  size?: number;
+  alert?: boolean;
+  overflow?: boolean;
+}
+export type ITreeNode = IGNode | IRootNode;
+
+export interface IDatum {
   id: string;
-  node: IGNode | null;
+  node: ITreeNode;
   /** Drawn faint: an ancestor kept only to place the lens records. */
   context: boolean;
   children?: IDatum[];
 }
-type IPoint = HierarchyPointNode<IDatum>;
+export type IPoint = HierarchyPointNode<IDatum>;
 
-export interface ILaidNode {
-  id: string;
-  node: IGNode | null;
-  x: number;
-  y: number;
-  /** Angle in radians (0 at the top, clockwise) and radius. */
-  angle: number;
-  radius: number;
-  depth: number;
-  leaf: boolean;
-  context: boolean;
-}
-export interface ILaidEdge {
-  id: string;
-  link: IGLink;
-  d: string;
-}
-export interface ILayout {
-  nodes: ILaidNode[];
-  /** Parent-child lines (TREE) */
-  branches: { id: string; d: string; tone: ITone }[];
-  edges: ILaidEdge[];
-  radius: number;
-}
-
-function buildTree(g: IGraph, lens: Set<string> | null): IDatum {
+/** The tree of a graph; under a lens, only what it cites and the branches above it. */
+export function buildTree(g: IGraph, lens: Set<string> | null): IDatum {
   const order = (a: IGNode, b: IGNode) =>
     KIND[a.kind] - KIND[b.kind] || ORDER[a.tone] - ORDER[b.tone] || a.label.localeCompare(b.label);
   const seen = new Set<string>();
@@ -80,74 +67,73 @@ function buildTree(g: IGraph, lens: Set<string> | null): IDatum {
     .sort(order)
     .map(visit)
     .filter((x): x is IDatum => Boolean(x));
-  return { id: 'root', node: null, context: false, children: roots.length ? roots : undefined };
-}
-
-/** Positions for a chart of outer radius `r`, turned by `rotation` radians. */
-export function layoutGraph(
-  g: IGraph,
-  options: { mode: ILayoutMode; radius: number; lens?: Set<string> | null; rotation?: number }
-): ILayout {
-  const rot = options.rotation ?? 0;
-  const root = hierarchy(buildTree(g, options.lens ?? null));
-  const margin = Math.max(60, Math.min(160, options.radius * 0.32));
-  const inner = Math.max(40, options.radius - margin);
-  const separation = (a: IPoint, b: IPoint) => {
-    const base = a.parent === b.parent ? 1 : 2;
-    const actor = a.data.node?.kind === 'actor' || b.data.node?.kind === 'actor' ? 1.6 : 1;
-    return (base * actor) / (options.mode === 'tree' ? Math.max(1, Math.min(a.depth, 3)) : 1);
-  };
-  const laid = (options.mode === 'tree' ? tree<IDatum>() : cluster<IDatum>())
-    .size([TAU, inner])
-    .separation(separation)(root);
-  const angle = (d: IPoint) => d.x + rot;
-  const nodes: ILaidNode[] = laid.descendants().map((d) => ({
-    id: d.data.id,
-    node: d.data.node,
-    angle: ((angle(d) % TAU) + TAU) % TAU,
-    radius: d.y,
-    x: d.y * Math.sin(angle(d)),
-    y: -d.y * Math.cos(angle(d)),
-    depth: d.depth,
-    leaf: !d.children,
-    context: d.data.context,
-  }));
-  const byId = new Map(laid.descendants().map((d) => [d.data.id, d]));
-  const branches =
-    options.mode === 'tree'
-      ? laid.links().map((l) => ({
-          id: `${l.source.data.id}>${l.target.data.id}`,
-          d:
-            linkRadial<typeof l, IPoint>()
-              .angle(angle)
-              .radius((d) => d.y)(l) ?? '',
-          tone: l.target.data.node?.tone ?? 'none',
-        }))
-      : [];
-  const bundle = lineRadial<IPoint>()
-    .curve(curveBundle.beta(0.85))
-    .radius((d) => d.y)
-    .angle(angle);
-  const edges: ILaidEdge[] = g.links.flatMap((link) => {
-    const a = byId.get(link.source);
-    const b = byId.get(link.target);
-    if (!a || !b) return [];
-    return [{ id: link.id, link, d: bundle(a.path(b)) ?? '' }];
-  });
-  return { nodes, branches, edges, radius: inner };
-}
-
-/** Text placement that stays readable: labels on the left half are flipped. */
-export function labelTransform(n: ILaidNode, offset: number, turn = 0) {
-  const deg = (n.angle * 180) / Math.PI - 90;
-  // the chart may be turned as one layer: the half a label is on is where it shows, not drawn
-  const shown = (((n.angle + turn) % TAU) + TAU) % TAU;
-  const flip = shown > Math.PI;
   return {
-    transform: `rotate(${deg}) translate(${n.radius + offset},0)${flip ? ' rotate(180)' : ''}`,
-    anchor: flip ? 'end' : 'start',
-  } as const;
+    id: 'root',
+    node: { id: 'root', kind: 'root', label: g.title, short: null, tone: 'none' },
+    context: false,
+    children: roots.length ? roots : undefined,
+  };
 }
 
-export const nodeRadius = (n: IGNode | null) =>
-  2.3 + Math.max(0, Math.min(4, Number(n?.size) || 0)) * 0.55;
+/** Where the chart sits in a box of `width` × `height` with `leaves` on its rim. */
+export interface IGeometry {
+  cx: number;
+  cy: number;
+  /** Outer radius: the rims sit just inside it. */
+  r: number;
+  /** Radius of the leaves; the band beyond is for their labels. */
+  rIn: number;
+  margin: number;
+  narrow: boolean;
+}
+
+/** The cockpit's centre() and geo(): room for full names only when the ring can show them. */
+export function geometry(width: number, height: number, leaves: number): IGeometry {
+  const r = Math.max(80, Math.min(height / 2 - 18, width / 2 - 26));
+  const narrow = width < 620;
+  const fontAt = (m: number) => ((TAU * Math.max(50, r - m)) / Math.max(1, leaves)) * 0.9;
+  let margin = narrow ? 30 : Math.max(96, Math.min(180, r * 0.38));
+  if (!narrow && fontAt(margin) < 8) margin = Math.max(84, Math.min(120, r * 0.22));
+  return { cx: width / 2, cy: height / 2, r, rIn: Math.max(50, r - margin), margin, narrow };
+}
+
+/** The tree laid out in polar coordinates: x is the angle, y the radius. */
+export function layoutTree(data: IDatum, mode: ILayoutMode, rIn: number): IPoint {
+  const h = hierarchy(data);
+  const isTree = mode === 'tree';
+  const separation = (a: IPoint, b: IPoint) => {
+    const base = a.parent === b.parent ? 1 : 2.4;
+    const actor = a.data.node.kind === 'actor' || b.data.node.kind === 'actor' ? 2.4 : 1;
+    return (base * actor) / (isTree ? Math.max(1, Math.min(a.depth, 3)) : 1);
+  };
+  return (isTree ? tree<IDatum>() : cluster<IDatum>()).size([TAU, rIn]).separation(separation)(h);
+}
+
+/** How labels fit: font size from the room per leaf, characters from the label band. */
+export interface ILabelFit {
+  fs: number;
+  chars: number;
+  actorChars: number;
+  withName: boolean;
+  hidden: boolean;
+}
+
+export function labelFit(g: IGeometry, leaves: number, wide: boolean): ILabelFit {
+  const fs = Math.max(5, Math.min(10.5, ((TAU * g.rIn) / Math.max(1, leaves)) * 0.9));
+  const chars = Math.floor((g.margin - 40) / (fs * 0.6));
+  const actorChars = Math.max(wide ? 26 : 16, Math.floor((g.margin - 34) / ((fs + 1.5) * 0.64)));
+  return { fs, chars, actorChars, withName: fs >= 8 && chars >= 16, hidden: g.narrow || fs < 5.2 };
+}
+
+const trunc = (s: string, n: number) => (n < 2 ? '' : s.length > n ? `${s.slice(0, n - 1)}…` : s);
+
+/** A leaf's label as the cockpit writes it: actors by name, records with their key when room. */
+export function labelOf(n: ITreeNode, fit: ILabelFit): string {
+  if (n.kind === 'actor') return trunc(n.label, fit.actorChars);
+  if (n.short)
+    return fit.withName ? `${n.short} ${trunc(n.label, fit.chars - n.short.length - 1)}` : n.short;
+  return trunc(n.label, fit.withName ? fit.chars : Math.max(10, Math.min(fit.chars, 18)));
+}
+
+export const nodeRadius = (n: ITreeNode) =>
+  2.3 + Math.max(0, Math.min(4, Number(n.size) || 0)) * 0.55;

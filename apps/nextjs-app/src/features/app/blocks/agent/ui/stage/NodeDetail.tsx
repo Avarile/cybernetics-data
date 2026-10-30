@@ -10,12 +10,15 @@ import o from '../theme/overview.module.css';
  */
 export const NodeDetail = ({
   node,
+  kind,
   baseId,
   onLeave,
   onAsk,
   onClose,
 }: {
   node: IGNode;
+  /** What the record is ("TASK"); the node's own key when there is none. */
+  kind?: string;
   baseId: string;
   /** Following the link leaves the cockpit. */
   onLeave: () => void;
@@ -27,7 +30,7 @@ export const NodeDetail = ({
   return (
     <div className={o.detail} role="group" aria-label={node.label}>
       <span className={o.key} data-tone={node.tone}>
-        {[node.short, node.alert ? t('agent.cockpit.overdue', 'OVERDUE') : node.state]
+        {[kind ?? node.short, node.alert ? t('agent.cockpit.overdue', 'OVERDUE') : node.state]
           .filter(Boolean)
           .join(' · ')}
       </span>

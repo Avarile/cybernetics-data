@@ -120,6 +120,7 @@ export const StageContainer = ({
             lit={stage.graphLit}
             onHover={stage.hoverRecord}
             onPin={stage.pinRecord}
+            onClear={stage.unpin}
           />
         ) : (
           <SearchBoard

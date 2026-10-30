@@ -2,7 +2,7 @@ import type { ISearchCard, ISearchPlan } from '@teable/openapi';
 import { describe, expect, it } from 'vitest';
 import { emptyBoard, type IBoard } from '../search-board';
 import { boardToGraph } from './from-board';
-import { labelTransform, layoutGraph } from './layout';
+import { TAU, buildTree, geometry, labelFit, labelOf, layoutTree } from './layout';
 import { limitGraph } from './limit';
 import { finishGraph, type IGNode } from './types';
 
@@ -94,23 +94,37 @@ describe('constellation graph (cockpit design §5.4)', () => {
     expect(g.byId.get('T4')?.parent).toBeNull();
   });
 
-  it('lays out every drawn node on the rim, with bundled edges and readable labels', () => {
+  it('lays the tree out on a ring sized to its box, with room for labels when there is room', () => {
     const g = boardToGraph(board);
-    const layout = layoutGraph(g, { mode: 'bundle', radius: 300 });
-    expect(layout.nodes.map((n) => n.id)).toEqual(
+    const data = buildTree(g, null);
+    const h = layoutTree(data, 'bundle', 200);
+    expect(h.descendants().map((d) => d.data.id)).toEqual(
       expect.arrayContaining(['root', 'G', 'P', 'T1', 'g:people', 'A'])
     );
-    expect(layout.edges).toHaveLength(3);
-    expect(layout.edges.every((e) => e.d.startsWith('M'))).toBe(true);
-    const left = layout.nodes.find((n) => n.angle > Math.PI)!;
-    expect(labelTransform(left, 6).anchor).toBe('end');
-    // turned half a turn as one layer, the same label shows on the right half
-    expect(labelTransform(left, 6, Math.PI).anchor).toBe('start');
-    const narrowed = layoutGraph(g, { mode: 'tree', radius: 300, lens: new Set(['T1']) });
+    // cluster: every leaf on the ring, angles around the whole turn
+    expect(h.leaves().every((d) => Math.abs(d.y - 200) < 1e-9)).toBe(true);
+    expect(h.leaves().every((d) => d.x >= 0 && d.x <= TAU)).toBe(true);
+    const wide = geometry(1200, 800, h.leaves().length);
+    expect(wide).toMatchObject({ cx: 600, cy: 400, r: 382, narrow: false });
+    expect(wide.rIn).toBeLessThan(wide.r);
+    expect(geometry(390, 600, 10).narrow).toBe(true);
+    const fit = labelFit(wide, h.leaves().length, false);
+    expect([fit.hidden, fit.withName]).toEqual([false, true]);
+    expect(labelOf({ ...g.byId.get('T1')!, short: 'TASK · #4' }, fit)).toBe('TASK · #4 T1');
+    expect(labelFit(geometry(390, 600, 10), 10, false).hidden).toBe(true);
+  });
+
+  it('narrows the tree to a lens, its branches kept faint and empty ones gone', () => {
+    const g = boardToGraph(board);
+    const narrowed = layoutTree(buildTree(g, new Set(['T1'])), 'tree', 200);
     // the people's branch cites no one: it is not drawn
-    expect(narrowed.nodes.map((n) => n.id).sort()).toEqual(['G', 'P', 'T1', 'root'].sort());
-    expect(narrowed.nodes.find((n) => n.id === 'P')?.context).toBe(true);
-    expect(narrowed.branches.length).toBeGreaterThan(0);
+    expect(
+      narrowed
+        .descendants()
+        .map((d) => d.data.id)
+        .sort()
+    ).toEqual(['G', 'P', 'T1', 'root'].sort());
+    expect(narrowed.descendants().find((d) => d.data.id === 'P')?.data.context).toBe(true);
   });
 
   it('draws within the budget and folds the rest into "+N more"', () => {

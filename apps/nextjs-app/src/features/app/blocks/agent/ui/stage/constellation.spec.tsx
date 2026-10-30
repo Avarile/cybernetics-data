@@ -12,9 +12,9 @@ vi.mock('../../model/graph/layout', async (importOriginal) => {
   const real = await importOriginal<typeof LayoutModule>();
   return {
     ...real,
-    layoutGraph: (...args: Parameters<typeof real.layoutGraph>) => {
+    layoutTree: (...args: Parameters<typeof real.layoutTree>) => {
       layouts.count++;
-      return real.layoutGraph(...args);
+      return real.layoutTree(...args);
     },
   };
 });
@@ -92,13 +92,24 @@ describe('constellation (cockpit design §5.4)', () => {
     expect(useCockpitStore.getState().pinned).toBe('s3:Ava');
   });
 
-  it('turns as one layer: the layout is not run again while the chart turns', async () => {
+  it('turns as one layer: a CSS turn on the drawn chart, the layout not run again', async () => {
     const { container } = render(<Chart />);
     const before = layouts.count;
+    expect(before).toBeGreaterThan(0);
     await new Promise((resolve) => setTimeout(resolve, 400));
-    const turn = container.querySelector('[data-turn]')!;
-    expect(turn.getAttribute('transform')).toMatch(/^rotate\(0\.\d+\)$/);
+    expect(container.querySelector('svg')!.style.transform).toMatch(/^rotate\(0\.\d+deg\)$/);
     expect(layouts.count).toBe(before);
+  });
+
+  it('draws with D3: a node per record by key, diamonds for people, rims for the branches', () => {
+    const { container } = render(<Chart />);
+    const kinds = [...container.querySelectorAll('g.v-node')].map((g) =>
+      g.getAttribute('data-kind')
+    );
+    expect(kinds.sort()).toEqual(['actor', 'actor', 'hub', 'item', 'root']);
+    expect(container.querySelectorAll('g.v-node.actor path.dia')).toHaveLength(2);
+    expect(container.querySelectorAll('g.rim')).toHaveLength(2);
+    expect(container.querySelector('g.v-node[data-key="s3:Ava"]')).not.toBeNull();
   });
 
   it("pins into the overview's own slot on the overview", async () => {

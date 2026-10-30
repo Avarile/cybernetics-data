@@ -703,3 +703,35 @@ With the cockpit's P8:
 - ASK into the composer;
 - 1440, 1024 and 390 px; MONO and CYBERPUNK; reduced motion;
 - CPU while turning, compared with before P5.
+
+### 15.5 The constellation drawn by D3 (after P5, at the admin's request)
+
+The admin asked for the constellation to be drawn by D3, as the ai-cockpit draws it. Until then,
+d3 only computed the layout and zoomed, and React drew the SVG. Now:
+
+- `ui/stage/constellation-chart.ts` is a port of the cockpit's `tree.ts` as a class (one per
+  mounted chart). D3 owns the `<svg>`:
+  - layers (rims, links, edges, nodes, labels, pulse) joined to the tree by key;
+  - glyphs: a diamond from `d3.symbol` for people, rings for hubs, dots and halos for records;
+  - an arc per top-level branch, with its name and count on a `textPath`;
+  - the cockpit's label fit (font size from the room per leaf, names when they fit);
+  - an 850 ms glide between layouts on `d3-timer`, and a pulse on `d3-transition` for records
+    that arrive;
+  - zoom on `d3-zoom` (the zoom group outside the centring group).
+- **The turn** is the cockpit's: a CSS rotation of the drawn `<svg>` (one GPU layer) about the
+  zoomed centre. The geometry is redrawn only every 6°, when labels re-flip. This replaces P5's
+  rotation group.
+- `ui/stage/constellation-marks.ts` holds the pure marks (glyph, classes, arcs, rims), and
+  `model/graph/layout.ts` the pure tree, d3-hierarchy layout, geometry and label fit.
+  `Constellation.tsx` is a thin React shell, with the same props plus `onClear`. It makes the
+  chart once, hands it graph, mode, lens, lit and labels, drives the rotator, and shows a styled
+  hover card, which replaces the browser's `<title>`.
+- The styles are the cockpit's (`cockpit.css` and `cyberpunk.css` chart rules) in
+  `ui/theme/constellation.module.css`, as global class names under the module's frame. They
+  compile in Next's pure CSS-module mode. The old chart rules left `cockpit.module.css`.
+- The trace by graph follows the cockpit's `focusOf`: a person lights their edges with both ends;
+  anything else lights its whole subtree, its edges and its branch.
+- Overview records go by name on the ring, because their `short` is the table's kind ("TASK"),
+  not a key; the hover card and the pinned strip name the kind.
+- New dependencies, exact versions from the pnpm store: `d3-ease` 3.0.1, `d3-timer` 3.0.1,
+  `d3-transition` 3.0.1, and their `@types`.

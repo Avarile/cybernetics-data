@@ -117,9 +117,16 @@ describe('overview model (overview design §9.1)', () => {
     expect(f.find((x) => x.k === 'TRANSACTIONS 90D')?.v).toBe(3);
   });
 
-  it('traces a node to its branch, its children and what its edges reach', () => {
+  it('traces a node to its branch, its subtree and what its edges reach', () => {
     const g = overviewToGraph(work);
-    expect([...traceGraph(g, 'rec:C')].sort()).toEqual(['hub:tblContacts', 'rec:C', 'rec:T1']);
+    // a person: their edges with both ends and the branches above them (the ai-cockpit's focusOf)
+    expect([...traceGraph(g, 'rec:C')].sort()).toEqual([
+      'hub:tblContacts',
+      'rec:C',
+      'rec:G',
+      'rec:P',
+      'rec:T1',
+    ]);
     expect(traceGraph(g, 'rec:P').has('rec:T4')).toBe(true);
     expect(traceGraph(g, 'nope').size).toBe(0);
   });

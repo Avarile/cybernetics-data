@@ -40,6 +40,7 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
       .cycle.holds.some((h) => h === 'paused' || h === 'picked');
     cycleEvent(held ? { type: 'resume' } : { type: 'hold', reason: 'paused' });
   }, [cycleEvent]);
+  const unpin = useCallback(() => pinOverview(undefined), [pinOverview]);
   const pointer = useCallback(
     (inside: boolean) => cycleEvent({ type: inside ? 'hold' : 'release', reason: 'pointer' }),
     [cycleEvent]
@@ -48,6 +49,8 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
     setView(view);
     setStage('search');
   };
+  /** A record's kind ("TASK"): the server's short, which the chart leaves out of its labels. */
+  const kindOf = (id: string) => ov.vo?.nodes.find((n) => n.id === id)?.short ?? undefined;
   /** ASK: the agent is pointed at the record, the composer gets the question to send or change. */
   const ask = (node: IGNode) => {
     if (!ov.vo || !node.recordId) return;
@@ -58,7 +61,7 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
       rows: 1,
       recordIds: [node.recordId],
     });
-    const what = (node.short ?? node.table ?? '').toLowerCase();
+    const what = (kindOf(node.id) ?? node.table ?? '').toLowerCase();
     setDraft(
       t('agent.cockpit.overview.askDraft', {
         what,
@@ -111,6 +114,7 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
           lit={ov.lit}
           onHover={ov.setHover}
           onPin={ov.pin}
+          onClear={unpin}
           onPointerInside={pointer}
           labels={!ov.narrow}
         />
@@ -153,6 +157,7 @@ export const OverviewStage = ({ hasSearch }: { hasSearch: boolean }) => {
         {ov.pinned && ov.vo && (
           <NodeDetail
             node={ov.pinned}
+            kind={kindOf(ov.pinned.id)}
             baseId={ov.vo.baseId}
             onLeave={store.close}
             onAsk={ask}

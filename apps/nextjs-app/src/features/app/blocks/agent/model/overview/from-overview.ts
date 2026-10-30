@@ -10,7 +10,9 @@ export function overviewToGraph(vo: IAgentOverviewVo): IGraph {
     id: n.id,
     kind: n.kind,
     label: n.label,
-    short: n.short,
+    // a record's short is its table's kind ("TASK"), not a key: on a crowded ring every label
+    // would read the same, so records go by name and the tooltip names the table
+    short: n.recordId ? null : n.short,
     parent: n.parent,
     tone: n.tone,
     ...(n.alert ? { alert: true } : {}),

@@ -1,0 +1,347 @@
+/* The constellation (cockpit design §5.4), ported from the ai-cockpit's cockpit.css and
+   cyberpunk.css. D3 writes the classes inside the chart (v-node, t-<tone>, focusing…), so they
+   are global names, scoped under this module's frame. Tokens come from cockpit.module.css. */
+
+/* The chart turns and glides continuously: its own GPU layer, its repaints contained, so the
+   panels around it are never re-rastered with it. */
+.frame {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  contain: strict;
+  isolation: isolate;
+}
+
+.chart {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+  will-change: transform;
+}
+.chart:active {
+  cursor: grabbing;
+}
+.chart :global(text) {
+  font-family: var(--f-data);
+  font-stretch: 87.5%;
+}
+
+.chart :global(.v-link) {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.07;
+  stroke-width: 0.8;
+}
+.chart:global(.mode-tree) :global(.v-link) {
+  stroke-opacity: 0.24;
+}
+
+.chart :global(.v-edge) {
+  fill: none;
+  stroke: var(--target);
+  stroke-width: 1.1;
+  stroke-opacity: 0.35;
+  pointer-events: none;
+  transition:
+    opacity 0.25s,
+    stroke-opacity 0.25s;
+}
+.chart :global(.v-edge.t-route) {
+  stroke: var(--route);
+  stroke-opacity: 0.45;
+  stroke-dasharray: 5 4;
+  animation: flow 1.1s linear infinite;
+}
+.chart :global(.v-edge.t-ink) {
+  stroke: var(--ink);
+  stroke-opacity: 0.22;
+}
+.chart :global(.v-edge.t-dim),
+.chart :global(.v-edge.t-none) {
+  stroke: var(--ink-2);
+  stroke-opacity: 0.24;
+}
+.chart :global(.v-edge.t-caution) {
+  stroke: var(--caution);
+  stroke-opacity: 0.45;
+}
+.chart :global(.v-edge.t-faint) {
+  display: none;
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -18;
+  }
+}
+/* a flowing dash repaints the whole chart every frame; past 120 active links they go solid */
+.frame:global(.still) :global(.v-edge.t-route) {
+  animation: none;
+}
+.frame:global(.calm) :global(.v-edge.t-route) {
+  animation: none;
+  stroke-dasharray: none;
+}
+
+/* "+N more": records beyond the render budget (limit.ts) */
+.chart :global(.v-node.more .dot) {
+  fill: var(--void);
+  stroke: var(--dim);
+  stroke-width: 1;
+  stroke-dasharray: 1.5 1.5;
+}
+.chart :global(.v-label.more) {
+  fill: var(--dim);
+  font-style: italic;
+}
+
+.chart :global(.v-node) {
+  cursor: pointer;
+  transition: opacity 0.25s;
+}
+.chart :global(.v-node .dot) {
+  stroke: var(--void);
+  stroke-width: 0.6;
+  fill: var(--ink-2);
+  fill-opacity: 0.75;
+}
+.chart :global(.v-node.t-ink .dot) {
+  fill: var(--ink);
+  fill-opacity: 0.55;
+}
+/* glows are soft outlines drawn behind the fill (paint-order), not filters: cheap every frame */
+.chart :global(.v-node.t-route .dot) {
+  fill: var(--route);
+  fill-opacity: 1;
+  stroke: color-mix(in srgb, var(--route) 22%, transparent);
+  stroke-width: 3;
+  paint-order: stroke;
+}
+.chart :global(.v-node.t-target .dot) {
+  fill: var(--void);
+  stroke: var(--target);
+  stroke-width: 1.3;
+}
+.chart :global(.v-node.t-dim .dot) {
+  fill: var(--dim);
+  fill-opacity: 1;
+}
+.chart :global(.v-node.t-faint .dot) {
+  fill: var(--faint);
+  fill-opacity: 1;
+}
+.chart :global(.v-node.t-caution .dot) {
+  fill: var(--caution);
+  fill-opacity: 1;
+}
+.chart :global(.v-node.parent .dot) {
+  stroke-width: 1.6;
+}
+.chart :global(.v-node .halo) {
+  fill: none;
+  stroke: var(--caution);
+  stroke-width: 1.1;
+}
+.chart :global(.v-node .hub) {
+  fill: var(--void);
+  stroke: var(--ink-2);
+  stroke-width: 1;
+}
+.chart :global(.v-node.hub.t-route .hub) {
+  stroke: var(--route);
+}
+.chart :global(.v-node.hub.t-target .hub) {
+  stroke: var(--target);
+}
+.chart :global(.v-node.hub.t-caution .hub) {
+  stroke: var(--caution);
+}
+.chart :global(.v-node.actor .dia) {
+  fill: var(--void);
+  stroke: var(--dim);
+  stroke-width: 1.2;
+}
+.chart :global(.v-node.actor.t-route .dia) {
+  fill: var(--route);
+  stroke: color-mix(in srgb, var(--route) 22%, transparent);
+  stroke-width: 4;
+  paint-order: stroke;
+}
+.chart :global(.v-node.actor.t-target .dia) {
+  fill: var(--target);
+  stroke: var(--void);
+}
+.chart :global(.v-node.actor.t-ink .dia) {
+  fill: var(--ink);
+  stroke: var(--void);
+}
+.chart :global(.v-node.context .dot) {
+  fill-opacity: 0.35;
+  stroke-opacity: 0.4;
+}
+/* the centre point every branch grows from */
+.chart :global(.v-node .core) {
+  fill: var(--void);
+  stroke: var(--ink-2);
+  stroke-width: 1.2;
+}
+.chart :global(.v-node.root) {
+  cursor: default;
+}
+
+.chart :global(.v-label) {
+  font-size: var(--fs, 9px);
+  fill: var(--dim);
+  cursor: pointer;
+  transition: opacity 0.25s;
+}
+.chart :global(.v-label.t-route) {
+  fill: var(--ink);
+}
+.chart :global(.v-label.t-target),
+.chart :global(.v-label.t-none) {
+  fill: var(--ink-2);
+}
+.chart :global(.v-label.alert),
+.chart :global(.v-label.t-caution) {
+  fill: var(--caution);
+}
+.chart :global(.v-label.actor) {
+  fill: var(--ink);
+  font-weight: 600;
+  font-size: calc(var(--fs, 9px) + 1.5px);
+  letter-spacing: 0.02em;
+}
+.chart :global(.v-label.actor.t-none) {
+  fill: var(--dim);
+}
+.chart:global(.no-labels) :global(.v-label) {
+  display: none;
+}
+/* a few per chart: keep them readable when other labels hide */
+.chart:global(.no-labels) :global(.v-label.more) {
+  display: inline;
+}
+
+.chart :global(.v-rim) {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-opacity: 0.5;
+  stroke-width: 2;
+}
+.chart :global(.v-rim-guide) {
+  fill: none;
+  stroke: none;
+}
+.chart :global(.v-rim-label) {
+  fill: var(--ink-2);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+.chart :global(.rim) {
+  cursor: pointer;
+}
+.chart :global(.rim:hover .v-rim) {
+  stroke: var(--target);
+  stroke-opacity: 1;
+}
+.chart :global(.rim:hover .v-rim-label) {
+  fill: var(--target);
+}
+
+.chart :global(.v-pulse) {
+  fill: none;
+  stroke-width: 1.6;
+  stroke: var(--ink);
+  pointer-events: none;
+}
+.chart :global(.v-pulse.t-route) {
+  stroke: var(--route);
+}
+.chart :global(.v-pulse.t-target) {
+  stroke: var(--target);
+}
+.chart :global(.v-pulse.t-caution) {
+  stroke: var(--caution);
+}
+
+.chart:global(.focusing) :global(.v-node:not(.on):not(.root)),
+.chart:global(.focusing) :global(.v-label:not(.on)) {
+  opacity: 0.14;
+}
+.chart:global(.focusing) :global(.v-edge:not(.on)) {
+  opacity: 0.05;
+}
+.chart:global(.focusing) :global(.v-edge.on) {
+  stroke-opacity: 1;
+  stroke-width: 1.7;
+}
+.chart:global(.focusing) :global(.v-link.on) {
+  stroke-opacity: 0.5;
+}
+
+/* the cockpit's CYBERPUNK palette: brighter chrome, glowing active work */
+:global([data-palette='cyberpunk']) .chart :global(.v-link) {
+  stroke: var(--chrome);
+  stroke-opacity: 0.2;
+}
+:global([data-palette='cyberpunk']) .chart:global(.mode-tree) :global(.v-link) {
+  stroke-opacity: 0.45;
+}
+:global([data-palette='cyberpunk']) .chart :global(.v-edge.t-target) {
+  stroke-opacity: 0.85;
+}
+:global([data-palette='cyberpunk']) .chart :global(.v-edge.t-route) {
+  stroke-opacity: 0.75;
+}
+:global([data-palette='cyberpunk']) .chart :global(.v-rim) {
+  stroke: var(--chrome-2);
+  stroke-opacity: 1;
+}
+:global([data-palette='cyberpunk']) .chart :global(.v-rim-label) {
+  fill: var(--chrome);
+}
+:global([data-palette='cyberpunk']) .chart :global(.v-node.t-route .dot) {
+  stroke: color-mix(in srgb, var(--route) 38%, transparent);
+  stroke-width: 4.5;
+}
+:global([data-palette='cyberpunk']) .chart :global(.v-node .core) {
+  stroke: var(--chrome);
+}
+
+/* the hover card: what a node is, beside the pointer */
+.tip {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  gap: 2px;
+  max-width: 260px;
+  padding: 6px 8px;
+  border: 1px solid var(--bezel-2);
+  background: var(--glass);
+  pointer-events: none;
+  font-family: var(--f-data);
+  font-size: 10px;
+  color: var(--ink-2);
+}
+.tip b {
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 12px;
+  font-weight: 500;
+}
+.tipKey {
+  color: var(--c, var(--dim));
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+.tip i {
+  font-style: normal;
+  color: var(--dim);
+}

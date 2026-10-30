@@ -1,5 +1,7 @@
 /* Slow rotation of the constellation, ported from the ai-cockpit's rotate.ts: an angle advanced in
-   real time and handed to a callback a few times a second (one turn every four minutes). */
+   real time and handed to a callback (one turn every four minutes). Each call should be cheap
+   for the receiver: the chart turns a GPU layer and redraws only every few degrees, so 30 a
+   second is smooth at this speed. */
 export interface IRotator {
   start(): void;
   stop(): void;
@@ -13,7 +15,7 @@ const MAX_STEP_MS = 250;
 
 export function createRotator(
   apply: (radians: number) => void,
-  { degPerSecond = 1.5, fps = 8 }: { degPerSecond?: number; fps?: number } = {}
+  { degPerSecond = 1.5, fps = 30 }: { degPerSecond?: number; fps?: number } = {}
 ): IRotator {
   const perMs = (degPerSecond * Math.PI) / 180 / 1000;
   const frameMs = 1000 / Math.max(1, fps);

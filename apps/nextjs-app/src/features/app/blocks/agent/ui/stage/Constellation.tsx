@@ -1,15 +1,8 @@
-import { select } from 'd3-selection';
-import { zoom, zoomIdentity, type ZoomBehavior, type ZoomTransform } from 'd3-zoom';
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  labelTransform,
-  layoutGraph,
-  nodeRadius,
-  type ILaidNode,
-  type ILayoutMode,
-} from '../../model/graph/layout';
+import type { ILayoutMode, ITreeNode } from '../../model/graph/layout';
 import type { IGraph } from '../../model/graph/types';
-import s from '../theme/cockpit.module.css';
+import c from '../theme/constellation.module.css';
+import { ConstellationChart } from './constellation-chart';
 import { createRotator } from './rotate';
 
 export interface IConstellationProps {
@@ -23,26 +16,37 @@ export interface IConstellationProps {
   lit?: Set<string>;
   onHover: (recordId?: string) => void;
   onPin: (recordId: string) => void;
+  /** A click on the empty chart. */
+  onClear?: () => void;
   /** The pointer came onto the chart or left it (the overview holds its cycle meanwhile). */
   onPointerInside?: (inside: boolean) => void;
   /** Record labels (branches keep theirs); off on narrow screens. */
   labels?: boolean;
 }
 
-/** Charts up to this many nodes plus links turn and flow; larger ones hold still. */
-const MOTION_MAX = 400;
-/** Labels re-flip when the turn passes a step this size, not on every frame (design §9.5). */
-const LABEL_STEP = (5 * Math.PI) / 180;
-/** Past this many nodes the records lose their labels; branches keep theirs. */
-const LABELS_MAX = 260;
+/** Records that arrive together beyond this many land without a pulse each. */
+const PULSE_MAX = 24;
 
-const truncate = (text: string, n: number) => (text.length > n ? `${text.slice(0, n - 1)}…` : text);
+interface ITip {
+  node: ITreeNode;
+  x: number;
+  y: number;
+}
+
+const tipKey = (n: ITreeNode) =>
+  n.kind === 'root'
+    ? ''
+    : [n.short ?? n.table?.toUpperCase(), n.alert ? 'OVERDUE' : n.state]
+        .filter(Boolean)
+        .join(' · ');
 
 /**
- * The search as a radial constellation (cockpit design §5.4): records on the rim, the plan's
- * structure as branches, links bundled through the tree, people as diamonds. Drag to pan, wheel
- * to zoom, double-click or `0` to reset; it turns slowly unless motion is reduced. Memoized, so a
- * reply streaming beside it does not redraw it.
+ * The search or the data base as a radial constellation (cockpit design §5.4), drawn by D3 as
+ * the ai-cockpit draws it (ui/stage/constellation-chart.ts): records on the rim, the structure as
+ * branches with their rims, links bundled through the tree, people as diamonds; it glides between
+ * layouts and turns slowly unless motion is reduced. Drag to pan, wheel to zoom, double-click or
+ * `0` to reset. React makes the chart once and hands it what changes; memoized, so a reply
+ * streaming beside it does not touch it.
  */
 export const Constellation = memo(
   ({
@@ -53,165 +57,113 @@ export const Constellation = memo(
     lit,
     onHover,
     onPin,
+    onClear,
     onPointerInside,
     labels = true,
   }: IConstellationProps) => {
+    const frameRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
-    const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown>>();
-    const [size, setSize] = useState({ w: 0, h: 0 });
-    const turnRef = useRef<SVGGElement>(null);
-    const [labelTurn, setLabelTurn] = useState(0);
-    const [transform, setTransform] = useState<ZoomTransform>(zoomIdentity);
-    // the chart turns as one layer: the frame sets a transform, it lays nothing out and renders
-    // nothing; labels render again only when the turn passes a step, to flip sides
+    const chartRef = useRef<ConstellationChart>();
+    const previous = useRef<IGraph>();
+    const [tip, setTip] = useState<ITip>();
+    // the chart is made once: it calls the latest handlers through this
+    const handlers = useRef({ onHover, onPin, onClear, onPointerInside });
+    handlers.current = { onHover, onPin, onClear, onPointerInside };
     const rotator = useMemo(
-      () =>
-        createRotator(
-          (radians) => {
-            turnRef.current?.setAttribute('transform', `rotate(${(radians * 180) / Math.PI})`);
-            const step = Math.floor(radians / LABEL_STEP) * LABEL_STEP;
-            setLabelTurn((prev) => (prev === step ? prev : step));
-          },
-          { fps: 30 }
-        ),
+      () => createRotator((radians) => chartRef.current?.setRotation(radians), { fps: 30 }),
       []
     );
 
     useEffect(() => {
-      const el = svgRef.current;
-      if (!el) return;
-      const observer = new ResizeObserver(([entry]) =>
-        setSize({ w: entry.contentRect.width, h: entry.contentRect.height })
-      );
-      observer.observe(el);
-      const behaviour = zoom<SVGSVGElement, unknown>()
-        .scaleExtent([0.5, 6])
-        .on('zoom', (e: { transform: ZoomTransform }) => setTransform(e.transform));
-      zoomRef.current = behaviour;
-      select(el)
-        .call(behaviour)
-        .on('dblclick.zoom', () => select(el).call(behaviour.transform, zoomIdentity));
+      const chart = new ConstellationChart(svgRef.current!, {
+        onHover: (node, x, y) => {
+          const shown = node && node.kind !== 'root' ? node : null;
+          if (shown) rotator.hold();
+          else rotator.release();
+          handlers.current.onHover(shown?.id);
+          const box = frameRef.current?.getBoundingClientRect();
+          setTip(
+            shown && box && x !== undefined && y !== undefined
+              ? { node: shown, x: x - box.left, y: y - box.top }
+              : undefined
+          );
+        },
+        onPin: (id) => handlers.current.onPin(id),
+        onClear: () => handlers.current.onClear?.(),
+        onPointerInside: (inside) => {
+          handlers.current.onPointerInside?.(inside);
+          if (inside) return;
+          rotator.release();
+          setTip(undefined);
+        },
+      });
+      chartRef.current = chart;
       return () => {
-        observer.disconnect();
-        select(el).on('.zoom', null);
+        chart.destroy();
+        chartRef.current = undefined;
+        previous.current = undefined;
       };
-    }, []);
+    }, [rotator]);
 
     useEffect(() => {
-      if (zoomResets && svgRef.current && zoomRef.current)
-        select(svgRef.current).call(zoomRef.current.transform, zoomIdentity);
+      chartRef.current?.setView({ mode, lens: lens?.size ? lens : null, labels });
+    }, [mode, lens, labels]);
+
+    // another search (or dataset) grows out of the core; the same one glides, its new records pulse
+    useEffect(() => {
+      const chart = chartRef.current;
+      if (!chart) return;
+      const before = previous.current;
+      const fresh = !before || before.title !== graph.title;
+      const changed = fresh
+        ? undefined
+        : new Set(graph.nodes.filter((n) => !before.byId.has(n.id)).map((n) => n.id));
+      chart.setModel(graph, {
+        fresh,
+        changed: changed && changed.size <= PULSE_MAX ? changed : undefined,
+      });
+      previous.current = graph;
+    }, [graph]);
+
+    useEffect(() => {
+      chartRef.current?.setView({ lit: lit?.size ? lit : null });
+    }, [lit]);
+
+    useEffect(() => {
+      if (zoomResets) chartRef.current?.resetZoom();
     }, [zoomResets]);
 
-    // motion costs in proportion to what is drawn: large charts hold still (as the cockpit's do)
-    const still = graph.nodes.length + graph.links.length > MOTION_MAX;
     useEffect(() => {
-      if (still || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
       rotator.start();
       return () => rotator.stop();
-    }, [rotator, still]);
+    }, [rotator]);
 
-    const measured = size.w > 0 && size.h > 0;
-    const radius = Math.max(80, Math.min(size.w, size.h) / 2 - 16);
-    const layout = useMemo(
-      () => layoutGraph(graph, { mode, radius, lens: lens?.size ? lens : null }),
-      [graph, mode, radius, lens]
-    );
-    const dim = (id?: string) => Boolean(lit?.size && id && !lit.has(id));
-    const showLabel = (n: ILaidNode) =>
-      n.node && (n.node.kind === 'hub' || (labels && n.leaf && layout.nodes.length < LABELS_MAX));
-
+    const width = frameRef.current?.clientWidth ?? 0;
+    const flip = width > 0 && tip !== undefined && tip.x > width - 280;
     return (
-      <svg
-        ref={svgRef}
-        className={s.constellation}
-        data-still={still ? 'true' : undefined}
-        role="img"
-        aria-label="Search constellation"
-        onMouseEnter={() => onPointerInside?.(true)}
-        // a node that vanished under the pointer never says it was left: the chart does
-        onMouseLeave={() => {
-          rotator.release();
-          onHover(undefined);
-          onPointerInside?.(false);
-        }}
-      >
-        {/* zoom outside, centring inside: d3-zoom pivots at the pointer only when its transform
-            is the outermost one (the cockpit's tree.ts nests them the same way) */}
-        {measured && (
-          <g transform={transform.toString()}>
-            <g transform={`translate(${size.w / 2},${size.h / 2})`}>
-              <g ref={turnRef} data-turn>
-                {layout.branches.map((b) => (
-                  <path key={b.id} d={b.d} className={s.branch} />
-                ))}
-                {layout.edges.map((e) => (
-                  <path
-                    key={e.id}
-                    d={e.d}
-                    className={s.edge}
-                    data-tone={e.link.tone}
-                    data-dim={dim(e.link.source) && dim(e.link.target) ? 'true' : undefined}
-                  >
-                    <title>{e.link.label}</title>
-                  </path>
-                ))}
-                {layout.nodes.map((n) => {
-                  if (!n.node) return <circle key={n.id} r={4} className={s.core} />;
-                  const node = n.node;
-                  const label = labelTransform(n, node.kind === 'hub' ? 8 : 6, labelTurn);
-                  return (
-                    <g
-                      key={n.id}
-                      className={s.node}
-                      data-tone={node.tone}
-                      data-kind={node.kind}
-                      data-key={node.cardKey ?? node.id}
-                      data-context={n.context ? 'true' : undefined}
-                      data-dim={dim(node.id) ? 'true' : undefined}
-                      onMouseEnter={() => {
-                        rotator.hold();
-                        onHover(node.id);
-                      }}
-                      onMouseLeave={() => {
-                        rotator.release();
-                        onHover(undefined);
-                      }}
-                      onClick={() => onPin(node.id)}
-                    >
-                      <g transform={`translate(${n.x},${n.y})`}>
-                        {node.alert && <circle r={nodeRadius(node) + 3.5} className={s.halo} />}
-                        {node.kind === 'actor' ? (
-                          <rect x={-4} y={-4} width={8} height={8} transform="rotate(45)" />
-                        ) : (
-                          <circle
-                            r={node.kind === 'hub' ? 4 : nodeRadius(node)}
-                            data-ring={node.tone === 'target' ? 'true' : undefined}
-                          />
-                        )}
-                      </g>
-                      {showLabel(n) && (
-                        <text transform={label.transform} textAnchor={label.anchor} dy="0.32em">
-                          {truncate(node.label, node.kind === 'hub' ? 28 : 22)}
-                        </text>
-                      )}
-                      <title>
-                        {[
-                          node.short,
-                          node.label,
-                          node.state,
-                          ...(node.meta ?? []).map(([k, v]) => `${k}: ${v}`),
-                        ]
-                          .filter(Boolean)
-                          .join('\n')}
-                      </title>
-                    </g>
-                  );
-                })}
-              </g>
-            </g>
-          </g>
+      <div ref={frameRef} className={c.frame}>
+        <svg ref={svgRef} className={c.chart} role="img" aria-label="Constellation" />
+        {tip && (
+          <div
+            className={c.tip}
+            data-tone={tip.node.tone}
+            style={{
+              top: tip.y + 14,
+              ...(flip ? { right: width - tip.x + 14 } : { left: tip.x + 14 }),
+            }}
+          >
+            {tipKey(tip.node) && <span className={c.tipKey}>{tipKey(tip.node)}</span>}
+            <b>{tip.node.label}</b>
+            {tip.node.kind !== 'root' &&
+              tip.node.meta?.map(([k, v]) => (
+                <span key={k}>
+                  <i>{k}</i> {v}
+                </span>
+              ))}
+          </div>
         )}
-      </svg>
+      </div>
     );
   }
 );
