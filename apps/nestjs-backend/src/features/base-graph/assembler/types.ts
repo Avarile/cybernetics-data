@@ -11,6 +11,8 @@ export interface IGraphRow extends IHierarchyRow {
   group: { recordId: string; title: string } | null;
   /** Only link fields the plan marks as read-side; the other side of a pair is skipped. */
   links: { fieldId: string; targetRecordIds: string[] }[];
+  /** The query's valueFieldIds of this record, by field id; absent when none were asked. */
+  values?: Record<string, unknown>;
 }
 
 export interface IAssemblerTable {

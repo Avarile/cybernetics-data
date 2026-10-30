@@ -196,6 +196,7 @@ const buildTable = (ctx: ITableContext) => {
       recordId: row.recordId,
       label: row.title,
       parentId: placed.parentId,
+      ...(row.values ? { values: row.values } : {}),
     });
     if (placed.parentId) {
       recordLinks.push({

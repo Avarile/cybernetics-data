@@ -27,10 +27,12 @@ export const labelOf = (primary: IFieldInstance, raw: unknown): string => {
 };
 
 export const toGraphRow = (
-  table: Pick<IGraphTablePlan, 'primaryField' | 'hierarchyField' | 'groupField' | 'readFields'>,
+  table: Pick<IGraphTablePlan, 'primaryField' | 'hierarchyField' | 'groupField' | 'readFields'> &
+    Partial<Pick<IGraphTablePlan, 'valueFields'>>,
   record: { id: string; fields: Record<string, unknown> }
 ): IGraphRow => {
   const group = table.groupField ? extractLinkCell(record.fields[table.groupField.id]) : null;
+  const valueFields = table.valueFields ?? [];
   return {
     recordId: record.id,
     title: labelOf(table.primaryField, record.fields[table.primaryField.id]),
@@ -42,6 +44,10 @@ export const toGraphRow = (
       fieldId: field.id,
       targetRecordIds: extractRelatedRecordIds(record.fields[field.id]),
     })),
+    // dbRecord2RecordFields drops empty cells: an asked-for field is null, never missing
+    ...(valueFields.length
+      ? { values: Object.fromEntries(valueFields.map((f) => [f.id, record.fields[f.id] ?? null])) }
+      : {}),
   };
 };
 
@@ -87,6 +93,7 @@ export class GraphRowReader {
       table.hierarchyField?.id,
       table.groupField?.id,
       ...table.readFields.map((f) => f.id),
+      ...table.valueFields.map((f) => f.id),
     ].filter((id): id is string => Boolean(id));
 
     const records = await this.recordService.getRecordsFields(

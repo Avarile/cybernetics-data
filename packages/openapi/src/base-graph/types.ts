@@ -57,6 +57,10 @@ export const baseGraphNodeSchema = z.object({
   }),
   depth: z.number().int(),
   degree: z.number().int().meta({ description: 'Adjacent node count, precomputed for sizing.' }),
+  values: z.record(z.string(), z.unknown()).optional().meta({
+    description:
+      "Cell values of the table's valueFieldIds, by field id (null when empty). Record nodes only, and only when asked.",
+  }),
 });
 export type IBaseGraphNode = z.infer<typeof baseGraphNodeSchema>;
 

@@ -280,4 +280,46 @@ describe('resolveGraphPlan', () => {
     );
     expect(viaView.tables[0].probeSafe).toBe(false);
   });
+
+  it('reads the value fields asked for, refusing unknown and file fields', () => {
+    const fields = new Map(FIELDS);
+    fields.set('tblTags', [
+      text('fldTagName', true),
+      text('fldColor'),
+      { ...text('fldFiles'), type: FieldType.Attachment } as unknown as IFieldInstance,
+      { ...text('fldScore'), isComputed: true } as unknown as IFieldInstance,
+    ]);
+    const plan = resolveGraphPlan(
+      input(
+        { tables: [{ tableId: 'tblTags', valueFieldIds: ['fldColor', 'fldColor'] }] },
+        { fieldsByTable: fields }
+      )
+    );
+    expect(plan.tables[0].valueFields.map((f) => f.id)).toEqual(['fldColor']);
+    expect(plan.tables[0].probeSafe).toBe(true);
+    // a computed value can change without its row being written
+    const computed = resolveGraphPlan(
+      input(
+        { tables: [{ tableId: 'tblTags', valueFieldIds: ['fldScore'] }] },
+        { fieldsByTable: fields }
+      )
+    );
+    expect(computed.tables[0].probeSafe).toBe(false);
+    expect(() =>
+      resolveGraphPlan(
+        input(
+          { tables: [{ tableId: 'tblTags', valueFieldIds: ['fldNope'] }] },
+          { fieldsByTable: fields }
+        )
+      )
+    ).toThrow(/not a field of table/);
+    expect(() =>
+      resolveGraphPlan(
+        input(
+          { tables: [{ tableId: 'tblTags', valueFieldIds: ['fldFiles'] }] },
+          { fieldsByTable: fields }
+        )
+      )
+    ).toThrow(/cannot carry a value/);
+  });
 });

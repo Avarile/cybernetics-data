@@ -148,6 +148,22 @@ describe('assembleBaseGraph — cross-table links', () => {
   });
 });
 
+describe('assembleBaseGraph — values', () => {
+  it('puts the values a row carries on its record node, and nothing when none were asked', () => {
+    const graph = assembleBaseGraph(
+      plan([table('tblTasks')]),
+      rows({
+        tblTasks: [
+          row('recT1', 'Write', { values: { fldStatus: 'in-progress', fldDue: null } }),
+          row('recT2', 'Ship'),
+        ],
+      })
+    );
+    expect(node(graph, 'rec:recT1').values).toEqual({ fldStatus: 'in-progress', fldDue: null });
+    expect('values' in node(graph, 'rec:recT2')).toBe(false);
+  });
+});
+
 describe('assembleBaseGraph — structure', () => {
   it('hangs root records off their table hub, and hubs off the base', () => {
     const graph = assembleBaseGraph(

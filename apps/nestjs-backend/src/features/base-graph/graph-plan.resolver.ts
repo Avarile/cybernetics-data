@@ -17,6 +17,8 @@ export interface IGraphTablePlan extends IAssemblerTable {
   groupField: IFieldInstance | null;
   /** Edge fields whose cells are read — one side of each two-way pair. */
   readFields: IFieldInstance[];
+  /** Fields whose values ride on the record nodes (valueFieldIds). */
+  valueFields: IFieldInstance[];
   viewId?: string;
   filter?: IFilter;
   limit: number;
@@ -118,6 +120,21 @@ const assertViewAndFilter = (input: IResolverInput, t: ITableRo, fields: IFieldI
   }
 };
 
+/** Types whose cells are files or actions, never values worth carrying on a node. */
+const valuelessTypes = new Set<string>([FieldType.Attachment, FieldType.Button]);
+
+const valueFieldsOf = (fields: IFieldInstance[], fieldIds: string[], tableId: string) =>
+  [...new Set(fieldIds)].map((fieldId) => {
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) {
+      throw badRequest(`Value field ${fieldId} is not a field of table ${tableId}`);
+    }
+    if (valuelessTypes.has(field.type)) {
+      throw badRequest(`Value field "${field.name}" on table ${tableId} cannot carry a value`);
+    }
+    return field;
+  });
+
 const hierarchyFieldOf = (fields: IFieldInstance[], fieldId: string, tableId: string) => {
   const field = findField(fields, fieldId, tableId, 'Hierarchy');
   if (linkOptionsOf(field).foreignTableId !== tableId) {
@@ -181,6 +198,7 @@ const resolveTable = (
     hierarchyField,
     groupField,
     readFields: [],
+    valueFields: valueFieldsOf(fields, t.valueFieldIds ?? [], t.tableId),
     viewId: t.viewId,
     filter: t.filter ?? undefined,
     limit: Math.min(t.limit ?? config.defaultTableLimit, maxNodes),
@@ -252,7 +270,13 @@ const isProbeSafe = (input: IResolverInput, plan: IGraphTablePlan): boolean => {
     (input.fieldsByTable.get(plan.tableId) ?? []).filter((f) => f.isComputed).map((f) => f.id)
   );
   const used = [
-    ...[plan.primaryField, plan.hierarchyField, plan.groupField, ...plan.readFields]
+    ...[
+      plan.primaryField,
+      plan.hierarchyField,
+      plan.groupField,
+      ...plan.readFields,
+      ...plan.valueFields,
+    ]
       .filter((f): f is IFieldInstance => Boolean(f))
       .map((f) => f.id),
     ...extractFieldIdsFromFilter(plan.filter, true),

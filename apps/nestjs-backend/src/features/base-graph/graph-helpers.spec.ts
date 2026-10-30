@@ -67,6 +67,13 @@ describe('toGraphRow', () => {
       links: [{ fieldId: 'fldTags', targetRecordIds: [] }],
     });
   });
+
+  it('carries the asked-for values, an empty cell as null', () => {
+    const withValues = { ...plan, valueFields: [field('fldStatus'), field('fldDue')] };
+    expect(
+      toGraphRow(withValues, { id: 'recA', fields: { fldStatus: 'in-progress' } }).values
+    ).toEqual({ fldStatus: 'in-progress', fldDue: null });
+  });
 });
 
 describe('detailFieldOrder', () => {

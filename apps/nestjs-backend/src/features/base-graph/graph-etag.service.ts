@@ -24,8 +24,9 @@ const sha1 = (value: unknown) =>
 /** Everything about the schema that shapes the payload: labels, field types, link targets. */
 const schemaFingerprint = (plan: IGraphPlan) => ({
   assembler: plan.assembler,
+  // value fields shape the payload too: a query with values never matches one without
   fields: plan.tables.map((t) =>
-    [t.primaryField, t.hierarchyField, t.groupField, ...t.readFields]
+    [t.primaryField, t.hierarchyField, t.groupField, ...t.readFields, ...t.valueFields]
       .filter(Boolean)
       .map((f) => ({ id: f!.id, name: f!.name, type: f!.type, options: f!.options }))
   ),

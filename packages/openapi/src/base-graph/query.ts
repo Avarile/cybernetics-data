@@ -10,6 +10,8 @@ export const QUERY_BASE_GRAPH = '/base/{baseId}/graph/query';
 /** Server-side ceilings for client-supplied budgets. Config may lower them. */
 export const BASE_GRAPH_MAX_TABLES = 50;
 export const BASE_GRAPH_MAX_TABLE_LIMIT = 20000;
+/** Fields whose values may ride on a table's record nodes. */
+export const BASE_GRAPH_MAX_VALUE_FIELDS = 8;
 
 export const baseGraphTableQuerySchema = z.object({
   tableId: z.string().startsWith('tbl'),
@@ -30,6 +32,16 @@ export const baseGraphTableQuerySchema = z.object({
     .startsWith('fld')
     .optional()
     .meta({ description: 'A single-valued link to another table: buckets root records.' }),
+  valueFieldIds: z
+    .string()
+    .startsWith('fld')
+    .array()
+    .max(BASE_GRAPH_MAX_VALUE_FIELDS)
+    .optional()
+    .meta({
+      description:
+        "Fields whose cell values ride on the table's record nodes (e.g. a status to colour by). Omitted = no values.",
+    }),
 });
 export type IBaseGraphTableQuery = z.infer<typeof baseGraphTableQuerySchema>;
 
