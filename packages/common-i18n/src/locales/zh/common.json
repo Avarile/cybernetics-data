@@ -1977,9 +1977,37 @@
         "label": "视图",
         "board": "面板",
         "constellation": "星图",
-        "tree": "树形"
+        "tree": "树形",
+        "overview": "总览"
       },
-      "showing": "显示 {{shown}} / {{total}}"
+      "showing": "显示 {{shown}} / {{total}}",
+      "overview": {
+        "label": "总览",
+        "title": "总览",
+        "datasets": "数据集",
+        "work": "工作",
+        "knowledge": "知识",
+        "people": "人员",
+        "finance": "财务",
+        "pause": "暂停或继续 (P)",
+        "next": "下一个",
+        "held": {
+          "pointer": "停留 · 指针",
+          "pin": "停留 · 已固定",
+          "picked": "停留 · 已选择",
+          "paused": "已暂停",
+          "hidden": "已暂停"
+        },
+        "open": "打开",
+        "ask": "提问",
+        "unpin": "取消固定",
+        "askDraft": "介绍一下{{what}}「{{title}}」",
+        "nothing": "没有可显示的内容",
+        "reading": "正在读取 {{dataset}}…",
+        "updated": "更新于",
+        "records": "条记录",
+        "truncated": "更多未读取"
+      }
     }
   }
 }

@@ -25,6 +25,8 @@ export const AskContainer = ({
   const focus = useCockpitStore((st) => st.focus);
   const selectedSearch = useCockpitStore((st) => st.selectedSearch);
   const selectSearch = useCockpitStore((st) => st.selectSearch);
+  const draft = useCockpitStore((st) => st.draft);
+  const setDraft = useCockpitStore((st) => st.setDraft);
   const voiceOn = useAgentVoiceStore((st) => st.enabled);
   const [sheet, setSheet] = useState<'open' | 'closed'>('open');
   const disabled = agent ? !agent.enabled || agent.status !== 'ok' : false;
@@ -116,6 +118,8 @@ export const AskContainer = ({
           onSend={send}
           onStop={() => void stop()}
           onClear={() => void stop().then(startNew)}
+          draft={draft}
+          onDraftTaken={() => setDraft(undefined)}
         />
       </div>
     </aside>

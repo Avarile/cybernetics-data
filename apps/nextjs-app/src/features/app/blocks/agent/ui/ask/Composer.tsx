@@ -1,7 +1,7 @@
 import { Button, Textarea, cn } from '@teable/ui-lib/shadcn';
 import { ArrowUp, Square } from 'lucide-react';
 import { useTranslation } from 'next-i18next';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SpeechInput } from '@/components/ai-elements/speech-input';
 import { isClearCommand, matchSkills, type IAgentSkillOption } from '../../model/skills';
 import type { IVoiceConversation } from '../../voice/useVoiceConversation';
@@ -19,6 +19,9 @@ export interface IAgentComposerProps {
   onClear?: () => void;
   /** Voice conversation (voice design §4); without it there is no Voice switch. */
   voice?: IVoiceConversation;
+  /** Text to put in the input once, selected, for the admin to send or change (ASK). */
+  draft?: string;
+  onDraftTaken?: () => void;
 }
 
 /**
@@ -33,9 +36,22 @@ export const AgentComposer = ({
   onStop,
   onClear,
   voice,
+  draft,
+  onDraftTaken,
 }: IAgentComposerProps) => {
   const { t } = useTranslation('common');
   const [value, setValue] = useState('');
+  const input = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!draft) return;
+    setValue(draft);
+    onDraftTaken?.();
+    // after the value lands: focus with the draft selected, so typing replaces it
+    requestAnimationFrame(() => {
+      input.current?.focus();
+      input.current?.select();
+    });
+  }, [draft, onDraftTaken]);
   const options = useMemo(
     () => [
       ...(onClear
@@ -69,8 +85,8 @@ export const AgentComposer = ({
       voice.turnOn(value);
       setValue('');
     } else {
-      const draft = voice.turnOff();
-      if (draft) setValue(draft);
+      const spoken = voice.turnOff();
+      if (spoken) setValue(spoken);
     }
   };
 
@@ -107,6 +123,7 @@ export const AgentComposer = ({
       ) : (
         <div className="flex items-end gap-2">
           <Textarea
+            ref={input}
             value={value}
             disabled={disabled}
             rows={2}

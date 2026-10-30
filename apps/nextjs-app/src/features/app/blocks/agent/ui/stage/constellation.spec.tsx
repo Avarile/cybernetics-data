@@ -26,13 +26,15 @@ const graph = finishGraph({
   links: [],
 });
 
-/** The chart in a cockpit-like root, with the cockpit's keys. */
-const Chart = () => {
+/** The chart in a cockpit-like root, with the cockpit's keys, on a search or the overview. */
+const Chart = ({ stage = 'search' }: { stage?: 'search' | 'overview' }) => {
   const root = useRef<HTMLDivElement>(null);
   useCockpitKeys(root);
   return (
     <div ref={root}>
-      <Constellation graph={graph} mode="bundle" onHover={vi.fn()} onPin={vi.fn()} />
+      <section data-stage={stage}>
+        <Constellation graph={graph} mode="bundle" onHover={vi.fn()} onPin={vi.fn()} />
+      </section>
     </div>
   );
 };
@@ -49,7 +51,11 @@ describe('constellation (cockpit design §5.4)', () => {
         disconnect = vi.fn();
       }
     );
-    useCockpitStore.setState({ view: 'constellation', pinned: undefined });
+    useCockpitStore.setState({
+      view: 'constellation',
+      pinned: undefined,
+      overviewPinned: undefined,
+    });
   });
   afterEach(() => {
     cleanup();
@@ -71,5 +77,14 @@ describe('constellation (cockpit design §5.4)', () => {
     expect(useCockpitStore.getState().pinned).toBe('s3:Bo');
     await userEvent.keyboard('[[');
     expect(useCockpitStore.getState().pinned).toBe('s3:Ava');
+  });
+
+  it("pins into the overview's own slot on the overview", async () => {
+    render(<Chart stage="overview" />);
+    await userEvent.keyboard(']');
+    expect(useCockpitStore.getState()).toMatchObject({
+      overviewPinned: 's3:Ava',
+      pinned: undefined,
+    });
   });
 });

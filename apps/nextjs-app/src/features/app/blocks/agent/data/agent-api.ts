@@ -1,5 +1,7 @@
+import type { IOverviewDatasetId } from '@teable/openapi';
 import {
   cancelAgentRun,
+  getAgentOverview,
   getAgentSearch,
   getAgentThreadMessages,
   getRecords,
@@ -12,6 +14,7 @@ export const agentQueryKeys = {
   threads: ['agent', 'threads'] as const,
   skills: ['agent', 'skills'] as const,
   search: (searchId: string) => ['agent', 'search', searchId] as const,
+  overview: (dataset: IOverviewDatasetId) => ['agent', 'overview', dataset] as const,
 };
 
 /** Stored messages of a thread, as UI messages for the chat. */
@@ -34,6 +37,9 @@ export const fetchSkills = async (skillsTableId: string): Promise<IAgentSkillOpt
 
 /** A stored search, for the board of a reopened thread. */
 export const fetchSearch = (searchId: string) => getAgentSearch(searchId);
+
+/** One dataset of the data base as a constellation (overview design §8.3). */
+export const fetchOverview = (dataset: IOverviewDatasetId) => getAgentOverview(dataset);
 
 /** Stops a run on the server (also one that waits for approval). */
 export const cancelRun = (runId: string) => cancelAgentRun(runId).catch(() => undefined);

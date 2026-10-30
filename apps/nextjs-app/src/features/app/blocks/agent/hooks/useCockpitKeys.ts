@@ -1,6 +1,8 @@
 import { useRouter } from 'next/router';
 import type { RefObject } from 'react';
 import { useEffect } from 'react';
+import { OVERVIEW_ORDER } from '../model/overview/datasets';
+import { searchesOf } from '../model/transcript';
 import { useCockpitStore } from '../state/cockpit-store';
 import { useSessionStore } from '../state/session-store';
 
@@ -41,12 +43,31 @@ const focusComposer: IKeyAction = (root) => {
   root?.querySelector<HTMLElement>('textarea')?.focus();
   return true;
 };
-const switchView: IKeyAction = () => {
+/** What the stage shows right now, as it marks itself (overview design §4). */
+const shownOf = (root: HTMLElement | null) =>
+  root?.querySelector('[data-stage]')?.getAttribute('data-stage') ?? 'overview';
+const onOverview = (root: HTMLElement | null) => shownOf(root) === 'overview';
+const hasSearch = () => {
+  const session = useSessionStore.getState().session;
+  return Boolean(
+    session &&
+      (Object.keys(session.boards).length || searchesOf(session.chat.store.messages).length)
+  );
+};
+/** `V`: overview → board → constellation → overview, once the conversation has a search. */
+const switchView: IKeyAction = (root) => {
   const store = useCockpitStore.getState();
-  store.setView(store.view === 'board' ? 'constellation' : 'board');
+  if (!hasSearch()) return false;
+  if (onOverview(root)) {
+    store.setView('board');
+    store.setStage('search');
+  } else if (store.view === 'board') store.setView('constellation');
+  else store.setStage('overview');
   return true;
 };
-const inConstellation = () => useCockpitStore.getState().view === 'constellation';
+/** A chart is on the stage: the overview, or a search drawn as a constellation. */
+const chartShown = (root: HTMLElement | null) =>
+  onOverview(root) || useCockpitStore.getState().view === 'constellation';
 const moveLane: IKeyAction = (root, key) => {
   const lanes = [...(root?.querySelectorAll<HTMLElement>('section[id^="lane-"]') ?? [])];
   if (!lanes.length) return false;
@@ -63,24 +84,41 @@ const moveActor: IKeyAction = (root, key) => {
   ].map((g) => g.getAttribute('data-key')!);
   if (!keys.length) return false;
   const store = useCockpitStore.getState();
-  const at = keys.indexOf(store.pinned ?? '');
+  const overview = onOverview(root);
+  const at = keys.indexOf((overview ? store.overviewPinned : store.pinned) ?? '');
   const dir = key === ']' ? 1 : -1;
-  store.pin(
-    keys[at < 0 ? (dir > 0 ? 0 : keys.length - 1) : (at + dir + keys.length) % keys.length]
-  );
+  const next =
+    keys[at < 0 ? (dir > 0 ? 0 : keys.length - 1) : (at + dir + keys.length) % keys.length];
+  if (overview) store.pinOverview(next);
+  else store.pin(next);
   return true;
 };
 const move: IKeyAction = (root, key) =>
-  inConstellation() ? moveActor(root, key) : moveLane(root, key);
-const toggleLayout: IKeyAction = () => {
-  if (!inConstellation()) return false;
+  chartShown(root) ? moveActor(root, key) : moveLane(root, key);
+const toggleLayout: IKeyAction = (root) => {
+  if (!chartShown(root)) return false;
   const store = useCockpitStore.getState();
   store.setLayout(store.layout === 'tree' ? 'bundle' : 'tree');
   return true;
 };
-const resetZoom: IKeyAction = () => {
-  if (!inConstellation()) return false;
+const resetZoom: IKeyAction = (root) => {
+  if (!chartShown(root)) return false;
   useCockpitStore.getState().resetZoom();
+  return true;
+};
+/** `1`–`4`: that dataset of the overview, held there. */
+const pickDataset: IKeyAction = (root, key) => {
+  const dataset = OVERVIEW_ORDER[Number(key) - 1];
+  if (!onOverview(root) || !dataset) return false;
+  useCockpitStore.getState().cycleEvent({ type: 'pick', id: dataset.id });
+  return true;
+};
+/** `P`: the overview's cycle paused or going on. */
+const pause: IKeyAction = (root) => {
+  if (!onOverview(root)) return false;
+  const store = useCockpitStore.getState();
+  const held = store.cycle.holds.some((h) => h === 'paused' || h === 'picked');
+  store.cycleEvent(held ? { type: 'resume' } : { type: 'hold', reason: 'paused' });
   return true;
 };
 const fullScreen: IKeyAction = (root) => {
@@ -90,10 +128,17 @@ const fullScreen: IKeyAction = (root) => {
 };
 /**
  * Escape unpins the trace, then drops the answer's lens to everything found (cockpit design
- * §5.8); it never turns the cockpit off.
+ * §5.8), or on the overview lets the cycle go on; it never turns the cockpit off.
  */
-const escape: IKeyAction = () => {
+const escape: IKeyAction = (root) => {
   const store = useCockpitStore.getState();
+  if (onOverview(root)) {
+    if (store.overviewPinned) store.pinOverview(undefined);
+    else if (store.cycle.holds.some((h) => h === 'paused' || h === 'picked'))
+      store.cycleEvent({ type: 'resume' });
+    else return false;
+    return true;
+  }
   if (store.pinned) store.pin(undefined);
   else if (store.lens !== 'retrieved') store.setLens('retrieved');
   else return false;
@@ -110,14 +155,20 @@ const actions: Record<string, IKeyAction> = {
   '0': resetZoom,
   f: fullScreen,
   F: fullScreen,
+  p: pause,
+  P: pause,
+  '1': pickDataset,
+  '2': pickDataset,
+  '3': pickDataset,
+  '4': pickDataset,
   Escape: escape,
 };
 
 /**
- * Keys inside the cockpit (cockpit design §5.8): `/` composer, `V` board or constellation,
- * `[` `]` lanes (board) or people (constellation), `T` bundle or tree, `0` reset the zoom,
- * `F` browser full screen, `Mod+Shift+O` new conversation, `Esc` unpins the trace, then drops
- * the lens.
+ * Keys inside the cockpit (cockpit design §5.8, overview design §7): `/` composer, `V` overview,
+ * board or constellation, `[` `]` lanes (board) or people (charts), `T` bundle or tree, `0` reset
+ * the zoom, `1`–`4` a dataset and `P` pause (overview), `F` browser full screen, `Mod+Shift+O`
+ * new conversation, `Esc` unpins, then drops the lens or resumes the cycle.
  */
 export function useCockpitKeys(root: RefObject<HTMLElement>) {
   useEffect(() => {

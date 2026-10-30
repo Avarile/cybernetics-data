@@ -3,7 +3,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ILayoutMode } from '../model/graph/layout';
 import type { ILensMode } from '../model/lens';
-import { rememberedThread, useSessionStore } from './session-store';
+import { reduceCycle, startCycle, type ICycle, type ICycleEvent } from '../model/overview/cycle';
+import { OVERVIEW_ORDER } from '../model/overview/datasets';
+import { searchesOf } from '../model/transcript';
+import { rememberedThread, useSessionStore, type AgentSession } from './session-store';
 
 /** Where the cockpit was opened from: a hint for the agent, never a limit (cockpit design §4.5). */
 export interface IAgentFocus {
@@ -18,6 +21,8 @@ export interface IAgentFocus {
 
 export type ICockpitPalette = 'mono' | 'cyberpunk';
 export type ICockpitView = 'board' | 'constellation';
+/** What the stage shows: the data (overview) or a search (overview design §4.1). */
+export type ICockpitStage = 'overview' | 'search';
 
 export interface IOpenCockpit {
   threadId?: string;
@@ -40,6 +45,13 @@ interface ICockpitState {
   layout: ILayoutMode;
   /** Counts the times the constellation's zoom was reset (`0`); the chart follows it. */
   zoomResets: number;
+  stage: ICockpitStage;
+  /** The overview's loop through its datasets. */
+  cycle: ICycle;
+  /** An overview node whose trace stays lit (a node id, not a card key). */
+  overviewPinned?: string;
+  /** Text the composer takes up once (ASK on an overview node). */
+  draft?: string;
   open: (options?: IOpenCockpit) => void;
   close: () => void;
   toggle: (options?: IOpenCockpit) => void;
@@ -51,6 +63,12 @@ interface ICockpitState {
   pin: (key?: string) => void;
   setLayout: (layout: ILayoutMode) => void;
   resetZoom: () => void;
+  setStage: (stage: ICockpitStage) => void;
+  /** An event for the overview's cycle, at the current time. */
+  cycleEvent: (event: ICycleEvent) => void;
+  pinOverview: (id?: string) => void;
+  setFocus: (focus?: IAgentFocus) => void;
+  setDraft: (draft?: string) => void;
 }
 
 export const useCockpitStore = create<ICockpitState>()(
@@ -61,6 +79,8 @@ export const useCockpitStore = create<ICockpitState>()(
       view: 'board',
       layout: 'bundle',
       zoomResets: 0,
+      stage: 'overview',
+      cycle: startCycle(OVERVIEW_ORDER.map((d) => d.id)),
       open: (options = {}) => {
         const sessions = useSessionStore.getState();
         const threadId = options.threadId ?? (sessions.session ? undefined : rememberedThread());
@@ -73,11 +93,22 @@ export const useCockpitStore = create<ICockpitState>()(
       clearFocus: () => set({ focus: undefined }),
       setPalette: (palette) => set({ palette }),
       setView: (view) => set({ view }),
-      selectSearch: (selectedSearch) => set({ selectedSearch, lens: undefined, pinned: undefined }),
+      selectSearch: (selectedSearch) =>
+        set({
+          selectedSearch,
+          lens: undefined,
+          pinned: undefined,
+          ...(selectedSearch ? { stage: 'search' as const } : {}),
+        }),
       setLens: (lens) => set({ lens }),
       pin: (pinned) => set({ pinned }),
       setLayout: (layout) => set({ layout }),
       resetZoom: () => set({ zoomResets: get().zoomResets + 1 }),
+      setStage: (stage) => set({ stage }),
+      cycleEvent: (event) => set({ cycle: reduceCycle(get().cycle, event, Date.now()) }),
+      pinOverview: (overviewPinned) => set({ overviewPinned }),
+      setFocus: (focus) => set({ focus }),
+      setDraft: (draft) => set({ draft }),
     }),
     {
       name: LocalStorageKeys.AgentCockpit,
@@ -86,6 +117,15 @@ export const useCockpitStore = create<ICockpitState>()(
     }
   )
 );
+
+/** A conversation that has searches opens on its latest; a new one opens on the overview. */
+const stageOf = (session: AgentSession | null): ICockpitStage =>
+  session && searchesOf(session.chat.store.messages).length ? 'search' : 'overview';
+
+useSessionStore.subscribe((now, before) => {
+  if (now.session !== before.session)
+    useCockpitStore.setState({ stage: stageOf(now.session), overviewPinned: undefined });
+});
 
 /** Turns the cockpit on, from anywhere in the app (grid menu, deep links). */
 export const openAgentCockpit = (options?: IOpenCockpit) =>

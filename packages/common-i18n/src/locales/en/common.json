@@ -1980,9 +1980,37 @@
         "label": "View",
         "board": "BOARD",
         "constellation": "CONSTELLATION",
-        "tree": "TREE"
+        "tree": "TREE",
+        "overview": "OVERVIEW"
       },
-      "showing": "SHOWING {{shown}} OF {{total}}"
+      "showing": "SHOWING {{shown}} OF {{total}}",
+      "overview": {
+        "label": "Overview",
+        "title": "OVERVIEW",
+        "datasets": "Datasets",
+        "work": "WORK",
+        "knowledge": "KNOWLEDGE",
+        "people": "PEOPLE",
+        "finance": "FINANCE",
+        "pause": "Pause or go on (P)",
+        "next": "NEXT",
+        "held": {
+          "pointer": "HELD · POINTER",
+          "pin": "HELD · PINNED",
+          "picked": "HELD · PICKED",
+          "paused": "PAUSED",
+          "hidden": "PAUSED"
+        },
+        "open": "OPEN",
+        "ask": "ASK",
+        "unpin": "Unpin",
+        "askDraft": "Tell me about the {{what}} \"{{title}}\"",
+        "nothing": "NOTHING TO SHOW",
+        "reading": "READING {{dataset}}…",
+        "updated": "UPDATED",
+        "records": "RECORDS",
+        "truncated": "MORE NOT READ"
+      }
     }
   }
 }

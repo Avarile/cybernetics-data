@@ -1,0 +1,159 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { IOverviewDatasetId } from '@teable/openapi';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { agentQueryKeys, fetchOverview } from '../data/agent-api';
+import { limitGraph, SAFE_DRAW } from '../model/graph/limit';
+import { traceGraph } from '../model/graph/trace';
+import { currentDataset, nextDataset, remainingAt, running } from '../model/overview/cycle';
+import { DATASET_MS, OVERVIEW_ORDER, PREFETCH_MS } from '../model/overview/datasets';
+import { overviewToGraph } from '../model/overview/from-overview';
+import { overviewMetrics } from '../model/overview/metrics';
+import { useCockpitStore } from '../state/cockpit-store';
+
+/** Narrow screens draw less and without labels (overview design §9.6). */
+const NARROW = '(max-width: 899px)';
+const narrowBudget = 400;
+
+export function useNarrow() {
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia?.(NARROW);
+    if (!media) return;
+    const sync = () => setNarrow(media.matches);
+    sync();
+    media.addEventListener?.('change', sync);
+    return () => media.removeEventListener?.('change', sync);
+  }, []);
+  return narrow;
+}
+
+const reasonOf = (error: unknown) => {
+  const status = (error as { status?: number })?.status;
+  if (status === 403) return 'NO ACCESS TO THE DATA BASE';
+  if (status === 404) return 'NO DATA BASE';
+  return (error as Error)?.message ?? 'FAILED';
+};
+
+const overviewQuery = (dataset: IOverviewDatasetId) => ({
+  queryKey: agentQueryKeys.overview(dataset),
+  queryFn: () => fetchOverview(dataset),
+  staleTime: DATASET_MS,
+  gcTime: 10 * DATASET_MS,
+  retry: false,
+});
+
+/**
+ * The overview on the stage (overview design §6, §9): the dataset the cycle is on, fetched (and
+ * the next one before it is due), its graph within the draw budget, its numbers, the trace of
+ * the node pointed at or pinned, and which datasets can be shown at all.
+ */
+export function useOverview(active: boolean) {
+  const queryClient = useQueryClient();
+  const cycle = useCockpitStore((s) => s.cycle);
+  const cycleEvent = useCockpitStore((s) => s.cycleEvent);
+  const pinned = useCockpitStore((s) => s.overviewPinned);
+  const [hover, setHover] = useState<string>();
+  const [failed, setFailed] = useState<Partial<Record<IOverviewDatasetId, string>>>({});
+  const narrow = useNarrow();
+  const dataset = currentDataset(cycle) ?? OVERVIEW_ORDER[0].id;
+  const query = useQuery({ ...overviewQuery(dataset), enabled: active });
+  const vo = query.data?.dataset === dataset ? query.data : undefined;
+
+  // a dataset that cannot be shown (no access, no data base, nothing to draw) leaves the loop
+  useEffect(() => {
+    let reason: string | undefined;
+    if (query.error) reason = reasonOf(query.error);
+    else if (vo && !vo.nodes.length)
+      reason = vo.missing.length ? `NOT IN THIS BASE: ${vo.missing.join(', ')}` : 'NOTHING TO DRAW';
+    if (reason) setFailed((f) => ({ ...f, [dataset]: reason }));
+  }, [query.error, vo, dataset]);
+  const available = useMemo(
+    () => OVERVIEW_ORDER.map((d) => d.id).filter((id) => !failed[id]),
+    [failed]
+  );
+  const order = available.join(',');
+  useEffect(() => {
+    cycleEvent({
+      type: 'available',
+      order: order ? (order.split(',') as IOverviewDatasetId[]) : [],
+    });
+  }, [order, cycleEvent]);
+
+  // the minute starts when the dataset is on screen, not when it was asked for
+  useEffect(() => {
+    if (active && vo && !cycle.drawn) cycleEvent({ type: 'drawn' });
+  }, [active, vo, cycle.drawn, cycleEvent]);
+
+  // the next dataset is fetched before it is due, so the switch is immediate
+  const next = nextDataset(cycle);
+  useEffect(() => {
+    if (!active || !next || !running(cycle)) return;
+    const wait = Math.max(0, remainingAt(cycle, Date.now()) - PREFETCH_MS);
+    const timer = setTimeout(() => void queryClient.prefetchQuery(overviewQuery(next)), wait);
+    return () => clearTimeout(timer);
+  }, [active, next, cycle, queryClient]);
+
+  const graph = useMemo(() => (vo ? overviewToGraph(vo) : undefined), [vo]);
+  const limited = useMemo(
+    () => (graph ? limitGraph(graph, { budget: narrow ? narrowBudget : SAFE_DRAW }) : undefined),
+    [graph, narrow]
+  );
+  const metrics = useMemo(() => (vo ? overviewMetrics(vo) : []), [vo]);
+  const pin = useCallback((id?: string) => {
+    const store = useCockpitStore.getState();
+    store.pinOverview(store.overviewPinned === id ? undefined : id);
+  }, []);
+  const focused = hover ?? pinned;
+  const lit = useMemo(
+    () => (limited && focused ? traceGraph(limited.graph, focused) : undefined),
+    [limited, focused]
+  );
+
+  return {
+    dataset,
+    vo,
+    loading: query.isLoading,
+    error: query.error ? reasonOf(query.error) : undefined,
+    failed,
+    available,
+    graph,
+    limited,
+    metrics,
+    lit,
+    narrow,
+    pinned: pinned ? graph?.byId.get(pinned) : undefined,
+    setHover,
+    pin,
+  };
+}
+
+/**
+ * The overview's clock (overview design §6.4): one timeout for the time left, the hidden-tab and
+ * pin holds, and a fresh minute whenever the overview comes back on screen.
+ */
+export function useOverviewCycle(active: boolean) {
+  const cycle = useCockpitStore((s) => s.cycle);
+  const cycleEvent = useCockpitStore((s) => s.cycleEvent);
+  const pinned = useCockpitStore((s) => s.overviewPinned);
+
+  useEffect(() => {
+    if (active) cycleEvent({ type: 'restart' });
+  }, [active, cycleEvent]);
+
+  useEffect(() => {
+    if (!active || !running(cycle)) return;
+    const timer = setTimeout(() => cycleEvent({ type: 'tick' }), remainingAt(cycle, Date.now()));
+    return () => clearTimeout(timer);
+  }, [active, cycle, cycleEvent]);
+
+  useEffect(() => {
+    const sync = () => cycleEvent({ type: document.hidden ? 'hold' : 'release', reason: 'hidden' });
+    sync();
+    document.addEventListener('visibilitychange', sync);
+    return () => document.removeEventListener('visibilitychange', sync);
+  }, [cycleEvent]);
+
+  useEffect(() => {
+    cycleEvent({ type: pinned ? 'hold' : 'release', reason: 'pin' });
+  }, [pinned, cycleEvent]);
+}

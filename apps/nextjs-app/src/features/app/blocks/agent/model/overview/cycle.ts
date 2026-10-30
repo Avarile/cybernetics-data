@@ -27,7 +27,9 @@ export type ICycleEvent =
   /** ▶ or Esc: the cycle goes on. */
   | { type: 'resume' }
   /** The datasets that can be shown changed. */
-  | { type: 'available'; order: IOverviewDatasetId[] };
+  | { type: 'available'; order: IOverviewDatasetId[] }
+  /** The overview is back on screen (cockpit on, or back from a search): a fresh minute. */
+  | { type: 'restart' };
 
 export const startCycle = (order: IOverviewDatasetId[]): ICycle => ({
   order,
@@ -91,6 +93,14 @@ function step(c: ICycle, event: ICycleEvent): ICycle {
       return withHolds(
         c,
         c.holds.filter((h) => h !== 'picked' && h !== 'paused')
+      );
+    case 'restart':
+      return show(
+        withHolds(
+          c,
+          c.holds.filter((h) => h !== 'pointer')
+        ),
+        c.index
       );
     case 'available': {
       const current = currentDataset(c);

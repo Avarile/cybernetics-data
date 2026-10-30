@@ -23,6 +23,10 @@ export interface IConstellationProps {
   lit?: Set<string>;
   onHover: (recordId?: string) => void;
   onPin: (recordId: string) => void;
+  /** The pointer came onto the chart or left it (the overview holds its cycle meanwhile). */
+  onPointerInside?: (inside: boolean) => void;
+  /** Record labels (branches keep theirs); off on narrow screens. */
+  labels?: boolean;
 }
 
 /** Charts up to this many nodes plus links turn and flow; larger ones hold still. */
@@ -39,7 +43,17 @@ const truncate = (text: string, n: number) => (text.length > n ? `${text.slice(0
  * reply streaming beside it does not redraw it.
  */
 export const Constellation = memo(
-  ({ graph, mode, zoomResets, lens, lit, onHover, onPin }: IConstellationProps) => {
+  ({
+    graph,
+    mode,
+    zoomResets,
+    lens,
+    lit,
+    onHover,
+    onPin,
+    onPointerInside,
+    labels = true,
+  }: IConstellationProps) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const zoomRef = useRef<ZoomBehavior<SVGSVGElement, unknown>>();
     const [size, setSize] = useState({ w: 0, h: 0 });
@@ -88,7 +102,7 @@ export const Constellation = memo(
     );
     const dim = (id?: string) => Boolean(lit?.size && id && !lit.has(id));
     const showLabel = (n: ILaidNode) =>
-      n.node && (n.node.kind === 'hub' || (n.leaf && layout.nodes.length < LABELS_MAX));
+      n.node && (n.node.kind === 'hub' || (labels && n.leaf && layout.nodes.length < LABELS_MAX));
 
     return (
       <svg
@@ -97,10 +111,12 @@ export const Constellation = memo(
         data-still={still ? 'true' : undefined}
         role="img"
         aria-label="Search constellation"
+        onMouseEnter={() => onPointerInside?.(true)}
         // a node that vanished under the pointer never says it was left: the chart does
         onMouseLeave={() => {
           rotator.release();
           onHover(undefined);
+          onPointerInside?.(false);
         }}
       >
         {/* zoom outside, centring inside: d3-zoom pivots at the pointer only when its transform
@@ -132,7 +148,7 @@ export const Constellation = memo(
                     className={s.node}
                     data-tone={node.tone}
                     data-kind={node.kind}
-                    data-key={node.cardKey}
+                    data-key={node.cardKey ?? node.id}
                     data-context={n.context ? 'true' : undefined}
                     data-dim={dim(node.id) ? 'true' : undefined}
                     onMouseEnter={() => {

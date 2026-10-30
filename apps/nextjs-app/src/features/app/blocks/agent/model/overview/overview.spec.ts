@@ -179,6 +179,16 @@ describe('overview cycle (overview design §6)', () => {
     expect(reduceCycle(c, { type: 'tick' }, 70_000 + DATASET_MS).index).toBe(0);
   });
 
+  it('gives the overview a fresh minute when it comes back, and forgets a stale pointer', () => {
+    const c = run([
+      [{ type: 'drawn' }, 0],
+      [{ type: 'hold', reason: 'pointer' }, 30_000],
+      [{ type: 'restart' }, 500_000],
+    ]);
+    expect([c.remaining, c.drawn, c.holds]).toEqual([DATASET_MS, false, []]);
+    expect(currentDataset(c)).toBe('work');
+  });
+
   it('skips datasets that cannot be shown, staying on the current one when it can', () => {
     let c = run([[{ type: 'available', order: ['work', 'finance'] }, 0]]);
     expect([currentDataset(c), nextDataset(c)]).toEqual(['work', 'finance']);

@@ -4,26 +4,37 @@ import s from '../theme/cockpit.module.css';
 
 export type IStageView = 'board' | 'constellation';
 export type ILayoutChoice = 'bundle' | 'tree';
+export type IStageMode = 'overview' | 'search';
 
-/** The stage's knobs: board or constellation (bundle or tree), and the lens (§5.3, §5.4). */
+/**
+ * The stage's knobs: the overview, a search as a board or a constellation (bundle or tree), and
+ * a search's lens (cockpit design §5.3, §5.4; overview design §4.2).
+ */
 export const StageKnobs = (p: {
+  mode: IStageMode;
+  hasSearch: boolean;
   view: IStageView;
   layout: ILayoutChoice;
-  lens: ILensMode;
-  cited: number;
-  found: number;
+  /** The lens knobs show in search mode only. */
+  lens?: { mode: ILensMode; cited: number; found: number; onLens: (lens: ILensMode) => void };
+  onOverview: () => void;
   onView: (view: IStageView) => void;
   onLayout: (layout: ILayoutChoice) => void;
-  onLens: (lens: ILensMode) => void;
 }) => {
   const { t } = useTranslation('common');
+  const search = p.mode === 'search';
+  const chart = !search || p.view === 'constellation';
   return (
     <>
       <span className={s.knobs} role="group" aria-label={t('agent.cockpit.view.label', 'View')}>
+        <button type="button" className={s.knob} aria-pressed={!search} onClick={p.onOverview}>
+          {t('agent.cockpit.view.overview', 'OVERVIEW')}
+        </button>
         <button
           type="button"
           className={s.knob}
-          aria-pressed={p.view === 'board'}
+          aria-pressed={search && p.view === 'board'}
+          disabled={!p.hasSearch}
           onClick={() => p.onView('board')}
         >
           {t('agent.cockpit.view.board', 'BOARD')}
@@ -31,12 +42,13 @@ export const StageKnobs = (p: {
         <button
           type="button"
           className={s.knob}
-          aria-pressed={p.view === 'constellation'}
+          aria-pressed={search && p.view === 'constellation'}
+          disabled={!p.hasSearch}
           onClick={() => p.onView('constellation')}
         >
           {t('agent.cockpit.view.constellation', 'CONSTELLATION')}
         </button>
-        {p.view === 'constellation' && (
+        {chart && (
           <button
             type="button"
             className={s.knob}
@@ -47,25 +59,27 @@ export const StageKnobs = (p: {
           </button>
         )}
       </span>
-      <span className={s.knobs} role="group" aria-label={t('agent.cockpit.lens.label', 'Lens')}>
-        <button
-          type="button"
-          className={s.knob}
-          aria-pressed={p.lens === 'answer'}
-          disabled={!p.cited}
-          onClick={() => p.onLens('answer')}
-        >
-          {t('agent.cockpit.lens.answer', 'ANSWER')} {p.cited}
-        </button>
-        <button
-          type="button"
-          className={s.knob}
-          aria-pressed={p.lens === 'retrieved'}
-          onClick={() => p.onLens('retrieved')}
-        >
-          {t('agent.cockpit.lens.retrieved', 'RETRIEVED')} {p.found}
-        </button>
-      </span>
+      {p.lens && (
+        <span className={s.knobs} role="group" aria-label={t('agent.cockpit.lens.label', 'Lens')}>
+          <button
+            type="button"
+            className={s.knob}
+            aria-pressed={p.lens.mode === 'answer'}
+            disabled={!p.lens.cited}
+            onClick={() => p.lens!.onLens('answer')}
+          >
+            {t('agent.cockpit.lens.answer', 'ANSWER')} {p.lens.cited}
+          </button>
+          <button
+            type="button"
+            className={s.knob}
+            aria-pressed={p.lens.mode === 'retrieved'}
+            onClick={() => p.lens!.onLens('retrieved')}
+          >
+            {t('agent.cockpit.lens.retrieved', 'RETRIEVED')} {p.lens.found}
+          </button>
+        </span>
+      )}
     </>
   );
 };

@@ -16,8 +16,10 @@ import { useSearchBoard } from './useSearchBoard';
  * readout numbers, the PICK options of an open question, and the constellation's graph.
  */
 export function useStage() {
-  const { board, chat } = useSearchBoard();
+  const { board, chat, searches } = useSearchBoard();
   const store = useCockpitStore();
+  // the overview unless a search was asked for and is there to show (overview design §4.1)
+  const mode = store.stage === 'search' && board?.plan ? 'search' : 'overview';
   const [hover, setHover] = useState<string>();
   const lensMode = store.lens ?? defaultLens(board);
   const focused = hover ?? store.pinned;
@@ -40,10 +42,10 @@ export function useStage() {
   }, [clarify, board?.status]);
   const limited = useMemo(
     () =>
-      store.view === 'constellation' && board
+      mode === 'search' && store.view === 'constellation' && board
         ? limitGraph(boardToGraph(board), { lens: graphLens })
         : undefined,
-    [store.view, board, graphLens]
+    [mode, store.view, board, graphLens]
   );
   // on the chart the trace also follows the links it draws: a person lights every task they
   // are on, not only the one they were reached from
@@ -55,17 +57,23 @@ export function useStage() {
     return records;
   }, [board, trace, focused, limited]);
 
-  // the answer may ask for a view (highlight_records): the stage switches when that arrives
+  // live parts move the stage: a search that starts takes it from the overview (overview design
+  // §4.1), and the answer may ask for a view (highlight_records). Replays and remounts never do.
   const session = chat.session;
-  useEffect(
-    () =>
-      session?.onData((part) => {
-        if (part.type !== AGENT_DATA_PART.searchLens) return;
-        const event = boardEventOf(part);
-        if (event?.type === 'lens' && event.view) useCockpitStore.getState().setView(event.view);
-      }),
-    [session]
-  );
+  useEffect(() => {
+    const started = new Set<string>();
+    return session?.onData((part) => {
+      if (part.type !== AGENT_DATA_PART.searchLens && part.type !== AGENT_DATA_PART.searchPlan)
+        return;
+      const event = boardEventOf(part);
+      const store = useCockpitStore.getState();
+      if (event?.type === 'plan' && !started.has(event.searchId)) {
+        started.add(event.searchId);
+        store.setStage('search');
+      }
+      if (event?.type === 'lens' && event.view) store.setView(event.view);
+    });
+  }, [session]);
 
   // stable callbacks, so the memoized cards, lanes and constellation skip renders they don't need
   const pin = useCallback((key?: string) => {
@@ -86,6 +94,10 @@ export function useStage() {
   );
 
   return {
+    mode,
+    /** The conversation has a search the stage can show. */
+    hasSearch: Boolean(board?.plan) || searches.length > 0,
+    setStage: store.setStage,
     board,
     clarify,
     picks,
