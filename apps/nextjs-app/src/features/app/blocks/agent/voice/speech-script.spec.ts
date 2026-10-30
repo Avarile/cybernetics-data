@@ -1,9 +1,13 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import en from '@teable/common-i18n/src/locales/en/common.json';
+import zh from '@teable/common-i18n/src/locales/zh/common.json';
 import type { UIMessage } from 'ai';
+import i18next from 'i18next';
 import { describe, expect, it } from 'vitest';
 import {
   buildSpeechScript,
   classifyBlock,
+  defaultDescriber,
   speakableText,
   splitLong,
   splitSentences,
@@ -307,6 +311,36 @@ describe('search and question pointers (cockpit design §8)', () => {
         text: 'Which project? Cockpit or Theme? Please pick one of these 2, or just say it.',
       },
     ]);
+  });
+
+  it('asks for an answer, not a pick, when the question has no options', () => {
+    expect(defaultDescriber.choice('Which goal do you mean?', [])).toBe(
+      'Which goal do you mean? Please say or type your answer.'
+    );
+  });
+
+  it('has words for no, one and several options in the app languages', async () => {
+    const i18n = i18next.createInstance();
+    await i18n.init({
+      resources: { en: { common: en }, zh: { common: zh } },
+      lng: 'en',
+      fallbackLng: 'en',
+      defaultNS: 'common',
+      interpolation: { escapeValue: false },
+    });
+    const say = (lng: string, count: number) =>
+      i18n.getFixedT(lng, 'common')('agent.voice.look.choice', {
+        question: 'Which?',
+        options: count ? 'A or B?' : '',
+        count,
+      });
+    expect(say('en', 0)).toBe('Which? Please say or type your answer.');
+    expect(say('zh', 0)).toBe('Which? 请说出或输入你的回答。');
+    // a language without its own words falls back to English, zero form included
+    expect(say('de', 0)).toBe('Which? Please say or type your answer.');
+    expect(say('en', 1)).toBe('Which? A or B? Please pick it, or just say it.');
+    expect(say('en', 2)).toBe('Which? A or B? Please pick one of these 2, or just say it.');
+    for (const lng of ['en', 'zh', 'de']) expect(say(lng, 0)).not.toMatch(/0/);
   });
 });
 

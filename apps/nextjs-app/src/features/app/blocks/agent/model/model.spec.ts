@@ -1,8 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import type { ISearchCard, ISearchPlan, IStepState } from '@teable/openapi';
 import type { UIMessage } from 'ai';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ChangeFeed, StoreChatState } from '../data/agent-chat';
 import { boardEventOf } from '../data/stream-events';
+import { textOf } from './agent-request';
 import { lensKeys } from './lens';
 import { metricsOf } from './metrics';
 import {
@@ -162,6 +164,47 @@ describe('search board (cockpit design §10.3)', () => {
       boardEventOf({ type: 'data-search-hit', data: { searchId: 's', card: { key: 'x' } } })
     ).toBeUndefined();
     expect(boardEventOf({ type: 'data-run', data: {} })).toBeUndefined();
+  });
+});
+
+describe('change feed (cockpit design §10.2)', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('tells React at once, then at most once a window, and never drops the last change', () => {
+    vi.useFakeTimers();
+    const feed = new ChangeFeed(50);
+    const heard = vi.fn();
+    feed.subscribe(heard);
+    feed.changed();
+    expect(heard).toHaveBeenCalledTimes(1);
+    feed.changed();
+    feed.changed();
+    feed.changed();
+    expect(heard).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(50);
+    expect(heard).toHaveBeenCalledTimes(2);
+    expect(feed.getVersion()).toBe(2);
+    // a flush (a status change) goes out now, with the change still waiting
+    feed.changed();
+    feed.flush();
+    expect(heard).toHaveBeenCalledTimes(3);
+    vi.advanceTimersByTime(200);
+    expect(heard).toHaveBeenCalledTimes(3);
+  });
+
+  it('throttles a streaming reply but not its end', () => {
+    vi.useFakeTimers();
+    const chat = new StoreChatState([]);
+    const heard = vi.fn();
+    chat.subscribe(heard);
+    const reply = (text: string) =>
+      ({ id: 'a1', role: 'assistant', parts: [{ type: 'text', text }] }) as UIMessage;
+    chat.pushMessage(reply(''));
+    for (const text of ['H', 'He', 'Hel', 'Hell', 'Hello']) chat.replaceMessage(0, reply(text));
+    expect(heard).toHaveBeenCalledTimes(1);
+    chat.setStatus('ready');
+    expect(heard).toHaveBeenCalledTimes(2);
+    expect(textOf(chat.messages[0])).toBe('Hello');
   });
 });
 

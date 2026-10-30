@@ -1,8 +1,8 @@
 import type { IClarifyOption } from '@teable/openapi';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { boardToGraph } from '../model/graph/from-board';
 import { limitGraph } from '../model/graph/limit';
-import { defaultLens, lensKeys } from '../model/lens';
+import { defaultLens, lensKeys, recordsOfKeys } from '../model/lens';
 import { metricsOf } from '../model/metrics';
 import { traceOf } from '../model/search-board';
 import { openClarify } from '../model/transcript';
@@ -24,11 +24,13 @@ export function useStage() {
     () => (board && focused ? traceOf(board, focused) : undefined),
     [board, focused]
   );
-  const lit = lensKeys(board, lensMode, trace);
-  const metrics = useMemo(
-    () => (board ? metricsOf(board, lensMode === 'answer' ? lit : undefined) : []),
-    [board, lensMode, lit]
-  );
+  // the lens stays put while the pointer moves: the trace only lights cards over it, so the
+  // readout keeps its numbers and the constellation its shape (§5.3)
+  const lens = useMemo(() => lensKeys(board, lensMode), [board, lensMode]);
+  const lit = trace?.size ? trace : lens;
+  const metrics = useMemo(() => (board ? metricsOf(board, lens) : []), [board, lens]);
+  const graphLens = useMemo(() => recordsOfKeys(board, lens), [board, lens]);
+  const graphLit = useMemo(() => recordsOfKeys(board, trace), [board, trace]);
   const clarify = openClarify(chat.messages);
   const picks = useMemo(() => {
     if (!clarify || board?.status !== 'needs_choice') return undefined;
@@ -40,13 +42,23 @@ export function useStage() {
     () => (store.view === 'constellation' && board ? limitGraph(boardToGraph(board)) : undefined),
     [store.view, board]
   );
-  /** Card keys as record ids, for the constellation (which draws records). */
-  const recordsOf = (keys?: Set<string>) =>
-    keys && board
-      ? new Set(board.cards.filter((c) => keys.has(c.key)).map((c) => c.recordId))
-      : undefined;
-  const keyOfRecord = (recordId?: string) => board?.cards.find((c) => c.recordId === recordId)?.key;
-  const pin = (key?: string) => store.pin(store.pinned === key ? undefined : key);
+  // stable callbacks, so the memoized cards, lanes and constellation skip renders they don't need
+  const pin = useCallback((key?: string) => {
+    const { pinned, pin: setPinned } = useCockpitStore.getState();
+    setPinned(pinned === key ? undefined : key);
+  }, []);
+  const keyOfRecord = useCallback(
+    (recordId?: string) => board?.cards.find((c) => c.recordId === recordId)?.key,
+    [board]
+  );
+  const hoverRecord = useCallback(
+    (recordId?: string) => setHover(keyOfRecord(recordId)),
+    [keyOfRecord]
+  );
+  const pinRecord = useCallback(
+    (recordId: string) => pin(keyOfRecord(recordId)),
+    [pin, keyOfRecord]
+  );
 
   return {
     board,
@@ -65,10 +77,10 @@ export function useStage() {
     close: store.close,
     setHover,
     pin,
-    /** For the constellation: the answer's records, or the trace. */
-    graphLens: lensMode === 'answer' && !trace ? recordsOf(lit) : undefined,
-    graphLit: trace ? recordsOf(trace) : undefined,
-    hoverRecord: (recordId?: string) => setHover(keyOfRecord(recordId)),
-    pinRecord: (recordId: string) => pin(keyOfRecord(recordId)),
+    /** For the constellation: the answer's records (its shape), and the trace's (lit). */
+    graphLens,
+    graphLit,
+    hoverRecord,
+    pinRecord,
   };
 }

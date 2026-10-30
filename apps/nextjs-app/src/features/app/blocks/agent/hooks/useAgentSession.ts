@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { agentQueryKeys } from '../data/agent-api';
 import type { IAgentChoice } from '../model/agent-request';
 import { useSessionStore, type AgentSession } from '../state/session-store';
@@ -43,10 +43,22 @@ export function useAgentSession() {
     lastThread.current = session?.threadId;
   });
 
-  const withSession =
-    <A extends unknown[]>(fn: (s: AgentSession, ...args: A) => PromiseLike<void> | void) =>
-    (...args: A) =>
-      session ? Promise.resolve(fn(session, ...args)).then(refresh) : Promise.resolve();
+  // the same functions for as long as the session lasts, so memoized views can skip renders
+  const actions = useMemo(() => {
+    const withSession =
+      <A extends unknown[]>(fn: (s: AgentSession, ...args: A) => PromiseLike<void> | void) =>
+      (...args: A) =>
+        session ? Promise.resolve(fn(session, ...args)).then(refresh) : Promise.resolve();
+    return {
+      send: withSession((s, text: string, choice?: IAgentChoice) => s.send(text, choice)),
+      respond: withSession((s, approvalId: string, approved: boolean) =>
+        s.respond(approvalId, approved)
+      ),
+      stop: () => session?.stop() ?? Promise.resolve(),
+      openThread: (threadId: string) => useSessionStore.getState().openThread(threadId),
+      startNew: () => useSessionStore.getState().startNew(),
+    };
+  }, [session, refresh]);
 
   const status = session?.chat.store.status ?? 'ready';
   return {
@@ -58,12 +70,6 @@ export function useAgentSession() {
     error: session?.chat.store.error,
     busy: status === 'submitted' || status === 'streaming',
     threadId: session?.threadId,
-    send: withSession((s, text: string, choice?: IAgentChoice) => s.send(text, choice)),
-    respond: withSession((s, approvalId: string, approved: boolean) =>
-      s.respond(approvalId, approved)
-    ),
-    stop: () => session?.stop() ?? Promise.resolve(),
-    openThread: (threadId: string) => useSessionStore.getState().openThread(threadId),
-    startNew: () => useSessionStore.getState().startNew(),
+    ...actions,
   };
 }

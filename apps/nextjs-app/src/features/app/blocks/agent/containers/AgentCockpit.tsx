@@ -1,6 +1,6 @@
 import type { IClarifyOption } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useAgentSession } from '../hooks/useAgentSession';
 import { useCockpitKeys } from '../hooks/useCockpitKeys';
 import { choiceFor } from '../model/transcript';
@@ -35,10 +35,14 @@ export const AgentCockpit = () => {
   }, []);
 
   /** An option of a clarify card (or a PICK on a card): the admin's answer, with its choice. */
-  const pick = (option: IClarifyOption, clarifyId: string) => {
-    selectSearch(undefined);
-    void chat.send(option.label, choiceFor(clarifyId, option));
-  };
+  const { send } = chat;
+  const pick = useCallback(
+    (option: IClarifyOption, clarifyId: string) => {
+      selectSearch(undefined);
+      void send(option.label, choiceFor(clarifyId, option));
+    },
+    [selectSearch, send]
+  );
 
   return (
     <div

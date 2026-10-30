@@ -146,18 +146,20 @@ export function lanesOf(board: IBoard): ILane[] {
 export const cardsOf = (board: IBoard, lane: ILane) =>
   board.cards.filter((c) => lane.stepIds.includes(c.stepId));
 
+/** The board's cards by key, so a card's source is found without a scan. */
+export const cardIndex = (board: IBoard) => new Map(board.cards.map((c) => [c.key, c]));
+
 /** The card a card was reached from (its `via`), if it is on the board. */
-export const sourceOf = (board: IBoard, card: ISearchCard) =>
-  card.via
-    ? board.cards.find((c) => c.key === `${card.via!.stepId}:${card.via!.recordId}`)
-    : undefined;
+export const sourceOf = (cards: Map<string, ISearchCard>, card: ISearchCard) =>
+  card.via ? cards.get(`${card.via.stepId}:${card.via.recordId}`) : undefined;
 
 /** Cards linked to `key`: where it came from and what came from it (the hover trace). */
 export function traceOf(board: IBoard, key: string): Set<string> {
-  const card = board.cards.find((c) => c.key === key);
+  const cards = cardIndex(board);
+  const card = cards.get(key);
   if (!card) return new Set();
   const out = new Set([key]);
-  const source = sourceOf(board, card);
+  const source = sourceOf(cards, card);
   if (source) out.add(source.key);
   for (const c of board.cards) {
     if (c.via?.recordId === card.recordId && c.via.stepId === card.stepId) out.add(c.key);

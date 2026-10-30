@@ -1,6 +1,7 @@
 import type { IClarifyOption } from '@teable/openapi';
 import dynamic from 'next/dynamic';
 import { useTranslation } from 'next-i18next';
+import { useCallback } from 'react';
 import { useAgentStatus } from '../hooks/useAgentData';
 import { useStage } from '../hooks/useStage';
 import { RunLog } from '../ui/log/RunLog';
@@ -25,6 +26,11 @@ export const StageContainer = ({
   const stage = useStage();
   const { data: agent } = useAgentStatus();
   const { board, limited } = stage;
+  const clarifyId = stage.clarify?.clarifyId;
+  const pickOption = useCallback(
+    (option: IClarifyOption) => clarifyId && onPick(option, clarifyId),
+    [clarifyId, onPick]
+  );
 
   if (!board?.plan) {
     const blocked =
@@ -96,7 +102,7 @@ export const StageContainer = ({
             onLeave={stage.close}
             onHover={stage.setHover}
             onPin={stage.pin}
-            onPick={(o) => stage.clarify && onPick(o, stage.clarify.clarifyId)}
+            onPick={pickOption}
           />
         )}
       </div>

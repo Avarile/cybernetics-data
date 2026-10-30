@@ -30,7 +30,6 @@ export const Readout = ({
         </span>
       ) : null}
       {note && <span className={s.note}>{note}</span>}
-      {note && <span className={s.note}>{note}</span>}
       <dl className={s.kpis}>
         {metrics.map((m) => (
           <div key={m.k} data-tone={m.tone}>

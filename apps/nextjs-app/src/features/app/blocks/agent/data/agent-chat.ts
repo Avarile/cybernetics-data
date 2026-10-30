@@ -8,22 +8,22 @@ import {
 } from 'ai';
 import { buildAgentRequestBody } from '../model/agent-request';
 
-/** ChatState that React can subscribe to (what `@ai-sdk/react` does, on the `ai` we already ship). */
-export class StoreChatState implements ChatState<UIMessage> {
-  status: ChatStatus = 'ready';
-  error: Error | undefined = undefined;
-  messages: UIMessage[];
+/** Changes that stream in reach React at most this often (`@ai-sdk/react`'s throttle, as used). */
+export const CHANGE_THROTTLE_MS = 50;
+
+/**
+ * Change notices for `useSyncExternalStore`. `changed` tells the listeners at once, then at most
+ * once per window while changes keep coming (the last one always follows), so a reply streaming
+ * token by token or a search landing card by card re-renders the cockpit a few times a second
+ * instead of on every chunk. `flush` tells them now.
+ */
+export class ChangeFeed {
   private readonly listeners = new Set<() => void>();
   private version = 0;
+  private last = 0;
+  private timer?: ReturnType<typeof setTimeout>;
 
-  constructor(messages: UIMessage[]) {
-    this.messages = messages;
-  }
-
-  private emit() {
-    this.version++;
-    this.listeners.forEach((l) => l());
-  }
+  constructor(private readonly ms = CHANGE_THROTTLE_MS) {}
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -32,27 +32,60 @@ export class StoreChatState implements ChatState<UIMessage> {
 
   getVersion = () => this.version;
 
+  changed = () => {
+    if (this.timer) return;
+    const wait = this.last + this.ms - Date.now();
+    if (wait <= 0) this.flush();
+    else this.timer = setTimeout(this.flush, wait);
+  };
+
+  flush = () => {
+    clearTimeout(this.timer);
+    this.timer = undefined;
+    this.last = Date.now();
+    this.version++;
+    this.listeners.forEach((l) => l());
+  };
+}
+
+/** ChatState that React can subscribe to (what `@ai-sdk/react` does, on the `ai` we already ship). */
+export class StoreChatState implements ChatState<UIMessage> {
+  status: ChatStatus = 'ready';
+  error: Error | undefined = undefined;
+  messages: UIMessage[];
+  private readonly feed = new ChangeFeed();
+
+  constructor(messages: UIMessage[]) {
+    this.messages = messages;
+  }
+
+  subscribe = this.feed.subscribe;
+
+  getVersion = this.feed.getVersion;
+
   pushMessage = (message: UIMessage) => {
     this.messages = [...this.messages, message];
-    this.emit();
+    this.feed.flush();
   };
 
   popMessage = () => {
     this.messages = this.messages.slice(0, -1);
-    this.emit();
+    this.feed.flush();
   };
 
+  /** The streaming path (every chunk of a reply): throttled. */
   replaceMessage = (index: number, message: UIMessage) => {
     this.messages = [...this.messages.slice(0, index), message, ...this.messages.slice(index + 1)];
-    this.emit();
+    this.feed.changed();
   };
 
   snapshot = <T>(thing: T): T => structuredClone(thing);
 
+  /** A status change goes out at once, with any chunk still waiting. */
   setStatus(status: ChatStatus, error?: Error) {
     this.status = status;
     this.error = error;
-    this.emit();
+    this.feed.flush();
   }
 }
 

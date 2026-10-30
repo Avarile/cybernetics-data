@@ -57,8 +57,11 @@ export const listed = (words: string[], and: string) =>
 export const defaultDescriber: ISpeechDescriber = {
   board: (found) => `I found ${listed(found.map(counted), 'and')}. They're on the board.`,
   empty: () => 'I found nothing for that.',
+  // a question with no options (an unclear intent, something missing) has nothing to pick
   choice: (question, labels) =>
-    `${question} ${labels.length && labels.length <= 3 ? `${listed(labels, 'or')}? ` : ''}Please pick one${labels.length > 1 ? ` of these ${labels.length}` : ''}, or just say it.`,
+    labels.length
+      ? `${question} ${labels.length <= 3 ? `${listed(labels, 'or')}? ` : ''}Please pick one${labels.length > 1 ? ` of these ${labels.length}` : ''}, or just say it.`
+      : `${question} Please say or type your answer.`,
 };
 
 /** What a search part says once it has finished, keyed so it is said once. */

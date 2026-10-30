@@ -2,7 +2,12 @@ import type { IAgentChatContext } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import { create } from 'zustand';
 import { cancelRun, fetchSearch, fetchThreadMessages } from '../data/agent-api';
-import { createAgentChat, type AgentChat, type IAgentDataChunk } from '../data/agent-chat';
+import {
+  ChangeFeed,
+  createAgentChat,
+  type AgentChat,
+  type IAgentDataChunk,
+} from '../data/agent-chat';
 import { boardEventOf } from '../data/stream-events';
 import type { IAgentChoice } from '../model/agent-request';
 import { emptyBoard, reduceBoard, type IBoard, type IBoardEvent } from '../model/search-board';
@@ -40,9 +45,8 @@ export class AgentSession {
   /** The search the latest reply made. */
   latestSearchId?: string;
   private readonly loading = new Set<string>();
-  private readonly listeners = new Set<() => void>();
+  private readonly feed = new ChangeFeed();
   private readonly dataListeners = new Set<(part: IAgentDataChunk) => void>();
-  private version = 0;
 
   constructor(init: { threadId?: string; initialMessages: UIMessage[] }) {
     this.threadId = init.threadId;
@@ -55,7 +59,7 @@ export class AgentSession {
           this.threadId = threadId;
           remember(threadId);
         }
-        this.emit();
+        this.feed.flush();
       },
       onData: (part) => {
         const event = boardEventOf(part);
@@ -65,25 +69,17 @@ export class AgentSession {
     });
   }
 
-  private emit() {
-    this.version++;
-    this.listeners.forEach((l) => l());
-  }
+  subscribe = this.feed.subscribe;
 
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
-  };
+  getVersion = this.feed.getVersion;
 
-  getVersion = () => this.version;
-
-  /** A search event onto its board. */
+  /** A search event onto its board; a burst of cards reaches React as one change. */
   apply(event: IBoardEvent) {
     const id = event.type === 'replay' ? event.search.id : event.searchId;
     const before = this.boards[id];
     this.boards = { ...this.boards, [id]: reduceBoard(before ?? emptyBoard(id), event) };
     if (!before && event.type !== 'replay') this.latestSearchId = id;
-    this.emit();
+    this.feed.changed();
   }
 
   /** A stored search onto the board (a reopened thread, or an earlier plan clicked). */

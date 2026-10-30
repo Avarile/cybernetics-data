@@ -1905,6 +1905,7 @@
         "error": "Something went wrong. Please take a look at the screen.",
         "board": "I found {{found}}. They're on the board.",
         "empty": "I found nothing for that.",
+        "choice_zero": "{{question}} Please say or type your answer.",
         "choice_one": "{{question}} {{options}} Please pick it, or just say it.",
         "choice_other": "{{question}} {{options}} Please pick one of these {{count}}, or just say it."
       },

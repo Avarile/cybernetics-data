@@ -1902,6 +1902,7 @@
         "error": "出了点问题。请看一下屏幕。",
         "board": "我找到了 {{found}}，都在面板上。",
         "empty": "没有找到相关内容。",
+        "choice_zero": "{{question}} 请说出或输入你的回答。",
         "choice_one": "{{question}} {{options}} 请选择它，或者直接说出来。",
         "choice_other": "{{question}} {{options}} 请从这 {{count}} 项中选择一项，或者直接说出来。"
       },
