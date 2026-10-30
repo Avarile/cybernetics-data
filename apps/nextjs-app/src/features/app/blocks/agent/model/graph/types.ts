@@ -64,6 +64,10 @@ export interface IGraph extends IGraphInput {
   branches: IBranch[];
 }
 
+/** The nodes a drawn link joins to `id` (e.g. a person to every task they are on). */
+export const linkedTo = (g: IGraphInput, id: string): string[] =>
+  g.links.flatMap((l) => (l.source === id ? [l.target] : l.target === id ? [l.source] : []));
+
 /** Adds lookups and one summary per top-level branch (ported from the cockpit's finishGraph). */
 export function finishGraph(input: IGraphInput): IGraph {
   const byId = new Map(input.nodes.map((n) => [n.id, n]));

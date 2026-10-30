@@ -7,6 +7,7 @@ import {
   ConversationScrollButton,
 } from '@/components/ai-elements/conversation';
 import { MessageResponse } from '@/components/ai-elements/message';
+import { withBoard, type IBoard } from '../../model/search-board';
 import { transcriptOf } from '../../model/transcript';
 import s from '../theme/cockpit.module.css';
 import { ClarifyCard } from './ClarifyCard';
@@ -18,6 +19,8 @@ export interface ITranscriptProps {
   busy: boolean;
   error?: Error;
   selectedSearch?: string;
+  /** The session's boards: a plan's legs follow its board (e.g. settled by Stop). */
+  boards?: Record<string, IBoard>;
   onSelectSearch: (searchId: string) => void;
   onRespond: (approvalId: string, approved: boolean) => void;
   onPick: (option: IClarifyOption, clarifyId: string) => void;
@@ -29,6 +32,7 @@ export const Transcript = ({
   busy,
   error,
   selectedSearch,
+  boards,
   onSelectSearch,
   onRespond,
   onPick,
@@ -79,7 +83,7 @@ export const Transcript = ({
                 return (
                   <PlanLegs
                     key={item.key}
-                    part={item.part}
+                    part={withBoard(item.part, boards?.[item.part.searchId])}
                     selected={selectedSearch === item.part.searchId}
                     onSelect={() => onSelectSearch(item.part.searchId)}
                   />

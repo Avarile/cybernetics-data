@@ -87,6 +87,7 @@ export const StageContainer = ({
           <Constellation
             graph={limited.graph}
             mode={stage.layout}
+            zoomResets={stage.zoomResets}
             lens={stage.graphLens}
             lit={stage.graphLit}
             onHover={stage.hoverRecord}

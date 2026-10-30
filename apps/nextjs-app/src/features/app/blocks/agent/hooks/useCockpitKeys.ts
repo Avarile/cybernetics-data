@@ -46,24 +46,56 @@ const switchView: IKeyAction = () => {
   store.setView(store.view === 'board' ? 'constellation' : 'board');
   return true;
 };
+const inConstellation = () => useCockpitStore.getState().view === 'constellation';
 const moveLane: IKeyAction = (root, key) => {
   const lanes = [...(root?.querySelectorAll<HTMLElement>('section[id^="lane-"]') ?? [])];
+  if (!lanes.length) return false;
   const at = lanes.findIndex((l) => l.contains(document.activeElement));
   const next = lanes[(at + (key === ']' ? 1 : -1) + lanes.length) % lanes.length];
-  next?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-  next?.querySelector<HTMLElement>('article button')?.focus();
-  return Boolean(next);
+  next.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+  next.querySelector<HTMLElement>('article button')?.focus();
+  return true;
+};
+/** The next or previous person on the chart, pinned so their trace stays lit (the cockpit's). */
+const moveActor: IKeyAction = (root, key) => {
+  const keys = [
+    ...(root?.querySelectorAll<SVGElement>('g[data-kind="actor"][data-key]') ?? []),
+  ].map((g) => g.getAttribute('data-key')!);
+  if (!keys.length) return false;
+  const store = useCockpitStore.getState();
+  const at = keys.indexOf(store.pinned ?? '');
+  const dir = key === ']' ? 1 : -1;
+  store.pin(
+    keys[at < 0 ? (dir > 0 ? 0 : keys.length - 1) : (at + dir + keys.length) % keys.length]
+  );
+  return true;
+};
+const move: IKeyAction = (root, key) =>
+  inConstellation() ? moveActor(root, key) : moveLane(root, key);
+const toggleLayout: IKeyAction = () => {
+  if (!inConstellation()) return false;
+  const store = useCockpitStore.getState();
+  store.setLayout(store.layout === 'tree' ? 'bundle' : 'tree');
+  return true;
+};
+const resetZoom: IKeyAction = () => {
+  if (!inConstellation()) return false;
+  useCockpitStore.getState().resetZoom();
+  return true;
 };
 const fullScreen: IKeyAction = (root) => {
   if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
   else void root?.requestFullscreen?.().catch(() => undefined);
   return true;
 };
-/** Escape unpins the trace, then drops the lens; it never turns the cockpit off. */
+/**
+ * Escape unpins the trace, then drops the answer's lens to everything found (cockpit design
+ * §5.8); it never turns the cockpit off.
+ */
 const escape: IKeyAction = () => {
   const store = useCockpitStore.getState();
   if (store.pinned) store.pin(undefined);
-  else if (store.lens) store.setLens(undefined);
+  else if (store.lens !== 'retrieved') store.setLens('retrieved');
   else return false;
   return true;
 };
@@ -71,8 +103,11 @@ const actions: Record<string, IKeyAction> = {
   '/': focusComposer,
   v: switchView,
   V: switchView,
-  '[': moveLane,
-  ']': moveLane,
+  '[': move,
+  ']': move,
+  t: toggleLayout,
+  T: toggleLayout,
+  '0': resetZoom,
   f: fullScreen,
   F: fullScreen,
   Escape: escape,
@@ -80,8 +115,9 @@ const actions: Record<string, IKeyAction> = {
 
 /**
  * Keys inside the cockpit (cockpit design §5.8): `/` composer, `V` board or constellation,
- * `[` `]` lanes, `F` browser full screen, `Mod+Shift+O` new conversation, `Esc` unpins the trace,
- * then drops the lens.
+ * `[` `]` lanes (board) or people (constellation), `T` bundle or tree, `0` reset the zoom,
+ * `F` browser full screen, `Mod+Shift+O` new conversation, `Esc` unpins the trace, then drops
+ * the lens.
  */
 export function useCockpitKeys(root: RefObject<HTMLElement>) {
   useEffect(() => {

@@ -2,8 +2,10 @@
 import { DATA_CENTRE_TABLES } from './__fixtures__/data-centre';
 import { chooseAnchor, isExactTitle } from './anchor-choice';
 import { cellText, plainText, projectCard, shortName } from './card-projection';
+import { openFirst, tallyOf } from './card-tally';
 import { buildPlan, PlanError } from './planner';
 import { RelationGraph } from './relation-graph';
+import type { ISearchCard, ISearchTone } from './search.types';
 import { sizeOfPriority, toneOf } from './tone';
 import { phaseAfter, stepTools } from './turn-protocol';
 
@@ -232,7 +234,63 @@ describe('projectCard', () => {
     expect(shortName('knowledges')).toBe('KNOWLEDGE');
     expect(toneOf('finished_reviewing')).toBe('ink');
     expect(toneOf('onhold')).toBe('caution');
+    // negated words are open work, not the state they negate
+    expect(['not started', 'Not_Done', 'incomplete', 'unfinished'].map(toneOf)).toEqual([
+      'target',
+      'target',
+      'target',
+      'target',
+    ]);
+    expect([toneOf('invalid'), toneOf('validated'), toneOf('started')]).toEqual([
+      'none',
+      'ink',
+      'route',
+    ]);
     expect(sizeOfPriority('can wait')).toBe(1);
+  });
+});
+
+describe('openFirst and tallyOf', () => {
+  const card = (id: string, tone: ISearchTone, state?: string, alert?: boolean): ISearchCard => ({
+    key: `s2:${id}`,
+    stepId: 's2',
+    recordId: id,
+    tableId: 'tblTasks',
+    table: 'tasks',
+    title: id,
+    short: null,
+    tone,
+    fields: [],
+    ...(state ? { state } : {}),
+    ...(alert ? { alert } : {}),
+  });
+  const cards = [
+    card('a', 'ink', 'closed'),
+    card('b', 'faint', 'cancelled'),
+    card('c', 'dim', 'backlog'),
+    card('d', 'route', 'in-progress'),
+    card('e', 'ink', 'closed'),
+    card('f', 'dim', 'backlog', true),
+    card('g', 'none'),
+  ];
+
+  it('puts overdue and open work first, keeping link order within a state', () => {
+    expect(openFirst(cards).map((c) => c.recordId)).toEqual(['f', 'd', 'c', 'g', 'a', 'e', 'b']);
+  });
+
+  it('counts every state, and none for a table without one', () => {
+    expect(tallyOf(cards)).toEqual({
+      counted: 7,
+      overdue: 1,
+      states: [
+        { state: 'in-progress', tone: 'route', count: 1 },
+        { state: 'backlog', tone: 'dim', count: 2 },
+        { state: '', tone: 'none', count: 1 },
+        { state: 'closed', tone: 'ink', count: 2 },
+        { state: 'cancelled', tone: 'faint', count: 1 },
+      ],
+    });
+    expect(tallyOf([card('x', 'none'), card('y', 'none')])).toBeUndefined();
   });
 });
 

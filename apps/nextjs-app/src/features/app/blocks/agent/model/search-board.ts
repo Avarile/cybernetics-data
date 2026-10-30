@@ -2,7 +2,9 @@ import type {
   IAgentSearchVo,
   ISearchCard,
   ISearchPlan,
+  ISearchPlanPart,
   ISearchStatus,
+  ISearchTone,
   ISearchView,
   IStepState,
 } from '@teable/openapi';
@@ -19,6 +21,8 @@ export interface ILane {
   /** The first step's purpose, e.g. "tasks of the project". */
   purpose: string;
   error?: string;
+  /** Records per tone over all its steps read, once every step tallied them. */
+  tones?: Partial<Record<ISearchTone, number>>;
 }
 
 export interface IBoard {
@@ -31,7 +35,6 @@ export interface IBoard {
   /** Cards in arrival order. */
   cards: ISearchCard[];
   lens: string[];
-  view?: ISearchView;
 }
 
 export type IBoardEvent =
@@ -44,8 +47,11 @@ export type IBoardEvent =
     }
   | { type: 'step'; searchId: string; state: IStepState }
   | { type: 'hit'; searchId: string; card: ISearchCard }
+  /** `view` is the stage's view the answer asks for; the stage follows it (useStage). */
   | { type: 'lens'; searchId: string; recordKeys: string[]; view?: ISearchView }
-  | { type: 'replay'; search: IAgentSearchVo };
+  | { type: 'replay'; search: IAgentSearchVo }
+  /** The reply ended before the search did (Stop, a dropped connection): nothing more comes. */
+  | { type: 'cut'; searchId: string };
 
 export const emptyBoard = (searchId: string): IBoard => ({
   searchId,
@@ -56,26 +62,58 @@ export const emptyBoard = (searchId: string): IBoard => ({
   lens: [],
 });
 
+const at = (iso?: string) => (iso ? Date.parse(iso) : undefined);
+
+/** When a step ran: the server's times when it sent them, else when the client heard. */
 const stamp = (board: IBoard, state: IStepState, now: number) => {
   const times = { ...board.times[state.stepId] };
-  if (state.status === 'running') times.started ??= now;
-  else if (state.status !== 'pending') times.finished ??= now;
+  times.started ??= at(state.startedAt) ?? (state.status === 'running' ? now : undefined);
+  if (state.status !== 'running' && state.status !== 'pending')
+    times.finished ??= at(state.finishedAt) ?? now;
   return { ...board.times, [state.stepId]: times };
+};
+
+const withPlan = (board: IBoard, event: Extract<IBoardEvent, { type: 'plan' }>, now: number) => {
+  const states = { ...board.states };
+  let times = board.times;
+  for (const s of event.states) {
+    // a transient step event may have told more already
+    if (!states[s.stepId] || states[s.stepId].status === 'pending') states[s.stepId] = s;
+    if (s.status !== 'pending') times = stamp({ ...board, times }, s, now);
+  }
+  return { ...board, plan: event.plan, states, times, status: event.status };
+};
+
+const replayed = (board: IBoard, s: IAgentSearchVo): IBoard => ({
+  ...board,
+  plan: s.plan,
+  status: s.status,
+  states: Object.fromEntries(s.states.map((st) => [st.stepId, st])),
+  times: Object.fromEntries(
+    s.states.map((st) => [st.stepId, { started: at(st.startedAt), finished: at(st.finishedAt) }])
+  ),
+  cards: s.cards,
+  lens: s.lens,
+});
+
+/** What was running stopped with the reply; what had not started never will. */
+const cut = (board: IBoard, now: number): IBoard => {
+  if (board.status !== 'running' && board.status !== 'planned') return board;
+  const states = { ...board.states };
+  let times = board.times;
+  for (const [id, st] of Object.entries(states)) {
+    if (st.status !== 'running' && st.status !== 'pending') continue;
+    states[id] = { ...st, status: st.status === 'running' ? 'cancelled' : 'skipped' };
+    times = stamp({ ...board, times }, states[id], now);
+  }
+  return { ...board, states, times, status: 'cancelled' };
 };
 
 /** The board after one event; plans and states may arrive in any order and more than once. */
 export function reduceBoard(board: IBoard, event: IBoardEvent, now = Date.now()): IBoard {
   switch (event.type) {
-    case 'plan': {
-      const states = { ...board.states };
-      let times = board.times;
-      for (const s of event.states) {
-        // a transient step event may have told more already
-        if (!states[s.stepId] || states[s.stepId].status === 'pending') states[s.stepId] = s;
-        if (s.status !== 'pending') times = stamp({ ...board, times }, s, now);
-      }
-      return { ...board, plan: event.plan, states, times, status: event.status };
-    }
+    case 'plan':
+      return withPlan(board, event, now);
     case 'step':
       return {
         ...board,
@@ -86,19 +124,31 @@ export function reduceBoard(board: IBoard, event: IBoardEvent, now = Date.now())
       if (board.cards.some((c) => c.key === event.card.key)) return board;
       return { ...board, cards: [...board.cards, event.card] };
     case 'lens':
-      return { ...board, lens: event.recordKeys, ...(event.view ? { view: event.view } : {}) };
-    case 'replay': {
-      const s = event.search;
-      return {
-        ...board,
-        plan: s.plan,
-        status: s.status,
-        states: Object.fromEntries(s.states.map((st) => [st.stepId, st])),
-        cards: s.cards,
-        lens: s.lens,
-      };
-    }
+      return { ...board, lens: event.recordKeys };
+    case 'replay':
+      return replayed(board, event.search);
+    case 'cut':
+      return cut(board, now);
   }
+}
+
+/** A stored plan part as the live board knows it, which is never behind the part. */
+export function withBoard(part: ISearchPlanPart, board: IBoard | undefined): ISearchPlanPart {
+  if (!board?.plan) return part;
+  return {
+    ...part,
+    status: board.status,
+    states: part.plan.steps.map(
+      (s) =>
+        board.states[s.id] ??
+        part.states.find((st) => st.stepId === s.id) ?? {
+          stepId: s.id,
+          status: 'pending',
+          found: 0,
+          shown: 0,
+        }
+    ),
+  };
 }
 
 const laneStatus = (states: IStepState[]): IStepState['status'] => {
@@ -139,7 +189,15 @@ export function lanesOf(board: IBoard): ILane[] {
     lane.shown += state.shown;
     if (state.error) lane.error = state.error;
   }
-  for (const lane of lanes) lane.status = laneStatus(lane.stepIds.map((id) => board.states[id]));
+  for (const lane of lanes) {
+    const states = lane.stepIds.map((id) => board.states[id]);
+    lane.status = laneStatus(states);
+    if (!states.every((st) => st.tally)) continue;
+    const tones: Partial<Record<ISearchTone, number>> = {};
+    for (const row of states.flatMap((st) => st.tally!.states))
+      tones[row.tone] = (tones[row.tone] ?? 0) + row.count;
+    lane.tones = tones;
+  }
   return lanes;
 }
 

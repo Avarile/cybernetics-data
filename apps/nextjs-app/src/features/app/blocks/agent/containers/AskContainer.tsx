@@ -97,6 +97,7 @@ export const AskContainer = ({
         busy={chat.busy}
         error={chat.error}
         selectedSearch={selectedSearch}
+        boards={chat.session?.boards}
         onSelectSearch={selectSearch}
         onRespond={(id, approved) => void chat.respond(id, approved)}
         onPick={onPick}

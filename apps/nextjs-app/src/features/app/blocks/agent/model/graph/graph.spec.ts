@@ -77,6 +77,23 @@ describe('constellation graph (cockpit design §5.4)', () => {
     expect(g.branches.find((b) => b.id === 'G')).toMatchObject({ count: 3 });
   });
 
+  it('names the people branch by its tables, and hangs a record whose source is not shown', () => {
+    const g = boardToGraph({
+      ...board,
+      cards: [
+        ...board.cards.map((c) =>
+          c.recordId === 'P' ? { ...c, links: { ...c.links, tasks: ['T1', 'T2', 'T3'] } } : c
+        ),
+        // reached from a task the board does not show, but the project links to it
+        card('s2', 'T3', { via: { stepId: 's1', recordId: 'Pgone', field: 'tasks' } }),
+        card('s2', 'T4', { via: { stepId: 's1', recordId: 'Pgone', field: 'tasks' } }),
+      ],
+    });
+    expect(g.byId.get('g:people')).toMatchObject({ label: 'Contacts', short: 'CONTACTS' });
+    expect(g.byId.get('T3')?.parent).toBe('P');
+    expect(g.byId.get('T4')?.parent).toBeNull();
+  });
+
   it('lays out every drawn node on the rim, with bundled edges and readable labels', () => {
     const g = boardToGraph(board);
     const layout = layoutGraph(g, { mode: 'bundle', radius: 300 });
@@ -88,9 +105,8 @@ describe('constellation graph (cockpit design §5.4)', () => {
     const left = layout.nodes.find((n) => n.angle > Math.PI)!;
     expect(labelTransform(left, 6).anchor).toBe('end');
     const narrowed = layoutGraph(g, { mode: 'tree', radius: 300, lens: new Set(['T1']) });
-    expect(narrowed.nodes.map((n) => n.id).sort()).toEqual(
-      ['G', 'P', 'T1', 'g:people', 'root'].sort()
-    );
+    // the people's branch cites no one: it is not drawn
+    expect(narrowed.nodes.map((n) => n.id).sort()).toEqual(['G', 'P', 'T1', 'root'].sort());
     expect(narrowed.nodes.find((n) => n.id === 'P')?.context).toBe(true);
     expect(narrowed.branches.length).toBeGreaterThan(0);
   });
@@ -107,10 +123,17 @@ describe('constellation graph (cockpit design §5.4)', () => {
         tone: (i === 7 ? 'caution' : 'ink') as IGNode['tone'],
       })),
     ];
-    const limited = limitGraph(finishGraph({ title: 't', nodes, links: [] }), 11);
+    const g = finishGraph({ title: 't', nodes, links: [] });
+    const limited = limitGraph(g, { budget: 11 });
     expect(limited.shown).toBe(9);
     expect(limited.hidden).toBe(21);
     expect(limited.graph.byId.has('n7')).toBe(true);
     expect(limited.graph.byId.get('more:hub')?.label).toBe('+21 more');
+
+    // the answer cites two records the budget would drop: under the lens they are what draws
+    expect(limitGraph(g, { budget: 3 }).graph.byId.has('n3')).toBe(false);
+    const lensed = limitGraph(g, { budget: 3, lens: new Set(['n3', 'n20']) });
+    expect([lensed.total, lensed.shown, lensed.hidden]).toEqual([2, 2, 0]);
+    expect([...lensed.graph.byId.keys()].sort()).toEqual(['hub', 'n20', 'n3']);
   });
 });

@@ -1,7 +1,9 @@
-import type { IClarifyOption } from '@teable/openapi';
-import { useCallback, useMemo, useState } from 'react';
+import { AGENT_DATA_PART, type IClarifyOption } from '@teable/openapi';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { boardEventOf } from '../data/stream-events';
 import { boardToGraph } from '../model/graph/from-board';
 import { limitGraph } from '../model/graph/limit';
+import { linkedTo } from '../model/graph/types';
 import { defaultLens, lensKeys, recordsOfKeys } from '../model/lens';
 import { metricsOf } from '../model/metrics';
 import { traceOf } from '../model/search-board';
@@ -17,7 +19,6 @@ export function useStage() {
   const { board, chat } = useSearchBoard();
   const store = useCockpitStore();
   const [hover, setHover] = useState<string>();
-  const [layout, setLayout] = useState<'bundle' | 'tree'>('bundle');
   const lensMode = store.lens ?? defaultLens(board);
   const focused = hover ?? store.pinned;
   const trace = useMemo(
@@ -30,7 +31,6 @@ export function useStage() {
   const lit = trace?.size ? trace : lens;
   const metrics = useMemo(() => (board ? metricsOf(board, lens) : []), [board, lens]);
   const graphLens = useMemo(() => recordsOfKeys(board, lens), [board, lens]);
-  const graphLit = useMemo(() => recordsOfKeys(board, trace), [board, trace]);
   const clarify = openClarify(chat.messages);
   const picks = useMemo(() => {
     if (!clarify || board?.status !== 'needs_choice') return undefined;
@@ -39,9 +39,34 @@ export function useStage() {
     );
   }, [clarify, board?.status]);
   const limited = useMemo(
-    () => (store.view === 'constellation' && board ? limitGraph(boardToGraph(board)) : undefined),
-    [store.view, board]
+    () =>
+      store.view === 'constellation' && board
+        ? limitGraph(boardToGraph(board), { lens: graphLens })
+        : undefined,
+    [store.view, board, graphLens]
   );
+  // on the chart the trace also follows the links it draws: a person lights every task they
+  // are on, not only the one they were reached from
+  const graphLit = useMemo(() => {
+    const records = recordsOfKeys(board, trace);
+    const record = focused ? board?.cards.find((c) => c.key === focused)?.recordId : undefined;
+    if (records && record && limited)
+      linkedTo(limited.graph, record).forEach((id) => records.add(id));
+    return records;
+  }, [board, trace, focused, limited]);
+
+  // the answer may ask for a view (highlight_records): the stage switches when that arrives
+  const session = chat.session;
+  useEffect(
+    () =>
+      session?.onData((part) => {
+        if (part.type !== AGENT_DATA_PART.searchLens) return;
+        const event = boardEventOf(part);
+        if (event?.type === 'lens' && event.view) useCockpitStore.getState().setView(event.view);
+      }),
+    [session]
+  );
+
   // stable callbacks, so the memoized cards, lanes and constellation skip renders they don't need
   const pin = useCallback((key?: string) => {
     const { pinned, pin: setPinned } = useCockpitStore.getState();
@@ -69,8 +94,9 @@ export function useStage() {
     lit,
     metrics,
     limited,
-    layout,
-    setLayout,
+    layout: store.layout,
+    setLayout: store.setLayout,
+    zoomResets: store.zoomResets,
     view: store.view,
     setView: store.setView,
     setLens: store.setLens,

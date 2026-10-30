@@ -45,6 +45,8 @@ export class AgentSession {
   /** The search the latest reply made. */
   latestSearchId?: string;
   private readonly loading = new Set<string>();
+  /** Searches the current reply streams (not replays). */
+  private readonly live = new Set<string>();
   private readonly feed = new ChangeFeed();
   private readonly dataListeners = new Set<(part: IAgentDataChunk) => void>();
 
@@ -66,7 +68,14 @@ export class AgentSession {
         if (event) this.apply(event);
         this.dataListeners.forEach((l) => l(part));
       },
+      onEnd: () => this.settle(),
     });
+  }
+
+  /** The reply ended: a search it left running (Stop, a dropped stream) stops waiting. */
+  settle() {
+    for (const id of this.live) this.apply({ type: 'cut', searchId: id });
+    this.live.clear();
   }
 
   subscribe = this.feed.subscribe;
@@ -77,8 +86,13 @@ export class AgentSession {
   apply(event: IBoardEvent) {
     const id = event.type === 'replay' ? event.search.id : event.searchId;
     const before = this.boards[id];
-    this.boards = { ...this.boards, [id]: reduceBoard(before ?? emptyBoard(id), event) };
-    if (!before && event.type !== 'replay') this.latestSearchId = id;
+    const after = reduceBoard(before ?? emptyBoard(id), event);
+    if (after === before) return;
+    this.boards = { ...this.boards, [id]: after };
+    if (event.type !== 'replay' && event.type !== 'cut') {
+      if (!before) this.latestSearchId = id;
+      this.live.add(id);
+    }
     this.feed.changed();
   }
 
@@ -98,7 +112,9 @@ export class AgentSession {
   /** Search progress, clarify cards and lenses as they stream (transient parts included). */
   onData(listener: (part: IAgentDataChunk) => void) {
     this.dataListeners.add(listener);
-    return () => this.dataListeners.delete(listener);
+    return () => {
+      this.dataListeners.delete(listener);
+    };
   }
 
   get busy() {

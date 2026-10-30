@@ -1,6 +1,7 @@
 import { LocalStorageKeys } from '@cybernetics/sdk/config';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { ILayoutMode } from '../model/graph/layout';
 import type { ILensMode } from '../model/lens';
 import { rememberedThread, useSessionStore } from './session-store';
 
@@ -35,6 +36,10 @@ interface ICockpitState {
   lens?: ILensMode;
   /** A card whose trace stays lit (clicked). */
   pinned?: string;
+  /** The constellation's layout: bundled edges on the rim, or the tree itself. */
+  layout: ILayoutMode;
+  /** Counts the times the constellation's zoom was reset (`0`); the chart follows it. */
+  zoomResets: number;
   open: (options?: IOpenCockpit) => void;
   close: () => void;
   toggle: (options?: IOpenCockpit) => void;
@@ -44,6 +49,8 @@ interface ICockpitState {
   selectSearch: (searchId?: string) => void;
   setLens: (lens?: ILensMode) => void;
   pin: (key?: string) => void;
+  setLayout: (layout: ILayoutMode) => void;
+  resetZoom: () => void;
 }
 
 export const useCockpitStore = create<ICockpitState>()(
@@ -52,6 +59,8 @@ export const useCockpitStore = create<ICockpitState>()(
       on: false,
       palette: 'mono',
       view: 'board',
+      layout: 'bundle',
+      zoomResets: 0,
       open: (options = {}) => {
         const sessions = useSessionStore.getState();
         const threadId = options.threadId ?? (sessions.session ? undefined : rememberedThread());
@@ -67,6 +76,8 @@ export const useCockpitStore = create<ICockpitState>()(
       selectSearch: (selectedSearch) => set({ selectedSearch, lens: undefined, pinned: undefined }),
       setLens: (lens) => set({ lens }),
       pin: (pinned) => set({ pinned }),
+      setLayout: (layout) => set({ layout }),
+      resetZoom: () => set({ zoomResets: get().zoomResets + 1 }),
     }),
     {
       name: LocalStorageKeys.AgentCockpit,

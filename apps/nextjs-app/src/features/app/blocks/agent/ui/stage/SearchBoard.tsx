@@ -34,6 +34,8 @@ export const SearchBoard = memo((p: ISearchBoardProps) => {
     () =>
       lanesOf(board).map((lane) => ({
         lane,
+        // numbered by the plan's step, as the legs in the rail are
+        step: board.plan?.steps.findIndex((s) => s.id === lane.stepIds[0]) ?? 0,
         cards: cardsOf(board, lane),
         how: lane.stepIds.map((id) => sourceText(board.plan, id)).join(' · '),
       })),
@@ -56,11 +58,11 @@ export const SearchBoard = memo((p: ISearchBoardProps) => {
         ))}
       </nav>
       <div className={s.board} role="region" aria-label="Search board">
-        {lanes.map(({ lane, cards: laneCards, how }, i) => (
+        {lanes.map(({ lane, step, cards: laneCards, how }) => (
           <TableLane
             key={lane.tableId}
             lane={lane}
-            index={i}
+            index={step}
             how={how}
             cards={laneCards}
             sourceOf={sourceOfCard}

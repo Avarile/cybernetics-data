@@ -61,6 +61,25 @@ describe('agent cockpit (cockpit design §4)', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 
+  it('drives the constellation by key, and Escape unpins, then drops the lens', async () => {
+    render(<AgentCockpitHost />);
+    act(() => useCockpitStore.getState().open());
+    act(() => (document.activeElement as HTMLElement | null)?.blur());
+    const keep = { layout: 'bundle' as const, zoomResets: 0, lens: undefined };
+    act(() => useCockpitStore.setState({ ...keep, view: 'board', pinned: 's2:recT1' }));
+    await userEvent.keyboard('t0');
+    expect(useCockpitStore.getState()).toMatchObject(keep);
+
+    act(() => useCockpitStore.setState({ view: 'constellation' }));
+    await userEvent.keyboard('t0');
+    expect(useCockpitStore.getState()).toMatchObject({ layout: 'tree', zoomResets: 1 });
+    await userEvent.keyboard('{Escape}');
+    expect(useCockpitStore.getState()).toMatchObject({ pinned: undefined, lens: undefined });
+    await userEvent.keyboard('{Escape}');
+    expect(useCockpitStore.getState().lens).toBe('retrieved');
+    expect(screen.getByRole('dialog')).toBeTruthy();
+  });
+
   it('keeps the conversation while off', async () => {
     render(<AgentCockpitHost />);
     act(() => useCockpitStore.getState().open());
@@ -175,5 +194,36 @@ describe('the stage (cockpit design §5.3)', () => {
     act(() => result.current.hoverRecord('recP'));
     expect(result.current.graphLens).toEqual(new Set(['recT1']));
     expect(result.current.metrics).toEqual(metrics);
+  });
+
+  it('settles a search the reply left running, but not one replayed from the server', () => {
+    const live = new AgentSession({ initialMessages: [] });
+    const states = plan.steps.map((s) => ({
+      stepId: s.id,
+      status: 'pending' as const,
+      found: 0,
+      shown: 0,
+    }));
+    live.apply({ type: 'plan', searchId: 'srch2', plan, states, status: 'running' });
+    live.apply({
+      type: 'step',
+      searchId: 'srch2',
+      state: { stepId: 's1', status: 'running', found: 0, shown: 0 },
+    });
+    live.apply({
+      type: 'replay',
+      search: {
+        id: 'srch3',
+        plan,
+        status: 'running',
+        states,
+        cards: [],
+        lens: [],
+      } as never,
+    });
+    live.settle();
+    expect(live.boards.srch2.status).toBe('cancelled');
+    expect(live.boards.srch2.states.s1.status).toBe('cancelled');
+    expect(live.boards.srch3.status).toBe('running');
   });
 });

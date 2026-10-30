@@ -14,6 +14,7 @@ import {
   reduceBoard,
   sourceText,
   traceOf,
+  withBoard,
   type IBoard,
 } from './search-board';
 import { openClarify, searchesOf, transcriptOf } from './transcript';
@@ -151,6 +152,114 @@ describe('search board (cockpit design §10.3)', () => {
     expect(m['IN PROGRESS']).toEqual([1, undefined]);
     expect(lensKeys(board, 'answer')).toEqual(new Set(['s2:t2']));
     expect(lensKeys(board, 'retrieved')).toBeUndefined();
+  });
+
+  it('counts every task the step read, not only its cards, and each late one once', () => {
+    const tally = {
+      counted: 132,
+      overdue: 3,
+      states: [
+        { state: 'in-progress', tone: 'route' as const, count: 12 },
+        { state: 'onhold', tone: 'caution' as const, count: 4 },
+        { state: 'backlog', tone: 'dim' as const, count: 16 },
+        { state: 'closed', tone: 'ink' as const, count: 90 },
+        { state: 'cancelled', tone: 'faint' as const, count: 10 },
+      ],
+    };
+    const board = run([
+      {
+        type: 'plan',
+        searchId: 'srch1',
+        plan,
+        states: [
+          state('s1', 'done', 1),
+          { ...state('s2', 'done', 132), shown: 2, tally },
+          state('s3', 'done', 7),
+        ],
+        status: 'done',
+      },
+      { type: 'hit', searchId: 'srch1', card: card('s2', 't1', { tone: 'route', alert: true }) },
+      { type: 'hit', searchId: 'srch1', card: card('s2', 't2', { tone: 'caution', alert: true }) },
+      { type: 'hit', searchId: 'srch1', card: card('s3', 'c1') },
+      { type: 'lens', searchId: 'srch1', recordKeys: ['s2:t1', 's2:t2'] },
+    ]);
+    const all = Object.fromEntries(metricsOf(board).map((x) => [x.k, [x.v, x.s]]));
+    expect(all).toMatchObject({
+      DONE: [90, '74%'],
+      'IN PROGRESS': [12, undefined],
+      BACKLOG: [16, undefined],
+      'ON HOLD': [4, '3 LATE'],
+      PEOPLE: [7, undefined],
+    });
+    // under the answer's lens: only what it cites, from the cards
+    const cited = Object.fromEntries(
+      metricsOf(board, lensKeys(board, 'answer')).map((x) => [x.k, [x.v, x.s]])
+    );
+    expect(cited).toMatchObject({ 'IN PROGRESS': [1, undefined], 'ON HOLD': [1, '2 LATE'] });
+    expect(cited.PEOPLE).toEqual([0, undefined]);
+    // the lane's mix bar counts the same records
+    expect(lanesOf(board)[1].tones).toEqual({ route: 12, caution: 4, dim: 16, ink: 90, faint: 10 });
+  });
+
+  it('keeps the server times of a replayed search for the run log', () => {
+    const board = reduceBoard(emptyBoard('srch1'), {
+      type: 'replay',
+      search: {
+        id: 'srch1',
+        plan,
+        status: 'done',
+        states: [
+          {
+            ...state('s1', 'done', 1),
+            startedAt: '2026-10-30T04:12:09.000Z',
+            finishedAt: '2026-10-30T04:12:10.000Z',
+          },
+        ],
+        cards: [],
+        lens: [],
+      } as never,
+    });
+    expect(board.times.s1).toEqual({
+      started: Date.parse('2026-10-30T04:12:09.000Z'),
+      finished: Date.parse('2026-10-30T04:12:10.000Z'),
+    });
+  });
+
+  it('stops waiting when the reply ends mid-search, and the plan legs follow the board', () => {
+    const live = run([
+      {
+        type: 'plan',
+        searchId: 'srch1',
+        plan,
+        states: [state('s1', 'done', 1), state('s2', 'running'), state('s3', 'pending')],
+        status: 'running',
+      },
+      { type: 'step', searchId: 'srch1', state: state('s2', 'running') },
+    ]);
+    const cut = reduceBoard(live, { type: 'cut', searchId: 'srch1' }, 2000);
+    expect(cut.status).toBe('cancelled');
+    expect(Object.values(cut.states).map((s) => s.status)).toEqual([
+      'done',
+      'cancelled',
+      'skipped',
+    ]);
+    expect(lanesOf(cut).map((l) => l.status)).toEqual(['done', 'cancelled']);
+    expect(cut.times.s2).toEqual({ started: 1000, finished: 2000 });
+    // a finished search is left as it is
+    const done = { ...cut, status: 'done' as const };
+    expect(reduceBoard(done, { type: 'cut', searchId: 'srch1' })).toBe(done);
+
+    const part = {
+      searchId: 'srch1',
+      plan,
+      states: [state('s1', 'done', 1), state('s2', 'running'), state('s3', 'pending')],
+      status: 'running' as const,
+    };
+    expect(withBoard(part, cut)).toMatchObject({
+      status: 'cancelled',
+      states: [{ status: 'done' }, { status: 'cancelled' }, { status: 'skipped' }],
+    });
+    expect(withBoard(part, undefined)).toBe(part);
   });
 
   it('takes only stream parts that fit the contract', () => {

@@ -1,6 +1,7 @@
 /* The constellation's render budget, ported from the ai-cockpit's limit.ts: the chart draws at
-   most about 900 nodes plus links, most relevant records first (the lens, alerts, active, large,
-   recent); the rest fold into one "+N more" marker per parent. Pure. */
+   most about 900 nodes plus links, most relevant records first (alerts, active, large, recent);
+   the rest fold into one "+N more" marker per parent. Under the answer's lens only its records
+   compete for the budget. Pure. */
 import { finishGraph, type IGLink, type IGNode, type IGraph, type ITone } from './types';
 
 export const SAFE_DRAW = 900;
@@ -46,8 +47,13 @@ const chainOf = (g: IGraph, id: string) => {
 };
 
 /** Records kept, most relevant first, while their nodes and links fit the budget. */
-function chooseKept(g: IGraph, ranked: IGNode[], budget: number) {
-  const keep = new Set<string>(g.nodes.filter((n) => n.kind !== 'item').map((n) => n.id));
+function chooseKept(g: IGraph, ranked: IGNode[], budget: number, lens: Set<string> | null) {
+  // hubs and people always draw; under a lens only those it cites, with their branch
+  const keep = new Set<string>(
+    g.nodes
+      .filter((n) => n.kind !== 'item' && (!lens || lens.has(n.id)))
+      .flatMap((n) => chainOf(g, n.id))
+  );
   let spent = keep.size;
   for (const n of ranked) {
     const chain = chainOf(g, n.id).filter((id) => !keep.has(id));
@@ -87,8 +93,21 @@ function reduced(g: IGraph, keep: Set<string>, dropped: IGNode[]): IGraph {
   });
 }
 
-export function limitGraph(g: IGraph, budget = SAFE_DRAW, now = Date.now()): ILimited {
-  const items = g.nodes.filter((n) => n.kind === 'item' && !n.overflow);
+export interface ILimitOptions {
+  /** Record ids the answer cites: only they are candidates, as only they are drawn. */
+  lens?: Set<string> | null;
+  /** Most nodes plus links to draw. */
+  budget?: number;
+  now?: number;
+}
+
+export function limitGraph(
+  g: IGraph,
+  { lens = null, budget = SAFE_DRAW, now = Date.now() }: ILimitOptions = {}
+): ILimited {
+  const items = g.nodes.filter(
+    (n) => n.kind === 'item' && !n.overflow && (!lens || lens.has(n.id))
+  );
   const total = items.length;
   if (g.nodes.length + g.links.length <= budget)
     return { graph: g, total, shown: total, hidden: 0 };
@@ -96,14 +115,13 @@ export function limitGraph(g: IGraph, budget = SAFE_DRAW, now = Date.now()): ILi
     .map((n) => ({ n, s: relevance(n, now) }))
     .sort((a, b) => b.s - a.s || (a.n.id < b.n.id ? -1 : 1))
     .map((x) => x.n);
-  // room for the "+N more" markers: one per parent that may lose records
-  const reserve = Math.min(new Set(items.map((n) => n.parent)).size, Math.floor(budget / 10));
-  const keep = chooseKept(g, ranked, budget - reserve);
+  // room for the "+N more" markers: one per parent that may lose records (none under a lens,
+  // which draws only its own records, so a marker would never show)
+  const reserve = lens
+    ? 0
+    : Math.min(new Set(items.map((n) => n.parent)).size, Math.floor(budget / 10));
+  const keep = chooseKept(g, ranked, budget - reserve, lens);
   const shown = ranked.filter((n) => keep.has(n.id)).length;
-  const graph = reduced(
-    g,
-    keep,
-    ranked.filter((n) => !keep.has(n.id))
-  );
+  const graph = reduced(g, keep, lens ? [] : ranked.filter((n) => !keep.has(n.id)));
   return { graph, total, shown, hidden: total - shown };
 }

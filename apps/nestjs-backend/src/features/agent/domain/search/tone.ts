@@ -1,5 +1,9 @@
 import type { ISearchTone } from './search.types';
 
+/** Work not begun or not finished, said by negating a settled or active word. */
+const notYet =
+  /\bnot[\s_-]*(?:yet|started|done|finished|complete)|\bun(?:started|finished|done)|\bincomplete/;
+
 /**
  * State words → tone, so any status-like select colours the same way in every table (ported from
  * the ai-cockpit's graph.ts). Settled = ink, active = route, next = target, caution, backlog = dim,
@@ -12,7 +16,9 @@ export function toneOf(value: unknown): ISearchTone {
   if (!s) return 'none';
   if (/cancel|archiv|drop|reject|void|abandon/.test(s)) return 'faint';
   if (/hold|block|stuck|risk|overdue|late/.test(s)) return 'caution';
-  if (/finish|final|done|complete|closed|paid|deliver|resolved|valid|landed|shipped/.test(s))
+  // before the words it negates ("not started" is not active, "incomplete" not settled)
+  if (notYet.test(s)) return 'target';
+  if (/finish|final|done|complete|closed|paid|deliver|resolved|\bvalid|landed|shipped/.test(s))
     return 'ink';
   if (/todo|to do|ready|next|plan|prepar|queue|unstarted|armed|scheduled/.test(s)) return 'target';
   if (/progress|doing|active|start|initiat|review|test|running|working|engaged/.test(s))

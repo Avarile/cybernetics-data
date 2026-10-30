@@ -118,6 +118,8 @@ export interface IAgentChatOptions {
   onRun: (data: IAgentRunData) => void;
   /** Every other data part (search progress, clarify cards, lenses). */
   onData?: (part: IAgentDataChunk) => void;
+  /** A reply ended: finished, stopped or cut off (after its last data part). */
+  onEnd?: () => void;
 }
 
 /**
@@ -140,5 +142,6 @@ export function createAgentChat(options: IAgentChatOptions): AgentChat {
       if (part.type === AGENT_DATA_PART.run) options.onRun(part.data as IAgentRunData);
       else options.onData?.(part as IAgentDataChunk);
     },
+    onFinish: () => options.onEnd?.(),
   });
 }

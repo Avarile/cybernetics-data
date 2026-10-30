@@ -42,8 +42,9 @@ export const RecordCard = memo(
     onPick,
   }: IRecordCardProps) => {
     const { t } = useTranslation('common');
+    // a source the board does not show (a step shows only its first cards) is named by its field
     const via = card.via
-      ? `${t('agent.cockpit.via', 'via')} ${source ? `${source.short ?? source.table} ${source.title}` : card.via.recordId} · ${card.via.field}`
+      ? `${t('agent.cockpit.via', 'via')} ${source ? `${source.short ?? source.table} ${source.title} · ` : ''}${card.via.field}`
       : undefined;
     return (
       <article

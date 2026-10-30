@@ -1,13 +1,14 @@
 import type { IClarifyOption, ISearchCard } from '@teable/openapi';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
-import { toneMix } from '../../model/metrics';
+import { laneMix } from '../../model/metrics';
 import type { ILane } from '../../model/search-board';
 import s from '../theme/cockpit.module.css';
 import { RecordCard } from './RecordCard';
 
 export interface ITableLaneProps {
   lane: ILane;
+  /** The plan step the lane starts with (0-based), shown as its number. */
   index: number;
   how: string;
   cards: ISearchCard[];
@@ -35,7 +36,7 @@ const statusText: Partial<Record<ILane['status'], string>> = {
 export const TableLane = (p: ITableLaneProps) => {
   const { t } = useTranslation('common');
   const { lane } = p;
-  const mix = toneMix(p.cards);
+  const mix = laneMix(lane, p.cards);
   const total = mix.reduce((n, [, c]) => n + c, 0);
   const count = lane.found > lane.shown ? `${lane.shown}/${lane.found}` : String(lane.shown);
   return (

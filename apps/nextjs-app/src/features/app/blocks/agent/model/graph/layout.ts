@@ -65,7 +65,8 @@ function buildTree(g: IGraph, lens: Set<string> | null): IDatum {
       .sort(order)
       .map(visit)
       .filter((x): x is IDatum => Boolean(x));
-    const self = !lens || lens.has(n.id) || n.kind === 'hub';
+    // under a lens a branch stays only for what it cites: no empty spokes
+    const self = !lens || lens.has(n.id);
     if (!self && !children.length) return null;
     return {
       id: n.id,

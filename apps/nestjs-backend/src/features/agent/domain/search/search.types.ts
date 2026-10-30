@@ -19,4 +19,5 @@ export type {
   IStepSource,
   IStepState,
   IStepStatus,
+  IStepTally,
 } from '@teable/openapi';

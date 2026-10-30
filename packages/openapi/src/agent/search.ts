@@ -102,6 +102,16 @@ export const stepStatusSchema = z.enum([
 ]);
 export type IStepStatus = z.infer<typeof stepStatusSchema>;
 
+export const stepTallySchema = z.object({
+  /** Records counted (found may be larger when a step reads only the first few hundred). */
+  counted: z.number().int(),
+  /** Open records whose deadline or due date passed. */
+  overdue: z.number().int(),
+  /** One row per state value; `state` is empty for records without one. */
+  states: z.array(z.object({ state: z.string(), tone: searchToneSchema, count: z.number().int() })),
+});
+export type IStepTally = z.infer<typeof stepTallySchema>;
+
 export const stepStateSchema = z.object({
   stepId: z.string(),
   status: stepStatusSchema,
@@ -110,6 +120,11 @@ export const stepStateSchema = z.object({
   /** Cards sent (at most the step's limit). */
   shown: z.number().int(),
   error: z.string().optional(),
+  /** Records per state over every record the step read, not only the cards (related steps). */
+  tally: stepTallySchema.optional(),
+  /** When the step started and ended on the server (ISO), for the run log of a replay. */
+  startedAt: z.string().optional(),
+  finishedAt: z.string().optional(),
 });
 export type IStepState = z.infer<typeof stepStateSchema>;
 

@@ -8,6 +8,7 @@ import {
 } from '../../domain/ports';
 import { chooseAnchor, isExactTitle, type IAnchorHit } from '../../domain/search/anchor-choice';
 import { cellText, isArchived, linkValues, projectCard } from '../../domain/search/card-projection';
+import { openFirst, tallyOf } from '../../domain/search/card-tally';
 import type { RelationGraph } from '../../domain/search/relation-graph';
 import type { IFieldRecord, ITableSchema } from '../../domain/search/schema';
 import type {
@@ -163,26 +164,50 @@ export class RunSearch {
       .catch((error) => this.logger.warn(`search ${id} not saved: ${errorText(error)}`));
   }
 
-  /** Cards for a step's records, each sent as it is made; returns how many were shown. */
-  private show(
+  private cardsOf(
     run: IRun,
     step: ISearchStep,
     table: ITableSchema,
     records: IFieldRecord[],
     vias?: Map<string, IVia>
   ) {
+    return records.map((record) =>
+      projectCard({ record, table, step, via: vias?.get(record.id), now: run.now })
+    );
+  }
+
+  /** Sends a step's first cards, each as its own chunk; returns how many were shown. */
+  private show(run: IRun, step: ISearchStep, table: ITableSchema, cards: ISearchCard[]) {
     const seen = run.shownInTable.get(table.id) ?? new Set<string>();
     run.shownInTable.set(table.id, seen);
     let shown = 0;
-    for (const record of records) {
+    for (const card of cards) {
       if (shown >= step.limit || run.cards.length >= MAX_RUN_CARDS) break;
-      const card = projectCard({ record, table, step, via: vias?.get(record.id), now: run.now });
       run.cards.push(card);
-      seen.add(record.id);
+      seen.add(card.recordId);
       shown++;
       run.input.events?.hit({ searchId: run.input.plan.id, card });
     }
     return shown;
+  }
+
+  /**
+   * A step's records as cards: related steps put open work first and count every state, since
+   * they show only their first cards. Later steps follow the records in this order, so what they
+   * reach names a shown card as its source whenever one links to it.
+   */
+  private stepCards(run: IRun, step: ISearchStep, table: ITableSchema, result: IStepRead) {
+    const cards = this.cardsOf(run, step, table, result.records, result.vias);
+    if (step.source.kind !== 'follow' && step.source.kind !== 'reverse') {
+      return { cards, records: result.records };
+    }
+    const ordered = openFirst(cards);
+    const byId = new Map(result.records.map((r) => [r.id, r]));
+    return {
+      cards: ordered,
+      records: ordered.map((c) => byId.get(c.recordId)!),
+      tally: tallyOf(ordered),
+    };
   }
 
   private async runStep(run: IRun, step: ISearchStep, state: IStepState) {
@@ -190,6 +215,7 @@ export class RunSearch {
     const emitStep = () => events?.step({ searchId: plan.id, state: { ...state } });
     const table = graph.table(step.table.id);
     state.status = 'running';
+    state.startedAt = new Date().toISOString();
     emitStep();
     try {
       if (!table) throw new Error(`table ${step.table.name} is gone`);
@@ -208,15 +234,22 @@ export class RunSearch {
       if (result.candidates) {
         state.status = 'needs_choice';
         state.found = result.candidates.length;
-        state.shown = this.show(run, step, table, result.candidates);
+        state.shown = this.show(
+          run,
+          step,
+          table,
+          this.cardsOf(run, step, table, result.candidates)
+        );
         run.status = 'needs_choice';
       } else if (!result.records.length) {
         state.status = 'empty';
         if (step.role === 'anchor') run.status = 'empty';
       } else {
-        run.read.set(step.id, result.records);
+        const { cards, records, tally } = this.stepCards(run, step, table, result);
+        run.read.set(step.id, records);
         state.found = result.found;
-        state.shown = this.show(run, step, table, result.records, result.vias);
+        if (tally) state.tally = tally;
+        state.shown = this.show(run, step, table, cards);
         state.status = 'done';
         if (result.totals) run.totals[step.id] = result.totals;
       }
@@ -225,6 +258,7 @@ export class RunSearch {
       state.error = errorText(error);
       if (step.role === 'anchor') run.status = 'failed';
     }
+    state.finishedAt = new Date().toISOString();
     emitStep();
     this.emitPlan(run);
     await this.save(run);
@@ -432,13 +466,9 @@ export class RunSearch {
       planned: '',
       running: '',
     };
-    return {
-      searchId: plan.id,
-      status,
-      intent: plan.intent,
-      summary: plan.summary,
-      ...(plan.missing.length ? { missing: plan.missing } : {}),
-      steps: plan.steps.map((s, i) => ({
+    const steps = plan.steps.map((s, i) => {
+      const tally = states[i].tally;
+      return {
         step: s.id,
         table: s.table.name,
         purpose: s.purpose,
@@ -446,6 +476,15 @@ export class RunSearch {
         found: states[i].found,
         ...(states[i].error ? { error: states[i].error } : {}),
         ...(totals[s.id] ? { totals: totals[s.id] } : {}),
+        ...(tally
+          ? {
+              byState: Object.fromEntries(
+                tally.states.map((row) => [row.state || 'no state', row.count])
+              ),
+              ...(tally.overdue ? { overdue: tally.overdue } : {}),
+              ...(tally.counted < states[i].found ? { counted: tally.counted } : {}),
+            }
+          : {}),
         records: cards
           .filter((c) => c.stepId === s.id)
           .slice(0, perStep)
@@ -459,10 +498,18 @@ export class RunSearch {
             ...(c.date ? { date: c.date } : {}),
             ...(c.via ? { via: `${c.via.field} of ${c.via.recordId}` } : {}),
           })),
-      })),
-      ...(perStep < modelRecords
+      };
+    });
+    return {
+      searchId: plan.id,
+      status,
+      intent: plan.intent,
+      summary: plan.summary,
+      ...(plan.missing.length ? { missing: plan.missing } : {}),
+      steps,
+      ...(steps.some((s) => s.records.length < s.found)
         ? {
-            listed: `At most ${perStep} records per step are listed here, to fit. The cockpit shows them all; call get_records for the others.`,
+            listed: `At most ${perStep} records per step are listed here, open work first. A step's byState counts every record it read: count from that, not from the list. Call get_records for the others.`,
           }
         : {}),
       next: next[status],

@@ -7,12 +7,20 @@ const PEOPLE = 'g:people';
 interface IShape {
   cards: Map<string, ISearchCard>;
   roleOf: Map<string, ISearchStepRole>;
+  /** Each step's place in the plan. */
+  orderOf: Map<string, number>;
 }
 
 const linkedIds = (c: ISearchCard) => Object.values(c.links ?? {}).flat();
 const role = (shape: IShape, c: ISearchCard) => shape.roleOf.get(c.stepId);
+const order = (shape: IShape, c: ISearchCard) => shape.orderOf.get(c.stepId) ?? 0;
 
-/** Where a record hangs: people on their branch, context on top, the rest under its source. */
+/**
+ * Where a record hangs: people on their branch, context on top, the rest under its source. A
+ * record reached through one the board does not show (a step shows only its first cards) hangs
+ * under a shown record of an earlier step that links to it, so it does not float as its own
+ * branch; earlier steps only, so parents never loop.
+ */
 function parentOf(shape: IShape, c: ISearchCard, context: ISearchCard[]): string | null {
   switch (role(shape, c)) {
     case 'actor':
@@ -26,10 +34,30 @@ function parentOf(shape: IShape, c: ISearchCard, context: ISearchCard[]): string
       );
     default: {
       const via = c.via ? shape.cards.get(c.via.recordId) : undefined;
-      return via && role(shape, via) !== 'actor' ? via.recordId : null;
+      if (via) return role(shape, via) !== 'actor' ? via.recordId : null;
+      const linking = [...shape.cards.values()].find(
+        (o) =>
+          order(shape, o) < order(shape, c) &&
+          role(shape, o) !== 'actor' &&
+          linkedIds(o).includes(c.recordId)
+      );
+      return linking?.recordId ?? null;
     }
   }
 }
+
+/** The people's branch is named after the tables it holds (contacts, payees…). */
+const actorLabel = (board: IBoard) => {
+  const names = [
+    ...new Set(
+      board.plan?.steps
+        .filter((s) => s.role === 'actor')
+        .map((s) => s.table.name.split('_').pop() || s.table.name)
+    ),
+  ];
+  const label = names.join(' · ') || 'people';
+  return label.charAt(0).toUpperCase() + label.slice(1);
+};
 
 const nodeOf = (shape: IShape, c: ISearchCard, parent: string | null): IGNode => {
   const r = role(shape, c);
@@ -82,6 +110,7 @@ function linksOf(shape: IShape, byId: Map<string, IGNode>): IGLink[] {
 export function boardToGraph(board: IBoard): IGraph {
   const shape: IShape = {
     roleOf: new Map(board.plan?.steps.map((s) => [s.id, s.role])),
+    orderOf: new Map(board.plan?.steps.map((s, i) => [s.id, i])),
     cards: new Map(),
   };
   for (const c of board.cards) if (!shape.cards.has(c.recordId)) shape.cards.set(c.recordId, c);
@@ -89,11 +118,12 @@ export function boardToGraph(board: IBoard): IGraph {
   const context = all.filter((c) => role(shape, c) === 'context');
   const nodes: IGNode[] = all.map((c) => nodeOf(shape, c, parentOf(shape, c, context)));
   if (all.some((c) => role(shape, c) === 'actor')) {
+    const label = actorLabel(board);
     nodes.unshift({
       id: PEOPLE,
       kind: 'hub',
-      label: 'People',
-      short: 'PEOPLE',
+      label,
+      short: label.toUpperCase(),
       parent: null,
       tone: 'none',
     });

@@ -55,6 +55,21 @@ const rows: Record<string, IFieldRecord[]> = {
   tblKnowledges: [{ id: 'recK1', fields: { title: 'D3 notes', is_active: true } }],
   tblGoals: [{ id: 'recG1', fields: { title: 'Ship the agent', is_active: true } }],
 };
+// a big project whose open tasks come last in its link cell: 55 closed, then 5 in progress
+const bigTasks = Array.from({ length: 60 }, (_, i) => ({
+  id: `recB${i}`,
+  fields: { title: `Big ${i}`, progress: i < 55 ? 'closed' : 'in-progress', is_active: true },
+}));
+rows.tblProjects.push({
+  id: 'recP3',
+  fields: {
+    title: 'Big board',
+    progress: 'in-progress',
+    is_active: true,
+    tasks: bigTasks.map((t) => ({ id: t.id, title: t.fields.title })),
+  },
+});
+rows.tblTasks.push(...bigTasks);
 const of = (t: ITableSchema) => rows[t.id] ?? [];
 
 const reader: ISearchReaderPort = {
@@ -137,6 +152,11 @@ describe('RunSearch', () => {
       field: 'assigned_to',
     });
     expect(log.save).toHaveBeenCalledTimes(6);
+    expect(result.states[1].tally?.states.map((s) => [s.state, s.count])).toEqual([
+      ['in-progress', 1],
+      ['closed', 1],
+    ]);
+    expect(result.states[2].tally).toBeUndefined();
     const forModel = result.forModel as { steps: { records: unknown[] }[]; next: string };
     expect(forModel.steps[1].records).toEqual([
       {
@@ -149,6 +169,36 @@ describe('RunSearch', () => {
       { id: 'recT2', title: 'Voice', state: 'closed', assigned_to: 'Ava', via: 'tasks of recP1' },
     ]);
     expect(forModel.next).toMatch(/highlight_records/);
+  });
+
+  it('shows open work first and counts every state, not only the cards (§6.6)', async () => {
+    const { runner, events, sink } = setup();
+    const result = await runner.run({ plan: plan('Big board'), graph, single: true, events: sink });
+    const tasks = result.states[1];
+    expect([tasks.found, tasks.shown]).toEqual([60, 50]);
+    expect(tasks.tally).toEqual({
+      counted: 60,
+      overdue: 0,
+      states: [
+        { state: 'in-progress', tone: 'route', count: 5 },
+        { state: 'closed', tone: 'ink', count: 55 },
+      ],
+    });
+    // the five open tasks lead the lane, though they come last in the link cell
+    const shown = events.filter((e) => e.startsWith('hit:s2:')).slice(0, 5);
+    expect(shown).toEqual(
+      ['recB55', 'recB56', 'recB57', 'recB58', 'recB59'].map((id) => `hit:s2:${id}`)
+    );
+    expect(tasks.startedAt && tasks.finishedAt).toBeTruthy();
+
+    type IView = { steps: { byState?: object; records: unknown[] }[]; listed?: string };
+    const view = result.forModel as IView;
+    expect(Object.entries(view.steps[1].byState ?? {})).toEqual([
+      ['in-progress', 5],
+      ['closed', 55],
+    ]);
+    expect(view.steps[1].records).toHaveLength(30);
+    expect(view.listed).toMatch(/byState/);
   });
 
   it('lists fewer records per step until the result fits its budget', async () => {
