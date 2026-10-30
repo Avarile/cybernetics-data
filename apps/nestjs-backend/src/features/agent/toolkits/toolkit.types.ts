@@ -48,6 +48,8 @@ export interface IAgentToolDef<I = any, O = unknown> {
    * as untrusted data (design §9.3).
    */
   untrusted?: boolean;
+  /** Top-level output keys kept whole when the result is cut to the budget. */
+  keepOnCap?: readonly string[];
   execute(input: I, ctx: IToolContext): Promise<O>;
 }
 

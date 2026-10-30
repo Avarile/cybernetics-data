@@ -4,6 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { clarifyReasonSchema, searchIntentSchema, searchViewSchema } from '@teable/openapi';
 import type { IClarifyPart } from '@teable/openapi';
 import { z } from 'zod';
+import { AiDataConfig, type IAiDataConfig } from '../../../../configs/ai-data.config';
 import { CustomHttpException } from '../../../../custom.exception';
 import { PlanSearch } from '../../application/search/plan-search.usecase';
 import { RunSearch } from '../../application/search/run-search.usecase';
@@ -119,7 +120,8 @@ export class InvestigateToolkit implements IToolkit, OnModuleInit {
     private readonly registry: ToolkitRegistry,
     private readonly planner: PlanSearch,
     private readonly runner: RunSearch,
-    @Inject(SEARCH_LOG_PORT) private readonly log: ISearchLogPort
+    @Inject(SEARCH_LOG_PORT) private readonly log: ISearchLogPort,
+    @AiDataConfig() private readonly limits: IAiDataConfig
   ) {
     this.tools = [
       defineTool({
@@ -128,6 +130,8 @@ export class InvestigateToolkit implements IToolkit, OnModuleInit {
           'Plan a search for the question and run it table by table; the cockpit shows each table and every record found as it goes. Name the intent and the anchor (the words or records the question is about); the plan follows the links between tables. Returns each step with its records (compact). Status needs_choice: several records match, call clarify; empty: nothing matched.',
         input: planInput,
         untrusted: true,
+        // the turn protocol reads the status, and the model needs what to do next
+        keepOnCap: ['searchId', 'status', 'next'],
         execute: async (input, ctx) => {
           if (!ctx.threadId) throw notFoundSearch();
           const planned = await this.planner.plan({
@@ -140,6 +144,7 @@ export class InvestigateToolkit implements IToolkit, OnModuleInit {
             ...planned,
             events: ctx.events,
             signal: ctx.abortSignal,
+            resultChars: this.limits.maxResponseChars,
           });
           return result.forModel;
         },

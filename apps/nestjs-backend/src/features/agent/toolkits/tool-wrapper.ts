@@ -19,11 +19,16 @@ export interface IToolWrapperDeps {
 
 const logger = new Logger('AgentTool');
 
-/** Over budget: the model gets a cut-off preview it can tell is incomplete. */
-export function capResult(value: unknown, maxChars: number): unknown {
+/**
+ * Over budget: the model gets a cut-off preview it can tell is incomplete. The top-level keys
+ * named in `keep` stay whole beside it (a status the turn protocol reads, say).
+ */
+export function capResult(value: unknown, maxChars: number, keep: readonly string[] = []): unknown {
   const json = JSON.stringify(value) ?? 'null';
   if (json.length <= maxChars) return value;
+  const whole = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
   return {
+    ...Object.fromEntries(keep.filter((key) => key in whole).map((key) => [key, whole[key]])),
     truncated: true,
     note: `Result cut to ${maxChars} of ${json.length} characters. Ask for less (fewer rows or fields).`,
     preview: json.slice(0, maxChars),
@@ -31,8 +36,13 @@ export function capResult(value: unknown, maxChars: number): unknown {
 }
 
 /** Untrusted outputs are fenced off so the model treats them as data (design §9.3). */
-export function shapeResult(value: unknown, untrusted: boolean, maxChars: number): unknown {
-  const capped = capResult(value, maxChars);
+export function shapeResult(
+  value: unknown,
+  untrusted: boolean,
+  maxChars: number,
+  keep?: readonly string[]
+): unknown {
+  const capped = capResult(value, maxChars, keep);
   return untrusted ? { untrusted_data: capped, notice: UNTRUSTED_NOTICE } : capped;
 }
 
@@ -71,7 +81,7 @@ export function wrapTool(def: IAgentToolDef, ctx: IToolContext, deps: IToolWrapp
           { runId: ctx.runId, actorUserId: ctx.actorUserId },
           () => def.execute(input, { ...ctx, abortSignal: signal })
         );
-        result = shapeResult(output, Boolean(def.untrusted), deps.maxResultChars);
+        result = shapeResult(output, Boolean(def.untrusted), deps.maxResultChars, def.keepOnCap);
       } catch (error) {
         status = 'error';
         result = { error: toToolError(error, def.name) };

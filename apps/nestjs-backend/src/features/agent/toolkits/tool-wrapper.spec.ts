@@ -5,6 +5,7 @@ import { CustomHttpException } from '../../../custom.exception';
 import type { IAgentProfile } from '../domain/entities';
 import type { IAuditEntry } from '../domain/ports';
 import { auditJson } from '../domain/redact';
+import { phaseAfter } from '../domain/search/turn-protocol';
 import type { AgentExecutionContext } from '../infrastructure/execution-context';
 import { capResult, shapeResult, UNTRUSTED_NOTICE, wrapTool } from './tool-wrapper';
 import type { IAgentToolDef, IToolContext } from './toolkit.types';
@@ -85,6 +86,24 @@ describe('tool-wrapper', () => {
       untrusted_data: { truncated: boolean };
     };
     expect(out.untrusted_data.truncated).toBe(true);
+  });
+
+  it('keeps the named keys of a capped result, so the turn protocol still reads the status', async () => {
+    const { deps } = setup();
+    const search = {
+      ...echo,
+      name: 'plan_search',
+      untrusted: true,
+      keepOnCap: ['status', 'next', 'absent'],
+      execute: async () => ({ status: 'done', steps: ['z'.repeat(1000)], next: 'Answer.' }),
+    };
+    const out = (await call(wrapTool(search, ctx, deps), { text: '' })) as {
+      untrusted_data: Record<string, unknown>;
+    };
+    expect(out.untrusted_data).toMatchObject({ status: 'done', next: 'Answer.', truncated: true });
+    expect(out.untrusted_data).not.toHaveProperty('steps');
+    expect(out.untrusted_data).not.toHaveProperty('absent');
+    expect(phaseAfter('intent', [{ toolName: 'plan_search', output: out }])).toBe('answer');
   });
 
   it('turns errors into results the model can read', async () => {

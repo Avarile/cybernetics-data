@@ -151,6 +151,30 @@ describe('RunSearch', () => {
     expect(forModel.next).toMatch(/highlight_records/);
   });
 
+  it('lists fewer records per step until the result fits its budget', async () => {
+    const { runner } = setup();
+    const run = (resultChars?: number) =>
+      runner.run({ plan: plan('Cybernetics Cockpit'), graph, single: true, resultChars });
+    const size = (r: { forModel: unknown }) => JSON.stringify(r.forModel).length;
+    type IView = { status: string; steps: { records: unknown[] }[]; listed?: string };
+
+    const full = await run();
+    expect((full.forModel as IView).listed).toBeUndefined();
+
+    const budget = size(full) - 1;
+    const fitted = await run(budget);
+    const view = fitted.forModel as IView;
+    expect(size(fitted)).toBeLessThanOrEqual(budget);
+    expect(view.status).toBe('done');
+    expect(view.listed).toMatch(/records per step are listed here/);
+
+    // nothing fits: no records at all, but the status and what to do next stay
+    const bare = (await run(10)).forModel as IView & { next: string };
+    expect(bare.steps.every((s) => s.records.length === 0)).toBe(true);
+    expect(bare.status).toBe('done');
+    expect(bare.next).toMatch(/highlight_records/);
+  });
+
   it('stops for a choice when several projects match', async () => {
     const { runner, events, sink } = setup();
     const result = await runner.run({ plan: plan('cockpit'), graph, single: true, events: sink });

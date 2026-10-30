@@ -25,7 +25,7 @@ export const MAX_RUN_CARDS = 500;
 const fetchCap = 300;
 /** Full-text hits considered for an anchor. */
 const anchorPool = 20;
-/** What the model gets per step. */
+/** Most records the model gets per step. */
 const modelRecords = 30;
 
 type IVia = NonNullable<ISearchCard['via']>;
@@ -45,6 +45,8 @@ export interface IRunInput {
   events?: ISearchEventSink;
   signal?: AbortSignal;
   now?: Date;
+  /** Characters the model's result may take; fewer records per step are listed to fit. */
+  resultChars?: number;
 }
 
 /** One run's working state. */
@@ -140,7 +142,7 @@ export class RunSearch {
       status: run.status,
       states: run.states,
       cards: run.cards,
-      forModel: this.forModel(plan, run.states, run.cards, run.totals, run.status),
+      forModel: this.forModel(run),
     };
   }
 
@@ -400,13 +402,24 @@ export class RunSearch {
     return { records, found: records.length, vias };
   }
 
-  private forModel(
-    plan: ISearchPlan,
-    states: IStepState[],
-    cards: ISearchCard[],
-    totals: Record<string, Record<string, number>>,
-    status: ISearchStatus
-  ) {
+  /**
+   * What the model reads: whole records, halving how many each step lists until the result fits
+   * its budget, so it is never cut off mid-record (or without its status).
+   */
+  private forModel(run: IRun) {
+    const budget = run.input.resultChars ?? Infinity;
+    let perStep = modelRecords;
+    let view = this.modelView(run, perStep);
+    while (perStep > 0 && JSON.stringify(view).length > budget) {
+      perStep = Math.floor(perStep / 2);
+      view = this.modelView(run, perStep);
+    }
+    return view;
+  }
+
+  private modelView(run: IRun, perStep: number) {
+    const { plan } = run.input;
+    const { states, cards, totals, status } = run;
     const anchor = plan.steps[0];
     const text = anchor?.source.kind === 'search' ? anchor.source.text : anchor?.table.name;
     const next: Record<ISearchStatus, string> = {
@@ -435,7 +448,7 @@ export class RunSearch {
         ...(totals[s.id] ? { totals: totals[s.id] } : {}),
         records: cards
           .filter((c) => c.stepId === s.id)
-          .slice(0, modelRecords)
+          .slice(0, perStep)
           .map((c) => ({
             id: c.recordId,
             title: c.title,
@@ -447,6 +460,11 @@ export class RunSearch {
             ...(c.via ? { via: `${c.via.field} of ${c.via.recordId}` } : {}),
           })),
       })),
+      ...(perStep < modelRecords
+        ? {
+            listed: `At most ${perStep} records per step are listed here, to fit. The cockpit shows them all; call get_records for the others.`,
+          }
+        : {}),
       next: next[status],
     };
   }
