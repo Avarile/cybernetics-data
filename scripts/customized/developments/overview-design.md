@@ -1,6 +1,6 @@
 # Agent cockpit: the overview constellation (the default stage)
 
-Status: **designed 2026-10-30, waiting for the admin's decisions (§13).** Branch `feat/agent-cockpit`,
+Status: **designed and approved 2026-10-30 (every default of §13); P0–P5 built the same day, P6 (the run in real browsers) waits for the admin.** As built: §15. Branch `feat/agent-cockpit`,
 on top of the review fixes of 2026-10-30 (uncommitted at the time of writing). Paths are relative to
 `apps/nextjs-app/src/features/app/blocks/agent/` (frontend) or `apps/nestjs-backend/src/features/`
 (backend) unless they start with `apps/` or `packages/`. The reference is
@@ -646,3 +646,60 @@ Defaults are what this design assumes.
 | A switch every minute is annoying, or noisy for screen readers | holds while looking, ⏸, `P`; timed switches are not announced |
 | Stale numbers | 60 s cache on both sides, refetched each time the dataset comes round (every 4 minutes); `UPDATED` shows the age; live push can come later from the base graph's existing invalidation hook |
 | Secrets in values | secret-looking and attachment fields are never in the projection; the encoder reads only the fields the spec names |
+
+---
+
+## 15. As built (2026-10-30)
+
+### 15.1 Commits
+
+| Phase | Commit | What |
+|---|---|---|
+| — | `29e81e2d` | the cockpit review fixes this design was written on top of, committed first |
+| P0 | `a9dde169` | base graph: `valueFieldIds` per table, `values` on record nodes, ETag fingerprint |
+| P1 | `dd984044` | `domain/overview` (datasets, resolve, encode) on a fixture of the live schema; the openapi contract |
+| P2 | `68d007a9` | `GET /api/agent/overview/:dataset`: port, base-graph adapter, `GetOverview`, controller, e2e |
+| P3 | `25bda797` | frontend model: datasets and legends, overview → graph, readout numbers, cycle reducer, trace by graph |
+| P4 | `8a1a4fca` | the overview stage: store, hooks, keys, head, node strip, ASK, i18n en/zh |
+| P5 | `ae887288` | rotation as one layer |
+
+Nothing is pushed.
+
+### 15.2 Tests
+
+- Backend unit: base graph 51, agent 194 (including `domain/overview` 8 and `GetOverview` 2).
+- e2e on `agent-e2e-pg`: `agent-overview` (3: work from real linked tables, a dataset with
+  missing tables, 304 / 403 / 400), `agent-search` (5) and `base-graph` (17) unchanged.
+- Frontend: 122 specs in `blocks/agent/`, including the cycle, the overview stage, its keys, ASK,
+  and the rotation running without a layout.
+- Typecheck and lint pass for openapi, the backend and the frontend. `next build` was not run.
+
+### 15.3 Differences from the design
+
+- **The contract came with P1**, not P2, because the domain encoder returns its types.
+- **PEOPLE: the people are labelled branches** (hubs) rather than dots with a tone taken from
+  their tasks. The radial layout only labels leaves and hubs, and a person with open work is not a
+  leaf. Their work shows through their tasks' tones. People without open work stay on the chart
+  (`keepEmpty`).
+- **WORK: referenced knowledge entries are dots** under REFERENCES (pruned items), not diamonds,
+  so a diamond always means a person.
+- **Server cache by time**: 60 s per admin and dataset. The base graph's cheap ETag steps aside
+  whenever a value field is computed (`updated_at` is a `lastModifiedTime`), so every rebuild
+  assembles. The endpoint still answers 304 when the content is unchanged.
+- **The switch is a 400 ms fade-in** of the new dataset, which is mounted fresh. This resets the
+  zoom as designed, and the turn starts again from 0.
+- **The keys read the mode from the DOM** (`data-stage` on the stage section), so they follow what
+  is on screen while a replayed search is still loading.
+- **The overview needs the agent ready.** When it is not, the stage shows STANDBY with the setup
+  link, as before.
+- **Not done**: a styled tooltip (still the browser's `<title>`); keyboard focus on nodes
+  (`[` `]` pins people, nothing else).
+
+### 15.4 Still to check by hand (P6)
+
+With the cockpit's P8:
+- each dataset on the real data base, and leaving the cockpit cycling for 10 minutes;
+- holds: pointer, pin, a picked dataset, `P`, a hidden tab;
+- ASK into the composer;
+- 1440, 1024 and 390 px; MONO and CYBERPUNK; reduced motion;
+- CPU while turning, compared with before P5.
