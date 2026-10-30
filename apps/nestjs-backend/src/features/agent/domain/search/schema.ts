@@ -10,6 +10,8 @@ export interface ISchemaField {
     foreignTableId: string;
     relationship: 'oneOne' | 'oneMany' | 'manyOne' | 'manyMany';
     isOneWay: boolean;
+    /** The other side of a two-way link. */
+    symmetricFieldId?: string;
   };
 }
 

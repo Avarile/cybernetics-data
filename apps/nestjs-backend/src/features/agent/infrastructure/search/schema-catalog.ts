@@ -14,6 +14,7 @@ interface IFieldOptions {
   foreignTableId?: string;
   relationship?: NonNullable<ISchemaField['link']>['relationship'];
   isOneWay?: boolean;
+  symmetricFieldId?: string;
   choices?: { name: string }[];
 }
 
@@ -122,6 +123,9 @@ export class SchemaCatalog implements ISchemaCatalogPort {
                     foreignTableId: options.foreignTableId!,
                     relationship: options.relationship ?? 'manyMany',
                     isOneWay: Boolean(options.isOneWay),
+                    ...(options.symmetricFieldId
+                      ? { symmetricFieldId: options.symmetricFieldId }
+                      : {}),
                   },
                 }
               : {}),
