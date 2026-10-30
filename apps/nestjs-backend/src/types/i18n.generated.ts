@@ -2071,6 +2071,7 @@ export type I18nTranslations = {
                 "title": string;
                 "approve": string;
                 "deny": string;
+                "denied": string;
             };
             "composer": {
                 "skills": string;
@@ -2172,6 +2173,7 @@ export type I18nTranslations = {
                     "speaking": string;
                     "approval": string;
                     "paused": string;
+                    "searching": string;
                 };
                 "error": {
                     "blocked": string;
@@ -2208,6 +2210,146 @@ export type I18nTranslations = {
                     "image_one": string;
                     "image_other": string;
                     "error": string;
+                    "board": string;
+                    "empty": string;
+                    "choice_zero": string;
+                    "choice_one": string;
+                    "choice_other": string;
+                };
+                "and": string;
+                "or": string;
+            };
+            "cockpit": {
+                "title": string;
+                "label": string;
+                "toggle": string;
+                "offButton": string;
+                "thread": string;
+                "newThread": string;
+                "focus": string;
+                "clearFocus": string;
+                "table": string;
+                "rows": string;
+                "status": string;
+                "linking": string;
+                "live": string;
+                "working": string;
+                "needsSetup": string;
+                "off": string;
+                "diag": {
+                    "status": string;
+                    "checked": string;
+                    "error": string;
+                    "warning": string;
+                };
+                "palette": string;
+                "stage": string;
+                "standby": string;
+                "standbyText": string;
+                "lens": {
+                    "label": string;
+                    "answer": string;
+                    "retrieved": string;
+                    "searching": string;
+                    "off": string;
+                    "searchingChip": string;
+                    "answerChip": string;
+                };
+                "lane": {
+                    "running": string;
+                    "empty": string;
+                    "failed": string;
+                    "needs_choice": string;
+                    "cancelled": string;
+                };
+                "noRecords": string;
+                "openTable": string;
+                "openRecord": string;
+                "via": string;
+                "pick": string;
+                "archived": string;
+                "overdue": string;
+                "missing": string;
+                "ask": string;
+                "askLabel": string;
+                "new": string;
+                "plan": string;
+                "planLabel": string;
+                "question": string;
+                "orType": string;
+                "picked": string;
+                "thinking": string;
+                "suggest": {
+                    "project": string;
+                    "tasks": string;
+                    "knowledge": string;
+                    "money": string;
+                };
+                "view": {
+                    "label": string;
+                    "board": string;
+                    "constellation": string;
+                    "tree": string;
+                    "overview": string;
+                    "bundle": string;
+                };
+                "showing": string;
+                "overview": {
+                    "label": string;
+                    "title": string;
+                    "work": string;
+                    "knowledge": string;
+                    "people": string;
+                    "finance": string;
+                    "pause": string;
+                    "next": string;
+                    "held": {
+                        "pointer": string;
+                        "pin": string;
+                        "picked": string;
+                        "paused": string;
+                        "hidden": string;
+                    };
+                    "open": string;
+                    "ask": string;
+                    "unpin": string;
+                    "askDraft": string;
+                    "nothing": string;
+                    "reading": string;
+                    "updated": string;
+                    "records": string;
+                    "truncated": string;
+                };
+                "dataset": string;
+                "sources": string;
+                "expand": string;
+                "collapse": string;
+                "readout": {
+                    "cited": string;
+                    "found": string;
+                };
+                "rail": {
+                    "branches": {
+                        "work": string;
+                        "knowledge": string;
+                        "people": string;
+                        "finance": string;
+                    };
+                    "feed": {
+                        "work": string;
+                        "knowledge": string;
+                        "people": string;
+                        "finance": string;
+                    };
+                    "branchHint": string;
+                    "feedHint": string;
+                    "noVectors": string;
+                    "noFeed": string;
+                    "tables": string;
+                    "tablesHint": string;
+                    "log": string;
+                    "logHint": string;
+                    "noSteps": string;
                 };
             };
         };
