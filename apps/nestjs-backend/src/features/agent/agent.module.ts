@@ -23,6 +23,7 @@ import { CancelRun } from './application/chat/cancel-run.usecase';
 import { ResumeTurn } from './application/chat/resume-turn.usecase';
 import { RunTurn } from './application/chat/run-turn.usecase';
 import { TurnGate } from './application/chat/turn-gate';
+import { CockpitRecords } from './application/cockpit/cockpit-records';
 import { CockpitScope } from './application/cockpit/cockpit-scope';
 import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
@@ -187,6 +188,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     ConfigureAgent,
     ManageCredentials,
     CockpitScope,
+    CockpitRecords,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },
