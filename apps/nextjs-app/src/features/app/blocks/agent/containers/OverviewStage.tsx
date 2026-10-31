@@ -30,7 +30,7 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
   const ov = useOverview(true);
   useOverviewCycle(true);
   const store = useCockpitStore();
-  const { cycle, cycleEvent, setFocus, setDraft, pinOverview } = store;
+  const { cycle, cycleEvent, pinOverview } = store;
   const { info } = ov;
   const vectors = useMemo(
     () => (ov.graph ? overviewVectors(ov.graph, info) : []),
@@ -61,24 +61,10 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
   );
   /** A record's kind ("TASK"): the server's short, which the chart leaves out of its labels. */
   const kindOf = (id: string) => ov.vo?.nodes.find((n) => n.id === id)?.short ?? undefined;
-  /** ASK: the agent is pointed at the record, the composer gets the question to send or change. */
-  const ask = (node: IGNode) => {
-    if (!ov.vo || !node.recordId) return;
-    setFocus({
-      baseId: ov.vo.baseId,
-      tableId: node.tableId,
-      tableName: node.table?.toUpperCase(),
-      rows: 1,
-      recordIds: [node.recordId],
-    });
-    const what = (kindOf(node.id) ?? node.table ?? '').toLowerCase();
-    setDraft(
-      t('agent.cockpit.overview.askDraft', {
-        what,
-        title: node.label,
-        defaultValue: `Tell me about the ${what} "${node.label}"`,
-      })
-    );
+  /** READ: the pinned record in the reader (scope design §8.1). */
+  const read = (node: IGNode) => {
+    if (node.recordId && node.tableId)
+      useSearchStore.getState().openRecord(node.recordId, node.tableId);
   };
 
   const missing = ov.vo?.missing.length
@@ -171,7 +157,7 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
             kind={kindOf(ov.pinned.id)}
             baseId={ov.vo.baseId}
             onLeave={store.close}
-            onAsk={ask}
+            onRead={read}
             onClose={unpin}
           />
         )

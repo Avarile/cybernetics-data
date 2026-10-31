@@ -1,6 +1,8 @@
 import { useTranslation } from 'next-i18next';
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAgentStatus } from '../hooks/useAgentData';
+import { useRecordReader } from '../hooks/useRecordReader';
 import { chooseBase, holdTable, useScope } from '../hooks/useScope';
 import { useTableSearch } from '../hooks/useTableSearch';
 import { parseInput, resolveName, suggest, type ISuggestion } from '../model/commands';
@@ -9,6 +11,7 @@ import { useCockpitStore } from '../state/cockpit-store';
 import { useSearchStore } from '../state/search-store';
 import { AskLog } from '../ui/ask/AskLog';
 import { AgentComposer } from '../ui/ask/Composer';
+import { RecordModal } from '../ui/stage/RecordModal';
 import s from '../ui/theme/cockpit.module.css';
 import p from '../ui/theme/panels.module.css';
 import { useVoiceConversation } from '../voice/useVoiceConversation';
@@ -117,6 +120,10 @@ export const AskContainer = () => {
     disabled: false,
     send: (text) => void submit(text, 'voice'),
   });
+  // the reader speaks through this panel's voice, so there is one queue and one microphone
+  const reader = useRecordReader(voice);
+  const cockpit = typeof document === 'undefined' ? null : document.querySelector('[data-cockpit]');
+  const leave = () => useCockpitStore.getState().close();
   const clear = () => {
     voice.stopSpeech();
     const store = useSearchStore.getState();
@@ -147,6 +154,18 @@ export const AskContainer = () => {
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
         <div className={p.backdrop} onClick={() => setExpanded(false)} />
       )}
+      {reader.open &&
+        createPortal(
+          <RecordModal
+            record={reader.record}
+            loading={reader.loading}
+            error={reader.error}
+            summary={reader.summary}
+            onClose={reader.close}
+            onLeave={leave}
+          />,
+          cockpit ?? document.body
+        )}
       <section
         className={`${p.panel} ${p.ask}`}
         data-expanded={expanded}

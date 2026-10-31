@@ -1,0 +1,146 @@
+/* The record reader (scope design §8.1): a glass panel in the middle of the cockpit, over the
+   stage and the rail. Tokens come from cockpit.module.css. */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--void) 72%, transparent);
+  backdrop-filter: blur(2px);
+}
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: min(860px, 92vw);
+  max-height: min(80vh, 900px);
+  border: 1px solid var(--bezel-2);
+  background: color-mix(in srgb, var(--void) 94%, transparent);
+  box-shadow: 0 30px 80px color-mix(in srgb, var(--void) 85%, transparent);
+  outline: none;
+}
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--bezel);
+}
+.head b {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font: 600 13px/1.3 var(--f-data);
+  letter-spacing: 0.06em;
+}
+.table {
+  color: var(--dim);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+.action {
+  border: 1px solid var(--bezel-2);
+  background: transparent;
+  color: var(--dim);
+  padding: 3px 8px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.action:hover {
+  color: var(--ink);
+  border-color: var(--ink-2);
+}
+.body {
+  overflow: auto;
+  padding: 12px 16px 16px;
+  display: grid;
+  gap: 14px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bezel-2) transparent;
+}
+.body h3 {
+  margin: 0 0 6px;
+  font: 600 9.5px/1.2 var(--f-data);
+  letter-spacing: 0.16em;
+  color: var(--dim);
+}
+.summary {
+  border-left: 2px solid var(--route);
+  padding-left: 10px;
+}
+.summary p {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.pending {
+  color: var(--dim) !important;
+  letter-spacing: 0.12em;
+  font-size: 10px !important;
+}
+.note {
+  margin: 6px 0 0;
+  color: var(--caution);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.note a {
+  color: var(--target);
+  text-decoration: underline;
+}
+.markdown {
+  color: var(--ink-2);
+  font-family: var(--f-body);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.markdown :global(h1) {
+  font-size: 17px;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+.markdown :global(h2) {
+  font-size: 13px;
+  color: var(--ink);
+  margin: 14px 0 4px;
+  letter-spacing: 0.04em;
+}
+.markdown :global(table) {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+}
+.markdown :global(th),
+.markdown :global(td) {
+  border: 1px solid var(--bezel);
+  padding: 3px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.markdown :global(th) {
+  color: var(--dim);
+  font-weight: 500;
+}
+.markdown :global(code) {
+  color: var(--target);
+}
+@media (max-width: 720px) {
+  .modal {
+    width: 100vw;
+    max-height: 100vh;
+    height: 100vh;
+  }
+  .backdrop {
+    padding: 0;
+  }
+}

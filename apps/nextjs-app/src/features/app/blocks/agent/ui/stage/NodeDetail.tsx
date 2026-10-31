@@ -6,14 +6,14 @@ import o from '../theme/overview.module.css';
 
 /**
  * The pinned node of the overview (overview design §7): what it is, its lines, the record in its
- * table, and ASK, which points the agent at it.
+ * table, and READ, which opens it in the cockpit's reader (scope design §8.1).
  */
 export const NodeDetail = ({
   node,
   kind,
   baseId,
   onLeave,
-  onAsk,
+  onRead,
   onClose,
 }: {
   node: IGNode;
@@ -22,7 +22,7 @@ export const NodeDetail = ({
   baseId: string;
   /** Following the link leaves the cockpit. */
   onLeave: () => void;
-  onAsk: (node: IGNode) => void;
+  onRead: (node: IGNode) => void;
   onClose: () => void;
 }) => {
   const { t } = useTranslation('common');
@@ -51,8 +51,8 @@ export const NodeDetail = ({
           </Link>
         )}
         {record && (
-          <button type="button" className={s.knob} onClick={() => onAsk(node)}>
-            {t('agent.cockpit.overview.ask', 'ASK')}
+          <button type="button" className={s.knob} onClick={() => onRead(node)}>
+            {t('agent.cockpit.overview.read', 'READ')}
           </button>
         )}
         <button

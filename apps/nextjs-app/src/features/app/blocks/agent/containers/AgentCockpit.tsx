@@ -41,6 +41,7 @@ export const AgentCockpit = () => {
     <div
       ref={root}
       role="dialog"
+      data-cockpit
       aria-modal="true"
       aria-label={t('agent.cockpit.label', 'Agent cockpit')}
       data-palette={palette}

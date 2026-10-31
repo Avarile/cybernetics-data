@@ -40,8 +40,8 @@ interface ISearchState {
   forced: string[];
   /** The result clicked last. */
   selected?: string;
-  /** The record in the reader (scope design §8). */
-  record?: { tableId: string; recordId: string };
+  /** The record in the reader (scope design §8); `opened` tells one opening from the next. */
+  record?: { tableId: string; recordId: string; opened: number };
   log: IAskLogEntry[];
   setBase: (baseId: string) => void;
   setTables: (tables: ICockpitTable[]) => void;
@@ -86,9 +86,9 @@ export const useSearchStore = create<ISearchState>()(
         set({
           forced: forceFirst(get().forced, recordId),
           selected: recordId,
-          record: { recordId, tableId },
+          record: { recordId, tableId, opened: Date.now() },
         }),
-      openRecord: (recordId, tableId) => set({ record: { recordId, tableId } }),
+      openRecord: (recordId, tableId) => set({ record: { recordId, tableId, opened: Date.now() } }),
       closeRecord: () => set({ record: undefined }),
       addLog: (kind, text) =>
         set({ log: [...get().log, { id: ++logIds, t: Date.now(), kind, text }].slice(-LOG_MAX) }),

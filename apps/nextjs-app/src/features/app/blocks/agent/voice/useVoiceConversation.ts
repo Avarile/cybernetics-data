@@ -15,6 +15,7 @@ import {
   defaultDescriber,
   defaultPointerText,
   listed,
+  splitSentences,
 } from './speech-script';
 import type { ISpeechDescriber, ISpeechPointerKind, ISpeechSegment } from './speech-script';
 import type { IListenerError, IListenerState } from './voice-listener';
@@ -124,6 +125,11 @@ export interface IVoiceConversation {
   retry: () => void;
   /** Stop: nothing more of this reply is said. */
   stopSpeech: () => void;
+  /**
+   * Says a text that is not a reply, once per `id` (scope design §8.3: the agent's summary of a
+   * record). Nothing happens with voice off.
+   */
+  say: (id: string, text: string) => void;
   tapToHear: () => void;
   browserVoices: () => Promise<SpeechSynthesisVoice[]>;
   previewVoice: (voice: SpeechSynthesisVoice) => void;
@@ -310,6 +316,16 @@ export function useVoiceConversation(options: IVoiceConversationOptions): IVoice
     silencedRef.current = last?.id;
     queue.stop();
   };
+  const say = useCallback(
+    (id: string, text: string) => {
+      if (!enabled) return;
+      const segments = splitSentences(text, true).map(
+        (sentence, i): ISpeechSegment => ({ id: `s${i}`, kind: 'prose', text: sentence })
+      );
+      queue.enqueue(id, segments);
+    },
+    [enabled, queue]
+  );
 
   // stable, so the picker can load voices in an effect
   const browser = engines.browser instanceof BrowserVoiceEngine ? engines.browser : undefined;
@@ -348,6 +364,7 @@ export function useVoiceConversation(options: IVoiceConversationOptions): IVoice
       listener.resume();
     },
     stopSpeech,
+    say,
     tapToHear: () => queue.resumeBlocked(),
     browserVoices,
     previewVoice,

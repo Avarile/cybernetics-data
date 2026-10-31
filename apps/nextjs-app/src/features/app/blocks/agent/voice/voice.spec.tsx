@@ -151,6 +151,23 @@ describe('useVoiceConversation', () => {
     vi.useRealTimers();
   });
 
+  it('says a summary once per id, sentence by sentence, and nothing with voice off', async () => {
+    const { result } = mount();
+    act(() => result.current.say('summary:recA:v1:1', 'Deploy steps. Pull, then apply.'));
+    await advance(10);
+    expect(engine.spoken).toEqual([]);
+    act(() => result.current.turnOn());
+    act(() => result.current.say('summary:recA:v1:1', 'Deploy steps. Pull, then apply.'));
+    await advance(10);
+    act(() => result.current.say('summary:recA:v1:1', 'Deploy steps. Pull, then apply.'));
+    await advance(10);
+    expect(engine.spoken.join(' ')).toBe('Deploy steps. Pull, then apply.');
+    // another opening says it again
+    act(() => result.current.say('summary:recA:v1:2', 'Deploy steps.'));
+    await advance(10);
+    expect(engine.spoken.join(' ')).toBe('Deploy steps. Pull, then apply. Deploy steps.');
+  });
+
   it('listens, sends after the silence, speaks the reply, then listens again', async () => {
     const { result, rerender } = mount();
     act(() => result.current.turnOn());
@@ -268,6 +285,7 @@ const fakeVoice = (over: Partial<IVoiceConversation> = {}): IVoiceConversation =
   sendNow: vi.fn(),
   retry: vi.fn(),
   stopSpeech: vi.fn(),
+  say: vi.fn(),
   tapToHear: vi.fn(),
   browserVoices: vi.fn(async () => []),
   previewVoice: vi.fn(),

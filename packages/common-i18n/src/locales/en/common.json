@@ -2024,7 +2024,8 @@
         "reading": "READING {{dataset}}…",
         "updated": "UPDATED",
         "records": "RECORDS",
-        "truncated": "MORE NOT READ"
+        "truncated": "MORE NOT READ",
+        "read": "READ"
       },
       "dataset": "DATASET",
       "sources": "Thread and dataset",
@@ -2093,7 +2094,18 @@
       },
       "logHint": "Type to search {{table}}, /base to change the database, /table to change the table.",
       "searching": "SEARCHING",
-      "clear": "CLEAR"
+      "clear": "CLEAR",
+      "reader": {
+        "loading": "READING…",
+        "openInTable": "OPEN IN TABLE",
+        "close": "Close the record",
+        "summary": "AGENT SUMMARY",
+        "summarizing": "SUMMARIZING…",
+        "needsAgent": "SUMMARY NEEDS THE AGENT",
+        "failed": "NO SUMMARY · {{error}}",
+        "record": "RECORD",
+        "masked": "MASKED · {{fields}}"
+      }
     }
   }
 }

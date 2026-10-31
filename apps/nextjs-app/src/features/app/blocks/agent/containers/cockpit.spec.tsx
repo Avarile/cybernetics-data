@@ -339,18 +339,17 @@ describe('agent cockpit (cockpit design §4)', () => {
     expect(useCockpitStore.getState().layout).toBe('tree');
   });
 
-  it('asks about a pinned overview node: the focus points at it, the composer gets the question', async () => {
+  it('reads a pinned overview node: READ opens it in the reader', async () => {
     render(<AgentCockpitHost />);
     act(() => useCockpitStore.getState().open());
     await screen.findByText('GOAL → PROJECT → TASK');
     act(() => useCockpitStore.setState({ overviewPinned: 'rec:T' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'ASK' }));
-    expect(useCockpitStore.getState().focus).toMatchObject({
-      baseId: 'bse1',
+    expect(screen.queryByRole('button', { name: 'ASK' })).toBeNull();
+    await userEvent.click(await screen.findByRole('button', { name: 'READ' }));
+    expect(useSearchStore.getState().record).toMatchObject({
+      recordId: 'recT',
       tableId: 'tblTasks',
-      recordIds: ['recT'],
     });
-    expect(useCockpitStore.getState().draft).toBe('Tell me about the task "Voice"');
   });
 
   it('lists a search in Search Results, forces its results onto the chart, and lights a click', async () => {
