@@ -1,10 +1,12 @@
-import type { IOverviewDatasetId } from '@teable/openapi';
 import {
   cancelAgentRun,
-  getAgentOverview,
   getAgentSearch,
+  getAgentTableOverview,
   getAgentThreadMessages,
+  getCockpitBases,
+  getCockpitTables,
   getRecords,
+  setCockpitDefaultBase,
 } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import type { IAgentSkillOption } from '../model/skills';
@@ -14,7 +16,9 @@ export const agentQueryKeys = {
   threads: ['agent', 'threads'] as const,
   skills: ['agent', 'skills'] as const,
   search: (searchId: string) => ['agent', 'search', searchId] as const,
-  overview: (dataset: IOverviewDatasetId) => ['agent', 'overview', dataset] as const,
+  bases: ['agent', 'cockpit', 'bases'] as const,
+  tables: (baseId: string) => ['agent', 'cockpit', 'tables', baseId] as const,
+  tableOverview: (tableId: string) => ['agent', 'overview', 'table', tableId] as const,
 };
 
 /** Stored messages of a thread, as UI messages for the chat. */
@@ -38,8 +42,13 @@ export const fetchSkills = async (skillsTableId: string): Promise<IAgentSkillOpt
 /** A stored search, for the board of a reopened thread. */
 export const fetchSearch = (searchId: string) => getAgentSearch(searchId);
 
-/** One dataset of the data base as a constellation (overview design §8.3). */
-export const fetchOverview = (dataset: IOverviewDatasetId) => getAgentOverview(dataset);
+/** The bases the cockpit can show, and the default one (scope design §5). */
+export const fetchBases = () => getCockpitBases();
+export const fetchTables = (baseId: string) => getCockpitTables(baseId);
+export const saveDefaultBase = (baseId: string) => setCockpitDefaultBase({ baseId });
+
+/** One table of a base as a constellation (scope design §9). */
+export const fetchTableOverview = (tableId: string) => getAgentTableOverview(tableId);
 
 /** Stops a run on the server (also one that waits for approval). */
 export const cancelRun = (runId: string) => cancelAgentRun(runId).catch(() => undefined);

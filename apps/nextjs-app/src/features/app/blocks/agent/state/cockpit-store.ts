@@ -1,11 +1,9 @@
 import { LocalStorageKeys } from '@cybernetics/sdk/config';
-import type { IOverviewDatasetId } from '@teable/openapi';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ILayoutMode } from '../model/graph/layout';
 import type { ILensMode } from '../model/lens';
 import { reduceCycle, startCycle, type ICycle, type ICycleEvent } from '../model/overview/cycle';
-import { OVERVIEW_ORDER } from '../model/overview/datasets';
 import { searchesOf } from '../model/transcript';
 import { rememberedThread, useSessionStore, type AgentSession } from './session-store';
 
@@ -45,14 +43,14 @@ interface ICockpitState {
   /** Counts the times the constellation's zoom was reset (`0`); the chart follows it. */
   zoomResets: number;
   stage: ICockpitStage;
-  /** The overview's loop through its datasets. */
+  /** The overview's loop through the tables of the current base. */
   cycle: ICycle;
   /** An overview node whose trace stays lit (a node id, not a card key). */
   overviewPinned?: string;
   /** Text the composer takes up once (ASK on an overview node). */
   draft?: string;
-  /** Overview datasets that cannot be shown, and why (no access, nothing to draw). */
-  overviewFailed: Partial<Record<IOverviewDatasetId, string>>;
+  /** Tables that cannot be shown, by id, and why (no access, nothing to draw). */
+  overviewFailed: Record<string, string>;
   open: (options?: IOpenCockpit) => void;
   close: () => void;
   toggle: (options?: IOpenCockpit) => void;
@@ -69,7 +67,7 @@ interface ICockpitState {
   pinOverview: (id?: string) => void;
   setFocus: (focus?: IAgentFocus) => void;
   setDraft: (draft?: string) => void;
-  failDataset: (id: IOverviewDatasetId, reason: string) => void;
+  failDataset: (id: string, reason: string) => void;
 }
 
 export const useCockpitStore = create<ICockpitState>()(
@@ -80,7 +78,7 @@ export const useCockpitStore = create<ICockpitState>()(
       layout: 'bundle',
       zoomResets: 0,
       stage: 'overview',
-      cycle: startCycle(OVERVIEW_ORDER.map((d) => d.id)),
+      cycle: startCycle([]),
       overviewFailed: {},
       open: (options = {}) => {
         const sessions = useSessionStore.getState();

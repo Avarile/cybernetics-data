@@ -3,7 +3,7 @@ import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import type { IFrame } from '../../model/graph/layout';
 import type { IMetric } from '../../model/metrics';
-import type { ILegendEntry } from '../../model/overview/datasets';
+import type { ILegendEntry } from '../../model/overview/presentation';
 import d from '../theme/deck.module.css';
 import { Kpis, Legend, Readout, type IReadoutProps } from './Readout';
 import { useStageFrame } from './stage-frame';

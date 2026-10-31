@@ -1,8 +1,8 @@
-import type { IAgentOverviewVo, ISearchTone } from '@teable/openapi';
+import type { ISearchTone } from '@teable/openapi';
 import { money } from './format';
 import type { IGraph } from './graph/types';
 import { laneMix } from './metrics';
-import type { IOverviewDatasetInfo } from './overview/datasets';
+import type { ITableInfo } from './overview/presentation';
 import { lanesOf, sourceText, type IBoard } from './search-board';
 
 /** The order of a mix bar's segments, settled first (the cockpit's stack). */
@@ -38,7 +38,10 @@ const stackOf = (mix: Partial<Record<ISearchTone, number>>) =>
  * The branches of a dataset as the cockpit's vectors (its panels.ts): count and the meaningful
  * tones as facts, the share done or the money moved on the right, a stacked mix bar.
  */
-export function overviewVectors(g: IGraph, info: IOverviewDatasetInfo): IVector[] {
+export function overviewVectors(
+  g: IGraph,
+  info: Pick<ITableInfo, 'toneNames' | 'unit' | 'right'>
+): IVector[] {
   const names = info.toneNames;
   return g.branches
     .filter((b) => b.count)
@@ -65,23 +68,6 @@ export function overviewVectors(g: IGraph, info: IOverviewDatasetInfo): IVector[
         ],
       };
     });
-}
-
-/** The dataset's dated records, newest first: the cockpit's recent feed. */
-export function overviewFeed(vo: IAgentOverviewVo, info: IOverviewDatasetInfo): IFeedRow[] {
-  return vo.nodes
-    .filter((n) => n.recordId && n.date && n.kind !== 'hub')
-    .map((n) => ({
-      id: n.id,
-      t: Date.parse(n.date!),
-      verb: info.verbs[n.tone] ?? (n.state ?? 'RECORD').split(/\s/)[0].toUpperCase().slice(0, 10),
-      tone: n.tone === 'none' ? ('ink' as const) : n.tone,
-      key: n.short ?? '',
-      text: n.amount ? `${n.label} · ${money(Math.abs(n.amount))}` : n.label,
-    }))
-    .filter((r) => !Number.isNaN(r.t))
-    .sort((a, b) => b.t - a.t)
-    .slice(0, 28);
 }
 
 /** The tables a search went through, as vectors: what each found and its mix. */

@@ -1,11 +1,11 @@
-import type { IAgentOverviewVo } from '@teable/openapi';
+import type { IOverviewGraphVo } from '@teable/openapi';
 import { finishGraph, type IGNode, type IGraph } from '../graph/types';
 
 /**
- * A dataset of the overview as the constellation's graph (overview design §9.1). The server
+ * A table's overview as the constellation's graph (overview design §9.1). The server
  * already encoded every node, so this only adapts the shape.
  */
-export function overviewToGraph(vo: IAgentOverviewVo): IGraph {
+export function overviewToGraph(vo: Pick<IOverviewGraphVo, 'title' | 'nodes' | 'links'>): IGraph {
   const nodes: IGNode[] = vo.nodes.map((n) => ({
     id: n.id,
     kind: n.kind,

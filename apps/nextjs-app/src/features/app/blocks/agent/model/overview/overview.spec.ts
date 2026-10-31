@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { IAgentOverviewVo, IOverviewNode } from '@teable/openapi';
+import type { IAgentTableOverviewVo, IOverviewNode } from '@teable/openapi';
 import { describe, expect, it } from 'vitest';
 import { traceGraph } from '../graph/trace';
 import {
@@ -12,9 +12,9 @@ import {
   type ICycle,
   type ICycleEvent,
 } from './cycle';
-import { DATASET_MS } from './datasets';
 import { overviewToGraph } from './from-overview';
 import { overviewMetrics } from './metrics';
+import { DATASET_MS } from './presentation';
 
 const node = (id: string, extra: Partial<IOverviewNode> = {}): IOverviewNode => ({
   id,
@@ -28,12 +28,15 @@ const node = (id: string, extra: Partial<IOverviewNode> = {}): IOverviewNode => 
 const rec = (table: string, id: string, extra: Partial<IOverviewNode> = {}) =>
   node(`rec:${id}`, { recordId: id, table, ...extra });
 const vo = (
-  dataset: IAgentOverviewVo['dataset'],
+  preset: IAgentTableOverviewVo['preset'],
   nodes: IOverviewNode[],
-  extra: Partial<IAgentOverviewVo> = {}
-): IAgentOverviewVo => ({
-  dataset,
-  title: dataset.toUpperCase(),
+  extra: Partial<IAgentTableOverviewVo> = {}
+): IAgentTableOverviewVo => ({
+  tableId: 'tblT',
+  tableName: 'tasks',
+  preset,
+  presentation: { branchTitle: 'GOALS', unit: 'RECORDS', toneNames: {}, legend: [] },
+  title: (preset ?? 'table').toUpperCase(),
   path: '',
   baseId: 'bse1',
   nodes,
@@ -84,7 +87,7 @@ describe('overview model (overview design §9.1)', () => {
   });
 
   it('counts each dataset for the readout', () => {
-    const m = (v: IAgentOverviewVo) =>
+    const m = (v: IAgentTableOverviewVo) =>
       Object.fromEntries(overviewMetrics(v).map((x) => [x.k, [x.v, x.s]]));
     expect(m(work)).toMatchObject({
       GOALS: [1, undefined],
@@ -115,6 +118,36 @@ describe('overview model (overview design §9.1)', () => {
     const f = overviewMetrics(finance);
     expect(f.find((x) => x.k === 'NET')).toMatchObject({ tone: 'caution' });
     expect(f.find((x) => x.k === 'TRANSACTIONS 90D')?.v).toBe(3);
+  });
+
+  it('counts any other table by its records, branches, named tones and money', () => {
+    const orders = vo(
+      null,
+      [
+        node('rec:C1', { kind: 'hub', label: 'Acme', recordId: 'C1', tableId: 'tblC' }),
+        rec('orders', 'O1', { tableId: 'tblT', parent: 'rec:C1', tone: 'route', amount: 30 }),
+        rec('orders', 'O2', { tableId: 'tblT', parent: 'rec:C1', tone: 'ink', amount: -10 }),
+        rec('orders', 'O3', { tableId: 'tblT', parent: 'hub:tblT', tone: 'route' }),
+        node('hub:tblT', { kind: 'hub', label: 'ORDERS' }),
+      ],
+      {
+        presentation: {
+          branchTitle: 'CUSTOMERS',
+          unit: 'RECORDS',
+          right: 'sum',
+          toneNames: { route: 'IN PROGRESS', ink: 'FINISHED' },
+          legend: [],
+        },
+      }
+    );
+    expect(overviewMetrics(orders).map((x) => [x.k, x.v])).toEqual([
+      ['RECORDS', 3],
+      ['CUSTOMERS', 1],
+      ['TOTAL', '40'],
+      ['IN PROGRESS', 2],
+      ['FINISHED', 1],
+      ['NO CUSTOMERS', 1],
+    ]);
   });
 
   it('traces a node to its branch, its subtree and what its edges reach', () => {

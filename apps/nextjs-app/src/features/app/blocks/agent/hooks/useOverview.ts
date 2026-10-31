@@ -1,14 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type { IOverviewDatasetId } from '@teable/openapi';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { agentQueryKeys, fetchOverview } from '../data/agent-api';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { agentQueryKeys, fetchTableOverview } from '../data/agent-api';
 import { limitGraph, SAFE_DRAW } from '../model/graph/limit';
 import { traceGraph } from '../model/graph/trace';
 import { currentDataset, nextDataset, remainingAt, running } from '../model/overview/cycle';
-import { DATASET_MS, OVERVIEW_ORDER, PREFETCH_MS } from '../model/overview/datasets';
 import { overviewToGraph } from '../model/overview/from-overview';
 import { overviewMetrics } from '../model/overview/metrics';
+import { DATASET_MS, PREFETCH_MS, pendingInfo, tableInfo } from '../model/overview/presentation';
 import { useCockpitStore } from '../state/cockpit-store';
+import { useSearchStore } from '../state/search-store';
+import { useScope } from './useScope';
 
 /** Narrow screens draw less and without labels (overview design §9.6). */
 const NARROW = '(max-width: 899px)';
@@ -29,26 +30,28 @@ export function useNarrow() {
 
 const reasonOf = (error: unknown) => {
   const status = (error as { status?: number })?.status;
-  if (status === 403) return 'NO ACCESS TO THE DATA BASE';
-  if (status === 404) return 'NO DATA BASE';
+  if (status === 403) return 'NO ACCESS';
+  if (status === 404) return 'NOT FOUND';
   return (error as Error)?.message ?? 'FAILED';
 };
 
-const overviewQuery = (dataset: IOverviewDatasetId) => ({
-  queryKey: agentQueryKeys.overview(dataset),
-  queryFn: () => fetchOverview(dataset),
+const overviewQuery = (tableId: string) => ({
+  queryKey: agentQueryKeys.tableOverview(tableId),
+  queryFn: () => fetchTableOverview(tableId),
   staleTime: DATASET_MS,
   gcTime: 10 * DATASET_MS,
   retry: false,
 });
 
 /**
- * The overview on the stage (overview design §6, §9): the dataset the cycle is on, fetched (and
- * the next one before it is due), its graph within the draw budget, its numbers, the trace of
- * the node pointed at or pinned, and which datasets can be shown at all.
+ * The overview on the stage (overview design §6, §9; scope design §5.3, §9): the table of the
+ * current base the cycle is on, fetched (and the next one before it is due), its graph within
+ * the draw budget, its numbers and words, the trace of the node pointed at or pinned, and which
+ * tables can be shown at all.
  */
 export function useOverview(active: boolean) {
   const queryClient = useQueryClient();
+  const scope = useScope();
   const cycle = useCockpitStore((s) => s.cycle);
   const cycleEvent = useCockpitStore((s) => s.cycleEvent);
   const pinned = useCockpitStore((s) => s.overviewPinned);
@@ -56,36 +59,41 @@ export function useOverview(active: boolean) {
   const failed = useCockpitStore((s) => s.overviewFailed);
   const failDataset = useCockpitStore((s) => s.failDataset);
   const narrow = useNarrow();
-  const dataset = currentDataset(cycle) ?? OVERVIEW_ORDER[0].id;
-  const query = useQuery({ ...overviewQuery(dataset), enabled: active });
-  const vo = query.data?.dataset === dataset ? query.data : undefined;
+  const tableId = currentDataset(cycle) ?? scope.tables[0]?.id ?? '';
+  const query = useQuery({ ...overviewQuery(tableId), enabled: active && Boolean(tableId) });
+  const vo = query.data?.tableId === tableId ? query.data : undefined;
 
-  // a dataset that cannot be shown (no access, no data base, nothing to draw) leaves the loop
+  // a table that cannot be shown (no access, gone, nothing to draw) leaves the loop
   useEffect(() => {
     let reason: string | undefined;
     if (query.error) reason = reasonOf(query.error);
     else if (vo && !vo.nodes.length)
       reason = vo.missing.length ? `NOT IN THIS BASE: ${vo.missing.join(', ')}` : 'NOTHING TO DRAW';
-    if (reason) failDataset(dataset, reason);
-  }, [query.error, vo, dataset, failDataset]);
+    if (reason && tableId) failDataset(tableId, reason);
+  }, [query.error, vo, tableId, failDataset]);
   const available = useMemo(
-    () => OVERVIEW_ORDER.map((d) => d.id).filter((id) => !failed[id]),
-    [failed]
+    () => scope.tables.map((t) => t.id).filter((id) => !failed[id]),
+    [scope.tables, failed]
   );
+
+  // the table the admin chose last time comes back once its base's tables are here
+  const restore = useRef(useSearchStore.getState().tableId);
   const order = available.join(',');
   useEffect(() => {
-    cycleEvent({
-      type: 'available',
-      order: order ? (order.split(',') as IOverviewDatasetId[]) : [],
-    });
-  }, [order, cycleEvent]);
+    if (!scope.tablesLoaded) return;
+    const ids = order ? order.split(',') : [];
+    cycleEvent({ type: 'available', order: ids });
+    if (restore.current && ids.includes(restore.current))
+      cycleEvent({ type: 'pick', id: restore.current });
+    restore.current = undefined;
+  }, [order, scope.tablesLoaded, cycleEvent]);
 
-  // the minute starts when the dataset is on screen, not when it was asked for
+  // the minute starts when the table is on screen, not when it was asked for
   useEffect(() => {
     if (active && vo && !cycle.drawn) cycleEvent({ type: 'drawn' });
   }, [active, vo, cycle.drawn, cycleEvent]);
 
-  // the next dataset is fetched before it is due, so the switch is immediate
+  // the next table is fetched before it is due, so the switch is immediate
   const next = nextDataset(cycle);
   useEffect(() => {
     if (!active || !next || !running(cycle)) return;
@@ -94,6 +102,11 @@ export function useOverview(active: boolean) {
     return () => clearTimeout(timer);
   }, [active, next, cycle, queryClient]);
 
+  const name = scope.tables.find((t) => t.id === tableId)?.name ?? '';
+  const info = useMemo(
+    () => (vo ? tableInfo(vo) : pendingInfo(tableId, name)),
+    [vo, tableId, name]
+  );
   const graph = useMemo(() => (vo ? overviewToGraph(vo) : undefined), [vo]);
   const limited = useMemo(
     () => (graph ? limitGraph(graph, { budget: narrow ? narrowBudget : SAFE_DRAW }) : undefined),
@@ -111,8 +124,10 @@ export function useOverview(active: boolean) {
   );
 
   return {
-    dataset,
+    tableId,
+    scope,
     vo,
+    info,
     loading: query.isLoading,
     error: query.error ? reasonOf(query.error) : undefined,
     failed,

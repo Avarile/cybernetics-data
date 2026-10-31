@@ -1,15 +1,17 @@
-import type { IOverviewDatasetId } from '@teable/openapi';
-import { DATASET_MS } from './datasets';
-
-/** Why the cycle waits (overview design §6.2). */
-export type IHold = 'pointer' | 'pin' | 'picked' | 'paused' | 'hidden';
+import { DATASET_MS } from './presentation';
 
 /**
- * The overview's loop through its datasets. `remaining` counts down only while the dataset is
+ * Why the cycle waits (overview design §6.2, scope design §5.3): `search` while a search is
+ * active, `typing` while the composer holds text not sent yet.
+ */
+export type IHold = 'pointer' | 'pin' | 'picked' | 'paused' | 'hidden' | 'search' | 'typing';
+
+/**
+ * The overview's loop through the tables of the current base (by id). `remaining` counts down only while the dataset is
  * drawn and nothing holds; `since` is when it last started counting.
  */
 export interface ICycle {
-  order: IOverviewDatasetId[];
+  order: string[];
   index: number;
   remaining: number;
   holds: IHold[];
@@ -23,15 +25,15 @@ export type ICycleEvent =
   | { type: 'drawn' }
   | { type: 'hold' | 'release'; reason: IHold }
   /** A dataset picked by the admin: shown at once, and held there. */
-  | { type: 'pick'; id: IOverviewDatasetId }
+  | { type: 'pick'; id: string }
   /** ▶ or Esc: the cycle goes on. */
   | { type: 'resume' }
   /** The datasets that can be shown changed. */
-  | { type: 'available'; order: IOverviewDatasetId[] }
+  | { type: 'available'; order: string[] }
   /** The overview is back on screen (cockpit on, or back from a search): a fresh minute. */
   | { type: 'restart' };
 
-export const startCycle = (order: IOverviewDatasetId[]): ICycle => ({
+export const startCycle = (order: string[]): ICycle => ({
   order,
   index: 0,
   remaining: DATASET_MS,
@@ -45,9 +47,9 @@ export const running = (c: ICycle) => c.drawn && c.holds.length === 0 && c.order
 export const remainingAt = (c: ICycle, now: number) =>
   running(c) && c.since !== undefined ? Math.max(0, c.remaining - (now - c.since)) : c.remaining;
 
-export const currentDataset = (c: ICycle): IOverviewDatasetId | undefined => c.order[c.index];
+export const currentDataset = (c: ICycle): string | undefined => c.order[c.index];
 
-export const nextDataset = (c: ICycle): IOverviewDatasetId | undefined =>
+export const nextDataset = (c: ICycle): string | undefined =>
   c.order.length > 1 ? c.order[(c.index + 1) % c.order.length] : undefined;
 
 /** Banks the time that ran since the last change. */

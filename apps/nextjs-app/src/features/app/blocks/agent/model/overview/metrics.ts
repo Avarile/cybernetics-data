@@ -1,4 +1,9 @@
-import type { IAgentOverviewVo, IOverviewNode, ISearchTone } from '@teable/openapi';
+import type {
+  IAgentTableOverviewVo,
+  IOverviewGraphVo,
+  IOverviewNode,
+  ISearchTone,
+} from '@teable/openapi';
 import { money } from '../format';
 import type { IMetric } from '../metrics';
 
@@ -14,7 +19,7 @@ const metric = (k: string, v: number | string, tone: ISearchTone = 'ink', s?: st
   ...(s ? { s } : {}),
 });
 
-function work(vo: IAgentOverviewVo): IMetric[] {
+function work(vo: IOverviewGraphVo): IMetric[] {
   const tasks = of(vo.nodes, 'tasks');
   const live = tasks.length - toned(tasks, 'faint');
   const late = vo.nodes.filter((n) => n.alert).length;
@@ -29,7 +34,7 @@ function work(vo: IAgentOverviewVo): IMetric[] {
   ];
 }
 
-function knowledge(vo: IAgentOverviewVo): IMetric[] {
+function knowledge(vo: IOverviewGraphVo): IMetric[] {
   const entries = of(vo.nodes, 'knowledges');
   const untyped = entries.filter((n) => n.parent?.startsWith('hub:')).length;
   return [
@@ -43,7 +48,7 @@ function knowledge(vo: IAgentOverviewVo): IMetric[] {
   ];
 }
 
-function people(vo: IAgentOverviewVo): IMetric[] {
+function people(vo: IOverviewGraphVo): IMetric[] {
   const unassigned = vo.counts['tasks.unplaced'] ?? 0;
   return [
     metric('PEOPLE', of(vo.nodes, 'contacts').length),
@@ -56,7 +61,7 @@ function people(vo: IAgentOverviewVo): IMetric[] {
   ];
 }
 
-function finance(vo: IAgentOverviewVo): IMetric[] {
+function finance(vo: IOverviewGraphVo): IMetric[] {
   const txns = of(vo.nodes, 'finance_Transactions');
   const spent = sum(txns.filter((n) => n.tone === 'route'));
   const income = sum(txns.filter((n) => n.tone === 'target'));
@@ -74,8 +79,32 @@ function finance(vo: IAgentOverviewVo): IMetric[] {
 
 const byDataset = { work, knowledge, people, finance };
 
+const toneOrder: ISearchTone[] = ['route', 'target', 'caution', 'dim', 'ink', 'faint'];
+
+/** Any table (scope design §9.3): its records, its branches, its tones by name, money moved. */
+function table(vo: IAgentTableOverviewVo): IMetric[] {
+  const records = vo.nodes.filter((n) => n.tableId === vo.tableId && n.recordId);
+  const branches = vo.nodes.filter((n) => n.kind === 'hub' && !n.id.startsWith('hub:')).length;
+  const loose = records.filter((n) => n.parent?.startsWith('hub:')).length;
+  const names = vo.presentation.toneNames;
+  const tones = toneOrder
+    .filter((t) => names[t] && toned(records, t))
+    .map((t) => metric(names[t]!, toned(records, t), t === 'ink' ? 'dim' : t));
+  const unit = vo.presentation.unit;
+  return [
+    metric(unit, records.length),
+    ...(branches ? [metric(vo.presentation.branchTitle, branches)] : []),
+    ...(vo.presentation.right === 'sum' ? [metric('TOTAL', money(sum(records)), 'target')] : []),
+    ...tones,
+    ...(vo.links.length ? [metric('LINKS', vo.links.length, 'target')] : []),
+    ...(branches && loose ? [metric(`NO ${vo.presentation.branchTitle}`, loose, 'caution')] : []),
+  ].slice(0, 7);
+}
+
 /**
- * The readout's numbers for a dataset (overview design §5.2), from everything the server sent:
- * only the chart sees the graph the draw budget reduced.
+ * The readout's numbers for the table on the stage (overview design §5.2, scope design §9.3):
+ * a curated dataset's own, else the table's. From everything the server sent: only the chart
+ * sees the graph the draw budget reduced.
  */
-export const overviewMetrics = (vo: IAgentOverviewVo): IMetric[] => byDataset[vo.dataset](vo);
+export const overviewMetrics = (vo: IAgentTableOverviewVo): IMetric[] =>
+  vo.preset ? byDataset[vo.preset](vo) : table(vo);

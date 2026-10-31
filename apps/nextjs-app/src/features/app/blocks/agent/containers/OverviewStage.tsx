@@ -1,13 +1,11 @@
-import type { IOverviewDatasetId } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
 import { useCallback, useMemo } from 'react';
 import { useOverview, useOverviewCycle } from '../hooks/useOverview';
 import type { IFrame } from '../model/graph/layout';
 import type { IGNode } from '../model/graph/types';
-import { OVERVIEW_ORDER, datasetInfo } from '../model/overview/datasets';
-import { overviewFeed, overviewVectors } from '../model/panels';
+import { overviewVectors } from '../model/panels';
 import { useCockpitStore } from '../state/cockpit-store';
-import { FlightLog, VectorsPanel } from '../ui/rail/RailPanels';
+import { VectorsPanel } from '../ui/rail/RailPanels';
 import { NodeDetail } from '../ui/stage/NodeDetail';
 import { StageDeck } from '../ui/stage/StageDeck';
 import { LayoutKnobs } from '../ui/stage/StageHead';
@@ -20,9 +18,9 @@ const recordsOf = (counts: Record<string, number>) =>
     .reduce((n, [, v]) => n + v, 0);
 
 /**
- * The stage when no search is on it (overview design §4): the data base, one dataset a minute,
- * as a constellation with the HUD's readout, legend and pinned node, and the dataset's branches
- * and latest records in the rail.
+ * The stage when no search is on it (overview design §4, scope design §5.3): the current base,
+ * one table a minute, as a constellation with the HUD's readout, legend and pinned node, and the
+ * table's branches in the rail.
  */
 export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
   const { t } = useTranslation('common');
@@ -30,13 +28,14 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
   useOverviewCycle(true);
   const store = useCockpitStore();
   const { cycle, cycleEvent, setFocus, setDraft, pinOverview } = store;
-  const info = datasetInfo(ov.dataset);
-  const chip = (id: IOverviewDatasetId) => t(`agent.cockpit.overview.${id}`, datasetInfo(id).chip);
+  const { info } = ov;
   const vectors = useMemo(
     () => (ov.graph ? overviewVectors(ov.graph, info) : []),
     [ov.graph, info]
   );
-  const feed = useMemo(() => (ov.vo ? overviewFeed(ov.vo, info) : []), [ov.vo, info]);
+  const branchTitle = info.preset
+    ? t(`agent.cockpit.rail.branches.${info.preset}`, info.branchTitle)
+    : info.branchTitle;
 
   const unpin = useCallback(() => pinOverview(undefined), [pinOverview]);
   const pointer = useCallback(
@@ -84,13 +83,13 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
     : '';
 
   const chart = (frame: IFrame | null) => {
-    if (!ov.available.length)
+    if (ov.scope.tablesLoaded && !ov.available.length)
       return (
         <div className={o.message}>
           <b>{t('agent.cockpit.overview.nothing', 'NOTHING TO SHOW')}</b>
-          {OVERVIEW_ORDER.map((d) => (
-            <span key={d.id}>
-              {chip(d.id)} · {ov.failed[d.id]}
+          {ov.scope.tables.map((table) => (
+            <span key={table.id}>
+              {table.name.toUpperCase()} · {ov.failed[table.id] ?? '—'}
             </span>
           ))}
         </div>
@@ -99,13 +98,13 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
       return (
         <div className={o.message}>
           {t('agent.cockpit.overview.reading', {
-            dataset: chip(ov.dataset),
-            defaultValue: `READING ${chip(ov.dataset)}…`,
+            dataset: info.chip,
+            defaultValue: `READING ${info.chip}…`,
           })}
         </div>
       );
     return (
-      <div key={ov.dataset} className={o.fade}>
+      <div key={ov.tableId} className={o.fade}>
         <LazyConstellation
           graph={ov.limited.graph}
           mode={store.layout}
@@ -126,7 +125,7 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
     <StageDeck
       stage="overview"
       label={t('agent.cockpit.overview.label', 'Overview')}
-      title={chip(ov.dataset)}
+      title={ov.vo?.title ?? info.chip}
       path={ov.vo?.path}
       readout={{
         top: `${t('agent.cockpit.overview.title', 'OVERVIEW')}${updated}`,
@@ -156,18 +155,12 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
       panels={
         <>
           <VectorsPanel
-            title={t(`agent.cockpit.rail.branches.${ov.dataset}`, info.branchTitle)}
+            title={branchTitle}
             hint={t('agent.cockpit.rail.branchHint', 'HOVER TO LIGHT BRANCH')}
             vectors={vectors}
             selected={store.overviewPinned}
             onHover={ov.setHover}
             onSelect={ov.pin}
-          />
-          <FlightLog
-            title={t(`agent.cockpit.rail.feed.${ov.dataset}`, info.feedTitle)}
-            hint={t('agent.cockpit.rail.feedHint', 'LATEST · UTC')}
-            rows={feed}
-            empty={t('agent.cockpit.rail.noFeed', 'No dated records yet.')}
           />
         </>
       }

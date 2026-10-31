@@ -160,6 +160,27 @@
 .menuButton[aria-expanded='true'] {
   border-color: var(--ink-2);
 }
+/* ★ beside the base: filled for the default base (scope design §5.1) */
+.star {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: none;
+  padding: 2px;
+  color: var(--dim);
+  cursor: pointer;
+}
+.star:hover:not(:disabled) {
+  color: var(--ink);
+}
+.star[aria-pressed='true'] {
+  color: var(--target);
+  cursor: default;
+}
+.star:disabled:not([aria-pressed='true']) {
+  opacity: 0.4;
+  cursor: progress;
+}
 .caret {
   margin-left: auto;
   align-self: center;

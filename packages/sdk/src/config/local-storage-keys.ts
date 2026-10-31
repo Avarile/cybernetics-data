@@ -29,4 +29,5 @@ export enum LocalStorageKeys {
   SpaceBaseListViewMode = 'ls_space_base_list_view_mode',
   DismissedChangelog = 'ls_dismissed_changelog',
   AgentVoice = 'ls_agent_voice',
+  AgentScope = 'ls_agent_scope',
 }

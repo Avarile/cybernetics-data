@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router';
 import type { RefObject } from 'react';
 import { useEffect } from 'react';
-import { OVERVIEW_ORDER } from '../model/overview/datasets';
 import { useCockpitStore } from '../state/cockpit-store';
+import { useSearchStore } from '../state/search-store';
 import { useSessionStore } from '../state/session-store';
+import { holdTable } from './useScope';
 
 /** `Mod+J` turns the cockpit on or off, anywhere in the app (cockpit design §5.8). */
 export function useToggleKey(enabled: boolean) {
@@ -71,14 +72,10 @@ const resetZoom: IKeyAction = () => {
   useCockpitStore.getState().resetZoom();
   return true;
 };
-/** `1`–`4`: that dataset of the overview, held there; from a search, back to the overview. */
-const pickDataset: IKeyAction = (_root, key) => {
-  const dataset = OVERVIEW_ORDER[Number(key) - 1];
-  if (!dataset) return false;
-  const store = useCockpitStore.getState();
-  store.setStage('overview');
-  store.cycleEvent({ type: 'pick', id: dataset.id });
-  return true;
+/** `1`–`9`: that table of the TABLE menu, held there; from a search, back to the overview. */
+const pickTable: IKeyAction = (_root, key) => {
+  const table = useSearchStore.getState().tables[Number(key) - 1];
+  return Boolean(table && holdTable(table.id));
 };
 /** `P`: the overview's cycle paused or going on. */
 const pause: IKeyAction = (root) => {
@@ -122,17 +119,15 @@ const actions: Record<string, IKeyAction> = {
   F: fullScreen,
   p: pause,
   P: pause,
-  '1': pickDataset,
-  '2': pickDataset,
-  '3': pickDataset,
-  '4': pickDataset,
+  ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => [String(n), pickTable])),
   Escape: escape,
 };
 
 /**
  * Keys inside the cockpit (cockpit design §5.8, overview design §7, scope design §4.3): `/`
- * composer, `[` `]` people on the chart, `T` bundle or tree, `0` reset the zoom, `1`–`4` a dataset (from anywhere), `P` pause (overview), `F` browser full screen,
- * `Mod+Shift+O` new conversation, `Esc` unpins, then drops the lens or resumes the cycle.
+ * composer, `[` `]` people on the chart, `T` bundle or tree, `0` reset the zoom, `1`–`9` a
+ * table (from anywhere), `P` pause (overview), `F` browser full screen, `Mod+Shift+O` new
+ * conversation, `Esc` unpins, then drops the lens or resumes the cycle.
  */
 export function useCockpitKeys(root: RefObject<HTMLElement>) {
   useEffect(() => {

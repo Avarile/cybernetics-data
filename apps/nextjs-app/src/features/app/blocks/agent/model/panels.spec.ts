@@ -1,10 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { IAgentOverviewVo, IOverviewNode, ISearchCard, ISearchPlan } from '@teable/openapi';
+import type { IOverviewGraphVo, IOverviewNode, ISearchCard, ISearchPlan } from '@teable/openapi';
 import { describe, expect, it } from 'vitest';
 import { logTime } from './format';
-import { datasetInfo } from './overview/datasets';
 import { overviewToGraph } from './overview/from-overview';
-import { overviewFeed, overviewVectors, searchFeed, searchVectors } from './panels';
+import type { ITableInfo } from './overview/presentation';
+import { overviewVectors, searchFeed, searchVectors } from './panels';
 import { emptyBoard, reduceBoard, type IBoard } from './search-board';
 
 const node = (id: string, extra: Partial<IOverviewNode> = {}): IOverviewNode => ({
@@ -18,9 +18,8 @@ const node = (id: string, extra: Partial<IOverviewNode> = {}): IOverviewNode => 
 });
 const rec = (table: string, id: string, extra: Partial<IOverviewNode> = {}) =>
   node(`rec:${id}`, { recordId: id, table, short: table.slice(0, -1).toUpperCase(), ...extra });
-const vo = (dataset: IAgentOverviewVo['dataset'], nodes: IOverviewNode[]): IAgentOverviewVo => ({
-  dataset,
-  title: dataset.toUpperCase(),
+const vo = (title: string, nodes: IOverviewNode[]): IOverviewGraphVo => ({
+  title,
   path: '',
   baseId: 'bse1',
   nodes,
@@ -28,8 +27,28 @@ const vo = (dataset: IAgentOverviewVo['dataset'], nodes: IOverviewNode[]): IAgen
   counts: {},
   missing: [],
   truncated: false,
-  builtAt: '2026-10-30T00:00:00.000Z',
 });
+/** What the server sends with the WORK and FINANCE presets. */
+const info: Record<'work' | 'finance', Pick<ITableInfo, 'toneNames' | 'unit' | 'right'>> = {
+  work: {
+    unit: 'ITEMS',
+    right: 'pct',
+    toneNames: {
+      route: 'IN PROGRESS',
+      target: 'PLANNED',
+      dim: 'BACKLOG',
+      ink: 'FINISHED',
+      caution: 'ON HOLD',
+      faint: 'CANCELLED',
+    },
+  },
+  finance: {
+    unit: 'TRANSACTIONS',
+    right: 'sum',
+    toneNames: { route: 'EXPENSE', target: 'INCOME', dim: 'TRANSFER' },
+  },
+};
+const datasetInfo = (id: 'work' | 'finance') => info[id];
 
 describe('rail panels of the overview (the cockpit panels.ts)', () => {
   it('sums each branch as a vector: count, tones, alerts, share done and its mix', () => {
@@ -73,7 +92,7 @@ describe('rail panels of the overview (the cockpit panels.ts)', () => {
     ]);
   });
 
-  it('shows the money a finance branch moved, and its latest transactions as the log', () => {
+  it('shows the money a finance branch moved', () => {
     const finance = vo('finance', [
       node('hub:food', { kind: 'hub', label: 'Food' }),
       rec('transactions', 'X1', {
@@ -94,22 +113,6 @@ describe('rail panels of the overview (the cockpit panels.ts)', () => {
     ]);
     const info = datasetInfo('finance');
     expect(overviewVectors(overviewToGraph(finance), info)[0].right).toBe('42');
-    expect(overviewFeed(finance, info)).toEqual([
-      expect.objectContaining({
-        id: 'rec:X2',
-        verb: 'INCOME',
-        key: 'TRANSACTION',
-        text: 'Refund · 30',
-      }),
-      expect.objectContaining({ id: 'rec:X1', verb: 'EXPENSE', tone: 'route', text: 'Lunch · 12' }),
-    ]);
-  });
-
-  it('words a work record by its tone, not the first word of its state', () => {
-    const work = vo('work', [
-      rec('tasks', 'T1', { tone: 'route', state: 'in-progress', date: '2026-10-30' }),
-    ]);
-    expect(overviewFeed(work, datasetInfo('work'))[0].verb).toBe('ACTIVE');
   });
 
   it('dates the log in UTC: the time today, the day before, dashes before it ran', () => {

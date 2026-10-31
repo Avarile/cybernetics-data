@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import { forwardRef } from 'react';
 import type { IMetric } from '../../model/metrics';
-import type { ILegendEntry } from '../../model/overview/datasets';
+import type { ILegendEntry } from '../../model/overview/presentation';
 import s from '../theme/cockpit.module.css';
 import d from '../theme/deck.module.css';
 

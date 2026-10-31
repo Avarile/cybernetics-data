@@ -8,6 +8,7 @@ import { useStage } from '../hooks/useStage';
 import { buildAgentRequestBody } from '../model/agent-request';
 import { startCycle } from '../model/overview/cycle';
 import { useCockpitStore } from '../state/cockpit-store';
+import { useSearchStore } from '../state/search-store';
 import { AgentSession, useSessionStore } from '../state/session-store';
 import { AgentCockpitHost } from './AgentCockpitHost';
 
@@ -35,9 +36,40 @@ vi.mock('@teable/openapi', async (importOriginal) => ({
   getAgentThreadMessages: vi.fn(async () => ({
     messages: [{ id: 'm1', role: 'user', parts: [{ type: 'text', text: 'hi' }] }],
   })),
-  getAgentOverview: vi.fn(async (dataset: string) => ({
-    dataset,
-    title: dataset.toUpperCase(),
+  getCockpitBases: vi.fn(async () => ({
+    bases: [
+      { id: 'bse1', name: 'data-centre', spaceId: 'spc1', spaceName: 'Work' },
+      { id: 'bse2', name: 'demo_database', spaceId: 'spc1', spaceName: 'Work' },
+    ],
+    defaultBaseId: 'bse1',
+  })),
+  getCockpitTables: vi.fn(async (baseId: string) => ({
+    baseId,
+    tables:
+      baseId === 'bse1'
+        ? [
+            { id: 'tblWork', name: 'tasks' },
+            { id: 'tblKnow', name: 'knowledges' },
+            { id: 'tblPeople', name: 'contacts' },
+            { id: 'tblFin', name: 'finance_Transactions' },
+          ]
+        : [{ id: 'tblOrders', name: 'orders' }],
+  })),
+  setCockpitDefaultBase: vi.fn(async ({ baseId }: { baseId: string }) => ({
+    defaultBaseId: baseId,
+  })),
+  getAgentTableOverview: vi.fn(async (tableId: string) => ({
+    tableId,
+    tableName: tableId === 'tblWork' ? 'tasks' : tableId.slice(3).toLowerCase(),
+    preset: tableId === 'tblWork' ? 'work' : null,
+    presentation: {
+      branchTitle: tableId === 'tblWork' ? 'GOAL VECTORS' : 'BRANCHES',
+      unit: 'ITEMS',
+      right: 'pct',
+      toneNames: { route: 'IN PROGRESS' },
+      legend: [['route', 'IN PROGRESS']],
+    },
+    title: tableId.slice(3).toUpperCase(),
     path: 'GOAL → PROJECT → TASK',
     baseId: 'bse1',
     nodes: [
@@ -103,8 +135,9 @@ describe('agent cockpit (cockpit design §4)', () => {
       overviewPinned: undefined,
       draft: undefined,
       overviewFailed: {},
-      cycle: startCycle(['work', 'knowledge', 'people', 'finance']),
+      cycle: startCycle([]),
     });
+    useSearchStore.setState({ baseId: undefined, tableId: undefined, tables: [] });
   });
   afterEach(cleanup);
 
@@ -140,26 +173,45 @@ describe('agent cockpit (cockpit design §4)', () => {
     expect(await screen.findAllByRole('region', { name: 'Search board' })).not.toHaveLength(0);
   });
 
-  it('lays the overview out as the ai-cockpit: rail panels under the ask, a dataset menu', async () => {
+  it('lays the overview out as the ai-cockpit: the ask and the branches in the rail, a table menu', async () => {
     render(<AgentCockpitHost />);
     act(() => useCockpitStore.getState().open());
     const rail = (await screen.findByRole('region', { name: 'GOAL VECTORS' })).parentElement!;
     expect(rail.firstElementChild?.getAttribute('aria-label')).toBe('ask');
-    expect(screen.getByRole('region', { name: 'RECENT WORK' })).toBeTruthy();
-    expect(screen.getByText('No dated records yet.')).toBeTruthy();
+    // the feed of recent records is gone from the overview
+    expect(screen.queryByRole('region', { name: 'RECENT WORK' })).toBeNull();
     // a branch in the vectors stays lit when clicked
     await userEvent.click(await screen.findByRole('button', { name: /Ship/ }));
     expect(useCockpitStore.getState().overviewPinned).toBe('rec:G');
-    // the dataset menu lists the four; a pick holds that one
-    await userEvent.click(screen.getByRole('button', { name: 'DATASET WORK' }));
+    // the table menu lists the tables of the base; a pick holds that one
+    await userEvent.click(await screen.findByRole('button', { name: 'TABLE TASKS' }));
     expect(screen.getAllByRole('option')).toHaveLength(4);
-    await userEvent.click(screen.getByRole('option', { name: /KNOWLEDGE/ }));
+    await userEvent.click(screen.getByRole('option', { name: /KNOWLEDGES/ }));
     const cycle = useCockpitStore.getState().cycle;
     expect([cycle.order[cycle.index], cycle.holds]).toEqual([
-      'knowledge',
+      'tblKnow',
       expect.arrayContaining(['picked']),
     ]);
+    expect(useSearchStore.getState().tableId).toBe('tblKnow');
     expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  it('shows the base with its default star; another base restarts the rotation on its tables', async () => {
+    const { setCockpitDefaultBase } = await import('@teable/openapi');
+    render(<AgentCockpitHost />);
+    act(() => useCockpitStore.getState().open());
+    const star = await screen.findByRole('button', { name: 'data-centre is the default base' });
+    expect(star.getAttribute('aria-pressed')).toBe('true');
+    await userEvent.click(screen.getByRole('button', { name: 'data-centre DEFAULT' }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Make demo_database the default base' })
+    );
+    expect(setCockpitDefaultBase).toHaveBeenCalledWith({ baseId: 'bse2' });
+    await userEvent.click(screen.getByRole('button', { name: 'demo_database' }));
+    expect(useSearchStore.getState().baseId).toBe('bse2');
+    expect(await screen.findByRole('button', { name: 'TABLE ORDERS' })).toBeTruthy();
+    const cycle = useCockpitStore.getState().cycle;
+    expect(cycle.order).toEqual(['tblOrders']);
   });
 
   it('takes a dataset key from a search back to the overview', async () => {
@@ -170,10 +222,12 @@ describe('agent cockpit (cockpit design §4)', () => {
     act(() => useCockpitStore.getState().open());
     await screen.findAllByRole('region', { name: 'Search board' });
     expect(screen.getByRole('region', { name: 'TABLES' })).toBeTruthy();
+    // the base's tables arrive with the table menu, before the overview has run
+    await screen.findByRole('button', { name: 'TABLE TASKS' });
     act(() => (document.activeElement as HTMLElement | null)?.blur());
     await userEvent.keyboard('3');
     const { stage, cycle } = useCockpitStore.getState();
-    expect([stage, cycle.order[cycle.index]]).toEqual(['overview', 'people']);
+    expect([stage, cycle.order[cycle.index]]).toEqual(['overview', 'tblPeople']);
   });
 
   it('drives the overview by key: T, 0, a dataset by number, P and Escape', async () => {
@@ -189,7 +243,7 @@ describe('agent cockpit (cockpit design §4)', () => {
     await userEvent.keyboard('2');
     const cycle = () => useCockpitStore.getState().cycle;
     expect([cycle().order[cycle().index], cycle().holds]).toEqual([
-      'knowledge',
+      'tblKnow',
       expect.arrayContaining(['picked']),
     ]);
     await userEvent.keyboard('{Escape}');
@@ -275,7 +329,6 @@ describe('agent cockpit (cockpit design §4)', () => {
     await act(async () => useCockpitStore.getState().open({ threadId: 'recT1' }));
     expect(useSessionStore.getState().session?.threadId).toBe('recT1');
     expect(useSessionStore.getState().session?.chat.store.messages).toHaveLength(1);
-    expect(await screen.findByText('Cockpit progress')).toBeTruthy();
     view.unmount();
     session.isAdmin = false;
     render(<AgentCockpitHost />);
