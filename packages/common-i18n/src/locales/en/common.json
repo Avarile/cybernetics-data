@@ -1768,10 +1768,20 @@
     },
     "composer": {
       "skills": "Skills",
-      "placeholder": "Ask the agent… type / for skills, /clear for a new chat",
+      "placeholder": "Search {{table}} · /base · /table",
       "clear": "Start a new conversation",
       "stop": "Stop",
-      "send": "Send"
+      "send": "Send",
+      "suggestions": "Suggestions",
+      "label": "Search or command",
+      "baseOption": "database",
+      "tableOption": "table",
+      "baseCommand": "<name>: choose the database",
+      "tableCommand": "<name>: choose the table",
+      "noTable": "NO TABLE TO SEARCH",
+      "noBase": "NO BASE NAMED \"{{name}}\"",
+      "noTableNamed": "NO TABLE NAMED \"{{name}}\" IN {{base}}",
+      "unknown": "UNKNOWN COMMAND · /base, /table"
     },
     "context": {
       "selected": "{{count}} selected",
@@ -1945,7 +1955,7 @@
         "retrieved": "RETRIEVED",
         "searching": "SEARCHING",
         "off": "Show everything found",
-        "searchingChip": "SEARCHING · THE BOARD FILLS AS IT GOES",
+        "searchingChip": "SEARCHING · THE CHART FILLS AS IT GOES",
         "answerChip": "ANSWER · {{n}} RECORDS CITED"
       },
       "lane": {
@@ -1984,7 +1994,8 @@
         "constellation": "CONSTELLATION",
         "tree": "TREE",
         "overview": "OVERVIEW",
-        "bundle": "BUNDLE"
+        "bundle": "BUNDLE",
+        "layout": "Layout"
       },
       "showing": "SHOWING {{shown}} OF {{total}}",
       "overview": {
@@ -2001,7 +2012,9 @@
           "pin": "HELD · PINNED",
           "picked": "HELD · PICKED",
           "paused": "PAUSED",
-          "hidden": "PAUSED"
+          "hidden": "PAUSED",
+          "search": "HELD · SEARCH",
+          "typing": "HELD · TYPING"
         },
         "open": "OPEN",
         "ask": "ASK",
@@ -2043,7 +2056,44 @@
         "log": "FLIGHT LOG",
         "logHint": "STEPS · UTC",
         "noSteps": "No steps yet."
-      }
+      },
+      "tableLabel": "TABLE",
+      "base": {
+        "label": "BASE",
+        "default": "DEFAULT",
+        "tables": "{{n}} TABLES",
+        "search": "Search bases",
+        "list": "Bases",
+        "none": "No bases",
+        "isDefault": "The default base",
+        "setDefault": "Make the default base",
+        "isDefaultNamed": "{{name}} is the default base",
+        "setDefaultNamed": "Make {{name}} the default base"
+      },
+      "results": {
+        "title": "SEARCH RESULTS",
+        "searching": "SEARCHING…",
+        "some": "{{shown}} OF {{total}} · {{table}}",
+        "found": "{{total}} FOUND · {{table}}",
+        "idle": "TYPE TO SEARCH {{table}} · /table TO CHANGE",
+        "none": "NOTHING MATCHES \"{{query}}\" IN {{table}}",
+        "clear": "Clear the search",
+        "offChart": "OFF CHART",
+        "refine": "SHOWING {{shown}} OF {{total}} · REFINE THE QUERY",
+        "note": "RESULTS {{total}} · {{onChart}} ON CHART"
+      },
+      "log": "Log",
+      "logVerb": {
+        "base": "BASE",
+        "table": "TABLE",
+        "query": "QUERY",
+        "summary": "SUMMARY",
+        "default": "DEFAULT",
+        "error": "ERROR"
+      },
+      "logHint": "Type to search {{table}}, /base to change the database, /table to change the table.",
+      "searching": "SEARCHING",
+      "clear": "CLEAR"
     }
   }
 }

@@ -14,6 +14,8 @@ export interface IConstellationProps {
   lens?: Set<string>;
   /** Record ids lit by the hover trace. */
   lit?: Set<string>;
+  /** Node ids of search results, ringed on the chart (scope design §7.3). */
+  marked?: Set<string>;
   onHover: (recordId?: string) => void;
   onPin: (recordId: string) => void;
   /** A click on the empty chart. */
@@ -59,6 +61,7 @@ export const Constellation = memo(
     zoomResets,
     lens,
     lit,
+    marked,
     onHover,
     onPin,
     onClear,
@@ -115,8 +118,13 @@ export const Constellation = memo(
     }, [frame]);
 
     useEffect(() => {
-      chartRef.current?.setView({ mode, lens: lens?.size ? lens : null, labels });
-    }, [mode, lens, labels]);
+      chartRef.current?.setView({
+        mode,
+        lens: lens?.size ? lens : null,
+        marked: marked?.size ? marked : null,
+        labels,
+      });
+    }, [mode, lens, marked, labels]);
 
     // another search (or dataset) grows out of the core; the same one glides, its new records pulse
     useEffect(() => {

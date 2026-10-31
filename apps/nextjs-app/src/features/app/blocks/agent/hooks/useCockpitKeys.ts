@@ -92,12 +92,14 @@ const fullScreen: IKeyAction = (root) => {
 };
 /**
  * Escape unpins the trace, then drops the answer's lens to everything found (cockpit design
- * §5.8), or on the overview lets the cycle go on; it never turns the cockpit off.
+ * §5.8), or on the overview clears the search, then lets the cycle go on (scope design §4.3);
+ * it never turns the cockpit off.
  */
 const escape: IKeyAction = (root) => {
   const store = useCockpitStore.getState();
   if (onOverview(root)) {
     if (store.overviewPinned) store.pinOverview(undefined);
+    else if (useSearchStore.getState().query) useSearchStore.getState().clearSearch();
     else if (store.cycle.holds.some((h) => h === 'paused' || h === 'picked'))
       store.cycleEvent({ type: 'resume' });
     else return false;

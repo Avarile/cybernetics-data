@@ -1,9 +1,7 @@
-import type { IClarifyOption } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAgentSession } from '../hooks/useAgentSession';
+import { useEffect, useRef, useState } from 'react';
 import { useCockpitKeys } from '../hooks/useCockpitKeys';
-import { choiceFor } from '../model/transcript';
+import { useTableSearch } from '../hooks/useTableSearch';
 import { useCockpitStore } from '../state/cockpit-store';
 import s from '../ui/theme/cockpit.module.css';
 import d from '../ui/theme/deck.module.css';
@@ -24,9 +22,9 @@ export const AgentCockpit = () => {
   // the rail outlives the stages, so the conversation in it is never remounted
   const [rail, setRail] = useState<HTMLElement | null>(null);
   const palette = useCockpitStore((st) => st.palette);
-  const selectSearch = useCockpitStore((st) => st.selectSearch);
-  const chat = useAgentSession();
   useCockpitKeys(root);
+  // the search's side effects (forced results, the log, following the table) run once, here
+  useTableSearch(true);
 
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null;
@@ -38,16 +36,6 @@ export const AgentCockpit = () => {
       before?.focus?.();
     };
   }, []);
-
-  /** An option of a clarify card (or a PICK on a card): the admin's answer, with its choice. */
-  const { send } = chat;
-  const pick = useCallback(
-    (option: IClarifyOption, clarifyId: string) => {
-      selectSearch(undefined);
-      void send(option.label, choiceFor(clarifyId, option));
-    },
-    [selectSearch, send]
-  );
 
   return (
     <div
@@ -63,7 +51,7 @@ export const AgentCockpit = () => {
         <StageContainer rail={rail} />
         <div className={d.grid}>
           <aside ref={setRail} className={d.rail} data-rail>
-            <AskContainer onPick={pick} />
+            <AskContainer />
           </aside>
         </div>
       </div>

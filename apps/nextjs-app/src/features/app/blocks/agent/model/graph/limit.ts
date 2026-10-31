@@ -46,8 +46,17 @@ const chainOf = (g: IGraph, id: string) => {
   return out;
 };
 
-/** Records kept, most relevant first, while their nodes and links fit the budget. */
-function chooseKept(g: IGraph, ranked: IGNode[], budget: number, lens: Set<string> | null) {
+/**
+ * Records kept, most relevant first, while their nodes and links fit the budget. The first
+ * `forced` of the ranked are kept whatever they cost.
+ */
+function chooseKept(
+  g: IGraph,
+  ranked: IGNode[],
+  budget: number,
+  lens: Set<string> | null,
+  forced = 0
+) {
   // hubs and people always draw; under a lens only those it cites, with their branch
   const keep = new Set<string>(
     g.nodes
@@ -55,12 +64,12 @@ function chooseKept(g: IGraph, ranked: IGNode[], budget: number, lens: Set<strin
       .flatMap((n) => chainOf(g, n.id))
   );
   let spent = keep.size;
-  for (const n of ranked) {
+  for (const [i, n] of ranked.entries()) {
     const chain = chainOf(g, n.id).filter((id) => !keep.has(id));
     const touches = (l: IGLink) =>
       (l.source === n.id && keep.has(l.target)) || (l.target === n.id && keep.has(l.source));
     const cost = chain.length + g.links.filter(touches).length;
-    if (spent + cost > budget && keep.size > 1) break;
+    if (i >= forced && spent + cost > budget && keep.size > 1) break;
     chain.forEach((id) => keep.add(id));
     spent += cost;
   }
@@ -99,11 +108,16 @@ export interface ILimitOptions {
   /** Most nodes plus links to draw. */
   budget?: number;
   now?: number;
+  /**
+   * Node ids drawn whatever the budget (scope design §7.3: the forced search results), with
+   * their branch; the least relevant of the rest make room for them.
+   */
+  must?: Set<string> | null;
 }
 
 export function limitGraph(
   g: IGraph,
-  { lens = null, budget = SAFE_DRAW, now = Date.now() }: ILimitOptions = {}
+  { lens = null, budget = SAFE_DRAW, now = Date.now(), must = null }: ILimitOptions = {}
 ): ILimited {
   const items = g.nodes.filter(
     (n) => n.kind === 'item' && !n.overflow && (!lens || lens.has(n.id))
@@ -111,16 +125,18 @@ export function limitGraph(
   const total = items.length;
   if (g.nodes.length + g.links.length <= budget)
     return { graph: g, total, shown: total, hidden: 0 };
-  const ranked = items
+  const byRelevance = items
     .map((n) => ({ n, s: relevance(n, now) }))
     .sort((a, b) => b.s - a.s || (a.n.id < b.n.id ? -1 : 1))
     .map((x) => x.n);
+  const forced = byRelevance.filter((n) => must?.has(n.id));
+  const ranked = [...forced, ...byRelevance.filter((n) => !must?.has(n.id))];
   // room for the "+N more" markers: one per parent that may lose records (none under a lens,
   // which draws only its own records, so a marker would never show)
   const reserve = lens
     ? 0
     : Math.min(new Set(items.map((n) => n.parent)).size, Math.floor(budget / 10));
-  const keep = chooseKept(g, ranked, budget - reserve, lens);
+  const keep = chooseKept(g, ranked, budget - reserve, lens, forced.length);
   const shown = ranked.filter((n) => keep.has(n.id)).length;
   const graph = reduced(g, keep, lens ? [] : ranked.filter((n) => !keep.has(n.id)));
   return { graph, total, shown, hidden: total - shown };

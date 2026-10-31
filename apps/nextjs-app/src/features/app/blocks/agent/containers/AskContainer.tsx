@@ -1,84 +1,130 @@
-import type { IClarifyOption } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
-import { useAgentSkills, useAgentStatus } from '../hooks/useAgentData';
-import { useAgentSession } from '../hooks/useAgentSession';
-import { useSearchBoard } from '../hooks/useSearchBoard';
-import { defaultLens } from '../model/lens';
-import { choiceFor, matchOption, openClarify } from '../model/transcript';
+import { useCallback, useEffect, useState } from 'react';
+import { useAgentStatus } from '../hooks/useAgentData';
+import { chooseBase, holdTable, useScope } from '../hooks/useScope';
+import { useTableSearch } from '../hooks/useTableSearch';
+import { parseInput, resolveName, suggest, type ISuggestion } from '../model/commands';
+import { currentDataset } from '../model/overview/cycle';
 import { useCockpitStore } from '../state/cockpit-store';
-import { useAgentVoiceStore } from '../state/voice-store';
+import { useSearchStore } from '../state/search-store';
+import { AskLog } from '../ui/ask/AskLog';
 import { AgentComposer } from '../ui/ask/Composer';
-import { Suggestions } from '../ui/ask/Suggestions';
-import { Transcript } from '../ui/ask/Transcript';
-import { LensKnobs } from '../ui/stage/StageHead';
 import s from '../ui/theme/cockpit.module.css';
 import p from '../ui/theme/panels.module.css';
 import { useVoiceConversation } from '../voice/useVoiceConversation';
 
+/** The table on the stage: what a query searches (scope design §7.2). */
+const tableOnStage = () =>
+  currentDataset(useCockpitStore.getState().cycle) ?? useSearchStore.getState().tables[0]?.id;
+
 /**
- * The ask panel at the top of the rail (§5.5, §8; the cockpit's ASK panel): the conversation,
- * its plans, the answer's lens and the composer with voice. It enlarges to the middle of the
- * screen; Escape or the backdrop puts it back.
+ * The ask panel at the top of the rail (scope design §6, the cockpit's ASK panel): the log and
+ * the command line with voice. `/base` and `/table` choose the scope; anything else is searched
+ * on the table on the stage. It enlarges to the middle of the screen; Escape or the backdrop puts
+ * it back.
  */
-export const AskContainer = ({
-  onPick,
-}: {
-  onPick: (option: IClarifyOption, clarifyId: string) => void;
-}) => {
+export const AskContainer = () => {
   const { t } = useTranslation('common');
-  const chat = useAgentSession();
+  const scope = useScope();
   const { data: agent } = useAgentStatus();
-  const { data: skills } = useAgentSkills(agent?.tables.agent_skills);
-  const focus = useCockpitStore((st) => st.focus);
-  const selectedSearch = useCockpitStore((st) => st.selectedSearch);
-  const selectSearch = useCockpitStore((st) => st.selectSearch);
-  const draft = useCockpitStore((st) => st.draft);
-  const setDraft = useCockpitStore((st) => st.setDraft);
-  const voiceOn = useAgentVoiceStore((st) => st.enabled);
+  const log = useSearchStore((st) => st.log);
+  const { searching } = useTableSearch();
   const [expanded, setExpanded] = useState(false);
-  const { board } = useSearchBoard();
-  const stage = useCockpitStore((st) => st.stage);
-  const lens = useCockpitStore((st) => st.lens);
-  const setLens = useCockpitStore((st) => st.setLens);
-  const showLens = stage === 'search' && Boolean(board?.plan) && Boolean(board?.cards.length);
-  const disabled = agent ? !agent.enabled || agent.status !== 'ok' : false;
+  const [hint, setHint] = useState<string>();
+  const onStage = useCockpitStore((st) => currentDataset(st.cycle));
+  const tableName = (scope.tables.find((x) => x.id === onStage) ?? scope.tables[0])?.name ?? '';
 
-  // the focus hint and voice ride along with every message (voice design §7.3)
-  useEffect(() => {
-    if (!chat.session) return;
-    const { baseId, tableId, viewId, recordIds } = focus ?? {};
-    chat.session.context = {
-      ...(baseId ? { baseId } : {}),
-      ...(tableId ? { tableId } : {}),
-      ...(viewId ? { viewId } : {}),
-      ...(recordIds?.length ? { recordIds } : {}),
-      ...(voiceOn ? { voice: true } : {}),
-    };
-  }, [chat.session, focus, voiceOn]);
+  const suggestionsFor = useCallback(
+    (value: string) => suggest(parseInput(value), scope.bases, scope.tables, scope.defaultBaseId),
+    [scope.bases, scope.tables, scope.defaultBaseId]
+  );
 
-  /** Typed or spoken: an answer that names an option of the open question sends it as the choice. */
-  const send = (text: string) => {
-    selectSearch(undefined);
-    const clarify = openClarify(chat.messages);
-    const option = clarify && matchOption(clarify, text);
-    void chat.send(text, option ? choiceFor(clarify.clarifyId, option) : undefined);
+  const applyBase = (id: string, name: string) => {
+    chooseBase(id);
+    useSearchStore.getState().addLog('base', name);
   };
+  const applyTable = (id: string, name: string) => {
+    if (!holdTable(id)) return false;
+    useSearchStore.getState().addLog('table', name);
+    return true;
+  };
+  /** A query runs on the table on the stage; the same text again only on Enter (a refetch). */
+  const search = (text: string, again: boolean) => {
+    const tableId = tableOnStage();
+    if (!tableId) return setHint(t('agent.composer.noTable', 'NO TABLE TO SEARCH'));
+    const active = useSearchStore.getState().query;
+    if (!again && active?.text === text && active.tableId === tableId) return;
+    useCockpitStore.getState().setStage('overview');
+    useSearchStore.getState().search(text, tableId);
+  };
+
+  const submit = (raw: string, via: 'enter' | 'idle' | 'voice'): boolean => {
+    const parsed = parseInput(raw);
+    setHint(undefined);
+    if (parsed.kind === 'query') {
+      search(parsed.text, via !== 'idle');
+      return false;
+    }
+    if (via === 'idle') return false;
+    if (parsed.kind === 'base') {
+      const base = resolveName(scope.bases, parsed.arg);
+      if (base) applyBase(base.id, base.name);
+      else
+        setHint(
+          t('agent.composer.noBase', {
+            name: parsed.arg,
+            defaultValue: `NO BASE NAMED "${parsed.arg}"`,
+          })
+        );
+      return Boolean(base);
+    }
+    if (parsed.kind === 'table') {
+      const table = resolveName(scope.tables, parsed.arg);
+      if (table && applyTable(table.id, table.name)) return true;
+      setHint(
+        t('agent.composer.noTableNamed', {
+          name: parsed.arg,
+          base: scope.base?.name ?? '',
+          defaultValue: `NO TABLE NAMED "${parsed.arg}" IN ${scope.base?.name ?? ''}`,
+        })
+      );
+      return false;
+    }
+    if (parsed.kind !== 'empty')
+      setHint(t('agent.composer.unknown', 'UNKNOWN COMMAND · /base, /table'));
+    return false;
+  };
+  const pick = (suggestion: ISuggestion) => {
+    setHint(undefined);
+    if (suggestion.kind === 'base') applyBase(suggestion.id, suggestion.name);
+    if (suggestion.kind === 'table') applyTable(suggestion.id, suggestion.name);
+  };
+  /** Text being typed holds the table on the stage until it is searched (scope design §5.3). */
+  const typing = (text: string) => {
+    const parsed = parseInput(text);
+    const pending =
+      parsed.kind === 'query' && parsed.text !== useSearchStore.getState().query?.text;
+    useCockpitStore.getState().cycleEvent({ type: pending ? 'hold' : 'release', reason: 'typing' });
+  };
+  useEffect(
+    () => () => useCockpitStore.getState().cycleEvent({ type: 'release', reason: 'typing' }),
+    []
+  );
+
   const voice = useVoiceConversation({
-    messages: chat.messages,
-    busy: chat.busy,
-    error: chat.error,
-    disabled,
-    send,
+    messages: [],
+    busy: false,
+    disabled: false,
+    send: (text) => void submit(text, 'voice'),
   });
-  /** Stop also ends what the agent is saying (voice design §4.2). */
-  const stop = () => {
+  const clear = () => {
     voice.stopSpeech();
-    return chat.stop();
-  };
-  const startNew = () => {
-    selectSearch(undefined);
-    chat.startNew();
+    const store = useSearchStore.getState();
+    store.clearSearch();
+    store.clearLog();
+    store.closeRecord();
+    useCockpitStore.getState().pinOverview(undefined);
+    setHint(undefined);
   };
 
   // Escape puts the enlarged panel back before the cockpit's own keys see it
@@ -93,6 +139,7 @@ export const AskContainer = ({
     return () => window.removeEventListener('keydown', onKey, true);
   }, [expanded]);
 
+  const table = tableName.toUpperCase();
   return (
     <>
       {expanded && (
@@ -108,9 +155,9 @@ export const AskContainer = ({
         <h2>
           {t('agent.cockpit.ask', 'ASK THE AGENT')}
           <span>
-            {chat.busy && <small>{t('agent.cockpit.working', 'WORKING')}</small>}
-            <button type="button" className={s.knob} onClick={() => void stop().then(startNew)}>
-              {t('agent.cockpit.new', 'NEW')}
+            {searching && <small>{t('agent.cockpit.searching', 'SEARCHING')}</small>}
+            <button type="button" className={s.knob} onClick={clear}>
+              {t('agent.cockpit.clear', 'CLEAR')}
             </button>
             <button
               type="button"
@@ -127,42 +174,28 @@ export const AskContainer = ({
             </button>
           </span>
         </h2>
-        <Transcript
-          messages={chat.messages}
-          busy={chat.busy}
-          error={chat.error}
-          selectedSearch={selectedSearch}
-          boards={chat.session?.boards}
-          onSelectSearch={selectSearch}
-          onRespond={(id, approved) => void chat.respond(id, approved)}
-          onPick={onPick}
+        <AskLog
+          lines={log}
+          hint={t('agent.cockpit.logHint', {
+            table,
+            defaultValue: `Type to search ${table}, /base to change the database, /table to change the table.`,
+          })}
         />
-        {showLens && board && (
-          <div className={s.lensRow}>
-            <LensKnobs
-              mode={lens ?? defaultLens(board)}
-              cited={board.lens.length}
-              found={board.cards.length}
-              onLens={setLens}
-            />
-          </div>
-        )}
-        {chat.messages.length === 0 && !disabled && (
-          <div className={s.lensRow}>
-            <Suggestions onAsk={send} />
-          </div>
-        )}
         <div className={s.composer}>
           <AgentComposer
-            busy={chat.busy}
-            disabled={disabled || chat.loading}
-            skills={skills}
+            busy={searching}
+            disabled={!scope.bases.length && !agent}
+            placeholder={t('agent.composer.placeholder', {
+              table,
+              defaultValue: `Search ${table} · /base · /table`,
+            })}
+            suggestionsFor={suggestionsFor}
+            hint={hint}
+            onSubmit={(text) => submit(text, 'enter')}
+            onIdle={(text) => void submit(text, 'idle')}
+            onPick={pick}
+            onChange={typing}
             voice={voice}
-            onSend={send}
-            onStop={() => void stop()}
-            onClear={() => void stop().then(startNew)}
-            draft={draft}
-            onDraftTaken={() => setDraft(undefined)}
           />
         </div>
       </section>

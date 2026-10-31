@@ -211,6 +211,114 @@ ol.rows {
   margin-right: 6px;
 }
 
+/* ---------- search results (scope design §7.4) ---------- */
+.resultsBody {
+  max-height: 34vh;
+}
+.clear {
+  border: 0;
+  background: none;
+  color: var(--dim);
+  cursor: pointer;
+  padding: 0 2px;
+}
+.clear:hover {
+  color: var(--ink);
+}
+.result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--bezel);
+  padding: 5px 2px 6px;
+  cursor: pointer;
+  color: var(--ink-2);
+}
+.result:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.result:hover,
+.result[data-on='true'] {
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.result header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.result .nm {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result[data-on='true'] .nm {
+  color: var(--target);
+}
+.result .tm {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+}
+.dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  align-self: center;
+}
+.dot[data-tone='route'] {
+  background: var(--route);
+}
+.dot[data-tone='target'] {
+  background: var(--target);
+}
+.dot[data-tone='caution'] {
+  background: var(--caution);
+}
+.dot[data-tone='dim'] {
+  background: var(--dim);
+}
+.dot[data-tone='faint'] {
+  background: var(--faint);
+}
+.dot[data-off='true'] {
+  background: transparent;
+  border: 1px solid var(--dim);
+}
+.off {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--caution);
+  white-space: nowrap;
+}
+.snip {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.snip i {
+  font-style: normal;
+  color: var(--faint);
+  letter-spacing: 0.08em;
+}
+.snip mark {
+  background: color-mix(in srgb, var(--target) 30%, transparent);
+  color: var(--ink);
+}
+
 :global([data-palette='cyberpunk']) .panel {
   --c: var(--chrome);
   border-color: color-mix(in srgb, var(--chrome-2) 70%, transparent);

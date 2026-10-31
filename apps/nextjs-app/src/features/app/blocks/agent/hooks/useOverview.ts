@@ -1,15 +1,22 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { ICockpitSearchResult } from '@teable/openapi';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { agentQueryKeys, fetchTableOverview } from '../data/agent-api';
+import { cockpitQueryKeys, fetchNodes } from '../data/cockpit-api';
 import { limitGraph, SAFE_DRAW } from '../model/graph/limit';
+import { mergeNodes } from '../model/graph/merge';
 import { traceGraph } from '../model/graph/trace';
 import { currentDataset, nextDataset, remainingAt, running } from '../model/overview/cycle';
 import { overviewToGraph } from '../model/overview/from-overview';
 import { overviewMetrics } from '../model/overview/metrics';
 import { DATASET_MS, PREFETCH_MS, pendingInfo, tableInfo } from '../model/overview/presentation';
+import { markedOf, nodeOf } from '../model/search-results';
 import { useCockpitStore } from '../state/cockpit-store';
 import { useSearchStore } from '../state/search-store';
 import { useScope } from './useScope';
+import { useTableSearch } from './useTableSearch';
+
+const noResults: ICockpitSearchResult[] = [];
 
 /** Narrow screens draw less and without labels (overview design §9.6). */
 const NARROW = '(max-width: 899px)';
@@ -107,20 +114,55 @@ export function useOverview(active: boolean) {
     () => (vo ? tableInfo(vo) : pendingInfo(tableId, name)),
     [vo, tableId, name]
   );
-  const graph = useMemo(() => (vo ? overviewToGraph(vo) : undefined), [vo]);
-  const limited = useMemo(
-    () => (graph ? limitGraph(graph, { budget: narrow ? narrowBudget : SAFE_DRAW }) : undefined),
-    [graph, narrow]
+
+  // the search's forced results are drawn for sure: read when the overview has not (§7.3)
+  const search = useTableSearch();
+  const forced = useSearchStore((s) => s.forced);
+  const searchHere = search.query?.tableId === tableId;
+  const missing = useMemo(
+    () =>
+      vo && searchHere
+        ? forced.filter((id) => !vo.nodes.some((n) => n.recordId === id)).sort()
+        : [],
+    [vo, searchHere, forced]
   );
+  const extra = useQuery({
+    queryKey: cockpitQueryKeys.nodes(tableId, missing),
+    queryFn: () => fetchNodes(tableId, missing),
+    enabled: active && missing.length > 0,
+    staleTime: DATASET_MS,
+    retry: false,
+  });
+  const merged = useMemo(
+    () => (vo && extra.data && missing.length ? mergeNodes(vo, extra.data.nodes) : vo),
+    [vo, extra.data, missing.length]
+  );
+  const graph = useMemo(() => (merged ? overviewToGraph(merged) : undefined), [merged]);
+  const must = useMemo(
+    () =>
+      graph && searchHere && forced.length ? new Set(forced.map((id) => nodeOf(graph, id))) : null,
+    [graph, searchHere, forced]
+  );
+  const limited = useMemo(
+    () =>
+      graph ? limitGraph(graph, { budget: narrow ? narrowBudget : SAFE_DRAW, must }) : undefined,
+    [graph, narrow, must]
+  );
+  const results = useMemo(
+    () => (searchHere ? search.results : noResults),
+    [searchHere, search.results]
+  );
+  const marked = useMemo(() => markedOf(results, limited?.graph), [results, limited]);
   const metrics = useMemo(() => (vo ? overviewMetrics(vo) : []), [vo]);
   const pin = useCallback((id?: string) => {
     const store = useCockpitStore.getState();
     store.pinOverview(store.overviewPinned === id ? undefined : id);
   }, []);
   const focused = hover ?? pinned;
+  // the trace of what is pointed at or pinned; else the results stay lit
   const lit = useMemo(
-    () => (limited && focused ? traceGraph(limited.graph, focused) : undefined),
-    [limited, focused]
+    () => (limited && focused ? traceGraph(limited.graph, focused) : marked),
+    [limited, focused, marked]
   );
 
   return {
@@ -136,6 +178,9 @@ export function useOverview(active: boolean) {
     limited,
     metrics,
     lit,
+    marked,
+    search,
+    results,
     narrow,
     pinned: pinned ? graph?.byId.get(pinned) : undefined,
     setHover,

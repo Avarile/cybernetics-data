@@ -58,6 +58,36 @@ vi.mock('@teable/openapi', async (importOriginal) => ({
   setCockpitDefaultBase: vi.fn(async ({ baseId }: { baseId: string }) => ({
     defaultBaseId: baseId,
   })),
+  searchCockpitTable: vi.fn(async (tableId: string, query: { q: string }) => ({
+    tableId,
+    q: query.q,
+    total: 2,
+    results: [
+      {
+        recordId: 'recT',
+        title: 'Voice',
+        snippet: { field: 'notes', text: 'voice mode', match: [0, 5] },
+        updatedAt: '2026-10-30T04:12:00.000Z',
+      },
+      { recordId: 'recFar', title: 'Far away', snippet: null, updatedAt: null },
+    ],
+  })),
+  getAgentTableOverviewNodes: vi.fn(async () => ({
+    nodes: [
+      {
+        id: 'rec:recFar',
+        kind: 'item',
+        label: 'Far away',
+        short: 'TASK',
+        parent: 'rec:G',
+        tone: 'ink',
+        recordId: 'recFar',
+        tableId: 'tblWork',
+        table: 'tasks',
+      },
+    ],
+    links: [],
+  })),
   getAgentTableOverview: vi.fn(async (tableId: string) => ({
     tableId,
     tableName: tableId === 'tblWork' ? 'tasks' : tableId.slice(3).toLowerCase(),
@@ -137,7 +167,16 @@ describe('agent cockpit (cockpit design §4)', () => {
       overviewFailed: {},
       cycle: startCycle([]),
     });
-    useSearchStore.setState({ baseId: undefined, tableId: undefined, tables: [] });
+    useSearchStore.setState({
+      baseId: undefined,
+      tableId: undefined,
+      tables: [],
+      query: undefined,
+      forced: [],
+      selected: undefined,
+      record: undefined,
+      log: [],
+    });
   });
   afterEach(cleanup);
 
@@ -312,6 +351,38 @@ describe('agent cockpit (cockpit design §4)', () => {
       recordIds: ['recT'],
     });
     expect(useCockpitStore.getState().draft).toBe('Tell me about the task "Voice"');
+  });
+
+  it('lists a search in Search Results, forces its results onto the chart, and lights a click', async () => {
+    const { getAgentTableOverviewNodes } = await import('@teable/openapi');
+    render(<AgentCockpitHost />);
+    act(() => useCockpitStore.getState().open());
+    await screen.findByRole('button', { name: 'TABLE TASKS' });
+    expect(await screen.findByText(/TYPE TO SEARCH TASKS/)).toBeTruthy();
+    act(() => useSearchStore.getState().search('voice', 'tblWork'));
+    const panel = await screen.findByRole('region', { name: 'SEARCH RESULTS' });
+    expect(await within(panel).findByText('2 FOUND · TASKS')).toBeTruthy();
+    // both results are forced: the one the overview did not read is fetched and drawn
+    await vi.waitFor(() => expect(useSearchStore.getState().forced).toEqual(['recT', 'recFar']));
+    await vi.waitFor(() =>
+      expect(getAgentTableOverviewNodes).toHaveBeenCalledWith('tblWork', { recordIds: ['recFar'] })
+    );
+    expect(await screen.findByText('RESULTS 2 · 2 ON CHART')).toBeTruthy();
+    // the search holds the rotation on its table
+    expect(useCockpitStore.getState().cycle.holds).toContain('search');
+    await userEvent.click(within(panel).getByRole('button', { name: /Far away/ }));
+    expect(useSearchStore.getState()).toMatchObject({
+      selected: 'recFar',
+      record: { recordId: 'recFar', tableId: 'tblWork' },
+    });
+    expect(useCockpitStore.getState().overviewPinned).toBe('rec:recFar');
+    // Escape unpins, then clears the search
+    act(() => (document.activeElement as HTMLElement | null)?.blur());
+    await userEvent.keyboard('{Escape}');
+    expect(useCockpitStore.getState().overviewPinned).toBeUndefined();
+    await userEvent.keyboard('{Escape}');
+    expect(useSearchStore.getState().query).toBeUndefined();
+    expect(useCockpitStore.getState().cycle.holds).not.toContain('search');
   });
 
   it('keeps the conversation while off', async () => {

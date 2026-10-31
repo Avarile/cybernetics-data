@@ -62,6 +62,8 @@ export interface IChartView {
   lens: Set<string> | null;
   /** Node ids lit by the trace; the rest dim. */
   lit: Set<string> | null;
+  /** Node ids of search results: ringed, and labelled even on a crowded ring (scope design §7.3). */
+  marked: Set<string> | null;
   /** Record labels on the rim; off on narrow screens. */
   labels: boolean;
 }
@@ -90,7 +92,13 @@ export class ConstellationChart {
   private byId = new Map<string, IPoint>();
   private edges: IEdge[] = [];
   private readonly pos: IPos = new Map();
-  private view: IChartView = { mode: 'bundle', lens: null, lit: null, labels: true };
+  private view: IChartView = {
+    mode: 'bundle',
+    lens: null,
+    lit: null,
+    marked: null,
+    labels: true,
+  };
   private width = 0;
   private height = 0;
   private frame: IFrame | null = null;
@@ -170,9 +178,12 @@ export class ConstellationChart {
     if (!same) this.rebuild();
   }
 
-  /** Mode, lens and labels change the tree (a rebuild); the lit trace only the focus. */
+  /**
+   * Mode, lens, labels and the marked results change the tree (a rebuild); the lit trace only
+   * the focus.
+   */
   setView(patch: Partial<IChartView>) {
-    const structural = (['mode', 'lens', 'labels'] as const).some(
+    const structural = (['mode', 'lens', 'labels', 'marked'] as const).some(
       (k) => k in patch && patch[k] !== this.view[k]
     );
     this.view = { ...this.view, ...patch };
@@ -312,7 +323,10 @@ export class ConstellationChart {
     );
     const hidden = fit.hidden || !this.view.labels;
     this.svg.style('--fs', `${fit.fs.toFixed(2)}px`).classed('no-labels', hidden);
-    const labelled = hidden ? leaves.filter((d) => d.data.node.overflow) : leaves;
+    const marked = this.view.marked;
+    const labelled = hidden
+      ? leaves.filter((d) => d.data.node.overflow || marked?.has(d.data.id))
+      : leaves;
     this.layers.labels
       .selectAll<SVGTextElement, IPoint>('text')
       .data(labelled, (d) => d.data.id)
@@ -469,17 +483,23 @@ export class ConstellationChart {
     }
   }
 
-  /** Lit nodes, and the edges and branches between them, stay bright; the rest dim. */
+  /**
+   * Lit nodes, and the edges and branches between them, stay bright; the rest dim. Search results
+   * keep their ring whatever is lit.
+   */
   private applyFocus() {
     const lit = this.view.lit?.size ? this.view.lit : null;
     const on = (id: string) => !!lit && lit.has(id);
+    const result = (id: string) => Boolean(this.view.marked?.has(id));
     this.svg.classed('focusing', !!lit);
     this.layers.nodes
       .selectAll<SVGGElement, IPoint>('g.v-node')
-      .classed('on', (d) => on(d.data.id));
+      .classed('on', (d) => on(d.data.id))
+      .classed('result', (d) => result(d.data.id));
     this.layers.labels
       .selectAll<SVGTextElement, IPoint>('text')
-      .classed('on', (d) => on(d.data.id));
+      .classed('on', (d) => on(d.data.id))
+      .classed('result', (d) => result(d.data.id));
     this.layers.edges
       .selectAll<SVGPathElement, IEdge>('path')
       .classed('on', (e) => on(e.link.source) && on(e.link.target));

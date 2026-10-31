@@ -271,6 +271,18 @@
   stroke: var(--caution);
 }
 
+/* search results (scope design §7.3): a ring around the mark and a bright label, always */
+.chart :global(.v-node.result .dot) {
+  stroke: var(--target);
+  stroke-width: 2.2;
+  stroke-opacity: 1;
+  paint-order: stroke;
+}
+.chart :global(.v-label.result) {
+  fill: var(--target);
+  font-weight: 600;
+}
+
 .chart:global(.focusing) :global(.v-node:not(.on):not(.root)),
 .chart:global(.focusing) :global(.v-label:not(.on)) {
   opacity: 0.14;

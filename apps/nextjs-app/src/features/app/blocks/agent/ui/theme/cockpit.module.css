@@ -321,6 +321,58 @@
   text-decoration: underline;
 }
 
+/* the ask panel's log (scope design §6.6) */
+.askLog {
+  list-style: none;
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bezel-2) transparent;
+  font-size: 10.5px;
+}
+.askLog li {
+  display: grid;
+  grid-template-columns: 38px 58px minmax(0, 1fr);
+  gap: 6px;
+  align-items: baseline;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.askLog li b {
+  font-weight: 600;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--route);
+}
+.askLog li[data-kind='summary'] span {
+  font-family: var(--f-body);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.askLog li[data-kind='error'] b,
+.askLog li[data-kind='error'] span {
+  color: var(--caution);
+}
+.askTime {
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.askLog li.askHint {
+  display: block;
+  color: var(--dim);
+}
+.askLog li.askEnd {
+  display: block;
+  height: 0;
+}
+
 .transcript {
   padding: 10px;
   display: flex;

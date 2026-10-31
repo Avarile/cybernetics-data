@@ -276,12 +276,18 @@ const fakeVoice = (over: Partial<IVoiceConversation> = {}): IVoiceConversation =
 
 describe('composer with voice', () => {
   afterEach(cleanup);
-  const props = { busy: false, onSend: vi.fn(), onStop: vi.fn() };
+  const props = {
+    placeholder: 'Search',
+    suggestionsFor: () => [],
+    onSubmit: vi.fn(() => false),
+    onIdle: vi.fn(),
+    onPick: vi.fn(),
+  };
 
   it('turns voice on with the typed text as the start of the draft', async () => {
     const voice = fakeVoice();
     render(<AgentComposer {...props} voice={voice} />);
-    await userEvent.type(screen.getByRole('textbox'), 'typed words');
+    await userEvent.type(screen.getByRole('combobox'), 'typed words');
     await userEvent.click(screen.getByRole('switch'));
     expect(voice.turnOn).toHaveBeenCalledWith('typed words');
   });
@@ -293,7 +299,7 @@ describe('composer with voice', () => {
       listener: { status: 'listening', draft: 'show me', interim: 'the top', deadline: Date.now() },
     });
     render(<AgentComposer {...props} voice={voice} />);
-    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.queryByRole('combobox')).toBeNull();
     expect(screen.getByTestId('agent-voice-transcript')).toHaveTextContent('show me the top');
     await userEvent.click(screen.getByRole('button', { name: /send now/i }));
     await userEvent.click(screen.getByRole('button', { name: /clear/i }));
@@ -301,13 +307,12 @@ describe('composer with voice', () => {
     expect(voice.clear).toHaveBeenCalled();
   });
 
-  it('locks the switch while the agent responds, with Stop to end it', async () => {
-    const onStop = vi.fn();
+  it('locks the switch while the agent speaks, with Stop to end it', async () => {
     const voice = fakeVoice({ enabled: true, phase: 'speaking', locked: true });
-    render(<AgentComposer {...props} onStop={onStop} voice={voice} />);
+    render(<AgentComposer {...props} voice={voice} />);
     expect(screen.getByRole('switch')).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: /stop/i }));
-    expect(onStop).toHaveBeenCalled();
+    expect(voice.stopSpeech).toHaveBeenCalled();
   });
 
   it('disables the switch without speech recognition', () => {
@@ -321,7 +326,7 @@ describe('composer with voice', () => {
     await userEvent.click(screen.getByRole('switch'));
     expect(voice.turnOff).toHaveBeenCalled();
     rerender(<AgentComposer {...props} voice={{ ...voice, enabled: false }} />);
-    expect(screen.getByRole('textbox')).toHaveValue('left over');
+    expect(screen.getByRole('combobox')).toHaveValue('left over');
   });
 
   it('shows a mic problem under the composer', () => {
