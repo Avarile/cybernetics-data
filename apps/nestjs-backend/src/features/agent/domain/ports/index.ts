@@ -8,3 +8,4 @@ export * from './rag.port';
 export * from './search-log.port';
 export * from './search.ports';
 export * from './overview.port';
+export * from './cockpit.port';

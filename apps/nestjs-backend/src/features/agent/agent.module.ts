@@ -23,6 +23,7 @@ import { CancelRun } from './application/chat/cancel-run.usecase';
 import { ResumeTurn } from './application/chat/resume-turn.usecase';
 import { RunTurn } from './application/chat/run-turn.usecase';
 import { TurnGate } from './application/chat/turn-gate';
+import { CockpitScope } from './application/cockpit/cockpit-scope';
 import { AgentSeeder } from './application/installation/agent-seeder';
 import { EnsureInstallation } from './application/installation/ensure-installation.usecase';
 import { AgentExposureService } from './application/installation/exposure';
@@ -45,6 +46,7 @@ import {
   AGENT_LAYOUT_PORT,
   AGENT_STORE_PORT,
   AUDIT_PORT,
+  COCKPIT_DATA_PORT,
   DATA_GATEWAY_PORT,
   HTTP_PORT,
   MODEL_PORT,
@@ -58,6 +60,7 @@ import {
   SECRET_VAULT_PORT,
 } from './domain/ports';
 import { PrismaAuditLog } from './infrastructure/audit/prisma-audit-log';
+import { CockpitDataReader } from './infrastructure/cockpit/cockpit-data.reader';
 import { UnrestrictedDataGateway } from './infrastructure/data/unrestricted-data-gateway';
 import { UnrestrictedDataWriter } from './infrastructure/data/unrestricted-data-writer';
 import { AgentExecutionContext } from './infrastructure/execution-context';
@@ -79,6 +82,7 @@ import { PrismaSecretVault } from './infrastructure/secrets/prisma-secret-vault'
 import { AgentTableStore } from './infrastructure/store/agent-table-store';
 import { AgentAdminGuard } from './interface/agent-admin.guard';
 import { AgentChatController } from './interface/agent-chat.controller';
+import { AgentCockpitController } from './interface/agent-cockpit.controller';
 import { AgentLifecycleController } from './interface/agent-lifecycle.controller';
 import { AgentOverviewController } from './interface/agent-overview.controller';
 import { AgentSearchController } from './interface/agent-search.controller';
@@ -110,6 +114,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     AgentSettingsController,
     AgentSearchController,
     AgentOverviewController,
+    AgentCockpitController,
   ],
   imports: [
     EventJobModule.registerQueue(AGENT_JOBS_QUEUE),
@@ -179,6 +184,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     RunSearch,
     ConfigureAgent,
     ManageCredentials,
+    CockpitScope,
     AgentAdminGuard,
     { provide: MODEL_PORT, useClass: ProviderModelAdapter },
     { provide: AUDIT_PORT, useClass: PrismaAuditLog },
@@ -189,6 +195,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     { provide: SCHEMA_CATALOG_PORT, useClass: SchemaCatalog },
     { provide: SEARCH_READER_PORT, useClass: SearchReader },
     { provide: OVERVIEW_GRAPH_PORT, useClass: BaseGraphOverviewReader },
+    { provide: COCKPIT_DATA_PORT, useClass: CockpitDataReader },
     { provide: DATA_GATEWAY_PORT, useClass: UnrestrictedDataGateway },
     { provide: SECRET_VAULT_PORT, useClass: PrismaSecretVault },
     { provide: HTTP_PORT, useClass: OutboundHttp },
