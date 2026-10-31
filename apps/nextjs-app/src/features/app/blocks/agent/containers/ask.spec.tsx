@@ -42,7 +42,7 @@ const input = () => screen.getByRole('combobox');
 
 describe('the ask panel as a command line (scope design §6)', () => {
   beforeEach(() => {
-    useCockpitStore.setState({ stage: 'overview', cycle: startCycle(['tblTasks', 'tblKnow']) });
+    useCockpitStore.setState({ cycle: startCycle(['tblTasks', 'tblKnow']) });
     useSearchStore.setState({
       baseId: undefined,
       tableId: undefined,

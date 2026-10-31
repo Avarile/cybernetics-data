@@ -115,3 +115,16 @@ useSearchStore.subscribe((now, before) => {
   if (Boolean(now.query) === Boolean(before.query)) return;
   useCockpitStore.getState().cycleEvent({ type: now.query ? 'hold' : 'release', reason: 'search' });
 });
+
+/**
+ * Opened from the grid (scope design D12): its base becomes the current one and its table the
+ * one held on the stage, once the cockpit has the base's tables.
+ */
+useCockpitStore.subscribe((now, before) => {
+  const focus = now.focus;
+  if (!now.on || focus === before.focus || !focus?.baseId) return;
+  const store = useSearchStore.getState();
+  if (store.baseId !== focus.baseId) store.setBase(focus.baseId);
+  useSearchStore.setState({ tableId: focus.tableId ?? useSearchStore.getState().tableId });
+  useCockpitStore.setState({ focus: undefined });
+});

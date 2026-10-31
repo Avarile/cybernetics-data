@@ -11,28 +11,21 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { overviewDatasetSchema, overviewNodesRoSchema } from '@teable/openapi';
-import type {
-  IAgentOverviewVo,
-  IAgentTableOverviewVo,
-  IOverviewDatasetId,
-  IOverviewNodesRo,
-  IOverviewNodesVo,
-} from '@teable/openapi';
+import { overviewNodesRoSchema } from '@teable/openapi';
+import type { IAgentTableOverviewVo, IOverviewNodesRo, IOverviewNodesVo } from '@teable/openapi';
 import type { Request, Response } from 'express';
 import { ClsService } from 'nestjs-cls';
 import type { IClsStore } from '../../../types/cls';
 import { ZodValidationPipe } from '../../../zod.validation.pipe';
-import { GetOverview } from '../application/overview/get-overview.query';
 import { GetTableOverview } from '../application/overview/get-table-overview.query';
 import { AgentAdminGuard } from './agent-admin.guard';
 
 /** Same content, same tag: builtAt is left out, so a rebuilt but unchanged overview is a 304. */
-const etagOf = ({ builtAt: _builtAt, ...content }: IAgentOverviewVo | IAgentTableOverviewVo) =>
+const etagOf = ({ builtAt: _builtAt, ...content }: IAgentTableOverviewVo) =>
   `"${createHash('sha1').update(JSON.stringify(content)).digest('hex').slice(0, 16)}"`;
 
 /** The ETag, the private cache headers, and a 304 when the client has this content. */
-function conditional<T extends IAgentOverviewVo | IAgentTableOverviewVo>(
+function conditional<T extends IAgentTableOverviewVo>(
   vo: T,
   req: Request,
   res: Response
@@ -48,27 +41,14 @@ function conditional<T extends IAgentOverviewVo | IAgentTableOverviewVo>(
   return vo;
 }
 
-/**
- * Overview design §8.3 and scope design §9: a dataset of the data base, or one table of any
- * base, for the cockpit's stage.
- */
+/** Scope design §9: one table of a base, for the cockpit's stage, and its forced records. */
 @Controller('api/agent')
 @UseGuards(AgentAdminGuard)
 export class AgentOverviewController {
   constructor(
-    private readonly overview: GetOverview,
     private readonly tableOverview: GetTableOverview,
     private readonly cls: ClsService<IClsStore>
   ) {}
-
-  @Get('overview/:dataset')
-  async get(
-    @Param('dataset', new ZodValidationPipe(overviewDatasetSchema)) dataset: IOverviewDatasetId,
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response
-  ): Promise<IAgentOverviewVo | undefined> {
-    return conditional(await this.overview.get(this.cls.get('user.id'), dataset), req, res);
-  }
 
   @Get('overview/tables/:tableId')
   async table(

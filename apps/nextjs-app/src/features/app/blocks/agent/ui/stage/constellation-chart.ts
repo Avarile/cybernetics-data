@@ -58,8 +58,6 @@ export interface IChartCallbacks {
 
 export interface IChartView {
   mode: ILayoutMode;
-  /** Node ids the chart narrows to (the answer's lens), their branches drawn faint. */
-  lens: Set<string> | null;
   /** Node ids lit by the trace; the rest dim. */
   lit: Set<string> | null;
   /** Node ids of search results: ringed, and labelled even on a crowded ring (scope design §7.3). */
@@ -92,13 +90,7 @@ export class ConstellationChart {
   private byId = new Map<string, IPoint>();
   private edges: IEdge[] = [];
   private readonly pos: IPos = new Map();
-  private view: IChartView = {
-    mode: 'bundle',
-    lens: null,
-    lit: null,
-    marked: null,
-    labels: true,
-  };
+  private view: IChartView = { mode: 'bundle', lit: null, marked: null, labels: true };
   private width = 0;
   private height = 0;
   private frame: IFrame | null = null;
@@ -178,12 +170,9 @@ export class ConstellationChart {
     if (!same) this.rebuild();
   }
 
-  /**
-   * Mode, lens, labels and the marked results change the tree (a rebuild); the lit trace only
-   * the focus.
-   */
+  /** Mode, labels and the marked results change the tree (a rebuild); the lit trace the focus. */
   setView(patch: Partial<IChartView>) {
-    const structural = (['mode', 'lens', 'labels', 'marked'] as const).some(
+    const structural = (['mode', 'labels', 'marked'] as const).some(
       (k) => k in patch && patch[k] !== this.view[k]
     );
     this.view = { ...this.view, ...patch };
@@ -254,7 +243,7 @@ export class ConstellationChart {
   private rebuild(changed?: Set<string>, fresh?: boolean) {
     if (!this.graph || !this.width) return;
     if (fresh) this.pos.clear();
-    const data = buildTree(this.graph, this.view.lens);
+    const data = buildTree(this.graph, null);
     this.geo = geometry(this.width, this.height, leavesOf(data), this.frame);
     this.gc.attr('transform', `translate(${this.geo.cx},${this.geo.cy})`);
     const h = layoutTree(data, this.view.mode, this.geo.rIn);
@@ -271,7 +260,7 @@ export class ConstellationChart {
     const nodes = h.descendants();
     this.hier = h;
     this.byId = new Map(nodes.map((d) => [d.data.id, d]));
-    this.svg.classed('mode-tree', this.view.mode === 'tree').classed('lensing', !!this.view.lens);
+    this.svg.classed('mode-tree', this.view.mode === 'tree');
     this.layers.links
       .selectAll<SVGPathElement, ILink>('path')
       .data(h.links(), (l) => l.target.data.id)
@@ -316,17 +305,11 @@ export class ConstellationChart {
         d.depth > 0 &&
         (d.data.node.kind === 'actor' || (d.data.node.kind === 'item' && !d.children))
     );
-    const fit = labelFit(
-      this.geo,
-      h.leaves().length,
-      !!this.view.lens || this.view.mode === 'tree'
-    );
+    const fit = labelFit(this.geo, h.leaves().length, this.view.mode === 'tree');
     const hidden = fit.hidden || !this.view.labels;
     this.svg.style('--fs', `${fit.fs.toFixed(2)}px`).classed('no-labels', hidden);
-    const marked = this.view.marked;
-    const labelled = hidden
-      ? leaves.filter((d) => d.data.node.overflow || marked?.has(d.data.id))
-      : leaves;
+    const keep = (d: IPoint) => d.data.node.overflow || this.view.marked?.has(d.data.id);
+    const labelled = hidden ? leaves.filter(keep) : leaves;
     this.layers.labels
       .selectAll<SVGTextElement, IPoint>('text')
       .data(labelled, (d) => d.data.id)
@@ -483,14 +466,11 @@ export class ConstellationChart {
     }
   }
 
-  /**
-   * Lit nodes, and the edges and branches between them, stay bright; the rest dim. Search results
-   * keep their ring whatever is lit.
-   */
+  /** Lit nodes and the edges between them stay bright, the rest dim; results keep their ring. */
   private applyFocus() {
     const lit = this.view.lit?.size ? this.view.lit : null;
     const on = (id: string) => !!lit && lit.has(id);
-    const result = (id: string) => Boolean(this.view.marked?.has(id));
+    const result = (id: string) => !!this.view.marked?.has(id);
     this.svg.classed('focusing', !!lit);
     this.layers.nodes
       .selectAll<SVGGElement, IPoint>('g.v-node')

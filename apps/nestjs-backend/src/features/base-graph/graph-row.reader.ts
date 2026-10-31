@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { FieldKeyType } from '@cybernetics/core';
+import { CellFormat, FieldKeyType } from '@cybernetics/core';
 import { Injectable } from '@nestjs/common';
 import type { IFieldInstance } from '../field/model/factory';
 import { RecordService } from '../record/record.service';
@@ -96,6 +96,20 @@ export class GraphRowReader {
       ...table.valueFields.map((f) => f.id),
     ].filter((id): id is string => Boolean(id));
 
+    // Chosen records (recordIds) are read by id, with the same permission wrapping;
+    // getRecordsFields has no way to select ids.
+    if (table.recordIds) {
+      const snapshots = await this.recordService.getSnapshotBulkWithPermission(
+        table.tableId,
+        table.recordIds,
+        Object.fromEntries([...new Set(projection)].map((id) => [id, true])),
+        FieldKeyType.Id,
+        CellFormat.Json,
+        true
+      );
+      return { rows: snapshots.map((s) => toGraphRow(table, s.data)), truncated: false };
+    }
+
     const records = await this.recordService.getRecordsFields(
       table.tableId,
       {
@@ -106,7 +120,6 @@ export class GraphRowReader {
         // and sort apply and `filter` is ANDed onto it.
         ignoreViewQuery: !table.viewId,
         filter: table.filter,
-        ...(table.recordIds ? { selectedRecordIds: table.recordIds } : {}),
         take: table.limit + 1,
       },
       true

@@ -3,7 +3,7 @@ import { AGENT_DATA_PART } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import { useTranslation } from 'next-i18next';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { isToolPart, waitingApprovals } from '../model/agent-request';
+import { isToolPart, waitingApprovals } from '../model/reply';
 import { useAgentVoiceStore } from '../state/voice-store';
 import { BrowserVoiceEngine } from './engines/browser-engine';
 import { ElevenLabsEngine } from './engines/elevenlabs-engine';

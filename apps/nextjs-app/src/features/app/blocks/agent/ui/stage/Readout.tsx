@@ -1,9 +1,6 @@
-import Link from 'next/link';
-import { useTranslation } from 'next-i18next';
 import { forwardRef } from 'react';
 import type { IMetric } from '../../model/metrics';
 import type { ILegendEntry } from '../../model/overview/presentation';
-import s from '../theme/cockpit.module.css';
 import d from '../theme/deck.module.css';
 
 /** Up to seven totals, one row each, label left and value right (the cockpit's kpis). */
@@ -30,8 +27,6 @@ export interface IReadoutProps {
   notes?: (string | undefined)[];
   /** The totals, when they sit in the corner (a boxed stage has them above it). */
   metrics?: IMetric[];
-  /** The answer's lens is on: the readout counts what it cites. */
-  lens?: boolean;
   /** Off for changes nobody asked for (the overview's timed switch). */
   live?: 'polite' | 'off';
 }
@@ -42,8 +37,8 @@ export interface IReadoutProps {
  * stays clear of it.
  */
 export const Readout = forwardRef<HTMLDivElement, IReadoutProps>(
-  ({ top, count, unit, notes = [], metrics, lens, live = 'polite' }, ref) => (
-    <div ref={ref} className={d.readout} data-lens={lens ? 'true' : undefined}>
+  ({ top, count, unit, notes = [], metrics, live = 'polite' }, ref) => (
+    <div ref={ref} className={d.readout}>
       <div className={d.head} aria-live={live}>
         <span className={d.coreTop}>{top}</span>
         <strong className={d.coreN}>
@@ -62,18 +57,8 @@ export const Readout = forwardRef<HTMLDivElement, IReadoutProps>(
 );
 Readout.displayName = 'Readout';
 
-/** The search board's marks. */
-export const SEARCH_LEGEND: ILegendEntry[] = [
-  ['route', 'IN PROGRESS', 'hatch'],
-  ['target', 'NEXT · TODO', 'ring'],
-  ['ink', 'DONE'],
-  ['dim', 'BACKLOG'],
-  ['caution', 'ON HOLD · OVERDUE', 'halo'],
-  ['faint', 'CANCELLED · ARCHIVED'],
-];
-
 /** The marks used on the stage, two columns in its bottom-left corner. */
-export const Legend = ({ entries = SEARCH_LEGEND }: { entries?: ILegendEntry[] }) => (
+export const Legend = ({ entries }: { entries: ILegendEntry[] }) => (
   <div className={d.legend} aria-label="Legend">
     {entries.map(([tone, label, mark]) => (
       <span key={`${tone}:${label}`}>
@@ -83,28 +68,3 @@ export const Legend = ({ entries = SEARCH_LEGEND }: { entries?: ILegendEntry[] }
     ))}
   </div>
 );
-
-/** The stage before any search: what to ask, or why the agent cannot answer yet. */
-export const StandbyStage = ({ blocked, onLeave }: { blocked?: string; onLeave?: () => void }) => {
-  const { t } = useTranslation('common');
-  return (
-    <div className={s.standby}>
-      <b>{t('agent.cockpit.standby', 'STANDBY')}</b>
-      {blocked ? (
-        <>
-          <span>{blocked}</span>
-          <Link href="/admin/agent" onClick={onLeave}>
-            {t('agent.panel.openSettings', 'Open Admin ▸ Agent')}
-          </Link>
-        </>
-      ) : (
-        <span>
-          {t(
-            'agent.cockpit.standbyText',
-            'Ask about your work, knowledge or money. The agent plans a search table by table, and every record it finds lands here as a card.'
-          )}
-        </span>
-      )}
-    </div>
-  );
-};

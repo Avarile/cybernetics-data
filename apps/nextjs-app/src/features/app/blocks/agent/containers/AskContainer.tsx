@@ -57,7 +57,6 @@ export const AskContainer = () => {
     if (!tableId) return setHint(t('agent.composer.noTable', 'NO TABLE TO SEARCH'));
     const active = useSearchStore.getState().query;
     if (!again && active?.text === text && active.tableId === tableId) return;
-    useCockpitStore.getState().setStage('overview');
     useSearchStore.getState().search(text, tableId);
   };
 

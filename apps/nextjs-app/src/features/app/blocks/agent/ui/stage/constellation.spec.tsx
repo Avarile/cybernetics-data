@@ -26,7 +26,6 @@ const node = (id: string, kind: IGNode['kind'], parent: string | null): IGNode =
   short: null,
   parent,
   tone: 'none',
-  ...(kind === 'actor' ? { cardKey: `s3:${id}` } : {}),
 });
 const graph = finishGraph({
   title: 'Cockpit',
@@ -39,13 +38,13 @@ const graph = finishGraph({
   links: [],
 });
 
-/** The chart in a cockpit-like root, with the cockpit's keys, on a search or the overview. */
-const Chart = ({ stage = 'search' }: { stage?: 'search' | 'overview' }) => {
+/** The chart in a cockpit-like root, with the cockpit's keys. */
+const Chart = () => {
   const root = useRef<HTMLDivElement>(null);
   useCockpitKeys(root);
   return (
     <div ref={root}>
-      <section data-stage={stage}>
+      <section>
         <Constellation graph={graph} mode="bundle" onHover={vi.fn()} onPin={vi.fn()} />
       </section>
     </div>
@@ -64,10 +63,7 @@ describe('constellation (cockpit design §5.4)', () => {
         disconnect = vi.fn();
       }
     );
-    useCockpitStore.setState({
-      pinned: undefined,
-      overviewPinned: undefined,
-    });
+    useCockpitStore.setState({ overviewPinned: undefined });
   });
   afterEach(() => {
     cleanup();
@@ -84,11 +80,11 @@ describe('constellation (cockpit design §5.4)', () => {
   it('pins the people in turn with ] and [', async () => {
     render(<Chart />);
     await userEvent.keyboard(']');
-    expect(useCockpitStore.getState().pinned).toBe('s3:Ava');
+    expect(useCockpitStore.getState().overviewPinned).toBe('Ava');
     await userEvent.keyboard(']');
-    expect(useCockpitStore.getState().pinned).toBe('s3:Bo');
+    expect(useCockpitStore.getState().overviewPinned).toBe('Bo');
     await userEvent.keyboard('[[');
-    expect(useCockpitStore.getState().pinned).toBe('s3:Ava');
+    expect(useCockpitStore.getState().overviewPinned).toBe('Ava');
   });
 
   it('turns as one layer: a CSS turn on the drawn chart, the layout not run again', async () => {
@@ -108,15 +104,6 @@ describe('constellation (cockpit design §5.4)', () => {
     expect(kinds.sort()).toEqual(['actor', 'actor', 'hub', 'item', 'root']);
     expect(container.querySelectorAll('g.v-node.actor path.dia')).toHaveLength(2);
     expect(container.querySelectorAll('g.rim')).toHaveLength(2);
-    expect(container.querySelector('g.v-node[data-key="s3:Ava"]')).not.toBeNull();
-  });
-
-  it("pins into the overview's own slot on the overview", async () => {
-    render(<Chart stage="overview" />);
-    await userEvent.keyboard(']');
-    expect(useCockpitStore.getState()).toMatchObject({
-      overviewPinned: 's3:Ava',
-      pinned: undefined,
-    });
+    expect(container.querySelector('g.v-node[data-key="Ava"]')).not.toBeNull();
   });
 });

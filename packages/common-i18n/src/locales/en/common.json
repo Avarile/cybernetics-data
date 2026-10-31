@@ -1767,9 +1767,7 @@
       "denied": "Denied."
     },
     "composer": {
-      "skills": "Skills",
       "placeholder": "Search {{table}} · /base · /table",
-      "clear": "Start a new conversation",
       "stop": "Stop",
       "send": "Send",
       "suggestions": "Suggestions",
@@ -1927,12 +1925,6 @@
       "label": "Agent cockpit",
       "toggle": "Agent cockpit (Ctrl/⌘ J)",
       "offButton": "Turn the cockpit off (Ctrl/⌘ J)",
-      "thread": "THREAD",
-      "newThread": "New conversation",
-      "focus": "FOCUS",
-      "clearFocus": "Forget the focus",
-      "table": "TABLE",
-      "rows": "ROWS",
       "status": "Agent status",
       "linking": "LINKING",
       "live": "LIVE",
@@ -1946,54 +1938,12 @@
         "warning": "WARNING"
       },
       "palette": "Colour theme",
-      "stage": "Search board",
-      "standby": "STANDBY",
-      "standbyText": "Ask about your work, knowledge or money. The agent plans a search table by table, and every record it finds lands here as a card.",
-      "lens": {
-        "label": "Lens",
-        "answer": "ANSWER",
-        "retrieved": "RETRIEVED",
-        "searching": "SEARCHING",
-        "off": "Show everything found",
-        "searchingChip": "SEARCHING · THE CHART FILLS AS IT GOES",
-        "answerChip": "ANSWER · {{n}} RECORDS CITED"
-      },
-      "lane": {
-        "running": "SEARCHING…",
-        "empty": "NO RECORDS",
-        "failed": "FAILED",
-        "needs_choice": "PICK ONE",
-        "cancelled": "STOPPED"
-      },
-      "noRecords": "No records.",
-      "openTable": "Open the table",
-      "openRecord": "Open the record",
-      "via": "via",
-      "pick": "PICK",
-      "archived": "ARCHIVED",
       "overdue": "OVERDUE",
       "missing": "Not in this base",
       "ask": "ASK THE AGENT",
       "askLabel": "Ask the agent",
-      "new": "NEW",
-      "plan": "PLAN",
-      "planLabel": "Search plan",
-      "question": "The agent asks",
-      "orType": "Or type or say your answer.",
-      "picked": "picked",
-      "thinking": "THINKING",
-      "suggest": {
-        "project": "How is my latest project going?",
-        "tasks": "Which tasks are in progress, and who is on them?",
-        "knowledge": "What do I have written about deployment?",
-        "money": "How much did I spend in the last 30 days?"
-      },
       "view": {
-        "label": "View",
-        "board": "BOARD",
-        "constellation": "CONSTELLATION",
         "tree": "TREE",
-        "overview": "OVERVIEW",
         "bundle": "BUNDLE",
         "layout": "Layout"
       },
@@ -2001,10 +1951,6 @@
       "overview": {
         "label": "Overview",
         "title": "OVERVIEW",
-        "work": "WORK",
-        "knowledge": "KNOWLEDGE",
-        "people": "PEOPLE",
-        "finance": "FINANCE",
         "pause": "Pause or go on (P)",
         "next": "NEXT",
         "held": {
@@ -2017,9 +1963,7 @@
           "typing": "HELD · TYPING"
         },
         "open": "OPEN",
-        "ask": "ASK",
         "unpin": "Unpin",
-        "askDraft": "Tell me about the {{what}} \"{{title}}\"",
         "nothing": "NOTHING TO SHOW",
         "reading": "READING {{dataset}}…",
         "updated": "UPDATED",
@@ -2027,14 +1971,9 @@
         "truncated": "MORE NOT READ",
         "read": "READ"
       },
-      "dataset": "DATASET",
       "sources": "Thread and dataset",
       "expand": "Enlarge the panel",
       "collapse": "Put the panel back",
-      "readout": {
-        "cited": "RECORDS CITED",
-        "found": "RECORDS FOUND"
-      },
       "rail": {
         "branches": {
           "work": "GOAL VECTORS",
@@ -2042,21 +1981,8 @@
           "people": "CONTACT TYPES",
           "finance": "CATEGORIES"
         },
-        "feed": {
-          "work": "RECENT WORK",
-          "knowledge": "RECENTLY UPDATED",
-          "people": "RECENT WORK",
-          "finance": "LATEST TRANSACTIONS"
-        },
         "branchHint": "HOVER TO LIGHT BRANCH",
-        "feedHint": "LATEST · UTC",
-        "noVectors": "Nothing to show for this dataset yet.",
-        "noFeed": "No dated records yet.",
-        "tables": "TABLES",
-        "tablesHint": "WHAT EACH STEP FOUND",
-        "log": "FLIGHT LOG",
-        "logHint": "STEPS · UTC",
-        "noSteps": "No steps yet."
+        "noVectors": "Nothing to show for this dataset yet."
       },
       "tableLabel": "TABLE",
       "base": {

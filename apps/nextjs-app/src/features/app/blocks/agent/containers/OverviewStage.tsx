@@ -21,7 +21,7 @@ const recordsOf = (counts: Record<string, number>) =>
     .reduce((n, [, v]) => n + v, 0);
 
 /**
- * The stage when no search is on it (overview design §4, scope design §5.3): the current base,
+ * The stage (overview design §4, scope design §5.3): the current base,
  * one table a minute, as a constellation with the HUD's readout, legend and pinned node, and the
  * table's branches and the search's results in the rail.
  */
@@ -136,7 +136,6 @@ export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
 
   return (
     <StageDeck
-      stage="overview"
       label={t('agent.cockpit.overview.label', 'Overview')}
       title={ov.vo?.title ?? info.chip}
       path={ov.vo?.path}

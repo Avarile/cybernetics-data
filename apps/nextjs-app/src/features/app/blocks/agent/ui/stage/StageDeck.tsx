@@ -9,8 +9,6 @@ import { Kpis, Legend, Readout, type IReadoutProps } from './Readout';
 import { useStageFrame } from './stage-frame';
 
 export interface IStageDeckProps {
-  /** What the stage shows; the keys read it (overview design §4). None while on standby. */
-  stage?: 'overview' | 'search';
   label: string;
   /** The HUD's title and the path under it (the cockpit's vizTitle and vizPath). */
   title: string;
@@ -42,7 +40,7 @@ export const StageDeck = (p: IStageDeckProps) => {
   const { frame, boxed } = useStageFrame(stageRef, readoutRef);
   return (
     <>
-      <section ref={stageRef} className={d.stage} data-stage={p.stage} aria-label={p.label}>
+      <section ref={stageRef} className={d.stage} aria-label={p.label}>
         <div className={d.chart}>{p.chart?.(frame)}</div>
         <div className={d.hud}>
           <div className={`${d.ov} ${d.ovTl}`}>

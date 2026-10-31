@@ -56,18 +56,17 @@ export function useScope() {
   };
 }
 
-/** Another base: the table, the pins and the stage start over (scope design §6.5). */
+/** Another base: the table, the search and the pins start over (scope design §6.5). */
 export const chooseBase = (baseId: string) => {
   useSearchStore.getState().setBase(baseId);
   const cockpit = useCockpitStore.getState();
   cockpit.pinOverview(undefined);
-  cockpit.setStage('overview');
   cockpit.cycleEvent({ type: 'resume' });
 };
 
 /**
- * A table of the current base held on the stage (TABLE menu, a key, `/table`): the stage goes back
- * to the overview, and the rotation learns the base's tables first if it has not yet.
+ * A table of the current base held on the stage (TABLE menu, a key, `/table`); the rotation learns
+ * the base's tables first if it has not yet.
  */
 export const holdTable = (tableId: string) => {
   const { tables } = useSearchStore.getState();
@@ -78,7 +77,6 @@ export const holdTable = (tableId: string) => {
       type: 'available',
       order: tables.map((t) => t.id).filter((id) => !cockpit.overviewFailed[id]),
     });
-  cockpit.setStage('overview');
   cockpit.cycleEvent({ type: 'pick', id: tableId });
   return true;
 };

@@ -1,6 +1,6 @@
 import type { IAgentStatusVo } from '@teable/openapi';
 import { Popover, PopoverContent, PopoverTrigger } from '@teable/ui-lib/shadcn';
-import { Power, X } from 'lucide-react';
+import { Power } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
 import type { ReactNode } from 'react';
@@ -11,35 +11,19 @@ import d from '../theme/deck.module.css';
 export type IPalette = 'mono' | 'cyberpunk';
 
 /**
- * The strip on top (cockpit design §5.2, the cockpit's annunciator): the sources (thread,
- * dataset, focus) on the left, the link (palette, status, clock, power) on the right.
+ * The strip on top (cockpit design §5.2, the cockpit's annunciator): the sources (base and
+ * table) on the left, the link (palette, status, clock, power) on the right.
  */
 export const Annunciator = ({ sources, link }: { sources: ReactNode; link: ReactNode }) => {
   const { t } = useTranslation('common');
   return (
     <header className={`${s.annunciator} ${d.top}`} data-annunciator>
       <h1 className="sr-only">{t('agent.cockpit.title', 'AGENT COCKPIT')}</h1>
-      <nav className={s.sources} aria-label={t('agent.cockpit.sources', 'Thread and dataset')}>
+      <nav className={s.sources} aria-label={t('agent.cockpit.sources', 'Base and table')}>
         {sources}
       </nav>
       <div className={s.link}>{link}</div>
     </header>
-  );
-};
-
-export const FocusChip = ({ text, onClear }: { text: string; onClear: () => void }) => {
-  const { t } = useTranslation('common');
-  return (
-    <span className={s.chip}>
-      {t('agent.cockpit.focus', 'FOCUS')} · {text}
-      <button
-        type="button"
-        aria-label={t('agent.cockpit.clearFocus', 'Forget the focus')}
-        onClick={onClear}
-      >
-        <X className="size-3" />
-      </button>
-    </span>
   );
 };
 

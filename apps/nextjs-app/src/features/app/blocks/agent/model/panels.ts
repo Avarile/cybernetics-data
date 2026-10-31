@@ -1,9 +1,7 @@
 import type { ISearchTone } from '@teable/openapi';
 import { money } from './format';
 import type { IGraph } from './graph/types';
-import { laneMix } from './metrics';
 import type { ITableInfo } from './overview/presentation';
-import { lanesOf, sourceText, type IBoard } from './search-board';
 
 /** The order of a mix bar's segments, settled first (the cockpit's stack). */
 const STACK: ISearchTone[] = ['ink', 'route', 'target', 'caution', 'dim', 'faint'];
@@ -18,17 +16,6 @@ export interface IVector {
   right: string;
   stack: [ISearchTone, number][];
   facts: { text: string; tone?: ISearchTone }[];
-}
-
-/** One row of the flight log. */
-export interface IFeedRow {
-  id: string;
-  /** When (ms). */
-  t: number;
-  verb: string;
-  tone: ISearchTone;
-  key: string;
-  text: string;
 }
 
 const stackOf = (mix: Partial<Record<ISearchTone, number>>) =>
@@ -68,53 +55,4 @@ export function overviewVectors(
         ],
       };
     });
-}
-
-/** The tables a search went through, as vectors: what each found and its mix. */
-export function searchVectors(board: IBoard): IVector[] {
-  return lanesOf(board).map((lane) => {
-    const cards = board.cards.filter((c) => lane.stepIds.includes(c.stepId));
-    const mix = Object.fromEntries(laneMix(lane, cards)) as Partial<Record<ISearchTone, number>>;
-    return {
-      id: lane.tableId,
-      label: lane.table.toUpperCase(),
-      right: lane.found > lane.shown ? `${lane.shown}/${lane.found}` : String(lane.found),
-      stack: stackOf(mix),
-      facts: [{ text: lane.purpose }, { text: lane.status.toUpperCase().replace('_', ' ') }],
-    };
-  });
-}
-
-const verbOf: Record<string, string> = {
-  search: 'SEARCH',
-  records: 'PICKED',
-  filter: 'FILTER',
-  follow: 'FOLLOW',
-  reverse: 'REVERSE',
-};
-
-/** A search's steps as the flight log: when each ran, how it reached its table, what it found. */
-export function searchFeed(board: IBoard): IFeedRow[] {
-  return (board.plan?.steps ?? []).map((step) => {
-    const st = board.states[step.id];
-    const time = board.times[step.id];
-    const status = st?.status ?? 'pending';
-    const tone: ISearchTone =
-      status === 'failed' || status === 'needs_choice'
-        ? 'caution'
-        : status === 'running'
-          ? 'route'
-          : status === 'pending'
-            ? 'dim'
-            : 'ink';
-    const found = st && status !== 'pending' ? ` ${st.found}` : '';
-    return {
-      id: step.id,
-      t: time?.finished ?? time?.started ?? 0,
-      verb: verbOf[step.source.kind],
-      tone,
-      key: step.table.name,
-      text: `${sourceText(board.plan, step.id)} → ${status}${found}${st?.error ? ` · ${st.error}` : ''}`,
-    };
-  });
 }

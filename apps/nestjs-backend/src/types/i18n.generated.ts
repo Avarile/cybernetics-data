@@ -2074,11 +2074,19 @@ export type I18nTranslations = {
                 "denied": string;
             };
             "composer": {
-                "skills": string;
                 "placeholder": string;
-                "clear": string;
                 "stop": string;
                 "send": string;
+                "suggestions": string;
+                "label": string;
+                "baseOption": string;
+                "tableOption": string;
+                "baseCommand": string;
+                "tableCommand": string;
+                "noTable": string;
+                "noBase": string;
+                "noTableNamed": string;
+                "unknown": string;
             };
             "context": {
                 "selected": string;
@@ -2224,12 +2232,6 @@ export type I18nTranslations = {
                 "label": string;
                 "toggle": string;
                 "offButton": string;
-                "thread": string;
-                "newThread": string;
-                "focus": string;
-                "clearFocus": string;
-                "table": string;
-                "rows": string;
                 "status": string;
                 "linking": string;
                 "live": string;
@@ -2243,64 +2245,19 @@ export type I18nTranslations = {
                     "warning": string;
                 };
                 "palette": string;
-                "stage": string;
-                "standby": string;
-                "standbyText": string;
-                "lens": {
-                    "label": string;
-                    "answer": string;
-                    "retrieved": string;
-                    "searching": string;
-                    "off": string;
-                    "searchingChip": string;
-                    "answerChip": string;
-                };
-                "lane": {
-                    "running": string;
-                    "empty": string;
-                    "failed": string;
-                    "needs_choice": string;
-                    "cancelled": string;
-                };
-                "noRecords": string;
-                "openTable": string;
-                "openRecord": string;
-                "via": string;
-                "pick": string;
-                "archived": string;
                 "overdue": string;
                 "missing": string;
                 "ask": string;
                 "askLabel": string;
-                "new": string;
-                "plan": string;
-                "planLabel": string;
-                "question": string;
-                "orType": string;
-                "picked": string;
-                "thinking": string;
-                "suggest": {
-                    "project": string;
-                    "tasks": string;
-                    "knowledge": string;
-                    "money": string;
-                };
                 "view": {
-                    "label": string;
-                    "board": string;
-                    "constellation": string;
                     "tree": string;
-                    "overview": string;
                     "bundle": string;
+                    "layout": string;
                 };
                 "showing": string;
                 "overview": {
                     "label": string;
                     "title": string;
-                    "work": string;
-                    "knowledge": string;
-                    "people": string;
-                    "finance": string;
                     "pause": string;
                     "next": string;
                     "held": {
@@ -2309,25 +2266,21 @@ export type I18nTranslations = {
                         "picked": string;
                         "paused": string;
                         "hidden": string;
+                        "search": string;
+                        "typing": string;
                     };
                     "open": string;
-                    "ask": string;
                     "unpin": string;
-                    "askDraft": string;
                     "nothing": string;
                     "reading": string;
                     "updated": string;
                     "records": string;
                     "truncated": string;
+                    "read": string;
                 };
-                "dataset": string;
                 "sources": string;
                 "expand": string;
                 "collapse": string;
-                "readout": {
-                    "cited": string;
-                    "found": string;
-                };
                 "rail": {
                     "branches": {
                         "work": string;
@@ -2335,21 +2288,56 @@ export type I18nTranslations = {
                         "people": string;
                         "finance": string;
                     };
-                    "feed": {
-                        "work": string;
-                        "knowledge": string;
-                        "people": string;
-                        "finance": string;
-                    };
                     "branchHint": string;
-                    "feedHint": string;
                     "noVectors": string;
-                    "noFeed": string;
+                };
+                "tableLabel": string;
+                "base": {
+                    "label": string;
+                    "default": string;
                     "tables": string;
-                    "tablesHint": string;
-                    "log": string;
-                    "logHint": string;
-                    "noSteps": string;
+                    "search": string;
+                    "list": string;
+                    "none": string;
+                    "isDefault": string;
+                    "setDefault": string;
+                    "isDefaultNamed": string;
+                    "setDefaultNamed": string;
+                };
+                "results": {
+                    "title": string;
+                    "searching": string;
+                    "some": string;
+                    "found": string;
+                    "idle": string;
+                    "none": string;
+                    "clear": string;
+                    "offChart": string;
+                    "refine": string;
+                    "note": string;
+                };
+                "log": string;
+                "logVerb": {
+                    "base": string;
+                    "table": string;
+                    "query": string;
+                    "summary": string;
+                    "default": string;
+                    "error": string;
+                };
+                "logHint": string;
+                "searching": string;
+                "clear": string;
+                "reader": {
+                    "loading": string;
+                    "openInTable": string;
+                    "close": string;
+                    "summary": string;
+                    "summarizing": string;
+                    "needsAgent": string;
+                    "failed": string;
+                    "record": string;
+                    "masked": string;
                 };
             };
         };

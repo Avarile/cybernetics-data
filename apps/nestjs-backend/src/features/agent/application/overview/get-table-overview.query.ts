@@ -12,7 +12,9 @@ import {
   type ISchemaCatalogPort,
 } from '../../domain/ports';
 import { cockpitNotFound } from '../cockpit/cockpit-scope';
-import { OVERVIEW_CACHE_MS } from './get-overview.query';
+
+/** A table's overview is rebuilt at most once a minute per admin (overview design §8.4). */
+export const OVERVIEW_CACHE_MS = 60_000;
 
 const emptyGraph: IOverviewGraph = {
   nodes: [],

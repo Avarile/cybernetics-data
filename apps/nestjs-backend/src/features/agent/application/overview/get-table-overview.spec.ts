@@ -1,8 +1,7 @@
 import type { IBaseGraphNode, IBaseGraphQueryRo } from '@teable/openapi';
 import { dataCentreSchema } from '../../domain/overview/__fixtures__/data-centre-schema';
 import type { ICockpitDataPort, IOverviewGraphPort, ISchemaCatalogPort } from '../../domain/ports';
-import { OVERVIEW_CACHE_MS } from './get-overview.query';
-import { GetTableOverview } from './get-table-overview.query';
+import { GetTableOverview, OVERVIEW_CACHE_MS } from './get-table-overview.query';
 
 const rec = (tableId: string, recordId: string, parentId: string | null): IBaseGraphNode => ({
   id: `rec:${recordId}`,

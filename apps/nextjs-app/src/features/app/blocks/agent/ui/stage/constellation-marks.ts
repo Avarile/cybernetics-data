@@ -52,7 +52,7 @@ export const lerpAngle = (a: number, b: number, t: number) => {
 };
 export const leavesOf = (d: IDatum): number =>
   d.children ? d.children.reduce((n, c) => n + leavesOf(c), 0) : 1;
-export const keyOf = (n: ITreeNode) => (n.kind === 'root' ? 'root' : n.cardKey ?? n.id);
+export const keyOf = (n: ITreeNode) => (n.kind === 'root' ? 'root' : n.id);
 const rimName = (n: ITreeNode) =>
   (n.kind !== 'root' && n.recordId ? n.label : n.short || n.label).toUpperCase();
 

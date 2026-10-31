@@ -1,13 +1,28 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /**
- * Overview design §8 end to end: real tables with links, the agent's data base pinned, each
- * dataset read through the base graph with values, encoded, cached by ETag, admins only.
+ * Scope design §5–§10 end to end: real tables with links, the agent's data base pinned; the bases
+ * and tables the cockpit lists, the default base, each table drawn by its preset through the base
+ * graph, forced records by id, the table page's search, the record as Markdown and the summary's
+ * threshold, ETags, admins only.
  */
 import { FieldType, Relationship } from '@cybernetics/core';
 import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '@teable/db-main-prisma';
-import type { IAgentOverviewVo, IOverviewNode } from '@teable/openapi';
-import { AGENT_OVERVIEW, axios, getAgentOverview, urlBuilder } from '@teable/openapi';
+import type { IAgentTableOverviewVo, IOverviewNode } from '@teable/openapi';
+import {
+  AGENT_COCKPIT_SUMMARY,
+  AGENT_TABLE_OVERVIEW,
+  axios,
+  getAgentTableOverview,
+  getAgentTableOverviewNodes,
+  getCockpitBases,
+  getCockpitRecord,
+  getCockpitTables,
+  getRecords,
+  searchCockpitTable,
+  setCockpitDefaultBase,
+  urlBuilder,
+} from '@teable/openapi';
 import type { AxiosInstance } from 'axios';
 import { ClsService } from 'nestjs-cls';
 import type { IAgentInstallationView } from '../src/features/agent/application/installation/ensure-installation.usecase';
@@ -27,7 +42,7 @@ import {
   runWithTestUser,
 } from './utils/init-app';
 
-describe('Agent overview (e2e)', () => {
+describe('Agent cockpit (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let store: IAgentStorePort;
@@ -37,18 +52,17 @@ describe('Agent overview (e2e)', () => {
   const ids: Record<string, string> = {};
   const adminId = () => globalThis.testConfig.userId;
   const asAgent = <T>(fn: () => Promise<T>) =>
-    app.get(AgentExecutionContext).run({ runId: 'e2e-overview', actorUserId: adminId() }, fn);
+    app.get(AgentExecutionContext).run({ runId: 'e2e-cockpit', actorUserId: adminId() }, fn);
 
   beforeAll(async () => {
     app = (await initApp()).app;
     prisma = app.get(PrismaService);
     store = app.get<IAgentStorePort>(AGENT_STORE_PORT);
     member = await createNewUserAxios({
-      email: 'agent-overview-member@example.com',
+      email: 'agent-cockpit-member@example.com',
       password: '12345678',
     });
-    baseId = (await createBase({ spaceId: globalThis.testConfig.spaceId, name: 'overview e2e' }))
-      .id;
+    baseId = (await createBase({ spaceId: globalThis.testConfig.spaceId, name: 'cockpit e2e' })).id;
 
     const active = { name: 'is_active', type: FieldType.Checkbox };
     const title = { name: 'title', type: FieldType.SingleLineText };
@@ -110,6 +124,11 @@ describe('Agent overview (e2e)', () => {
           records: records.map((fields) => ({ fields })),
         })
       ).records;
+    ids.tblContacts = contacts.id;
+    ids.tblKnowledges = knowledges.id;
+    ids.tblGoals = goals.id;
+    ids.tblProjects = projects.id;
+    ids.tblTasks = tasks.id;
     const [ava, bo] = contacts.records;
     ids.ava = ava.id;
     ids.bo = bo.id;
@@ -162,12 +181,36 @@ describe('Agent overview (e2e)', () => {
     await app.close();
   });
 
-  const nodeOf = (vo: IAgentOverviewVo, recordId: string) =>
+  const nodeOf = (vo: { nodes: IOverviewNode[] }, recordId: string) =>
     vo.nodes.find((n) => n.recordId === recordId) as IOverviewNode;
 
-  it('draws WORK from the pinned base: the tree, tones, people and references where linked', async () => {
-    const vo = await getAgentOverview('work');
-    expect(vo).toMatchObject({ dataset: 'work', baseId, missing: [] });
+  it('lists the base with the pinned default, and its tables', async () => {
+    const { bases, defaultBaseId } = await getCockpitBases();
+    expect(bases.map((b) => b.id)).toContain(baseId);
+    // the Agent space's bases are never offered
+    expect(bases.some((b) => b.spaceId === home.spaceId)).toBe(false);
+    expect(defaultBaseId).toBe(baseId);
+    const { tables } = await getCockpitTables(baseId);
+    expect(tables.map((t) => t.name)).toEqual([
+      'contacts',
+      'knowledges',
+      'goals',
+      'projects',
+      'tasks',
+    ]);
+  });
+
+  it('draws tasks by the WORK preset: the tree, tones, people and references where linked', async () => {
+    const vo: IAgentTableOverviewVo = await getAgentTableOverview(ids.tblTasks);
+    expect(vo).toMatchObject({
+      tableId: ids.tblTasks,
+      tableName: 'tasks',
+      title: 'TASKS',
+      preset: 'work',
+      presentation: { branchTitle: 'GOAL VECTORS' },
+      baseId,
+      missing: [],
+    });
     expect(nodeOf(vo, ids.goal)).toMatchObject({ kind: 'hub', alert: true });
     expect(nodeOf(vo, ids.p1)).toMatchObject({ parent: `rec:${ids.goal}`, tone: 'route' });
     expect(nodeOf(vo, ids.p2).parent).toMatch(/^hub:/);
@@ -189,20 +232,56 @@ describe('Agent overview (e2e)', () => {
     ]);
   });
 
-  it('names what a dataset lacks, and still draws the rest', async () => {
-    const vo = await getAgentOverview('knowledge');
-    expect(vo.missing).toEqual(
+  it('names what a preset lacks, and draws other tables by their own schema', async () => {
+    const knowledge = await getAgentTableOverview(ids.tblKnowledges);
+    expect(knowledge.preset).toBe('knowledge');
+    expect(knowledge.presentation.branchTitle).toBe('TYPES');
+    expect(knowledge.missing).toEqual(
       expect.arrayContaining([
         'knowledge_type',
         'knowledges.knowledge_parent',
         'knowledges.knowledge_type',
       ])
     );
-    expect(nodeOf(vo, ids.d3)?.parent).toMatch(/^hub:/);
+    expect(nodeOf(knowledge, ids.d3)?.parent).toMatch(/^hub:/);
+    const projects = await getAgentTableOverview(ids.tblProjects);
+    expect(projects).toMatchObject({
+      preset: null,
+      presentation: { branchTitle: 'GOALS', right: 'pct' },
+    });
+    expect(nodeOf(projects, ids.p1)).toMatchObject({ parent: `rec:${ids.goal}`, tone: 'route' });
   });
 
-  it('answers an unchanged overview with 304, and only admins at all', async () => {
-    const url = urlBuilder(AGENT_OVERVIEW, { dataset: 'work' });
+  it('reads forced records by id with the branch they hang from', async () => {
+    const { nodes } = await getAgentTableOverviewNodes(ids.tblTasks, { recordIds: [ids.t1] });
+    expect(nodeOf({ nodes }, ids.t1)).toMatchObject({ parent: `rec:${ids.p1}` });
+    expect(nodes.map((n) => n.id)).toEqual(
+      expect.arrayContaining([`rec:${ids.goal}`, `rec:${ids.p1}`, `rec:${ids.t1}`])
+    );
+    expect(nodeOf({ nodes }, ids.t2)).toBeUndefined();
+  });
+
+  it('searches a table as the table page does, and reads a record as Markdown', async () => {
+    const found = await searchCockpitTable(ids.tblProjects, { q: 'cock' });
+    expect(found).toMatchObject({ total: 1, results: [{ recordId: ids.p1, title: 'Cockpit' }] });
+    // the same rows, in the same order, as the record list's search
+    const page = await getRecords(ids.tblProjects, {
+      search: ['cock', '', true],
+      ignoreViewQuery: true,
+    });
+    expect(found.results.map((r) => r.recordId)).toEqual(page.data.records.map((r) => r.id));
+    const record = await getCockpitRecord(ids.tblProjects, ids.p1);
+    expect(record).toMatchObject({ title: 'Cockpit', tableName: 'projects', baseId });
+    expect(record.markdown).toMatch(/^# Cockpit\n/);
+    expect(record.markdown).toMatch(/\| progress \| in-progress \|/);
+    expect(record.chars).toBeLessThan(500);
+    // a record this short is not summarised
+    const url = urlBuilder(AGENT_COCKPIT_SUMMARY, { tableId: ids.tblProjects, recordId: ids.p1 });
+    expect((await getError(() => axios.post(url)))?.status).toBe(422);
+  });
+
+  it('answers an unchanged table with 304, sets the default base, and only for admins', async () => {
+    const url = urlBuilder(AGENT_TABLE_OVERVIEW, { tableId: ids.tblTasks });
     const first = await axios.get(url);
     const etag = first.headers.etag as string;
     expect(etag).toMatch(/^".+"$/);
@@ -212,9 +291,11 @@ describe('Agent overview (e2e)', () => {
       validateStatus: () => true,
     });
     expect(again.status).toBe(304);
+    expect(await setCockpitDefaultBase({ baseId })).toEqual({ defaultBaseId: baseId });
     expect((await getError(() => member.get(url)))?.status).toBe(403);
     expect(
-      (await getError(() => axios.get(urlBuilder(AGENT_OVERVIEW, { dataset: 'nope' }))))?.status
-    ).toBe(400);
+      (await getError(() => axios.get(urlBuilder(AGENT_TABLE_OVERVIEW, { tableId: 'tblNope' }))))
+        ?.status
+    ).toBe(404);
   });
 });

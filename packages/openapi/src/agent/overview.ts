@@ -5,13 +5,13 @@ import { z } from '../zod';
 import { searchToneSchema } from './search';
 
 /**
- * Overview design §8.3: one dataset of the data base drawn as a constellation, the cockpit's
- * default stage. Nodes are already encoded (tone, size, alert), so the cockpit only draws them.
+ * Overview design §8.3, scope design §9: a table of a base drawn as a constellation, the cockpit's
+ * stage. Nodes are already encoded (tone, size, alert), so the cockpit only draws them. The four
+ * curated datasets survive as presets of the tables they anchor.
  */
 
 export const overviewDatasetSchema = z.enum(['work', 'knowledge', 'people', 'finance']);
 export type IOverviewDatasetId = z.infer<typeof overviewDatasetSchema>;
-export const OVERVIEW_DATASETS = overviewDatasetSchema.options;
 
 export const overviewNodeSchema = z.object({
   /** rec:<recordId> or grp:<fieldId>:<…> from the base graph, or hub:<tableId> for a table's hub. */
@@ -65,31 +65,6 @@ export const overviewGraphVoSchema = z.object({
   truncated: z.boolean(),
 });
 export type IOverviewGraphVo = z.infer<typeof overviewGraphVoSchema>;
-
-export const agentOverviewVoSchema = overviewGraphVoSchema.extend({
-  dataset: overviewDatasetSchema,
-  builtAt: z.string(),
-});
-export type IAgentOverviewVo = z.infer<typeof agentOverviewVoSchema>;
-
-export const AGENT_OVERVIEW = '/agent/overview/{dataset}';
-
-export const AgentOverviewGetRoute: RouteConfig = registerRoute({
-  method: 'get',
-  path: AGENT_OVERVIEW,
-  description: 'One dataset of the data base as a constellation, for the cockpit (admin only)',
-  request: { params: z.object({ dataset: overviewDatasetSchema }) },
-  responses: {
-    200: {
-      description: 'Overview',
-      content: { 'application/json': { schema: agentOverviewVoSchema } },
-    },
-  },
-  tags: ['agent'],
-});
-
-export const getAgentOverview = async (dataset: IOverviewDatasetId) =>
-  (await axios.get<IAgentOverviewVo>(urlBuilder(AGENT_OVERVIEW, { dataset }))).data;
 
 /**
  * Scope design §9: one table of a base as a constellation, the stage the cockpit rotates through.

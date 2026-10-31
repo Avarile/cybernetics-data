@@ -727,3 +727,89 @@ tsc after `eslint --fix`), and the vitest suites of both apps run before every c
 | P7 | Record modal, summary, `voice.say` | modal spec green |
 | P8 | Prune the chat path (D1), dead i18n keys, the old dataset route; as-built notes here | tsc, lint and every spec green; no unused exports in the folder |
 | P9 | Manual run with the user (§14) | the user signs off |
+
+---
+
+## 17. As built (2026-10-31)
+
+P0 to P8 are built on `feat/agent-cockpit`, one commit per phase, not pushed. P9 (the manual run
+in a browser) waits for you.
+
+| P | Commit | What |
+| --- | --- | --- |
+| design | 43c32538 | this document and the goal |
+| P0 | 07cedc54 | contracts (`agent/cockpit.ts`, table overview), base graph `recordIds` |
+| P1 | 8360b172 | bases, tables, default base |
+| P2 | 8c47bc81 | table overview: presets, derived preset, select branches, forced nodes |
+| P3 | e5a061a7 | table search, record Markdown, summary |
+| P4 | 36b9ee63 | stacked BUNDLE/TREE under the readout, the board deleted |
+| P5 | 4cc189f3 | BASE menu with ★, TABLE menu, a rotation per table |
+| P6 | 3041c52d | command line, idle/Enter search, log, Search Results, forced/marked results |
+| P7 | c00c96b8 | record reader, summary, `voice.say` |
+| P8 | (this commit) | the cockpit's chat path removed, old dataset route removed, e2e |
+
+### 17.1 Where it differs from the design
+
+- **Backend services.** One class per concern instead of one per route: `CockpitScope` (bases,
+  tables, default base) and `CockpitRecords` (search, record, summary), both in
+  `application/cockpit/`. `GetTableOverview` serves the table overview and the forced nodes.
+- **Errors.** A failed model call answers 409 with the redacted provider message; there is no
+  502 code in `HttpErrorCode`. A table in `search_exclude` is not sent to the model either: its
+  summary answers 409 (an addition, it keeps the admin's own exclusion).
+- **Base graph `recordIds`.** `getRecordsFields` ignores `selectedRecordIds`, so the P0 version
+  read the first rows of the table instead of the forced ones. The e2e run caught it. Chosen
+  records are now read with `getSnapshotBulkWithPermission` (same permission wrapping), and such
+  a read is never probed or cached.
+- **Presets.** The curated presentation (legend, TYPES, tones) moved to
+  `domain/overview/presentation.ts` on the server. The overview always titles the stage with the
+  table's name. A table with no single link groups by its first status-like select into
+  `sel:<field>:<value>` hubs.
+- **Feed.** RECENTLY UPDATED left the overview in P5. Search Results took its place in P6.
+- **Pinned node.** `ASK` became `READ` (it opens the reader). `OPEN ↗` already linked to the
+  table, so the name was taken.
+- **Result lookup.** Results map to chart nodes by `recordId`, not by assuming `rec:<id>` ids.
+- **Voice.** The hook still reads agent replies (`model/reply.ts` keeps `isToolPart` and
+  `waitingApprovals`); the cockpit hands it none and speaks summaries through `say(id, text)`.
+  The reader lives in the ask panel so there is one voice queue and one microphone.
+- **Chart.** The answer's `lens` is gone from the constellation (nothing passes it any more);
+  `marked` rings the results. `buildTree` keeps its lens parameter (pure, tested).
+- **Grid entry (D12).** `openAgentCockpit({ focus })` sets the base and holds the table; the
+  FOCUS chip is gone. The grid menu item is still labelled "Add to Chat".
+- **Locales.** New English strings are in `en/common.json`; `zh` falls back to them. 64 keys of
+  the removed chat, board and thread UI were pruned from `en` and `zh`.
+
+### 17.2 Removed
+
+Frontend (cockpit folder only): the session store and chat transport, transcript, plan legs,
+tool steps, approval and clarify cards, suggestions, skills, thread menu, the search board model,
+`useStage`, `useSearchBoard`, `useAgentSession`, `StageContainer`, the flight log, lens knobs and
+chip, the standby stage, and their styles. The backend chat, threads, the `investigate` toolkit
+and `agent_search` are untouched.
+
+Backend: `GET /api/agent/overview/:dataset`, `GetOverview` and its contract
+(`getAgentOverview`, `agentOverviewVoSchema`). Its e2e became `test/agent-cockpit.e2e-spec.ts`.
+
+### 17.3 Verified
+
+- Frontend: `tsc`, eslint, 125 tests in the cockpit folder (layers rule included).
+- Backend: `tsc`, eslint on the touched files, 271 unit tests (agent and base graph).
+- E2E, against a disposable Postgres (pgvector:pg17 on 127.0.0.1:5432, migrated and seeded):
+  `agent-cockpit.e2e-spec.ts` (6) and `base-graph.e2e-spec.ts` (17) pass. That covers search
+  parity with the record list, Markdown, the 422 threshold, presets on real tables, forced nodes,
+  ETag/304, 403 and 404.
+- **E2E gotcha.** Run with `NODE_ENV=test`, and blank the shared-service variables that only
+  `.env.development.local` sets (`BACKEND_CACHE_REDIS_URI`, `BACKEND_PERFORMANCE_CACHE`,
+  `VECTOR_DATABASE_URL`, `BACKEND_STORAGE_*`, the API keys). The Nest config module loads that
+  file for any variable `.env.test` leaves unset, so the test app otherwise reaches the dev Redis
+  and reads its cached settings.
+
+### 17.4 Open
+
+- P9 with you: the dev server's bases, `/base dat`, `/table`, idle and Enter searches, a forced
+  off-chart result, a long knowledge entry spoken in Chrome, the ★ default after a reload, and
+  the 1440, 1024 and 390 px layouts.
+- Not covered by tests: the summary against a real model, and anything visual (ring colours,
+  stacked knobs, the reader's layout).
+- Rename the grid's "Add to Chat" item (e.g. "Open in Cockpit") if you want it.
+- Chinese strings for the new panels.
+- The K3s database needs nothing new for this work (no migration).

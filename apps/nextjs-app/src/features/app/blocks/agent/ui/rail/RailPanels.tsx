@@ -1,12 +1,10 @@
 import { useTranslation } from 'next-i18next';
 import { Fragment } from 'react';
-import { logTime } from '../../model/format';
-import type { IFeedRow, IVector } from '../../model/panels';
+import type { IVector } from '../../model/panels';
 import p from '../theme/panels.module.css';
 
 /**
- * The vectors panel (the cockpit's branches): one row per branch, or per table a search went
- * through, with its count, its tones and a stacked mix bar. Pointing at a row lights the branch on
+ * The vectors panel (the cockpit's branches): one row per branch, with its count, its tones and a stacked mix bar. Pointing at a row lights the branch on
  * the chart, a click keeps it lit.
  */
 export const VectorsPanel = ({
@@ -75,39 +73,3 @@ export const VectorsPanel = ({
     </section>
   );
 };
-
-/** The flight log (the cockpit's): what happened last, newest first, in UTC. */
-export const FlightLog = ({
-  title,
-  hint,
-  rows,
-  empty,
-}: {
-  title: string;
-  hint?: string;
-  rows: IFeedRow[];
-  empty: string;
-}) => (
-  <section className={p.panel} aria-label={title}>
-    <h2>
-      {title} {hint && <small>{hint}</small>}
-    </h2>
-    <div className={p.body}>
-      <ol className={`${p.rows} ${p.log}`}>
-        {rows.map((r) => (
-          <li key={r.id} title={`${r.key ? `${r.key} ` : ''}${r.text}`}>
-            <span className={p.tm}>{logTime(r.t)}</span>
-            <span className={p.vb} data-tone={r.tone}>
-              {r.verb}
-            </span>
-            <span className={p.tx}>
-              {r.key && <b>{r.key}</b>}
-              {r.text}
-            </span>
-          </li>
-        ))}
-        {!rows.length && <li className={p.note}>{empty}</li>}
-      </ol>
-    </div>
-  </section>
-);

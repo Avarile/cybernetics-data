@@ -1,11 +1,10 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import type { IOverviewGraphVo, IOverviewNode, ISearchCard, ISearchPlan } from '@teable/openapi';
+import type { IOverviewGraphVo, IOverviewNode } from '@teable/openapi';
 import { describe, expect, it } from 'vitest';
 import { logTime } from './format';
 import { overviewToGraph } from './overview/from-overview';
 import type { ITableInfo } from './overview/presentation';
-import { overviewVectors, searchFeed, searchVectors } from './panels';
-import { emptyBoard, reduceBoard, type IBoard } from './search-board';
+import { overviewVectors } from './panels';
 
 const node = (id: string, extra: Partial<IOverviewNode> = {}): IOverviewNode => ({
   id,
@@ -120,82 +119,5 @@ describe('rail panels of the overview (the cockpit panels.ts)', () => {
     expect(logTime(Date.parse('2026-10-30T04:12:00Z'), now)).toBe('04:12');
     expect(logTime(Date.parse('2026-10-29T23:59:00Z'), now)).toBe('10-29');
     expect(logTime(0, now)).toBe('--:--');
-  });
-});
-
-describe('rail panels of a search', () => {
-  const plan: ISearchPlan = {
-    id: 'srch1',
-    intent: 'project_progress',
-    summary: 'Cockpit',
-    baseId: 'bse1',
-    missing: [],
-    steps: [
-      {
-        id: 's1',
-        table: { id: 'tblP', name: 'projects' },
-        role: 'anchor',
-        purpose: 'the project',
-        source: { kind: 'search', text: 'Cockpit', filter: undefined },
-        limit: 10,
-      },
-      {
-        id: 's2',
-        table: { id: 'tblT', name: 'tasks' },
-        role: 'related',
-        purpose: 'tasks',
-        source: { kind: 'follow', from: [{ stepId: 's1', field: 'tasks' }] },
-        limit: 50,
-      },
-    ],
-  };
-  const card = (stepId: string, recordId: string, tone: ISearchCard['tone']): ISearchCard => ({
-    key: `${stepId}:${recordId}`,
-    stepId,
-    recordId,
-    tableId: stepId === 's1' ? 'tblP' : 'tblT',
-    table: stepId === 's1' ? 'projects' : 'tasks',
-    title: recordId,
-    short: null,
-    tone,
-    fields: [],
-  });
-  const board = [
-    {
-      type: 'plan' as const,
-      searchId: 'srch1',
-      plan,
-      states: [
-        { stepId: 's1', status: 'done' as const, found: 1, shown: 1 },
-        { stepId: 's2', status: 'running' as const, found: 5, shown: 2 },
-      ],
-      status: 'running' as const,
-    },
-    { type: 'hit' as const, searchId: 'srch1', card: card('s1', 'recP', 'route') },
-    { type: 'hit' as const, searchId: 'srch1', card: card('s2', 'recT1', 'ink') },
-    { type: 'hit' as const, searchId: 'srch1', card: card('s2', 'recT2', 'route') },
-  ].reduce<IBoard>((b, e) => reduceBoard(b, e, 1000), emptyBoard('srch1'));
-
-  it('makes a vector of each table searched: what it found and its mix', () => {
-    expect(searchVectors(board)).toEqual([
-      expect.objectContaining({ id: 'tblP', label: 'PROJECTS', right: '1', stack: [['route', 1]] }),
-      expect.objectContaining({
-        id: 'tblT',
-        label: 'TASKS',
-        right: '2/5',
-        stack: [
-          ['ink', 1],
-          ['route', 1],
-        ],
-      }),
-    ]);
-  });
-
-  it('logs each step with how it reached its table and what it found', () => {
-    const [first, second] = searchFeed(board);
-    expect(first).toMatchObject({ verb: 'SEARCH', tone: 'ink', key: 'projects' });
-    expect(first.text).toBe('search "Cockpit" → done 1');
-    expect(second).toMatchObject({ verb: 'FOLLOW', tone: 'route', key: 'tasks' });
-    expect(second.text).toBe('via projects.tasks → running 5');
   });
 });

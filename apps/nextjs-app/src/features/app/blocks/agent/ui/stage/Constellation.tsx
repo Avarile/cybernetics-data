@@ -10,8 +10,6 @@ export interface IConstellationProps {
   mode: ILayoutMode;
   /** Changes when the zoom should go back to the whole chart (the `0` key). */
   zoomResets?: number;
-  /** Record ids the answer cites: the chart narrows to them, ancestors faint. */
-  lens?: Set<string>;
   /** Record ids lit by the hover trace. */
   lit?: Set<string>;
   /** Node ids of search results, ringed on the chart (scope design §7.3). */
@@ -59,7 +57,6 @@ export const Constellation = memo(
     graph,
     mode,
     zoomResets,
-    lens,
     lit,
     marked,
     onHover,
@@ -118,13 +115,8 @@ export const Constellation = memo(
     }, [frame]);
 
     useEffect(() => {
-      chartRef.current?.setView({
-        mode,
-        lens: lens?.size ? lens : null,
-        marked: marked?.size ? marked : null,
-        labels,
-      });
-    }, [mode, lens, marked, labels]);
+      chartRef.current?.setView({ mode, marked: marked?.size ? marked : null, labels });
+    }, [mode, marked, labels]);
 
     // another search (or dataset) grows out of the core; the same one glides, its new records pulse
     useEffect(() => {

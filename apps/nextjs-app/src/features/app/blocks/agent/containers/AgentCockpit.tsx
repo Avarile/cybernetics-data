@@ -8,7 +8,7 @@ import d from '../ui/theme/deck.module.css';
 import { cockpitFonts } from '../ui/theme/fonts';
 import { AnnunciatorContainer } from './AnnunciatorContainer';
 import { AskContainer } from './AskContainer';
-import { StageContainer } from './StageContainer';
+import { OverviewStage } from './OverviewStage';
 
 /**
  * The cockpit: one full-screen surface over the app, on or off (cockpit design §4, §5), laid out
@@ -49,7 +49,7 @@ export const AgentCockpit = () => {
     >
       <div className={d.deck} data-deck>
         <AnnunciatorContainer />
-        <StageContainer rail={rail} />
+        <OverviewStage rail={rail} />
         <div className={d.grid}>
           <aside ref={setRail} className={d.rail} data-rail>
             <AskContainer />

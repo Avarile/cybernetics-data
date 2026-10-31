@@ -1764,9 +1764,7 @@
       "denied": "已拒绝。"
     },
     "composer": {
-      "skills": "技能",
       "placeholder": "向智能体提问… 输入 / 选择技能，/clear 开始新对话",
-      "clear": "开始新的对话",
       "stop": "停止",
       "send": "发送"
     },
@@ -1914,12 +1912,6 @@
       "label": "智能体驾驶舱",
       "toggle": "智能体驾驶舱（Ctrl/⌘ J）",
       "offButton": "关闭驾驶舱（Ctrl/⌘ J）",
-      "thread": "会话",
-      "newThread": "新对话",
-      "focus": "焦点",
-      "clearFocus": "忽略焦点",
-      "table": "表",
-      "rows": "行",
       "status": "智能体状态",
       "linking": "连接中",
       "live": "在线",
@@ -1933,64 +1925,18 @@
         "warning": "警告"
       },
       "palette": "配色",
-      "stage": "搜索面板",
-      "standby": "待命",
-      "standbyText": "可以询问你的工作、知识或财务。智能体会逐表规划搜索，找到的每条记录都会以卡片形式出现在这里。",
-      "lens": {
-        "label": "视图",
-        "answer": "答案",
-        "retrieved": "已检索",
-        "searching": "搜索中",
-        "off": "显示全部结果",
-        "searchingChip": "搜索中 · 面板随搜索填充",
-        "answerChip": "答案 · 引用 {{n}} 条记录"
-      },
-      "lane": {
-        "running": "搜索中…",
-        "empty": "无记录",
-        "failed": "失败",
-        "needs_choice": "请选择",
-        "cancelled": "已停止"
-      },
-      "noRecords": "没有记录。",
-      "openTable": "打开表",
-      "openRecord": "打开记录",
-      "via": "来自",
-      "pick": "选择",
-      "archived": "已归档",
       "overdue": "已逾期",
       "missing": "此数据库中没有",
       "ask": "询问智能体",
       "askLabel": "询问智能体",
-      "new": "新建",
-      "plan": "计划",
-      "planLabel": "搜索计划",
-      "question": "智能体提问",
-      "orType": "也可以直接输入或说出你的回答。",
-      "picked": "已选择",
-      "thinking": "思考中",
-      "suggest": {
-        "project": "我最近的项目进展如何？",
-        "tasks": "哪些任务正在进行，由谁负责？",
-        "knowledge": "关于部署我写过哪些内容？",
-        "money": "过去 30 天我花了多少钱？"
-      },
       "view": {
-        "label": "视图",
-        "board": "面板",
-        "constellation": "星图",
         "tree": "树形",
-        "overview": "总览",
         "bundle": "束状"
       },
       "showing": "显示 {{shown}} / {{total}}",
       "overview": {
         "label": "总览",
         "title": "总览",
-        "work": "工作",
-        "knowledge": "知识",
-        "people": "人员",
-        "finance": "财务",
         "pause": "暂停或继续 (P)",
         "next": "下一个",
         "held": {
@@ -2001,23 +1947,16 @@
           "hidden": "已暂停"
         },
         "open": "打开",
-        "ask": "提问",
         "unpin": "取消固定",
-        "askDraft": "介绍一下{{what}}「{{title}}」",
         "nothing": "没有可显示的内容",
         "reading": "正在读取 {{dataset}}…",
         "updated": "更新于",
         "records": "条记录",
         "truncated": "更多未读取"
       },
-      "dataset": "数据集",
       "sources": "会话与数据集",
       "expand": "放大面板",
       "collapse": "收回面板",
-      "readout": {
-        "cited": "条记录被引用",
-        "found": "条记录已找到"
-      },
       "rail": {
         "branches": {
           "work": "目标向量",
@@ -2025,21 +1964,8 @@
           "people": "联系人类型",
           "finance": "分类"
         },
-        "feed": {
-          "work": "近期工作",
-          "knowledge": "最近更新",
-          "people": "近期工作",
-          "finance": "最新交易"
-        },
         "branchHint": "悬停以点亮分支",
-        "feedHint": "最新 · UTC",
-        "noVectors": "此数据集暂无可显示的内容。",
-        "noFeed": "暂无带日期的记录。",
-        "tables": "数据表",
-        "tablesHint": "每一步找到的内容",
-        "log": "飞行日志",
-        "logHint": "步骤 · UTC",
-        "noSteps": "暂无步骤。"
+        "noVectors": "此数据集暂无可显示的内容。"
       }
     }
   }

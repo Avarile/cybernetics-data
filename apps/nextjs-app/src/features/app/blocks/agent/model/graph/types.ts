@@ -33,9 +33,7 @@ export interface IGNode {
   date?: number;
   state?: string;
   table?: string;
-  /** The board card this node draws (for the lens and the trace). */
-  cardKey?: string;
-  /** The record behind the node, to open it or ask about it (overview). */
+  /** The record behind the node, to read it (overview). */
   recordId?: string;
   tableId?: string;
   meta?: [string, string][];

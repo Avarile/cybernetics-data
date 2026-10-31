@@ -150,9 +150,6 @@
   padding-left: 10px;
   border-left: 2px solid var(--bezel-2);
 }
-.readout[data-lens='true'] {
-  border-left-color: var(--route);
-}
 .readout .head {
   display: grid;
   justify-items: start;
@@ -163,9 +160,6 @@
   font-size: 8.5px;
   letter-spacing: 0.16em;
   color: var(--dim);
-}
-.readout[data-lens='true'] .coreTop {
-  color: var(--route);
 }
 .coreN {
   font: 600 34px/1 var(--f-display);
@@ -231,47 +225,6 @@
 }
 .kpiSlot {
   display: none;
-}
-
-/* the lens chip: what the chart is narrowed to, with the way back */
-.lensChip {
-  pointer-events: auto;
-  margin-top: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  max-width: min(520px, 60vw);
-  border: 1px solid var(--route);
-  background: color-mix(in srgb, var(--void) 88%, transparent);
-  padding: 3px 4px 3px 8px;
-  color: var(--ink);
-}
-.lensChip i {
-  width: 6px;
-  height: 6px;
-  background: var(--route);
-  transform: rotate(45deg);
-  flex: none;
-}
-.lensChip[data-kind='searching'] i {
-  animation: blink 0.8s steps(1) infinite;
-}
-.lensChip span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 9px;
-}
-.lensChip button {
-  background: none;
-  border: 0;
-  color: var(--dim);
-  cursor: pointer;
-  padding: 0 4px;
-  font-size: 11px;
-}
-.lensChip button:hover {
-  color: var(--ink);
 }
 
 /* ---------- legend and symbology ---------- */
