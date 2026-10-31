@@ -37,6 +37,7 @@ import { KnowledgeSync } from './application/knowledge/knowledge-sync';
 import { KnowledgeSyncScheduler } from './application/knowledge/knowledge-sync.scheduler';
 import { RAG_JOBS_QUEUE } from './application/knowledge/rag-jobs';
 import { GetOverview } from './application/overview/get-overview.query';
+import { GetTableOverview } from './application/overview/get-table-overview.query';
 import { GetSearch } from './application/search/get-search.query';
 import { PlanSearch } from './application/search/plan-search.usecase';
 import { RunSearch } from './application/search/run-search.usecase';
@@ -180,6 +181,7 @@ import { ToolkitRegistry } from './toolkits/toolkit.registry';
     ManageThreads,
     GetSearch,
     GetOverview,
+    GetTableOverview,
     PlanSearch,
     RunSearch,
     ConfigureAgent,

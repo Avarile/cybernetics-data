@@ -15,6 +15,8 @@ export interface IOverviewTable {
   hierarchy?: string;
   /** A single-valued link to another table of the dataset: root records hang under that record. */
   groupBy?: string;
+  /** Without a group link: a single select whose values become the branches (derived presets). */
+  groupSelect?: string;
   /** A status-like select, or `fresh` (tone from how recently the record changed). */
   tone?: string;
   /** Select value (lower case) → tone, instead of the shared state words. */
@@ -47,7 +49,8 @@ export interface IOverviewTable {
 }
 
 export interface IOverviewDataset {
-  id: IOverviewDatasetId;
+  /** A curated dataset, or `table`: a preset derived from one table's schema (scope design §9). */
+  id: IOverviewDatasetId | 'table';
   title: string;
   path: string;
   tables: IOverviewTable[];

@@ -1,8 +1,8 @@
 import type {
-  IAgentOverviewVo,
   IBaseGraphLink,
   IBaseGraphNode,
   IBaseGraphStats,
+  IOverviewGraphVo,
   IOverviewLink,
   IOverviewNode,
 } from '@teable/openapi';
@@ -147,6 +147,16 @@ function place(o: IResolvedOverview, graph: IOverviewGraph, now: Date): IPlaced 
   return placed;
 }
 
+/** The hub of a select value (groupSelect), made on first use; none for an empty cell. */
+function selectHub(nodes: Map<string, IOverviewNode>, r: IResolvedTable, node: IBaseGraphNode) {
+  const field = r.fields.group;
+  const value = field ? cellText(node.values?.[field.id]) : '';
+  if (!field || !value) return undefined;
+  const id = `sel:${field.id}:${value}`;
+  if (!nodes.has(id)) nodes.set(id, hubNode(id, value, null));
+  return id;
+}
+
 /** The table's hub for its orphans and actors, made on first use. */
 function orphanHub(nodes: Map<string, IOverviewNode>, r: IResolvedTable) {
   const id = hubOf(r.table.id);
@@ -162,7 +172,9 @@ function placeRecord(placed: IPlaced, r: IResolvedTable, node: IBaseGraphNode, n
     return;
   }
   const own = encodeRecord(r, node, now);
-  own.parent = parent === 'orphan' ? orphanHub(placed.nodes, r) : parent;
+  if (parent === 'orphan' && r.def.role === 'item')
+    own.parent = selectHub(placed.nodes, r, node) ?? orphanHub(placed.nodes, r);
+  else own.parent = parent === 'orphan' ? orphanHub(placed.nodes, r) : parent;
   placed.nodes.set(own.id, own);
 }
 
@@ -246,7 +258,7 @@ export function encodeOverview(
   o: IResolvedOverview,
   graph: IOverviewGraph,
   now = new Date()
-): Omit<IAgentOverviewVo, 'builtAt'> {
+): IOverviewGraphVo {
   const { nodes, unplaced } = place(o, graph, now);
   alerts(o, nodes, now);
   pruneSatellites(o, graph, nodes);
@@ -256,7 +268,6 @@ export function encodeOverview(
     if (n.recordId && n.table) counts[n.table] = (counts[n.table] ?? 0) + 1;
   for (const [table, n] of unplaced) counts[`${table}.unplaced`] = n;
   return {
-    dataset: o.dataset.id,
     title: o.dataset.title,
     path: o.dataset.path,
     baseId: o.baseId,

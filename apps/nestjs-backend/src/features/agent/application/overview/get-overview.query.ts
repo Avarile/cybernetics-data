@@ -55,6 +55,7 @@ export class GetOverview {
           stats: { perTable: [], truncated: { nodes: false, links: false } },
         };
     const vo: IAgentOverviewVo = {
+      dataset,
       ...encodeOverview(resolved, graph, now),
       builtAt: now.toISOString(),
     };

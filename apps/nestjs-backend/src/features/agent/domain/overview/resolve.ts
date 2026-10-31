@@ -14,6 +14,8 @@ const single = new Set(['manyOne', 'oneOne']);
 /** The fields of a table the encoder reads. */
 export interface IOverviewFields {
   tone?: ISchemaField;
+  /** The single select whose values are the branches (groupSelect). */
+  group?: ISchemaField;
   size?: ISchemaField;
   money?: ISchemaField;
   /** In the dataset's order: the first with a value is the record's date. */
@@ -57,8 +59,10 @@ const settledChoices = (def: IOverviewTable, tone: ISchemaField) =>
 function fieldsOf(def: IOverviewTable, table: ITableSchema): IOverviewFields {
   const tone = def.tone && def.tone !== 'fresh' ? named(table.fields, def.tone) : undefined;
   const active = named(table.fields, 'is_active');
+  const group = named(table.fields, def.groupSelect);
   return {
     tone: readable(tone) && selects.has(tone.type) ? tone : undefined,
+    group: readable(group) && group.type === 'singleSelect' ? group : undefined,
     size: [named(table.fields, def.size)].find(readable),
     money: [named(table.fields, def.money)].find(readable),
     dates: (def.date ?? [])
@@ -98,9 +102,14 @@ function tableQuery(r: IResolvedTable, missing: string[], now: Date): IBaseGraph
     missing.push(`${table.name}.${def.hierarchy}`);
   if (def.groupBy && (!group || group.link!.foreignTableId === table.id))
     missing.push(`${table.name}.${def.groupBy}`);
-  const values = [fields.tone, fields.size, fields.money, ...fields.dates, fields.active].filter(
-    (f): f is ISchemaField => Boolean(f)
-  );
+  const values = [
+    fields.tone,
+    fields.group,
+    fields.size,
+    fields.money,
+    ...fields.dates,
+    fields.active,
+  ].filter((f): f is ISchemaField => Boolean(f));
   const filter = filterOf(r, now);
   return {
     tableId: table.id,
