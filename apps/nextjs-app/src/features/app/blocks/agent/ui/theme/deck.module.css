@@ -86,19 +86,6 @@
   inset: 0;
   display: flex;
 }
-/* the search board in the free area, right of the readout and under the knobs */
-.boardArea {
-  position: absolute;
-  z-index: 2;
-  top: calc(var(--hud-t, 0px) + 40px);
-  right: var(--hud-r, 0px);
-  bottom: calc(var(--hud-b, 0px) + 40px);
-  left: calc(var(--hud-l, 0px) + 262px);
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
 /* ---------- HUD: corner overlays in the free area ---------- */
 .hud {
   position: absolute;
@@ -132,18 +119,26 @@
   color: var(--dim);
   font-size: 8.5px;
 }
-.ovTr {
-  top: 10px;
-  right: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 4px;
-  pointer-events: auto;
-}
 .ovBl {
   left: 12px;
   bottom: 10px;
+}
+
+/* the readout and the layout knobs under it, measured as one block (useStageFrame) */
+.readoutBlock {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+/* BUNDLE and TREE, stacked under the readout (scope design §4.1) */
+.layoutKnobs {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  min-width: 72px;
+  margin-left: 12px;
+  pointer-events: auto;
 }
 
 /* the readout: name, count and unit, fixed in the corner while the chart turns */
@@ -408,11 +403,6 @@
   .rail {
     grid-column: 1;
     grid-template-rows: auto;
-  }
-  .boardArea {
-    top: 120px;
-    left: 12px;
-    right: 12px;
   }
 }
 @media (max-width: 720px) {

@@ -21,7 +21,6 @@ export interface IAgentFocus {
 }
 
 export type ICockpitPalette = 'mono' | 'cyberpunk';
-export type ICockpitView = 'board' | 'constellation';
 /** What the stage shows: the data (overview) or a search (overview design §4.1). */
 export type ICockpitStage = 'overview' | 'search';
 
@@ -35,7 +34,6 @@ interface ICockpitState {
   on: boolean;
   focus?: IAgentFocus;
   palette: ICockpitPalette;
-  view: ICockpitView;
   /** The search on the stage; undefined follows the latest one. */
   selectedSearch?: string;
   /** undefined: the board's own default (answer once cited). */
@@ -60,7 +58,6 @@ interface ICockpitState {
   toggle: (options?: IOpenCockpit) => void;
   clearFocus: () => void;
   setPalette: (palette: ICockpitPalette) => void;
-  setView: (view: ICockpitView) => void;
   selectSearch: (searchId?: string) => void;
   setLens: (lens?: ILensMode) => void;
   pin: (key?: string) => void;
@@ -80,7 +77,6 @@ export const useCockpitStore = create<ICockpitState>()(
     (set, get) => ({
       on: false,
       palette: 'mono',
-      view: 'board',
       layout: 'bundle',
       zoomResets: 0,
       stage: 'overview',
@@ -97,7 +93,6 @@ export const useCockpitStore = create<ICockpitState>()(
       toggle: (options) => (get().on ? get().close() : get().open(options)),
       clearFocus: () => set({ focus: undefined }),
       setPalette: (palette) => set({ palette }),
-      setView: (view) => set({ view }),
       selectSearch: (selectedSearch) =>
         set({
           selectedSearch,

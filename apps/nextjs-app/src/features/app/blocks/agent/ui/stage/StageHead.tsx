@@ -3,70 +3,37 @@ import type { ILensMode } from '../../model/lens';
 import s from '../theme/cockpit.module.css';
 import d from '../theme/deck.module.css';
 
-export type IStageView = 'board' | 'constellation';
 export type ILayoutChoice = 'bundle' | 'tree';
-export type IStageMode = 'overview' | 'search';
 
 /**
- * The stage's knobs, top-right of the HUD (the cockpit's ov-tr): the overview or a search as a
- * board or a constellation, and a chart's layout, BUNDLE or TREE (cockpit design §5.3, §5.4;
- * overview design §4.2).
+ * The chart's layout, BUNDLE or TREE, stacked under the readout in the HUD's top-left corner
+ * (scope design §4.1).
  */
-export const StageKnobs = (p: {
-  mode: IStageMode;
-  hasSearch: boolean;
-  view: IStageView;
+export const LayoutKnobs = (p: {
   layout: ILayoutChoice;
-  onOverview: () => void;
-  onView: (view: IStageView) => void;
   onLayout: (layout: ILayoutChoice) => void;
 }) => {
   const { t } = useTranslation('common');
-  const search = p.mode === 'search';
-  const chart = !search || p.view === 'constellation';
   return (
-    <>
-      <span className={s.knobs}>
-        <button type="button" className={s.knob} aria-pressed={!search} onClick={p.onOverview}>
-          {t('agent.cockpit.view.overview', 'OVERVIEW')}
-        </button>
+    <div
+      className={d.layoutKnobs}
+      role="group"
+      aria-label={t('agent.cockpit.view.layout', 'Layout')}
+    >
+      {(['bundle', 'tree'] as const).map((layout) => (
         <button
+          key={layout}
           type="button"
           className={s.knob}
-          aria-pressed={search && p.view === 'board'}
-          disabled={!p.hasSearch}
-          onClick={() => p.onView('board')}
+          aria-pressed={p.layout === layout}
+          onClick={() => p.onLayout(layout)}
         >
-          {t('agent.cockpit.view.board', 'BOARD')}
+          {layout === 'tree'
+            ? t('agent.cockpit.view.tree', 'TREE')
+            : t('agent.cockpit.view.bundle', 'BUNDLE')}
         </button>
-        <button
-          type="button"
-          className={s.knob}
-          aria-pressed={search && p.view === 'constellation'}
-          disabled={!p.hasSearch}
-          onClick={() => p.onView('constellation')}
-        >
-          {t('agent.cockpit.view.constellation', 'CONSTELLATION')}
-        </button>
-      </span>
-      {chart && (
-        <span className={s.knobs}>
-          {(['bundle', 'tree'] as const).map((layout) => (
-            <button
-              key={layout}
-              type="button"
-              className={s.knob}
-              aria-pressed={p.layout === layout}
-              onClick={() => p.onLayout(layout)}
-            >
-              {layout === 'tree'
-                ? t('agent.cockpit.view.tree', 'TREE')
-                : t('agent.cockpit.view.bundle', 'BUNDLE')}
-            </button>
-          ))}
-        </span>
-      )}
-    </>
+      ))}
+    </div>
   );
 };
 

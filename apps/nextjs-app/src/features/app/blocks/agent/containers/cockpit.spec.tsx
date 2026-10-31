@@ -3,7 +3,7 @@ import type { ISearchCard, ISearchPlan, ISearchStep } from '@teable/openapi';
 import type { UIMessage } from 'ai';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, render, renderHook, screen, userEvent } from '@/test-utils';
+import { act, cleanup, render, renderHook, screen, userEvent, within } from '@/test-utils';
 import { useStage } from '../hooks/useStage';
 import { buildAgentRequestBody } from '../model/agent-request';
 import { startCycle } from '../model/overview/cycle';
@@ -100,7 +100,6 @@ describe('agent cockpit (cockpit design §4)', () => {
       on: false,
       focus: undefined,
       stage: 'overview',
-      view: 'board',
       overviewPinned: undefined,
       draft: undefined,
       overviewFailed: {},
@@ -166,7 +165,7 @@ describe('agent cockpit (cockpit design §4)', () => {
   it('takes a dataset key from a search back to the overview', async () => {
     const { live } = liveSearch();
     useSessionStore.setState({ session: live, loading: false, error: undefined });
-    useCockpitStore.setState({ stage: 'search', view: 'board' });
+    useCockpitStore.setState({ stage: 'search' });
     render(<AgentCockpitHost />);
     act(() => useCockpitStore.getState().open());
     await screen.findAllByRole('region', { name: 'Search board' });
@@ -204,27 +203,47 @@ describe('agent cockpit (cockpit design §4)', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
   });
 
-  it('keeps search keys on a search: the board ignores T and 0, Escape unpins then drops the lens', async () => {
+  it('keeps search keys on a search: T and 0 on its chart, Escape unpins then drops the lens', async () => {
     const { live } = liveSearch();
     useSessionStore.setState({ session: live, loading: false, error: undefined });
-    const keep = { layout: 'bundle' as const, zoomResets: 0, lens: undefined };
-    useCockpitStore.setState({ ...keep, stage: 'search', view: 'board', pinned: 's1:recP' });
+    useCockpitStore.setState({
+      layout: 'bundle',
+      zoomResets: 0,
+      lens: undefined,
+      stage: 'search',
+      pinned: 's1:recP',
+    });
     render(<AgentCockpitHost />);
     act(() => useCockpitStore.getState().open());
     await screen.findAllByRole('region', { name: 'Search board' });
     act(() => (document.activeElement as HTMLElement | null)?.blur());
-    await userEvent.keyboard('t0');
-    expect(useCockpitStore.getState()).toMatchObject(keep);
-    act(() => useCockpitStore.setState({ view: 'constellation' }));
     await userEvent.keyboard('t0');
     expect(useCockpitStore.getState()).toMatchObject({ layout: 'tree', zoomResets: 1 });
     await userEvent.keyboard('{Escape}');
     expect(useCockpitStore.getState()).toMatchObject({ pinned: undefined, lens: undefined });
     await userEvent.keyboard('{Escape}');
     expect(useCockpitStore.getState().lens).toBe('retrieved');
-    // V leaves the search for the overview from the constellation
+    // V no longer switches views: there is no board
     await userEvent.keyboard('v');
-    expect(useCockpitStore.getState().stage).toBe('overview');
+    expect(useCockpitStore.getState().stage).toBe('search');
+  });
+
+  it('stacks BUNDLE and TREE under the readout, with no view buttons', async () => {
+    render(<AgentCockpitHost />);
+    act(() => useCockpitStore.getState().open());
+    const stage = await screen.findByRole('region', { name: 'Overview' });
+    const knobs = within(stage).getByRole('group', { name: 'Layout' });
+    expect(
+      within(knobs)
+        .getAllByRole('button')
+        .map((b) => b.textContent)
+    ).toEqual(['BUNDLE', 'TREE']);
+    // under the readout, in the top-left corner of the HUD
+    expect(knobs.parentElement?.firstElementChild?.textContent).toMatch(/OVERVIEW/);
+    for (const name of ['OVERVIEW', 'BOARD', 'CONSTELLATION'])
+      expect(within(stage).queryByRole('button', { name })).toBeNull();
+    await userEvent.click(within(knobs).getByRole('button', { name: 'TREE' }));
+    expect(useCockpitStore.getState().layout).toBe('tree');
   });
 
   it('asks about a pinned overview node: the focus points at it, the composer gets the question', async () => {
@@ -328,7 +347,6 @@ describe('the stage (cockpit design §5.3)', () => {
     live.apply({ type: 'lens', searchId: 'srch1', recordKeys: ['s2:recT1'] });
     useSessionStore.setState({ session: live, loading: false, error: undefined });
     useCockpitStore.setState({
-      view: 'constellation',
       selectedSearch: undefined,
       lens: undefined,
       pinned: undefined,

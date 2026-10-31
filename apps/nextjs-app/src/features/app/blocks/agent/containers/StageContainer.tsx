@@ -1,6 +1,5 @@
-import type { IClarifyOption } from '@teable/openapi';
 import { useTranslation } from 'next-i18next';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAgentStatus } from '../hooks/useAgentData';
 import { useStage } from '../hooks/useStage';
 import type { IFrame } from '../model/graph/layout';
@@ -9,9 +8,8 @@ import { searchFeed, searchVectors } from '../model/panels';
 import type { IBoard } from '../model/search-board';
 import { FlightLog, VectorsPanel } from '../ui/rail/RailPanels';
 import { SEARCH_LEGEND, StandbyStage } from '../ui/stage/Readout';
-import { SearchBoard } from '../ui/stage/SearchBoard';
 import { StageDeck } from '../ui/stage/StageDeck';
-import { LensChip, StageKnobs, type IStageView } from '../ui/stage/StageHead';
+import { LayoutKnobs, LensChip } from '../ui/stage/StageHead';
 import { LazyConstellation } from './LazyConstellation';
 import { OverviewStage } from './OverviewStage';
 
@@ -20,18 +18,14 @@ interface IRail {
 }
 
 /** No search on the stage: the overview, or why the agent cannot answer yet. */
-const IdleStage = ({
-  hasSearch,
-  onLeave,
-  rail,
-}: IRail & { hasSearch: boolean; onLeave: () => void }) => {
+const IdleStage = ({ onLeave, rail }: IRail & { onLeave: () => void }) => {
   const { t } = useTranslation('common');
   const { data: agent } = useAgentStatus();
   const blocked =
     agent && (!agent.enabled || agent.status !== 'ok')
       ? agent.lastError ?? t('agent.panel.notReady', 'The agent needs setup.')
       : undefined;
-  if (!blocked) return <OverviewStage hasSearch={hasSearch} rail={rail} />;
+  if (!blocked) return <OverviewStage rail={rail} />;
   return (
     <StageDeck
       label={t('agent.cockpit.stage', 'Search board')}
@@ -59,36 +53,20 @@ const readoutOf = (board: IBoard, lensMode: ILensMode, cited: number) => {
   return { running, answer, top, unit, count };
 };
 
-/** The scroll of the board to a table's lane, from the vectors panel. */
-const toLane = (tableId: string) =>
-  document
-    .getElementById(`lane-${tableId}`)
-    ?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-
 /**
- * The stage: the overview of the data base by default, or the selected search as a board or a
- * constellation, with its readout, lens chip and legend in the HUD and its tables and steps in
- * the rail (cockpit design §5, overview design §4).
+ * The stage: the overview of the data base by default, or the selected search as a
+ * constellation, with its readout, layout knobs, lens chip and legend in the HUD and its tables
+ * and steps in the rail (cockpit design §5, overview design §4, scope design §4).
  */
-export const StageContainer = ({
-  onPick,
-  rail,
-}: IRail & {
-  onPick: (option: IClarifyOption, clarifyId: string) => void;
-}) => {
+export const StageContainer = ({ rail }: IRail) => {
   const { t } = useTranslation('common');
   const stage = useStage();
   const { board, limited } = stage;
-  const clarifyId = stage.clarify?.clarifyId;
-  const pickOption = useCallback(
-    (option: IClarifyOption) => clarifyId && onPick(option, clarifyId),
-    [clarifyId, onPick]
-  );
   const vectors = useMemo(() => (board ? searchVectors(board) : []), [board]);
   const feed = useMemo(() => (board ? searchFeed(board) : []), [board]);
 
   if (stage.mode === 'overview' || !board?.plan)
-    return <IdleStage hasSearch={stage.hasSearch} onLeave={stage.close} rail={rail} />;
+    return <IdleStage onLeave={stage.close} rail={rail} />;
 
   const cited = stage.graphLens?.size ?? 0;
   const { running, answer, top, unit, count } = readoutOf(board, stage.lensMode, cited);
@@ -102,12 +80,6 @@ export const StageContainer = ({
   const missing = board.plan.missing.length
     ? `${t('agent.cockpit.missing', 'Not in this base')}: ${board.plan.missing.join(', ')}`
     : undefined;
-  const showView = (view: IStageView) => {
-    stage.setView(view);
-    stage.setStage('search');
-  };
-  const constellation = stage.view === 'constellation' && limited;
-
   return (
     <StageDeck
       stage="search"
@@ -123,10 +95,10 @@ export const StageContainer = ({
       }}
       metrics={stage.metrics}
       chart={
-        constellation
+        limited
           ? (frame: IFrame | null) => (
               <LazyConstellation
-                graph={constellation.graph}
+                graph={limited.graph}
                 mode={stage.layout}
                 zoomResets={stage.zoomResets}
                 lens={stage.graphLens}
@@ -139,28 +111,14 @@ export const StageContainer = ({
             )
           : undefined
       }
-      board={
-        !constellation && (
-          <SearchBoard
-            board={board}
-            lit={stage.lit}
-            hover={stage.trace}
-            picks={stage.picks}
-            baseHref={`/base/${board.plan.baseId}`}
-            onLeave={stage.close}
-            onHover={stage.setHover}
-            onPin={stage.pin}
-            onPick={pickOption}
-          />
-        )
-      }
+      layout={<LayoutKnobs layout={stage.layout} onLayout={stage.setLayout} />}
       aside={
         (running || answer) && (
           <LensChip
             searching={running}
             text={
               running
-                ? t('agent.cockpit.lens.searchingChip', 'SEARCHING · THE BOARD FILLS AS IT GOES')
+                ? t('agent.cockpit.lens.searchingChip', 'SEARCHING · THE CHART FILLS AS IT GOES')
                 : t('agent.cockpit.lens.answerChip', {
                     n: cited,
                     defaultValue: `ANSWER · ${cited} RECORDS CITED`,
@@ -170,17 +128,6 @@ export const StageContainer = ({
           />
         )
       }
-      knobs={
-        <StageKnobs
-          mode="search"
-          hasSearch
-          view={stage.view}
-          layout={stage.layout}
-          onOverview={() => stage.setStage('overview')}
-          onView={showView}
-          onLayout={stage.setLayout}
-        />
-      }
       legend={SEARCH_LEGEND}
       rail={rail}
       panels={
@@ -189,7 +136,6 @@ export const StageContainer = ({
             title={t('agent.cockpit.rail.tables', 'TABLES')}
             hint={t('agent.cockpit.rail.tablesHint', 'WHAT EACH STEP FOUND')}
             vectors={vectors}
-            onSelect={stage.view === 'board' ? toLane : undefined}
           />
           <FlightLog
             title={t('agent.cockpit.rail.log', 'FLIGHT LOG')}

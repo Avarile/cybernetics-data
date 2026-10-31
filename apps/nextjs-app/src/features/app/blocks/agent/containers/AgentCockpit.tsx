@@ -60,7 +60,7 @@ export const AgentCockpit = () => {
     >
       <div className={d.deck} data-deck>
         <AnnunciatorContainer />
-        <StageContainer onPick={pick} rail={rail} />
+        <StageContainer rail={rail} />
         <div className={d.grid}>
           <aside ref={setRail} className={d.rail} data-rail>
             <AskContainer onPick={pick} />

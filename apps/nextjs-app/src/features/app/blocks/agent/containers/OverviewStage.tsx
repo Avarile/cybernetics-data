@@ -10,7 +10,7 @@ import { useCockpitStore } from '../state/cockpit-store';
 import { FlightLog, VectorsPanel } from '../ui/rail/RailPanels';
 import { NodeDetail } from '../ui/stage/NodeDetail';
 import { StageDeck } from '../ui/stage/StageDeck';
-import { StageKnobs, type IStageView } from '../ui/stage/StageHead';
+import { LayoutKnobs } from '../ui/stage/StageHead';
 import o from '../ui/theme/overview.module.css';
 import { LazyConstellation } from './LazyConstellation';
 
@@ -24,18 +24,12 @@ const recordsOf = (counts: Record<string, number>) =>
  * as a constellation with the HUD's readout, legend and pinned node, and the dataset's branches
  * and latest records in the rail.
  */
-export const OverviewStage = ({
-  hasSearch,
-  rail,
-}: {
-  hasSearch: boolean;
-  rail: HTMLElement | null;
-}) => {
+export const OverviewStage = ({ rail }: { rail: HTMLElement | null }) => {
   const { t } = useTranslation('common');
   const ov = useOverview(true);
   useOverviewCycle(true);
   const store = useCockpitStore();
-  const { cycle, cycleEvent, setStage, setView, setFocus, setDraft, pinOverview } = store;
+  const { cycle, cycleEvent, setFocus, setDraft, pinOverview } = store;
   const info = datasetInfo(ov.dataset);
   const chip = (id: IOverviewDatasetId) => t(`agent.cockpit.overview.${id}`, datasetInfo(id).chip);
   const vectors = useMemo(
@@ -49,10 +43,6 @@ export const OverviewStage = ({
     (inside: boolean) => cycleEvent({ type: inside ? 'hold' : 'release', reason: 'pointer' }),
     [cycleEvent]
   );
-  const showSearch = (view: IStageView) => {
-    setView(view);
-    setStage('search');
-  };
   /** A record's kind ("TASK"): the server's short, which the chart leaves out of its labels. */
   const kindOf = (id: string) => ov.vo?.nodes.find((n) => n.id === id)?.short ?? undefined;
   /** ASK: the agent is pointed at the record, the composer gets the question to send or change. */
@@ -160,17 +150,7 @@ export const OverviewStage = ({
           />
         )
       }
-      knobs={
-        <StageKnobs
-          mode="overview"
-          hasSearch={hasSearch}
-          view={store.view}
-          layout={store.layout}
-          onOverview={() => undefined}
-          onView={showSearch}
-          onLayout={store.setLayout}
-        />
-      }
+      layout={<LayoutKnobs layout={store.layout} onLayout={store.setLayout} />}
       legend={info.legend}
       rail={rail}
       panels={

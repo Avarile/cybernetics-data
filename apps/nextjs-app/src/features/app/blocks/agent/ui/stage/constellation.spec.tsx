@@ -65,7 +65,6 @@ describe('constellation (cockpit design §5.4)', () => {
       }
     );
     useCockpitStore.setState({
-      view: 'constellation',
       pinned: undefined,
       overviewPinned: undefined,
     });

@@ -12,7 +12,7 @@ import { useCockpitStore } from '../state/cockpit-store';
 import { useSearchBoard } from './useSearchBoard';
 
 /**
- * What the stage shows (cockpit design §5.3–§5.6): the board, its lens and hover trace, the
+ * What the stage shows (cockpit design §5.3–§5.6): the search, its lens and hover trace, the
  * readout numbers, the PICK options of an open question, and the constellation's graph.
  */
 export function useStage() {
@@ -42,10 +42,8 @@ export function useStage() {
   }, [clarify, board?.status]);
   const limited = useMemo(
     () =>
-      mode === 'search' && store.view === 'constellation' && board
-        ? limitGraph(boardToGraph(board), { lens: graphLens })
-        : undefined,
-    [mode, store.view, board, graphLens]
+      mode === 'search' && board ? limitGraph(boardToGraph(board), { lens: graphLens }) : undefined,
+    [mode, board, graphLens]
   );
   // on the chart the trace also follows the links it draws: a person lights every task they
   // are on, not only the one they were reached from
@@ -58,20 +56,18 @@ export function useStage() {
   }, [board, trace, focused, limited]);
 
   // live parts move the stage: a search that starts takes it from the overview (overview design
-  // §4.1), and the answer may ask for a view (highlight_records). Replays and remounts never do.
+  // §4.1). Replays and remounts never do.
   const session = chat.session;
   useEffect(() => {
     const started = new Set<string>();
     return session?.onData((part) => {
-      if (part.type !== AGENT_DATA_PART.searchLens && part.type !== AGENT_DATA_PART.searchPlan)
-        return;
+      if (part.type !== AGENT_DATA_PART.searchPlan) return;
       const event = boardEventOf(part);
       const store = useCockpitStore.getState();
       if (event?.type === 'plan' && !started.has(event.searchId)) {
         started.add(event.searchId);
         store.setStage('search');
       }
-      if (event?.type === 'lens' && event.view) store.setView(event.view);
     });
   }, [session]);
 
@@ -110,8 +106,6 @@ export function useStage() {
     layout: store.layout,
     setLayout: store.setLayout,
     zoomResets: store.zoomResets,
-    view: store.view,
-    setView: store.setView,
     setLens: store.setLens,
     close: store.close,
     setHover,
