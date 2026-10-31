@@ -21,6 +21,8 @@ export interface IGraphTablePlan extends IAssemblerTable {
   valueFields: IFieldInstance[];
   viewId?: string;
   filter?: IFilter;
+  /** Only these records; the view, filter and limit do not apply. */
+  recordIds?: string[];
   limit: number;
   /**
    * Every value the payload depends on lives in a stored column of this table,
@@ -199,9 +201,13 @@ const resolveTable = (
     groupField,
     readFields: [],
     valueFields: valueFieldsOf(fields, t.valueFieldIds ?? [], t.tableId),
-    viewId: t.viewId,
-    filter: t.filter ?? undefined,
-    limit: Math.min(t.limit ?? config.defaultTableLimit, maxNodes),
+    ...(t.recordIds
+      ? { recordIds: [...new Set(t.recordIds)], limit: new Set(t.recordIds).size }
+      : {
+          viewId: t.viewId,
+          filter: t.filter ?? undefined,
+          limit: Math.min(t.limit ?? config.defaultTableLimit, maxNodes),
+        }),
     probeSafe: true,
   };
 };
@@ -312,7 +318,8 @@ export const resolveGraphPlan = (input: IResolverInput): IGraphPlan => {
   assertNoGroupCycle(plans);
   resolveEdges(input, plans, included);
   for (const plan of plans) {
-    plan.probeSafe = isProbeSafe(input, plan);
+    // a read of chosen records is small and rare: never probed, never cached
+    plan.probeSafe = !plan.recordIds && isProbeSafe(input, plan);
   }
 
   return {

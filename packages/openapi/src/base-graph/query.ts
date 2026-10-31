@@ -13,6 +13,8 @@ export const BASE_GRAPH_MAX_TABLE_LIMIT = 20000;
 /** Fields whose values may ride on a table's record nodes. */
 export const BASE_GRAPH_MAX_VALUE_FIELDS = 8;
 
+export const BASE_GRAPH_MAX_RECORD_IDS = 50;
+
 export const baseGraphTableQuerySchema = z.object({
   tableId: z.string().startsWith('tbl'),
   viewId: z
@@ -32,6 +34,17 @@ export const baseGraphTableQuerySchema = z.object({
     .startsWith('fld')
     .optional()
     .meta({ description: 'A single-valued link to another table: buckets root records.' }),
+  recordIds: z
+    .string()
+    .startsWith('rec')
+    .array()
+    .min(1)
+    .max(BASE_GRAPH_MAX_RECORD_IDS)
+    .optional()
+    .meta({
+      description:
+        'Only these records of the table. The view, filter and limit do not apply; group and hierarchy cells are still read.',
+    }),
   valueFieldIds: z
     .string()
     .startsWith('fld')

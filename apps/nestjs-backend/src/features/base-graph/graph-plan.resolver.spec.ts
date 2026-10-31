@@ -93,6 +93,28 @@ describe('resolveGraphPlan', () => {
     );
   });
 
+  it('reads only chosen records: no view, filter or limit, never probed', () => {
+    const plan = resolveGraphPlan(
+      input({
+        tables: [
+          {
+            tableId: 'tblTasks',
+            viewId: 'viwTasks',
+            limit: 3,
+            recordIds: ['recA', 'recB', 'recA'],
+            groupByFieldId: 'fldProject',
+          },
+        ],
+      })
+    );
+    const [tasks] = plan.tables;
+    expect(tasks.recordIds).toEqual(['recA', 'recB']);
+    expect(tasks.limit).toBe(2);
+    expect(tasks.viewId).toBeUndefined();
+    expect(tasks.groupField?.id).toBe('fldProject');
+    expect(tasks.probeSafe).toBe(false);
+  });
+
   it('rejects a view of another table', () => {
     expect(() =>
       resolveGraphPlan(input({ tables: [{ tableId: 'tblProjects', viewId: 'viwTasks' }] }))

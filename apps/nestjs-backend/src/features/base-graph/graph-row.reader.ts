@@ -106,6 +106,7 @@ export class GraphRowReader {
         // and sort apply and `filter` is ANDed onto it.
         ignoreViewQuery: !table.viewId,
         filter: table.filter,
+        ...(table.recordIds ? { selectedRecordIds: table.recordIds } : {}),
         take: table.limit + 1,
       },
       true
